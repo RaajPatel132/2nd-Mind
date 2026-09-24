@@ -104,7 +104,11 @@ markers = [
     "integration: needs Docker (testcontainers Postgres and Redis)",
     "live: calls real model providers; needs API keys",
 ]
-filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+filterwarnings = [
+    "error::pytest.PytestUnraisableExceptionWarning",
+    # arq closes its pool with redis-py's deprecated close(); not ours to fix.
+    "ignore:Call to deprecated close:DeprecationWarning:arq.worker",
+]
 
 # ---------------------------------------------------------------- import-linter
 [tool.importlinter]

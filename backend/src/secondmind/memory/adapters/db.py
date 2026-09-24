@@ -21,6 +21,9 @@ from sqlalchemy.orm import DeclarativeBase
 from secondmind.core import WorkspaceScope
 from secondmind.memory import WORKSPACE_SETTING
 
+# Latest migration revision; readiness fails until the database is at it.
+SCHEMA_HEAD = "0001"
+
 NAMING = {
     "ix": "ix_%(table_name)s_%(column_0_N_name)s",
     "uq": "uq_%(table_name)s_%(column_0_N_name)s",

@@ -1,0 +1,2178 @@
+{
+  "components": {
+    "schemas": {
+      "CheckOut": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "detail"
+        ],
+        "title": "CheckOut",
+        "type": "object"
+      },
+      "Classification": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "item_type": {
+            "title": "Item Type",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "item_type",
+          "rationale"
+        ],
+        "title": "Classification",
+        "type": "object"
+      },
+      "CreateTurnIn": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "CreateTurnIn",
+        "type": "object"
+      },
+      "DecisionEvent": {
+        "additionalProperties": false,
+        "description": "Decision panel: types, date and person resolutions, rationale, rules applied.",
+        "properties": {
+          "classifications": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Classification"
+            },
+            "title": "Classifications",
+            "type": "array"
+          },
+          "person_resolutions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PersonResolution"
+            },
+            "title": "Person Resolutions",
+            "type": "array"
+          },
+          "rationale": {
+            "default": "",
+            "title": "Rationale",
+            "type": "string"
+          },
+          "rules_applied": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Rules Applied",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "time_resolutions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TimeResolution"
+            },
+            "title": "Time Resolutions",
+            "type": "array"
+          },
+          "type": {
+            "const": "decision",
+            "default": "decision",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "title": "DecisionEvent",
+        "type": "object"
+      },
+      "DiffEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "changes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "layer": {
+            "$ref": "#/components/schemas/Layer"
+          },
+          "op": {
+            "enum": [
+              "added",
+              "updated",
+              "removed",
+              "held",
+              "not_written"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "layer",
+          "title"
+        ],
+        "title": "DiffEntry",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "description": "Stable machine-readable error code.",
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable, safe to show to users.",
+            "title": "Message",
+            "type": "string"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorEvent": {
+        "additionalProperties": false,
+        "description": "A turn-ending or step-level error, with a stable code and a user-safe message.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "type": {
+            "const": "error",
+            "default": "error",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorEvent",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "FallbackInfo": {
+        "additionalProperties": false,
+        "description": "Set on a model call that was served by the step's fallback model (FR-14.4).",
+        "properties": {
+          "from_model": {
+            "title": "From Model",
+            "type": "string"
+          },
+          "from_provider": {
+            "title": "From Provider",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_provider",
+          "from_model",
+          "reason"
+        ],
+        "title": "FallbackInfo",
+        "type": "object"
+      },
+      "FieldChange": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "title": "After"
+          },
+          "before": {
+            "title": "Before"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field"
+        ],
+        "title": "FieldChange",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "Intent": {
+        "enum": [
+          "save",
+          "recall",
+          "save_and_recall",
+          "correct",
+          "chit_chat"
+        ],
+        "title": "Intent",
+        "type": "string"
+      },
+      "IntentEvent": {
+        "additionalProperties": false,
+        "description": "What the agent decided the message is (FR-1.2).",
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/Intent"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "stub",
+              "model",
+              "rule"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "intent",
+            "default": "intent",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "intent",
+          "confidence",
+          "reason",
+          "source"
+        ],
+        "title": "IntentEvent",
+        "type": "object"
+      },
+      "Layer": {
+        "enum": [
+          "core",
+          "quick",
+          "archive"
+        ],
+        "title": "Layer",
+        "type": "string"
+      },
+      "MeOut": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          },
+          "workspaces": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceOut"
+            },
+            "title": "Workspaces",
+            "type": "array"
+          }
+        },
+        "required": [
+          "user",
+          "workspaces"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "MemoryDiffEvent": {
+        "additionalProperties": false,
+        "description": "Memory diff panel, built from the write log so it can't disagree with what happened.",
+        "properties": {
+          "entries": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DiffEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "type": {
+            "const": "memory_diff",
+            "default": "memory_diff",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "title": "MemoryDiffEvent",
+        "type": "object"
+      },
+      "MetaOut": {
+        "properties": {
+          "config_hash": {
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "config_hash_short": {
+            "title": "Config Hash Short",
+            "type": "string"
+          },
+          "dev_auth": {
+            "title": "Dev Auth",
+            "type": "boolean"
+          },
+          "env": {
+            "title": "Env",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_version": {
+            "title": "Price Version",
+            "type": "string"
+          },
+          "prompts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Prompts",
+            "type": "array"
+          },
+          "provider_mode": {
+            "title": "Provider Mode",
+            "type": "string"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/RouteOut"
+            },
+            "title": "Routes",
+            "type": "array"
+          },
+          "substitutions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Substitutions",
+            "type": "array"
+          },
+          "tracing_enabled": {
+            "title": "Tracing Enabled",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "env",
+          "config_hash",
+          "config_hash_short",
+          "provider_mode",
+          "price_version",
+          "routes",
+          "prompts",
+          "substitutions",
+          "dev_auth",
+          "tracing_enabled"
+        ],
+        "title": "MetaOut",
+        "type": "object"
+      },
+      "ModelCallEvent": {
+        "additionalProperties": false,
+        "description": "One model call: who served it, what it cost, how long it took (FR-14.8, FR-19.2).",
+        "properties": {
+          "attempts": {
+            "minimum": 1.0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FallbackInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "step": {
+            "title": "Step",
+            "type": "string"
+          },
+          "time_to_first_token_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time To First Token Ms"
+          },
+          "type": {
+            "const": "model_call",
+            "default": "model_call",
+            "title": "Type",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "step",
+          "provider",
+          "model",
+          "started_at",
+          "latency_ms",
+          "attempts",
+          "usage"
+        ],
+        "title": "ModelCallEvent",
+        "type": "object"
+      },
+      "PersonResolution": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "mention": {
+            "title": "Mention",
+            "type": "string"
+          },
+          "person_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Id"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mention",
+          "person_id",
+          "display_name",
+          "created",
+          "rationale"
+        ],
+        "title": "PersonResolution",
+        "type": "object"
+      },
+      "PolicyDecision": {
+        "enum": [
+          "allowed",
+          "held",
+          "blocked"
+        ],
+        "title": "PolicyDecision",
+        "type": "string"
+      },
+      "PolicyEvent": {
+        "additionalProperties": false,
+        "description": "A write-policy decision on one proposed operation (FR-4.6).",
+        "properties": {
+          "op": {
+            "title": "Op",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "type": {
+            "const": "policy",
+            "default": "policy",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/PolicyVerdict"
+          }
+        },
+        "required": [
+          "op",
+          "verdict"
+        ],
+        "title": "PolicyEvent",
+        "type": "object"
+      },
+      "PolicyVerdict": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/PolicyDecision"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "rule_id",
+          "reason"
+        ],
+        "title": "PolicyVerdict",
+        "type": "object"
+      },
+      "ReadyOut": {
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CheckOut"
+            },
+            "title": "Checks",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ],
+        "title": "ReadyOut",
+        "type": "object"
+      },
+      "RetrievalCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "dense_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dense Score"
+          },
+          "fused_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fused Score"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "layer": {
+            "$ref": "#/components/schemas/Layer"
+          },
+          "lexical_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lexical Score"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "rerank_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rerank Score"
+          },
+          "selected": {
+            "default": false,
+            "title": "Selected",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "title",
+          "layer"
+        ],
+        "title": "RetrievalCandidate",
+        "type": "object"
+      },
+      "RetrievalEvent": {
+        "additionalProperties": false,
+        "description": "Retrieval panel: plan, filters, candidates with scores, what reached the answer.",
+        "properties": {
+          "candidates": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RetrievalCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Filters",
+            "type": "object"
+          },
+          "layers": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "title": "Layers",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "type": {
+            "const": "retrieval",
+            "default": "retrieval",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "RetrievalEvent",
+        "type": "object"
+      },
+      "RouteOut": {
+        "properties": {
+          "fallback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "step": {
+            "title": "Step",
+            "type": "string"
+          },
+          "timeout_s": {
+            "title": "Timeout S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "step",
+          "provider",
+          "model",
+          "fallback",
+          "prompt",
+          "timeout_s"
+        ],
+        "title": "RouteOut",
+        "type": "object"
+      },
+      "SseToken": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "SseToken",
+        "type": "object"
+      },
+      "SseTurnCompleted": {
+        "properties": {
+          "turn": {
+            "$ref": "#/components/schemas/TurnOut"
+          },
+          "turn_id": {
+            "format": "uuid",
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageTotals"
+          }
+        },
+        "required": [
+          "turn_id",
+          "usage",
+          "turn"
+        ],
+        "title": "SseTurnCompleted",
+        "type": "object"
+      },
+      "SseTurnFailed": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/TurnError"
+          },
+          "turn": {
+            "$ref": "#/components/schemas/TurnOut"
+          },
+          "turn_id": {
+            "format": "uuid",
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageTotals"
+          }
+        },
+        "required": [
+          "turn_id",
+          "error",
+          "usage",
+          "turn"
+        ],
+        "title": "SseTurnFailed",
+        "type": "object"
+      },
+      "SseTurnStarted": {
+        "properties": {
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "turn_id": {
+            "format": "uuid",
+            "title": "Turn Id",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "turn_id",
+          "workspace_id",
+          "started_at"
+        ],
+        "title": "SseTurnStarted",
+        "type": "object"
+      },
+      "StepModel": {
+        "additionalProperties": false,
+        "description": "Which provider and model served a step, and with which prompt version (FR-19.2).",
+        "properties": {
+          "fallback_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback From"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "StepModel",
+        "type": "object"
+      },
+      "TimeResolution": {
+        "additionalProperties": false,
+        "properties": {
+          "assumed": {
+            "default": false,
+            "title": "Assumed",
+            "type": "boolean"
+          },
+          "expression": {
+            "title": "Expression",
+            "type": "string"
+          },
+          "now": {
+            "format": "date-time",
+            "title": "Now",
+            "type": "string"
+          },
+          "precision": {
+            "enum": [
+              "datetime",
+              "day",
+              "month",
+              "year"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expression",
+          "value",
+          "precision",
+          "now",
+          "timezone",
+          "rule"
+        ],
+        "title": "TimeResolution",
+        "type": "object"
+      },
+      "ToolCallEvent": {
+        "additionalProperties": false,
+        "description": "Tool calls panel: tool, summarised arguments and result, policy verdict.",
+        "properties": {
+          "arguments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Arguments",
+            "type": "object"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PolicyVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result_summary": {
+            "default": "",
+            "title": "Result Summary",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          },
+          "type": {
+            "const": "tool_call",
+            "default": "tool_call",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "ToolCallEvent",
+        "type": "object"
+      },
+      "TraceLink": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/TraceStatus"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Link to the raw trace; null when unavailable or disabled.",
+            "title": "Url"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "TraceLink",
+        "type": "object"
+      },
+      "TraceStatus": {
+        "description": "Whether the turn's trace reached the trace backend (FR-9.2).",
+        "enum": [
+          "recorded",
+          "unavailable",
+          "disabled"
+        ],
+        "title": "TraceStatus",
+        "type": "string"
+      },
+      "TurnError": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "TurnError",
+        "type": "object"
+      },
+      "TurnEventOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "event": {
+            "discriminator": {
+              "mapping": {
+                "decision": "#/components/schemas/DecisionEvent",
+                "error": "#/components/schemas/ErrorEvent",
+                "intent": "#/components/schemas/IntentEvent",
+                "memory_diff": "#/components/schemas/MemoryDiffEvent",
+                "model_call": "#/components/schemas/ModelCallEvent",
+                "policy": "#/components/schemas/PolicyEvent",
+                "retrieval": "#/components/schemas/RetrievalEvent",
+                "tool_call": "#/components/schemas/ToolCallEvent"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IntentEvent"
+              },
+              {
+                "$ref": "#/components/schemas/DecisionEvent"
+              },
+              {
+                "$ref": "#/components/schemas/MemoryDiffEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RetrievalEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ToolCallEvent"
+              },
+              {
+                "$ref": "#/components/schemas/PolicyEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ModelCallEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ErrorEvent"
+              }
+            ],
+            "title": "Event"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seq",
+          "created_at",
+          "event"
+        ],
+        "title": "TurnEventOut",
+        "type": "object"
+      },
+      "TurnEventsOut": {
+        "properties": {
+          "events": {
+            "description": "In emission order (seq ascending).",
+            "items": {
+              "$ref": "#/components/schemas/TurnEventOut"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "turn_id": {
+            "format": "uuid",
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "turn_id",
+          "events"
+        ],
+        "title": "TurnEventsOut",
+        "type": "object"
+      },
+      "TurnOut": {
+        "properties": {
+          "config_hash": {
+            "title": "Config Hash",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TurnError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "input": {
+            "title": "Input",
+            "type": "string"
+          },
+          "models": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StepModel"
+            },
+            "title": "Models",
+            "type": "object"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "prompt_versions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Prompt Versions",
+            "type": "array"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TurnStatus"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/TraceLink"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageTotals"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "input",
+          "output",
+          "status",
+          "started_at",
+          "finished_at",
+          "config_hash",
+          "prompt_versions",
+          "models",
+          "usage",
+          "trace"
+        ],
+        "title": "TurnOut",
+        "type": "object"
+      },
+      "TurnPage": {
+        "properties": {
+          "items": {
+            "description": "Newest first.",
+            "items": {
+              "$ref": "#/components/schemas/TurnOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pass as `before` to get the next (older) page.",
+            "title": "Next Before"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TurnPage",
+        "type": "object"
+      },
+      "TurnStatus": {
+        "enum": [
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "TurnStatus",
+        "type": "string"
+      },
+      "TurnStreamFrame": {
+        "description": "One server-sent event on the turn stream: `event:` name, `data:` JSON.",
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseTurnStarted"
+              },
+              "event": {
+                "const": "turn.started",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseTurnStartedFrame",
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseToken"
+              },
+              "event": {
+                "const": "token",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseTokenFrame",
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseTurnCompleted"
+              },
+              "event": {
+                "const": "turn.completed",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseTurnCompletedFrame",
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseTurnFailed"
+              },
+              "event": {
+                "const": "turn.failed",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseTurnFailedFrame",
+            "type": "object"
+          }
+        ],
+        "title": "TurnStreamFrame"
+      },
+      "Usage": {
+        "additionalProperties": false,
+        "description": "Usage of one model call.\n\n``input_tokens`` counts *uncached* input only; cached reads are in ``cached_input_tokens``.\nAdapters normalise to this split so cost is always\n``input * p_in + cached * p_cached + output * p_out`` from the price table.",
+        "properties": {
+          "cached_input_tokens": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Cached Input Tokens",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "input_tokens": {
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "output_tokens": {
+            "minimum": 0.0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "price_version": {
+            "title": "Price Version",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "latency_ms",
+          "price_version"
+        ],
+        "title": "Usage",
+        "type": "object"
+      },
+      "UsageTotals": {
+        "additionalProperties": false,
+        "description": "Sum of usage across a turn's model calls.",
+        "properties": {
+          "cached_input_tokens": {
+            "default": 0,
+            "title": "Cached Input Tokens",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "default": 0.0,
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "UsageTotals",
+        "type": "object"
+      },
+      "UserOut": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ],
+        "title": "UserOut",
+        "type": "object"
+      },
+      "WorkspaceKind": {
+        "enum": [
+          "private",
+          "guest",
+          "persona_copy"
+        ],
+        "title": "WorkspaceKind",
+        "type": "string"
+      },
+      "WorkspaceOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkspaceKind"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "timezone",
+          "created_at"
+        ],
+        "title": "WorkspaceOut",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Chat-first personal memory. The web app is one client of this API.",
+    "title": "2nd Mind API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "description": "Process is alive (no dependencies checked).",
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Database (schema at head, app role under RLS), Redis, and provider config.",
+        "operationId": "readyz",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyOut"
+                }
+              }
+            },
+            "description": "A dependency is not ready"
+          }
+        },
+        "summary": "Readyz",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/auth/dev-login": {
+      "post": {
+        "description": "Create or reuse the dev user and their private workspace; set the session cookie.",
+        "operationId": "dev_login",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Dev Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/meta": {
+      "get": {
+        "description": "Build, routing and config hash this process runs with (FR-19.2).",
+        "operationId": "meta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Meta",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/v1/turns/{turn_id}": {
+      "get": {
+        "operationId": "get_turn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Turn Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Get Turn",
+        "tags": [
+          "turns"
+        ]
+      }
+    },
+    "/v1/turns/{turn_id}/events": {
+      "get": {
+        "description": "The turn's structured events, in order: the glass box's source of truth (FR-9.2).",
+        "operationId": "get_turn_events",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Turn Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnEventsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Get Turn Events",
+        "tags": [
+          "turns"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/turns": {
+      "get": {
+        "description": "Conversation history for a workspace, newest first (FR-1.6).",
+        "operationId": "list_turns",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Turn id to page from",
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Turn id to page from",
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "List Turns",
+        "tags": [
+          "turns"
+        ]
+      },
+      "post": {
+        "description": "Send a message; the reply streams back as server-sent events.",
+        "operationId": "create_turn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTurnIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnStreamFrame"
+                }
+              }
+            },
+            "description": "A `text/event-stream` of frames: `turn.started`, then `token` (repeated), then exactly one of `turn.completed` or `turn.failed`. Comment lines are keep-alives."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Create Turn",
+        "tags": [
+          "turns"
+        ]
+      }
+    }
+  }
+}
