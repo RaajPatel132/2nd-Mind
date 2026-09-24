@@ -1,0 +1,2 @@
+# Enforce the commit message standard (commitlint.config.mjs, CONTRIBUTING.md).
+npx --no -- commitlint --edit "$1"

@@ -1,0 +1,2 @@
+# Staged-file checks: ruff lint + format, gitleaks and hygiene (.pre-commit-config.yaml).
+uv run --project backend --frozen pre-commit run --hook-stage pre-commit
