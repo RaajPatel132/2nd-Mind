@@ -86,7 +86,9 @@ class AnthropicAdapter:
             )
         return AdapterStructured(value=value, usage=_usage(message.usage))
 
-    async def embed(self, model: str, texts: Sequence[str]) -> AdapterEmbedding:
+    async def embed(
+        self, model: str, texts: Sequence[str], dimensions: int | None = None
+    ) -> AdapterEmbedding:
         raise ProviderError(
             ProviderErrorKind.UNSUPPORTED,
             "Anthropic has no embeddings API; route the embed step to another provider",
@@ -104,7 +106,18 @@ class AnthropicAdapter:
             "max_tokens": request.max_output_tokens,
             "messages": _messages(request.messages),
         }
-        if request.system:
+        if request.cache_prefix:
+            blocks: list[dict[str, Any]] = [
+                {
+                    "type": "text",
+                    "text": request.cache_prefix,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+            if request.system:
+                blocks.append({"type": "text", "text": request.system})
+            params["system"] = blocks
+        elif request.system:
             params["system"] = request.system
         if request.tools:
             params["tools"] = [

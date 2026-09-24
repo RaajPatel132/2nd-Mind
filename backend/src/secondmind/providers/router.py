@@ -68,6 +68,7 @@ class ModelCall:
     attempts: int
     usage: Usage
     fallback: FallbackInfo | None
+    cache_hits: int | None = None
 
     def to_event(self) -> ModelCallEvent:
         return ModelCallEvent(
@@ -81,6 +82,7 @@ class ModelCall:
             attempts=self.attempts,
             usage=self.usage,
             fallback=self.fallback,
+            cache_hits=self.cache_hits,
         )
 
 
@@ -112,6 +114,7 @@ class _Payload:
     system: str | None
     messages: Sequence[ChatMessage]
     tools: Sequence[ToolSpec] = ()
+    cache_prefix: str | None = None
 
 
 _NO_PAYLOAD = _Payload(system=None, messages=())
@@ -175,10 +178,11 @@ class ModelRouter:
         system: str | None,
         messages: Sequence[ChatMessage],
         prompt: str | None = None,
+        cache_prefix: str | None = None,
     ) -> AsyncIterator[RouterStreamEvent]:
         """Stream text deltas, then one :class:`ChatResult` with usage."""
         state = self._start(step, StepKind.CHAT, prompt)
-        payload = _Payload(system=system, messages=messages)
+        payload = _Payload(system=system, messages=messages, cache_prefix=cache_prefix)
         for index, ref in enumerate(self._candidates(state.route)):
             adapter = self._adapters[ref.provider]
             breaker = self._breakers.get(ref.provider)
@@ -263,6 +267,7 @@ class ModelRouter:
         system: str | None,
         messages: Sequence[ChatMessage],
         prompt: str | None = None,
+        cache_prefix: str | None = None,
     ) -> StructuredResult[T]:
         """Structured output: a Pydantic model in, a validated instance out."""
 
@@ -270,13 +275,26 @@ class ModelRouter:
             return await adapter.structured(request, schema)
 
         state = self._start(step, StepKind.CHAT, prompt)
-        payload = _Payload(system=system, messages=messages)
+        payload = _Payload(system=system, messages=messages, cache_prefix=cache_prefix)
         result, call = await self._invoke(state, payload, invoke, _structured_usage)
         return StructuredResult(value=result.value, call=call)
 
-    async def embed(self, texts: Sequence[str], *, step: Step = Step.EMBED) -> EmbeddingResult:
+    async def embed(
+        self,
+        texts: Sequence[str],
+        *,
+        step: Step = Step.EMBED,
+        dimensions: int | None = None,
+    ) -> EmbeddingResult:
         async def invoke(adapter: ProviderAdapter, request: AdapterRequest) -> AdapterEmbedding:
-            return await adapter.embed(request.model, texts)
+            result = await adapter.embed(request.model, texts, dimensions)
+            if dimensions is not None and any(len(v) != dimensions for v in result.vectors):
+                raise ProviderError(
+                    ProviderErrorKind.INVALID_OUTPUT,
+                    f"embeddings are not {dimensions}-dimensional",
+                    provider=adapter.name,
+                )
+            return result
 
         state = self._start(step, StepKind.EMBEDDING, None)
         result, call = await self._invoke(state, _NO_PAYLOAD, invoke, _embedding_usage)
@@ -349,6 +367,7 @@ class ModelRouter:
             max_output_tokens=state.route.max_output_tokens,
             effort=state.route.effort,
             tools=payload.tools,
+            cache_prefix=payload.cache_prefix,
         )
 
     def _fail(

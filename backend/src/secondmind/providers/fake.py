@@ -12,7 +12,7 @@ import hashlib
 import math
 import re
 import struct
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -76,9 +76,14 @@ class FakeRule:
         return outcome
 
 
+# Answers an unscripted structured call for one step (the offline "brain" in fake mode).
+Responder = Callable[[AdapterRequest], dict[str, Any] | None]
+
+
 @dataclass(slots=True)
 class FakeScript:
     rules: list[FakeRule] = field(default_factory=list)
+    responders: dict[str, Responder] = field(default_factory=dict)
 
     def add(
         self,
@@ -103,6 +108,10 @@ class FakeScript:
             if rule.matches(request):
                 return rule.next_outcome()
         return None
+
+    def respond(self, request: AdapterRequest) -> dict[str, Any] | None:
+        responder = self.responders.get(request.step)
+        return None if responder is None else responder(request)
 
 
 def estimate_tokens(text: str) -> int:
@@ -136,6 +145,8 @@ class FakeProvider:
         self._token_delay_s = token_delay_s
         self._embedding_dim = embedding_dim
         self.requests: list[AdapterRequest] = []
+        self.embed_calls: list[list[str]] = []
+        self._seen_prefixes: set[str] = set()
 
     @property
     def name(self) -> str:
@@ -181,6 +192,8 @@ class FakeProvider:
         data: dict[str, Any] = {}
         if outcome is not None and outcome.structured is not None:
             data = outcome.structured
+        elif outcome is None:
+            data = self.script.respond(request) or {}
         try:
             value = schema.model_validate(data)
         except ValidationError as exc:
@@ -190,14 +203,15 @@ class FakeProvider:
                 f"{request.step!r}: {exc.error_count()} validation error(s)",
                 provider=self._name,
             ) from exc
-        usage = RawUsage(
-            input_tokens=_input_tokens(request),
-            output_tokens=estimate_tokens(value.model_dump_json()),
-        )
+        usage = self._usage(request, value.model_dump_json())
         return AdapterStructured(value=value, usage=usage)
 
-    async def embed(self, model: str, texts: Sequence[str]) -> AdapterEmbedding:
-        vectors = [_embedding(text, self._embedding_dim) for text in texts]
+    async def embed(
+        self, model: str, texts: Sequence[str], dimensions: int | None = None
+    ) -> AdapterEmbedding:
+        self.embed_calls.append(list(texts))
+        dim = dimensions or self._embedding_dim
+        vectors = [_embedding(text, dim) for text in texts]
         usage = RawUsage(input_tokens=sum(estimate_tokens(t) for t in texts), output_tokens=0)
         return AdapterEmbedding(vectors=vectors, usage=usage)
 
@@ -223,21 +237,35 @@ class FakeProvider:
             )
         return outcome
 
-    @staticmethod
-    def _reply(request: AdapterRequest, text: str, tool_calls: list[ToolCall]) -> AdapterReply:
+    def _reply(
+        self, request: AdapterRequest, text: str, tool_calls: list[ToolCall]
+    ) -> AdapterReply:
         output = text + "".join(c.model_dump_json() for c in tool_calls)
         return AdapterReply(
             text=text,
             tool_calls=tool_calls,
             stop_reason="tool_use" if tool_calls else "end_turn",
-            usage=RawUsage(
-                input_tokens=_input_tokens(request), output_tokens=estimate_tokens(output)
-            ),
+            usage=self._usage(request, output),
+        )
+
+    def _usage(self, request: AdapterRequest, output: str) -> RawUsage:
+        """Plausible usage; a cache prefix seen before is reported as cached input."""
+        total = _input_tokens(request)
+        cached = 0
+        prefix = request.cache_prefix
+        if prefix:
+            if prefix in self._seen_prefixes:
+                cached = min(total, estimate_tokens(prefix))
+            self._seen_prefixes.add(prefix)
+        return RawUsage(
+            input_tokens=total - cached,
+            cached_input_tokens=cached,
+            output_tokens=estimate_tokens(output),
         )
 
 
 def _input_tokens(request: AdapterRequest) -> int:
-    parts: list[str] = [request.system or ""]
+    parts: list[str] = [request.full_system or ""]
     parts.extend(_message_text(m) for m in request.messages)
     parts.extend(t.model_dump_json() for t in request.tools)
     return estimate_tokens("".join(parts))

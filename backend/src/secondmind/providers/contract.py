@@ -61,6 +61,14 @@ class AdapterRequest:
     max_output_tokens: int
     effort: Effort | None = None
     tools: Sequence[ToolSpec] = ()
+    # A stable system prefix (core memory) sent before ``system`` and marked for the provider's
+    # prompt cache where the adapter supports it (S2.9, FR-14.6).
+    cache_prefix: str | None = None
+
+    @property
+    def full_system(self) -> str | None:
+        parts = [p for p in (self.cache_prefix, self.system) if p]
+        return "\n\n".join(parts) if parts else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +132,8 @@ class ProviderAdapter(Protocol):
         self, request: AdapterRequest, schema: type[T]
     ) -> AdapterStructured[T]: ...
 
-    async def embed(self, model: str, texts: Sequence[str]) -> AdapterEmbedding: ...
+    async def embed(
+        self, model: str, texts: Sequence[str], dimensions: int | None = None
+    ) -> AdapterEmbedding: ...
 
     async def aclose(self) -> None: ...

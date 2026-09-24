@@ -145,9 +145,12 @@ class OpenAIAdapter:
             )
         return AdapterStructured(value=value, usage=_usage(completion.usage))
 
-    async def embed(self, model: str, texts: Sequence[str]) -> AdapterEmbedding:
+    async def embed(
+        self, model: str, texts: Sequence[str], dimensions: int | None = None
+    ) -> AdapterEmbedding:
+        extra: dict[str, Any] = {"dimensions": dimensions} if dimensions is not None else {}
         try:
-            response = await self._client.embeddings.create(model=model, input=list(texts))
+            response = await self._client.embeddings.create(model=model, input=list(texts), **extra)
         except openai.OpenAIError as exc:
             self._raise(exc)
         vectors = [list(d.embedding) for d in sorted(response.data, key=lambda d: d.index)]
@@ -163,8 +166,10 @@ class OpenAIAdapter:
 
     def _params(self, request: AdapterRequest) -> dict[str, Any]:
         messages: list[dict[str, Any]] = []
-        if request.system:
-            messages.append({"role": "system", "content": request.system})
+        system = request.full_system
+        if system:
+            # The stable core prefix goes first, so OpenAI's automatic prefix caching can hit.
+            messages.append({"role": "system", "content": system})
         messages.extend(_message(m) for m in request.messages)
         params: dict[str, Any] = {
             "model": request.model,
