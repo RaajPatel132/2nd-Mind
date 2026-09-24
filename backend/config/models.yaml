@@ -1,0 +1,84 @@
+# Per-step model routing (FR-14.2). Switching a step's model is a config change only:
+# edit this file, or override from the environment without touching it:
+#   MODEL_<STEP>=<provider>:<model>            e.g. MODEL_ANSWER=openai:gpt-6-sol
+#   MODEL_<STEP>_FALLBACK=<provider>:<model>   or "none" to disable the fallback
+# MODEL_PROVIDER_MODE decides what happens when a provider has no credentials:
+#   auto (default): use the step's fallback if it has credentials, else the fake provider
+#   live: refuse to start      fake: every step uses the fake provider
+# Every routed model needs a price in prices.yaml; start-up fails otherwise.
+version: 1
+
+providers:
+  anthropic:
+    kind: anthropic
+    api_key_env: ANTHROPIC_API_KEY
+  openai:
+    kind: openai
+    api_key_env: OPENAI_API_KEY
+    base_url_env: OPENAI_BASE_URL
+  # An OpenAI-compatible server (for example vLLM) registers as one more provider,
+  # with no code change (FR-14.7):
+  # vllm:
+  #   kind: openai
+  #   base_url_env: VLLM_BASE_URL
+  #   api_key_env: VLLM_API_KEY
+  fake:
+    kind: fake
+
+# timeout_s: time allowed to the first token and between streamed chunks (non-streaming:
+# the whole call). effort: reasoning depth where the provider supports it.
+steps:
+  intent:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 20
+    max_output_tokens: 1024
+    effort: low
+  extract:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 45
+    max_output_tokens: 4096
+    effort: medium
+  resolve:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 2048
+    effort: low
+  enrich:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 2048
+    effort: low
+  plan:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 2048
+    effort: low
+  answer:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 4096
+    effort: low
+    prompt: answer@1
+  judge:
+    provider: anthropic
+    model: claude-opus-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 60
+    max_output_tokens: 2048
+    effort: medium
+  embed:
+    provider: openai
+    model: text-embedding-3-small
+    timeout_s: 15

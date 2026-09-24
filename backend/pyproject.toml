@@ -64,7 +64,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "S311", "PLR2004", "ARG"]
-"migrations/**" = ["N999"]
+"migrations/**" = ["N999", "S608"]  # DDL built from module constants
+
+[tool.ruff.lint.pylint]
+max-branches = 15
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
