@@ -1,0 +1,50 @@
+# A moved plan: the reconcile step (a fuzzy case) says supersede; the old plan is 'moved'.
+id: 17-dentist-moved
+title: "Plan moved: the new appointment supersedes the old one, with a change key"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: Dentist appointment on Thursday 1 October at 5pm
+    now: "2026-09-20T10:00"
+    model:
+      intent: {intent: save, confidence: 0.95, reason: "An appointment."}
+      extract:
+        entities:
+          - {id: e1, mention: Dentist, name: dentist, kind: org}
+        memories:
+          - ref: m1
+            kind: plan
+            subtype: appointment
+            title: Dentist appointment
+            text: Dentist appointment on [[t1]].
+            category: health/appointments
+            entities: [{entity: e1, role: with}]
+            times: [{id: t1, expression: Thursday 1 October at 5pm, clock: occurred, direction: future}]
+input: My dentist appointment moved to Friday 2 October, 5 pm
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A changed appointment."}
+  extract:
+    entities:
+      - {id: e1, mention: My dentist, name: dentist, kind: org}
+    memories:
+      - ref: m1
+        kind: plan
+        subtype: appointment
+        title: Dentist appointment
+        text: Dentist appointment on [[t1]].
+        category: health/appointments
+        entities: [{entity: e1, role: with}]
+        times: [{id: t1, expression: Friday 2 October at 5 pm, clock: occurred, direction: future}]
+  reconcile:
+    - {decision: supersede, candidate: c1, reason: "The same appointment, moved to another day."}
+expect:
+  memories:
+    - match: 2 october
+      kind: plan
+      state: scheduled
+      dates: [{clock: occurred, value: "2026-10-02T17:00", precision: datetime}]
+      reconcile: supersede
+  changed:
+    - {match: 1 october, state: moved}
+  reply_contains: ["Moved: Dentist appointment is now Fri 2 Oct, 5 pm (was Thu 1 Oct, 5 pm)."]
+  keys_contain: ["Changed on 23 September 2026: dentist appointment moved from Thursday 1 October to Friday 2 October 2026, 5 pm."]

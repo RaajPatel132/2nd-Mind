@@ -1,0 +1,58 @@
+# The same show watched twice on different days is two episodes; the wish is fulfilled once.
+id: 16-watched-twice
+title: "Watched twice: two episodes on different days, the wish fulfilled only once"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: Nisha recommended Severance
+    now: "2026-09-18T20:00"
+    model:
+      intent: {intent: save, confidence: 0.9, reason: "A recommendation to watch."}
+      extract:
+        entities:
+          - {id: e1, mention: Nisha, name: Nisha, kind: person}
+          - {id: e2, mention: Severance, name: Severance, kind: work}
+        memories:
+          - ref: m1
+            kind: intention
+            subtype: watch
+            title: Severance
+            text: I want to watch Severance, recommended by Nisha.
+            entities: [{entity: e2, role: about}, {entity: e1, role: by}]
+  - input: watched Severance on Saturday
+    model:
+      intent: {intent: save, confidence: 0.9, reason: "Something the user did."}
+      extract:
+        entities:
+          - {id: e1, mention: Severance, name: Severance, kind: work}
+        memories:
+          - ref: m1
+            kind: episode
+            subtype: experience
+            title: Watched Severance
+            text: I watched Severance on [[t1]].
+            attributes: {activity: watched}
+            entities: [{entity: e1, role: about}]
+            times: [{id: t1, expression: on Saturday, clock: occurred, direction: past}]
+input: watched Severance again last night
+model:
+  intent: {intent: save, confidence: 0.9, reason: "Something the user did."}
+  extract:
+    entities:
+      - {id: e1, mention: Severance, name: Severance, kind: work}
+    memories:
+      - ref: m1
+        kind: episode
+        subtype: experience
+        title: Watched Severance again
+        text: I watched Severance again on [[t1]].
+        attributes: {activity: watched}
+        entities: [{entity: e1, role: about}]
+        times: [{id: t1, expression: last night, clock: occurred, direction: past}]
+expect:
+  memories:
+    - match: again
+      kind: episode
+      dates: [{clock: occurred, value: "2026-09-22T21:00", precision: datetime}]
+      reconcile: new
+  counts: {episode: 2, intention: 1}

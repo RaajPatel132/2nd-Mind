@@ -1,0 +1,57 @@
+# Supersede: "I moved to Pune" replaces "I live in Bengaluru", which stays as history.
+id: 05-moved-city
+title: "Supersede: a new value for the same subject + predicate keeps the old one as history"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: I live in Bengaluru
+    now: "2026-09-10T09:00"
+    model:
+      intent: {intent: save, confidence: 0.95, reason: "A fact about where the user lives."}
+      extract:
+        entities:
+          - {id: e1, mention: Bengaluru, name: Bengaluru, kind: place}
+        memories:
+          - ref: m1
+            kind: fact
+            title: I live in Bengaluru
+            text: I live in Bengaluru.
+            category: personal/home
+            subject: self
+            predicate: lives_in
+            value: {text: Bengaluru}
+            entities: [{entity: e1, role: at}]
+            layer: core
+            layer_rationale: Where the user lives is a standing fact.
+input: I moved to Pune
+model:
+  intent: {intent: save, confidence: 0.95, reason: "A change of city."}
+  extract:
+    entities:
+      - {id: e1, mention: Pune, name: Pune, kind: place}
+    memories:
+      - ref: m1
+        kind: fact
+        title: I live in Pune
+        text: I live in Pune.
+        category: personal/home
+        subject: self
+        predicate: lives_in
+        value: {text: Pune}
+        entities: [{entity: e1, role: at}]
+        layer: core
+        layer_rationale: Where the user lives is a standing fact.
+expect:
+  memories:
+    - match: live in pune
+      kind: fact
+      state: current
+      predicate: lives_in
+      entities: ["Pune:at"]
+      layer: core
+      reconcile: supersede
+  changed:
+    - {match: bengaluru, state: superseded, valid_to: "2026-09-23T04:30:00+00:00"}
+  diff_ops: [superseded]
+  reply_contains: ["Updated: you live in Pune now (Bengaluru until today)."]
+  keys_contain: ["No longer true since 23 September 2026: I lived in Bengaluru. I live in Pune now."]

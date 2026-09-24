@@ -1,0 +1,43 @@
+# Episodes never merge: the same run on two different days is two episodes.
+id: 12-runs-not-merged
+title: "Episodes not merged: two 5 km runs on different days are two episodes"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: Ran 5 km in 31 min on Monday morning
+    model:
+      intent: {intent: save, confidence: 0.9, reason: "A logged run."}
+      extract:
+        memories:
+          - ref: m1
+            kind: episode
+            subtype: measurement
+            title: Run
+            text: I ran 5 km in 31 min.
+            category: health/fitness
+            attributes: {activity: run}
+            value: {number: 5, unit: km}
+            times: [{id: t1, expression: on Monday morning, clock: occurred, direction: past}]
+input: Ran 5 km in 31 min this morning
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A logged run."}
+  extract:
+    memories:
+      - ref: m1
+        kind: episode
+        subtype: measurement
+        title: Run
+        text: I ran 5 km in 31 min.
+        category: health/fitness
+        attributes: {activity: run}
+        value: {number: 5, unit: km}
+        times: [{id: t1, expression: this morning, clock: occurred, direction: past}]
+expect:
+  memories:
+    - match: ran 5 km
+      kind: episode
+      subtype: measurement
+      dates: [{clock: occurred, value: "2026-09-23T08:00", precision: datetime}]
+      reconcile: new
+  counts: {episode: 2}
+  keys_contain: ["Logged run: I ran 5 km in 31 minutes on Wednesday 23 September 2026, in the morning."]

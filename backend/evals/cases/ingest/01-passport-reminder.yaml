@@ -1,0 +1,42 @@
+# §8.1 (a). All data in these cases is synthetic.
+id: 01-passport-reminder
+title: "§8.1 (a): a plan on the 3rd of next month, with the default reminder the day before"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Remind me to renew my passport before it expires on the 3rd of next month.
+model:
+  intent: {intent: save, confidence: 0.95, reason: "A deadline to keep, with a reminder."}
+  extract:
+    entities:
+      - {id: e1, mention: my passport, name: passport, kind: thing}
+    memories:
+      - ref: m1
+        kind: plan
+        subtype: deadline
+        title: Passport expires
+        text: My passport expires on [[t1]]; I need to renew it before then.
+        category: admin/documents
+        tags: [passport, renewal]
+        subject: e1
+        entities: [{entity: e1, role: about}]
+        times: [{id: t1, expression: the 3rd of next month, clock: occurred, direction: future}]
+        reminder: {lead: null}
+        importance: 4
+        layer: quick
+        layer_rationale: Due within a month.
+        rationale: A dated deadline, and the user asked to be reminded.
+expect:
+  memories:
+    - match: passport
+      kind: plan
+      subtype: deadline
+      state: scheduled
+      modality: asserted
+      dates: [{clock: occurred, value: "2026-10-03", precision: day}]
+      entities: ["passport:about"]
+      category: admin/documents
+      layer: quick
+      reconcile: new
+  triggers: [{match: passport, fires: "2026-10-02T09:00"}]
+  reply_contains: ["Sat 3 Oct", "I'll remind you Fri 2 Oct"]
+  keys_contain: ["Saturday 3 October 2026"]

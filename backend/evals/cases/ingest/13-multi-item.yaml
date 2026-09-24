@@ -1,0 +1,43 @@
+# FR-2.1: one message, two memories.
+id: 13-multi-item
+title: "Multi-item: a show to watch and a task to call Nisha, with a reminder"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Mindhunter, and remind me to call Nisha Sunday
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A show and a reminder."}
+  extract:
+    entities:
+      - {id: e1, mention: Mindhunter, name: Mindhunter, kind: work}
+      - {id: e2, mention: Nisha, name: Nisha, kind: person}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: watch
+        title: Mindhunter
+        text: I want to watch Mindhunter.
+        category: entertainment/series
+        entities: [{entity: e1, role: about}]
+      - ref: m2
+        kind: task
+        title: Call Nisha
+        text: Call Nisha on [[t1]].
+        category: people/calls
+        entities: [{entity: e2, role: with}]
+        times:
+          - {id: t1, expression: Sunday, clock: due, direction: future}
+          - {id: t2, expression: Sunday, clock: trigger, direction: future}
+expect:
+  memories:
+    - match: mindhunter
+      kind: intention
+      subtype: watch
+      reconcile: new
+    - match: call nisha
+      kind: task
+      state: open
+      dates: [{clock: due, value: "2026-09-27", precision: day}]
+      entities: ["Nisha:with"]
+      layer: quick
+  triggers: [{match: call nisha, fires: "2026-09-27T09:00"}]
+  counts: {intention: 1, task: 1}

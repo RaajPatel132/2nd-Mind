@@ -1,0 +1,29 @@
+# Modality reported: attached to Rohan, not a fact about where Rohan lives.
+id: 11-reported-claim
+title: "Reported: 'Rohan said he's moving to Delhi' is reported, about Rohan, no lives_in"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Rohan said he's moving to Delhi
+model:
+  intent: {intent: save, confidence: 0.85, reason: "Something someone said."}
+  extract:
+    entities:
+      - {id: e1, mention: Rohan, name: Rohan, kind: person}
+      - {id: e2, mention: Delhi, name: Delhi, kind: place}
+    memories:
+      - ref: m1
+        kind: fact
+        title: Rohan said he's moving to Delhi
+        text: Rohan said he's moving to Delhi.
+        category: people/news
+        subject: e1
+        entities: [{entity: e1, role: about}, {entity: e2, role: about}]
+        modality: reported
+        rationale: Reported by Rohan; not confirmed.
+expect:
+  memories:
+    - match: moving to delhi
+      kind: fact
+      modality: reported
+      predicate: null
+      entities: ["Rohan:about", "Rohan:subject"]

@@ -1,0 +1,33 @@
+# §8.1 (d).
+id: 03-mindhunter
+title: "§8.1 (d): a show to watch, category entertainment, to-watch state"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Mindhunter. Psychology thriller, can watch when nothing to do.
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A show to keep for later."}
+  extract:
+    entities:
+      - {id: e1, mention: Mindhunter, name: Mindhunter, kind: work}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: watch
+        title: Mindhunter
+        text: I want to watch Mindhunter, a psychological thriller series, when I have nothing to do.
+        category: entertainment/series
+        tags: [series, crime, thriller, psychology]
+        entities: [{entity: e1, role: about}]
+        importance: 2
+        rationale: A title with a note to watch it later.
+expect:
+  memories:
+    - match: mindhunter
+      kind: intention
+      subtype: watch
+      state: wanted
+      entities: ["Mindhunter:about"]
+      category: entertainment/series
+      reconcile: new
+  reply_contains: ["Added Mindhunter to your watch list."]
+  keys_contain: ["Wish list, to watch: Mindhunter"]

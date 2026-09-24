@@ -1,0 +1,30 @@
+# Person-to-person relation: normalised to spouse_of, with the fact as evidence.
+id: 10-relation
+title: "Relation: 'Rohan is Nisha's husband' is a fact plus an entity_relations row"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Rohan is Nisha's husband
+model:
+  intent: {intent: save, confidence: 0.9, reason: "How two people are related."}
+  extract:
+    entities:
+      - {id: e1, mention: Rohan, name: Rohan, kind: person}
+      - {id: e2, mention: Nisha, name: Nisha, kind: person}
+    memories:
+      - ref: m1
+        kind: fact
+        title: Rohan is Nisha's husband
+        text: Rohan is Nisha's husband.
+        category: people/relationships
+        subject: e1
+        entities: [{entity: e1, role: about}, {entity: e2, role: about}]
+    relations:
+      - {src: e1, relation: husband_of, dst: e2, evidence: m1}
+expect:
+  memories:
+    - match: husband
+      kind: fact
+      entities: ["Rohan:about", "Nisha:about"]
+      reconcile: new
+  new_entities: ["Rohan:person", "Nisha:person"]
+  relations: ["Rohan spouse_of Nisha"]

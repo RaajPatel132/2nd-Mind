@@ -1,0 +1,25 @@
+id: 25-save-and-recall
+title: "Save and recall: the save happens, the recall part gets the honest stub"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Add Dark to my watchlist. What else is on it?
+model:
+  intent: {intent: save_and_recall, confidence: 0.9, reason: "Adds a show and asks about the list."}
+  extract:
+    entities:
+      - {id: e1, mention: Dark, name: Dark, kind: work}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: watch
+        title: Dark
+        text: I want to watch Dark.
+        category: entertainment/series
+        entities: [{entity: e1, role: about}]
+expect:
+  intent: save_and_recall
+  memories:
+    - match: watch dark
+      kind: intention
+      subtype: watch
+  reply_contains: ["Added Dark to your watch list.", "recall isn't wired up"]

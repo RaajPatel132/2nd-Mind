@@ -1,0 +1,26 @@
+# P-MOD-1: a hypothetical is never stored as a fact.
+id: 08-hypothetical
+title: "Hypothetical not asserted: 'if I get the offer I'll move' is not a fact"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: If I get the Berlin offer I'll move to Berlin
+model:
+  intent: {intent: save, confidence: 0.6, reason: "A possible move."}
+  extract:
+    entities:
+      - {id: e1, mention: Berlin, name: Berlin, kind: place}
+    memories:
+      - ref: m1
+        kind: fact
+        title: Moving to Berlin
+        text: I'll move to Berlin if I get the Berlin offer.
+        subject: self
+        predicate: lives_in
+        value: {text: Berlin}
+        entities: [{entity: e1, role: at}]
+        modality: hypothetical
+        rationale: Conditional on an offer.
+expect:
+  not_written: [P-MOD-1]
+  counts: {fact: 0}
+  reply_contains: ["it's hypothetical"]

@@ -1,0 +1,71 @@
+# §8.1 (b): three linked memories and a new person.
+id: 02-mk-bag
+title: "§8.1 (b): a gift idea, a birthday at month precision, a preference for core"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: My wife liked this bag from MK, serial no. 123ABC. We can gift it on her birthday next May.
+model:
+  intent: {intent: save, confidence: 0.93, reason: "A gift idea and a birthday to keep."}
+  extract:
+    entities:
+      - {id: e1, mention: My wife, kind: person, label: wife}
+      - {id: e2, mention: this bag from MK, name: MK bag, kind: thing}
+    memories:
+      - ref: m1
+        kind: preference
+        title: Wife likes MK bags
+        text: My wife likes bags from MK (Michael Kors).
+        category: people/preferences
+        tags: [bags, michael-kors]
+        subject: e1
+        entities: [{entity: e1, role: about}, {entity: e2, role: about}]
+        layer: core
+        layer_rationale: A standing preference of a key person.
+        rationale: She liked the bag. MK expanded to Michael Kors.
+      - ref: m2
+        kind: intention
+        subtype: gift
+        title: Gift the MK bag to my wife
+        text: Gift my wife the MK (Michael Kors) bag, serial 123ABC, on her birthday in [[t1]].
+        category: shopping/gifts
+        tags: [gift, bags, michael-kors]
+        attributes: {brand: Michael Kors (MK), serial: 123ABC}
+        entities: [{entity: e2, role: about}, {entity: e1, role: for}]
+        times: [{id: t1, expression: next May, clock: due, direction: future}]
+        links: [{type: gift_for_event, to: m3}]
+        importance: 4
+        rationale: A gift for a known occasion.
+      - ref: m3
+        kind: plan
+        subtype: birthday
+        title: Wife's birthday
+        text: My wife's birthday is in [[t1]].
+        category: people/birthdays
+        subject: e1
+        entities: [{entity: e1, role: about}]
+        times: [{id: t1, expression: next May, clock: occurred, direction: future, recurring: true}]
+        importance: 4
+        rationale: A yearly date; the day isn't known yet.
+expect:
+  memories:
+    - match: likes bags
+      kind: preference
+      state: current
+      entities: ["wife:about"]
+      layer: core
+      reconcile: new
+    - match: gift the mk bag
+      kind: intention
+      subtype: gift
+      state: wanted
+      dates: [{clock: due, value: "2027-05", precision: month}]
+      entities: ["MK bag:about", "wife:for"]
+      category: shopping/gifts
+    - match: birthday is in
+      kind: plan
+      subtype: birthday
+      state: scheduled
+      dates: [{clock: occurred, value: "2027-05", precision: month, rrule: "FREQ=YEARLY;BYMONTH=5"}]
+      entities: ["wife:about"]
+  new_entities: ["wife:person", "MK bag:thing"]
+  reply_contains: ["I've assumed 'My wife' is someone new"]

@@ -1,0 +1,31 @@
+id: 24-half-marathon
+title: "A goal: a project entity plus an intention with a target month"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Training for a half marathon in Feb
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A goal."}
+  extract:
+    entities:
+      - {id: e1, mention: a half marathon, name: Half marathon, kind: project}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: train
+        state: active
+        title: Half marathon
+        text: I'm training for a half marathon in [[t1]].
+        category: health/fitness
+        entities: [{entity: e1, role: about}]
+        times: [{id: t1, expression: in Feb, clock: due, direction: future}]
+        layer: core
+        layer_rationale: An active goal.
+expect:
+  memories:
+    - match: half marathon
+      kind: intention
+      state: active
+      dates: [{clock: due, value: "2027-02", precision: month}]
+      entities: ["Half marathon:about"]
+      layer: core
+  new_entities: ["Half marathon:project"]

@@ -1,0 +1,31 @@
+# §8.1 (e).
+id: 04-trading-idea
+title: "§8.1 (e): an idea, as a note"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: I have an idea of building an end-to-end skill that can trade for itself.
+model:
+  intent: {intent: save, confidence: 0.9, reason: "An idea to keep."}
+  extract:
+    entities:
+      - {id: e1, mention: trade, name: trading, kind: topic}
+    memories:
+      - ref: m1
+        kind: note
+        subtype: idea
+        title: End-to-end trading skill
+        text: Idea - build an end-to-end skill that can trade by itself.
+        category: ideas/projects
+        tags: [career, idea, claude-skill, trading]
+        entities: [{entity: e1, role: about}]
+        rationale: The user calls it an idea.
+expect:
+  memories:
+    - match: trading skill
+      kind: note
+      subtype: idea
+      state: current
+      entities: ["trading:about"]
+      category: ideas/projects
+      reconcile: new
+  reply_contains: ["Saved as a note: End-to-end trading skill."]

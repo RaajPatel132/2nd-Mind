@@ -1,0 +1,27 @@
+id: 22-keys-location
+title: "Where a thing is: a supersedable located_at fact about the keys"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Spare keys are in the kitchen cabinet
+model:
+  intent: {intent: save, confidence: 0.95, reason: "Where something is."}
+  extract:
+    entities:
+      - {id: e1, mention: Spare keys, name: spare keys, kind: thing}
+      - {id: e2, mention: the kitchen cabinet, name: kitchen cabinet, kind: place}
+    memories:
+      - ref: m1
+        kind: fact
+        title: Spare keys location
+        text: The spare keys are in the kitchen cabinet.
+        category: home/things
+        subject: e1
+        predicate: kept_in
+        value: {text: kitchen cabinet}
+        entities: [{entity: e1, role: about}, {entity: e2, role: at}]
+expect:
+  memories:
+    - match: spare keys
+      kind: fact
+      predicate: located_at
+      entities: ["spare keys:about", "kitchen cabinet:at"]

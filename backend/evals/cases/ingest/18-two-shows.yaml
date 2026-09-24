@@ -1,0 +1,39 @@
+# Two different shows with similar descriptions are two items.
+id: 18-two-shows
+title: "Two shows, similar descriptions: two intentions, never merged"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: Watch Mindhunter, a dark psychological crime thriller
+    model:
+      intent: {intent: save, confidence: 0.9, reason: "A show to watch."}
+      extract:
+        entities:
+          - {id: e1, mention: Mindhunter, name: Mindhunter, kind: work}
+        memories:
+          - ref: m1
+            kind: intention
+            subtype: watch
+            title: Mindhunter
+            text: I want to watch Mindhunter, a dark psychological crime thriller.
+            entities: [{entity: e1, role: about}]
+input: Watch Dark, a dark psychological sci-fi thriller
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A show to watch."}
+  extract:
+    entities:
+      - {id: e1, mention: Dark, name: Dark, kind: work}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: watch
+        title: Dark
+        text: I want to watch Dark, a dark psychological sci-fi thriller.
+        entities: [{entity: e1, role: about}]
+expect:
+  memories:
+    - match: sci-fi
+      kind: intention
+      entities: ["Dark:about"]
+      reconcile: new
+  counts: {intention: 2}

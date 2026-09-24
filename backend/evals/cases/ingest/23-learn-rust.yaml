@@ -1,0 +1,26 @@
+id: 23-learn-rust
+title: "An intention to learn, linked to a topic"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Want to learn Rust
+model:
+  intent: {intent: save, confidence: 0.9, reason: "Something to learn."}
+  extract:
+    entities:
+      - {id: e1, mention: Rust, name: Rust, kind: topic}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: learn
+        title: Rust
+        text: I want to learn Rust.
+        category: learning/programming
+        entities: [{entity: e1, role: about}]
+expect:
+  memories:
+    - match: learn rust
+      kind: intention
+      subtype: learn
+      state: wanted
+      entities: ["Rust:about"]
+  reply_contains: ["Added Rust to things to learn."]

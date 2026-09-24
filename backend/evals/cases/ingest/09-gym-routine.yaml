@@ -1,0 +1,28 @@
+# Routine -> RRULE.
+id: 09-gym-routine
+title: "Routine: 'every Mon/Wed/Fri at 7' becomes a weekly RRULE"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Gym every Mon/Wed/Fri at 7
+model:
+  intent: {intent: save, confidence: 0.9, reason: "A routine."}
+  extract:
+    memories:
+      - ref: m1
+        kind: plan
+        subtype: routine
+        title: Gym
+        text: I go to the gym [[t1]].
+        category: health/fitness
+        tags: [gym, exercise]
+        times: [{id: t1, expression: every Mon/Wed/Fri at 7, clock: occurred, direction: future, recurring: true}]
+expect:
+  memories:
+    - match: gym
+      kind: plan
+      subtype: routine
+      state: scheduled
+      dates: [{clock: occurred, value: "2026-09-25T07:00", precision: datetime, rrule: "FREQ=WEEKLY;BYDAY=MO,WE,FR;BYHOUR=7;BYMINUTE=0"}]
+      layer: quick
+  reply_contains: ["every Monday, Wednesday and Friday at 7 am"]
+  keys_contain: ["Routine: gym every Monday, Wednesday and Friday at 7 am"]

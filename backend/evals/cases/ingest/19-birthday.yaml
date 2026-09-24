@@ -1,0 +1,31 @@
+# A birthday: a yearly plan linked to the person, with a time trigger.
+id: 19-birthday
+title: "Birthday: a yearly plan on 14 March linked to Kabir, reminded the day before"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Kabir's birthday is 14 March
+model:
+  intent: {intent: save, confidence: 0.95, reason: "A birthday."}
+  extract:
+    entities:
+      - {id: e1, mention: Kabir, name: Kabir, kind: person}
+    memories:
+      - ref: m1
+        kind: plan
+        subtype: birthday
+        title: Kabir's birthday
+        text: Kabir's birthday is on [[t1]].
+        category: people/birthdays
+        subject: e1
+        entities: [{entity: e1, role: about}]
+        times: [{id: t1, expression: 14 March, clock: occurred, direction: future, recurring: true}]
+        reminder: {lead: null}
+        importance: 4
+expect:
+  memories:
+    - match: kabir's birthday
+      kind: plan
+      subtype: birthday
+      dates: [{clock: occurred, value: "2027-03-14", precision: day, rrule: "FREQ=YEARLY;BYMONTH=3;BYMONTHDAY=14"}]
+      entities: ["Kabir:about"]
+  triggers: [{match: kabir's birthday, fires: "2027-03-13T09:00"}]
