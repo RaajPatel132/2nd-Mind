@@ -17,6 +17,16 @@ class TurnStatus(StrEnum):
     FAILED = "failed"
 
 
+class TurnKind(StrEnum):
+    """What started a turn: a message, an undo, a confirmation of a held write, or the system
+    (background jobs). Every kind is stored, auditable and undoable the same way."""
+
+    USER = "user"
+    UNDO = "undo"
+    CONFIRM = "confirm"
+    SYSTEM = "system"
+
+
 class TraceStatus(StrEnum):
     """Whether the turn's trace reached the trace backend (FR-9.2)."""
 
@@ -54,6 +64,8 @@ class Turn(BaseModel):
     trace_status: TraceStatus
     error_code: str | None = None
     error_message: str | None = None
+    kind: TurnKind = TurnKind.USER
+    parent_turn_id: uuid.UUID | None = None
 
 
 class StoredEvent(BaseModel):
@@ -86,8 +98,19 @@ class TurnStore(Protocol):
     """Persistence port for turns. Implementations are bound to one workspace scope."""
 
     async def create(
-        self, *, turn_id: uuid.UUID, text: str, config_hash: str, started_at: datetime
+        self,
+        *,
+        turn_id: uuid.UUID,
+        text: str,
+        config_hash: str,
+        started_at: datetime,
+        kind: TurnKind = TurnKind.USER,
+        parent_turn_id: uuid.UUID | None = None,
     ) -> Turn: ...
+
+    async def redact_input(self, turn_id: uuid.UUID, text: str) -> None:
+        """Replace the stored input (a secret found after the turn started)."""
+        ...
 
     async def append(self, turn_id: uuid.UUID, event: TurnEvent) -> StoredEvent: ...
 

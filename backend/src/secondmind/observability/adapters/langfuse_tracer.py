@@ -98,10 +98,19 @@ class _TurnTrace:
             obs = _Noop()
         return _Generation(obs, self._include_content)
 
-    def finish(self, *, status: str, output: object | None, error: str | None) -> None:
+    def finish(
+        self,
+        *,
+        status: str,
+        output: object | None,
+        error: str | None,
+        redacted_input: object | None = None,
+    ) -> None:
         if self._root is None:
             return
         try:
+            if redacted_input is not None and self._include_content:
+                self._root.update(input=redacted_input)  # type: ignore[attr-defined]
             self._root.update(  # type: ignore[attr-defined]
                 output=output if self._include_content else None,
                 level="ERROR" if error else "DEFAULT",

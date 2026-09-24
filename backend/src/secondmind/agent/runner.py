@@ -5,12 +5,19 @@ graph then runs in its own task: a client that disconnects mid-reply does not ca
 which finishes and is saved. Events are persisted as they happen, in order; every model call
 writes its ``model_call`` event and usage-ledger row together. A turn always ends with a
 typed status: ``completed`` with its reply, or ``failed`` with a user-safe message and an
-``error`` event. A failed turn stores no reply (nothing half-written, NFR-6.2).
+``error`` event. A failed turn stores no reply and no memory writes (NFR-6.1, NFR-6.2).
+
+The secret pre-check runs before the turn row is created, so a secret never reaches the
+database, the trace backend or a model provider (ADR-0021).
+
+Undo, confirming a held write and background jobs run as turns too (``TurnKind``), with their
+own events and diff, so they are auditable and can themselves be undone.
 """
 
 import asyncio
 import contextlib
-from collections.abc import AsyncIterator
+import uuid
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from zoneinfo import ZoneInfo
 
@@ -19,6 +26,7 @@ from secondmind.agent.turns import (
     StepModel,
     TraceStatus,
     Turn,
+    TurnKind,
     TurnOutcome,
     TurnStatus,
     TurnStore,
@@ -35,6 +43,17 @@ from secondmind.core import (
     new_id,
     utc_now,
 )
+from secondmind.ingestion import (
+    ExtractionInvalidError,
+    IngestContext,
+    IngestionPipeline,
+    IngestOutcome,
+    IngestSettings,
+    ModelSteps,
+    TurnNow,
+    summarise_commit,
+)
+from secondmind.memory import CommitResult, Memory, WriterTurn
 from secondmind.observability import (
     GenerationSpan,
     Tracer,
@@ -42,11 +61,16 @@ from secondmind.observability import (
     bind_log_context,
     get_logger,
 )
+from secondmind.policy import redact_values, scan_secrets
 from secondmind.providers import ChatMessage, ModelCall, ModelRouter, ProviderUnavailableError
 
 log = get_logger(__name__)
 
 INTERNAL_ERROR_MESSAGE = "Something went wrong on our side, and this turn was not saved."
+
+# Called after a commit that renamed or relabelled entities (their items' keys need
+# re-rendering in the background, as a system turn).
+EntitiesRenamed = Callable[[WorkspaceScope, set[uuid.UUID]], Awaitable[None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,9 +142,19 @@ class _TurnRun:
     turn: Turn
     history: list[ChatMessage]
     timezone: str
-    queue: asyncio.Queue[TurnStreamEvent | None]
+    queue: asyncio.Queue[TurnStreamEvent | None] | None
+    default_lead_minutes: int = 1440
+    secret_kinds: list[str] = field(default_factory=list)
     tally: _Tally = field(default_factory=_Tally)
     trace: TurnTrace | None = None
+    redacted_input: str | None = None
+
+
+# An action run as a non-chat turn (undo, confirm, system job): given the writer turn, the
+# event sink and the model steps, it commits memory changes and returns the reply.
+TurnAction = Callable[
+    [WriterTurn, Callable[[TurnEvent], Awaitable[None]], ModelSteps], Awaitable[str]
+]
 
 
 class TurnRunner:
@@ -133,6 +167,10 @@ class TurnRunner:
         tracer: Tracer,
         config_hash: str,
         max_message_chars: int,
+        memory: Memory,
+        ingest: IngestSettings | None = None,
+        embed_dimensions: int = 1536,
+        on_entities_renamed: EntitiesRenamed | None = None,
         history_turns: int = 10,
         clock: Clock = utc_now,
     ) -> None:
@@ -142,30 +180,54 @@ class TurnRunner:
         self._tracer = tracer
         self._config_hash = config_hash
         self._max_chars = max_message_chars
+        self._memory = memory
+        self._pipeline = IngestionPipeline(ingest)
+        self._embed_dimensions = embed_dimensions
+        self._on_renamed = on_entities_renamed
         self._history_turns = history_turns
         self._clock = clock
         self._graph = build_turn_graph()
         self._tasks: set[asyncio.Task[None]] = set()
 
+    @property
+    def memory(self) -> Memory:
+        return self._memory
+
     def store(self, scope: WorkspaceScope) -> TurnStore:
         return self._stores(scope)
 
-    async def start(self, scope: WorkspaceScope, *, text: str, timezone: str) -> TurnHandle:
+    async def start(
+        self,
+        scope: WorkspaceScope,
+        *,
+        text: str,
+        timezone: str,
+        default_lead_minutes: int = 1440,
+    ) -> TurnHandle:
         message = text.strip()
         if not message:
             raise ValidationFailedError("message is empty")
         if len(message) > self._max_chars:
             raise ValidationFailedError(f"message is longer than {self._max_chars} characters")
+        # Before anything is stored or sent anywhere: a secret never leaves this function.
+        scan = scan_secrets(message)
         store = self._stores(scope)
         history = await self._history(store)
         started = self._clock()
         turn = await store.create(
-            turn_id=new_id(), text=message, config_hash=self._config_hash, started_at=started
+            turn_id=new_id(), text=scan.redacted, config_hash=self._config_hash, started_at=started
         )
         queue: asyncio.Queue[TurnStreamEvent | None] = asyncio.Queue()
         await queue.put(TurnStarted(turn))
         run = _TurnRun(
-            scope=scope, store=store, turn=turn, history=history, timezone=timezone, queue=queue
+            scope=scope,
+            store=store,
+            turn=turn,
+            history=history,
+            timezone=timezone,
+            queue=queue,
+            default_lead_minutes=default_lead_minutes,
+            secret_kinds=scan.kinds,
         )
         task = asyncio.create_task(self._run(run), name=f"turn-{turn.id}")
         self._tasks.add(task)
@@ -186,12 +248,36 @@ class TurnRunner:
         turns = await store.recent(limit=self._history_turns)
         history: list[ChatMessage] = []
         for past in reversed(turns):
-            if past.status is TurnStatus.COMPLETED and past.output:
+            if past.kind is TurnKind.USER and past.status is TurnStatus.COMPLETED and past.output:
                 history.append(ChatMessage.user(past.input))
                 history.append(ChatMessage(role="assistant", content=past.output))
         return history
 
-    async def _run(self, run: _TurnRun) -> None:
+    def _recorder(
+        self, run: _TurnRun
+    ) -> Callable[[ModelCall, GenerationSpan, object, str], Awaitable[None]]:
+        async def record(
+            call: ModelCall, span: GenerationSpan, prompt_input: object, output: str
+        ) -> None:
+            event = call.to_event()
+            await run.store.record_model_call(run.turn.id, event)
+            run.tally.add(call)
+            span.finish(event, prompt_input=prompt_input, output=output)
+
+        return record
+
+    def _steps(self, run: _TurnRun, trace: TurnTrace, core_prefix: str | None) -> ModelSteps:
+        return ModelSteps(
+            router=self._router,
+            prompts=self._prompts,
+            trace=trace,
+            record=self._recorder(run),
+            now=run.turn.started_at,
+            cache_prefix=core_prefix,
+            embed_dimensions=self._embed_dimensions,
+        )
+
+    async def _run(self, run: _TurnRun) -> None:  # noqa: PLR0915
         turn, store = run.turn, run.store
         bind_log_context(turn_id=str(turn.id), workspace_id=str(run.scope.workspace_id))
         trace = self._tracer.start_turn(
@@ -199,47 +285,82 @@ class TurnRunner:
             workspace_id=run.scope.workspace_id,
             user_id=run.scope.user_id,
             turn_input=turn.input,
-            metadata={"config_hash": self._config_hash},
+            metadata={"config_hash": self._config_hash, "kind": turn.kind.value},
         )
         run.trace = trace
 
         async def emit(event: TurnEvent) -> None:
             await store.append(turn.id, event)
 
-        async def record(
-            call: ModelCall, span: GenerationSpan, prompt_input: object, output: str
-        ) -> None:
-            event = call.to_event()
-            await store.record_model_call(turn.id, event)
-            run.tally.add(call)
-            span.finish(event, prompt_input=prompt_input, output=output)
-
-        context = TurnContext(
-            router=self._router,
-            prompts=self._prompts,
-            trace=trace,
-            now=turn.started_at.astimezone(ZoneInfo(run.timezone)),
-            timezone=run.timezone,
-            history=run.history,
-            emit=emit,
-            record_model_call=record,
-        )
         answer: str | None = None
         error: ErrorEvent | None = None
         log.info("turn.started")
         try:
+            core = await self._memory.reader(run.scope).core()
+            steps = self._steps(run, trace, core.text)
+            now = TurnNow(turn.started_at, run.timezone)
+            outcomes: list[IngestOutcome] = []
+
+            async def ingest() -> IngestOutcome:
+                outcome = await self._pipeline.run(
+                    IngestContext(
+                        scope=run.scope,
+                        turn_id=turn.id,
+                        message=turn.input,
+                        now=now,
+                        emit=emit,
+                        steps=steps,
+                        memory=self._memory,
+                        default_lead_minutes=run.default_lead_minutes,
+                        secret_found=bool(run.secret_kinds),
+                        secret_kinds=run.secret_kinds,
+                    )
+                )
+                outcomes.append(outcome)
+                return outcome
+
+            context = TurnContext(
+                router=self._router,
+                prompts=self._prompts,
+                trace=trace,
+                now=turn.started_at.astimezone(ZoneInfo(run.timezone)),
+                timezone=run.timezone,
+                history=run.history,
+                emit=emit,
+                record_model_call=self._recorder(run),
+                steps=steps,
+                ingest=ingest,
+                secret_found=bool(run.secret_kinds),
+                core_prefix=core.text,
+            )
+            secret_values: list[str] = []
             async for mode, chunk in self._graph.astream(
                 {"message": turn.input}, context=context, stream_mode=["custom", "values"]
             ):
                 if mode == "custom":
-                    await run.queue.put(TokenDelta(str(chunk)))
-                elif isinstance(chunk, dict) and chunk.get("answer") is not None:
-                    answer = str(chunk["answer"])
+                    if run.queue is not None:
+                        await run.queue.put(TokenDelta(str(chunk)))
+                elif isinstance(chunk, dict):
+                    if chunk.get("answer") is not None:
+                        answer = str(chunk["answer"])
+                    secret_values = list(chunk.get("secret_values") or secret_values)
             if answer is None:
                 raise RuntimeError("turn graph finished without an answer")
+            secret_values += steps.secrets
+            if secret_values:
+                run.redacted_input = redact_values(turn.input, secret_values)
+                await store.redact_input(turn.id, run.redacted_input)
+            renamed = {e for o in outcomes for e in o.renamed_entities}
+            if renamed and self._on_renamed is not None:
+                try:
+                    await self._on_renamed(run.scope, renamed)
+                except Exception:
+                    log.exception("turn.rerender_enqueue_failed")
         except ProviderUnavailableError as exc:
             log.warning("turn.provider_unavailable", step=exc.step, attempts=exc.detail)
             error = ErrorEvent(code=exc.code, message=exc.message, step=exc.step, retryable=True)
+        except ExtractionInvalidError as exc:
+            error = ErrorEvent(code=exc.code, message=exc.message, step="extract")
         except asyncio.CancelledError:
             error = ErrorEvent(code="cancelled", message=INTERNAL_ERROR_MESSAGE)
             await asyncio.shield(self._finish(run, None, error))
@@ -249,8 +370,128 @@ class TurnRunner:
             error = ErrorEvent(code="internal_error", message=INTERNAL_ERROR_MESSAGE)
         await self._finish(run, answer, error)
 
-    async def _finish(self, run: _TurnRun, answer: str | None, error: ErrorEvent | None) -> None:
+    # ------------------------------------------------------------------ non-chat turns
+
+    async def undo(self, scope: WorkspaceScope, *, turn_id: uuid.UUID, timezone: str) -> Turn:
+        """Revert every write ``turn_id`` made, as a new turn with its own diff (FR-10.1)."""
+        undone = await self._stores(scope).get(turn_id)
+        if undone is None:
+            raise ValidationFailedError("that turn doesn't exist")
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            commit = await self._memory.undo(scope, writer_turn, turn_id, emit=emit)
+            await self._rebuild_keys(scope, commit, steps, timezone)
+            return summarise_commit(commit, prefix="Undone")
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.UNDO,
+            text=f"Undo turn {turn_id}",
+            timezone=timezone,
+            action=action,
+            parent_turn_id=turn_id,
+        )
+
+    async def confirm_held(
+        self, scope: WorkspaceScope, *, held_id: uuid.UUID, timezone: str
+    ) -> Turn:
+        """Apply a held write as a new turn, so it has its own diff and can be undone."""
+        held = await self._memory.reader(scope).held_write(held_id)
+        if held is None:
+            raise ValidationFailedError("that held write doesn't exist")
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            commit = await self._memory.confirm_held(scope, writer_turn, held_id, emit=emit)
+            await self._rebuild_keys(scope, commit, steps, timezone)
+            return summarise_commit(commit, prefix="Confirmed")
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.CONFIRM,
+            text=f"Confirm: {held.title}",
+            timezone=timezone,
+            action=action,
+            parent_turn_id=held.turn_id,
+        )
+
+    async def run_action(
+        self,
+        scope: WorkspaceScope,
+        *,
+        kind: TurnKind,
+        text: str,
+        timezone: str,
+        action: TurnAction,
+        parent_turn_id: uuid.UUID | None = None,
+    ) -> Turn:
+        """Run a non-chat turn to completion and return it (no streaming)."""
+        store = self._stores(scope)
+        turn = await store.create(
+            turn_id=new_id(),
+            text=text,
+            config_hash=self._config_hash,
+            started_at=self._clock(),
+            kind=kind,
+            parent_turn_id=parent_turn_id,
+        )
+        run = _TurnRun(
+            scope=scope, store=store, turn=turn, history=[], timezone=timezone, queue=None
+        )
+        trace = self._tracer.start_turn(
+            turn_id=turn.id,
+            workspace_id=scope.workspace_id,
+            user_id=scope.user_id,
+            turn_input=text,
+            metadata={"config_hash": self._config_hash, "kind": kind.value},
+        )
+        run.trace = trace
+
+        async def emit(event: TurnEvent) -> None:
+            await store.append(turn.id, event)
+
+        writer_turn = WriterTurn(
+            turn_id=turn.id, workspace_id=scope.workspace_id, kind=kind.value, now=turn.started_at
+        )
+        reply: str | None = None
+        error: ErrorEvent | None = None
+        try:
+            reply = await action(writer_turn, emit, self._steps(run, trace, None))
+        except ValidationFailedError as exc:
+            error = ErrorEvent(code=exc.code, message=exc.message)
+        except Exception:
+            log.exception("turn.action_crashed", kind=kind.value)
+            error = ErrorEvent(code="internal_error", message=INTERNAL_ERROR_MESSAGE)
+        final = await self._finish(run, reply, error)
+        if error is not None and error.code == "validation_failed":
+            raise ValidationFailedError(error.message)
+        return final
+
+    async def _rebuild_keys(
+        self, scope: WorkspaceScope, commit: CommitResult, steps: ModelSteps, timezone: str
+    ) -> None:
+        if not commit.touched_items:
+            return
+
+        async def embed(texts: Sequence[str], hits: int) -> list[list[float]] | None:
+            try:
+                return await steps.embed(list(texts), hits)
+            except ProviderUnavailableError:
+                return None
+
+        indexer = self._memory.keys(
+            scope, timezone=timezone, embed=embed, model=steps.embedding_model
+        )
+        await indexer.rebuild(sorted(commit.touched_items))
+
+    # ------------------------------------------------------------------ finishing
+
+    async def _finish(self, run: _TurnRun, answer: str | None, error: ErrorEvent | None) -> Turn:
         turn, store = run.turn, run.store
+        final = turn
         try:
             if error is not None:
                 with contextlib.suppress(Exception):
@@ -282,15 +523,20 @@ class TurnRunner:
             )
             # The client gets its terminal event first; tracing and logging come after and
             # can never take it away.
-            await run.queue.put(done)
+            if run.queue is not None:
+                await run.queue.put(done)
             try:
                 if run.trace is not None:
                     run.trace.finish(
-                        status=final.status.value, output=final.output, error=final.error_code
+                        status=final.status.value,
+                        output=final.output,
+                        error=final.error_code,
+                        redacted_input=run.redacted_input,
                     )
                 log.info(
                     "turn.finished",
                     status=final.status.value,
+                    kind=final.kind.value,
                     tokens=final.usage.total_tokens,
                     cost_usd=float(final.usage.cost_usd),
                     error_code=final.error_code,
@@ -298,7 +544,9 @@ class TurnRunner:
             except Exception:
                 log.exception("turn.after_finish_failed")
         finally:
-            await run.queue.put(None)
+            if run.queue is not None:
+                await run.queue.put(None)
+        return final
 
     async def _trace_status(self) -> TraceStatus:
         if not self._tracer.enabled:

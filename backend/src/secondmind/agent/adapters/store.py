@@ -10,6 +10,7 @@ from secondmind.agent import (
     StoredEvent,
     TraceStatus,
     Turn,
+    TurnKind,
     TurnOutcome,
     TurnStatus,
 )
@@ -33,9 +34,18 @@ class SqlTurnStore:
         self._scope = scope
 
     async def create(
-        self, *, turn_id: uuid.UUID, text: str, config_hash: str, started_at: Any
+        self,
+        *,
+        turn_id: uuid.UUID,
+        text: str,
+        config_hash: str,
+        started_at: Any,
+        kind: TurnKind = TurnKind.USER,
+        parent_turn_id: uuid.UUID | None = None,
     ) -> Turn:
         row = TurnRow(
+            kind=kind.value,
+            parent_turn_id=parent_turn_id,
             id=turn_id,
             workspace_id=self._scope.workspace_id,
             user_id=self._scope.user_id,
@@ -52,6 +62,10 @@ class SqlTurnStore:
             await session.flush()
             await session.refresh(row)
             return _turn(row)
+
+    async def redact_input(self, turn_id: uuid.UUID, text: str) -> None:
+        async with self._db.workspace(self._scope) as session:
+            await session.execute(update(TurnRow).where(TurnRow.id == turn_id).values(input=text))
 
     async def append(self, turn_id: uuid.UUID, event: TurnEvent) -> StoredEvent:
         async with self._db.workspace(self._scope) as session:
@@ -165,4 +179,6 @@ def _turn(row: TurnRow) -> Turn:
         trace_status=TraceStatus(row.trace_status),
         error_code=row.error_code,
         error_message=row.error_message,
+        kind=TurnKind(row.kind),
+        parent_turn_id=row.parent_turn_id,
     )

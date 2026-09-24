@@ -1,9 +1,11 @@
-"""The turn graph (LangGraph): ``intent`` -> ``answer``. The shape S2 and S3 plug into.
+"""The turn graph (LangGraph): ``intent`` routes to ``ingest``, the recall/correct stubs or
+``answer`` (S2.4). The user never picks a mode.
 
 The graph stays thin: nodes read their collaborators from the runtime context and call plain
-modules. Tokens leave the graph through LangGraph's custom stream writer.
+modules. Replies leave the graph through LangGraph's custom stream writer.
 """
 
+import re
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +18,7 @@ from pydantic import BaseModel
 
 from secondmind.config import PromptRegistry, Step
 from secondmind.core import Intent, IntentEvent, TurnEvent
+from secondmind.ingestion import IngestOutcome, IntentOutput, ModelSteps
 from secondmind.observability import GenerationSpan, TurnTrace
 from secondmind.providers import (
     ChatMessage,
@@ -26,6 +29,15 @@ from secondmind.providers import (
     TextDelta,
 )
 
+RECALL_STUB = (
+    "I can't look things up in your memory yet: recall isn't wired up, so I won't guess. "
+    "Saving works, though; tell me anything and I'll keep it."
+)
+CORRECT_STUB = (
+    "Correcting saved memories by chat isn't wired up yet. For now, open that turn's glass box "
+    "and undo it, then tell me the right version."
+)
+
 
 class AnswerPromptVars(BaseModel):
     """Typed variables of the ``answer`` prompt."""
@@ -34,10 +46,16 @@ class AnswerPromptVars(BaseModel):
     timezone: str
 
 
+class IntentPromptVars(BaseModel):
+    now: str
+    timezone: str
+
+
 class TurnState(TypedDict):
     message: str
     intent: NotRequired[str]
     answer: NotRequired[str]
+    secret_values: NotRequired[list[str]]
 
 
 RecordModelCall = Callable[[ModelCall, GenerationSpan, object, str], Awaitable[None]]
@@ -55,18 +73,75 @@ class TurnContext:
     history: Sequence[ChatMessage]
     emit: Callable[[TurnEvent], Awaitable[None]]
     record_model_call: RecordModelCall
+    steps: ModelSteps
+    ingest: Callable[[], Awaitable[IngestOutcome]]
+    secret_found: bool = False
+    core_prefix: str | None = None
+
+
+def _stream(runtime: Runtime[TurnContext], text: str) -> None:
+    for piece in re.findall(r"\S+\s*|\s+", text):
+        runtime.stream_writer(piece)
 
 
 async def intent_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
-    """Stub until S2: every message is chit-chat."""
-    event = IntentEvent(
-        intent=Intent.CHIT_CHAT,
-        confidence=1.0,
-        reason="Stub intent router: every message is chit-chat until intent detection (S2).",
-        source="stub",
-    )
-    await runtime.context.emit(event)
+    """Decide what the message is for (FR-1.2). A secret skips the model entirely."""
+    ctx = runtime.context
+    if ctx.secret_found:
+        event = IntentEvent(
+            intent=Intent.SAVE,
+            confidence=1.0,
+            reason="The secret pre-check matched, so no model saw this message.",
+            source="rule",
+        )
+    else:
+        out = await ctx.steps.structured(
+            Step.INTENT,
+            IntentOutput,
+            IntentPromptVars(now=ctx.now.isoformat(timespec="minutes"), timezone=ctx.timezone),
+            [ChatMessage.user(state["message"])],
+        )
+        event = IntentEvent(
+            intent=Intent(out.intent),
+            confidence=min(max(out.confidence, 0.0), 1.0),
+            reason=out.reason,
+            source="model",
+        )
+    await ctx.emit(event)
     return {"intent": event.intent.value}
+
+
+def route_intent(state: TurnState) -> str:
+    intent = state.get("intent")
+    if intent in (Intent.SAVE, Intent.SAVE_AND_RECALL):
+        return "ingest"
+    if intent == Intent.RECALL:
+        return "recall_stub"
+    if intent == Intent.CORRECT:
+        return "correct_stub"
+    return "answer"
+
+
+async def ingest_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    outcome = await runtime.context.ingest()
+    _stream(runtime, outcome.reply)
+    return {"answer": outcome.reply, "secret_values": outcome.secret_values}
+
+
+def after_ingest(state: TurnState) -> str:
+    return "recall_stub" if state.get("intent") == Intent.SAVE_AND_RECALL else END
+
+
+async def recall_stub_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    before = state.get("answer")
+    text = f"\n\n{RECALL_STUB}" if before else RECALL_STUB
+    _stream(runtime, text)
+    return {"answer": (before or "") + text}
+
+
+async def correct_stub_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    _stream(runtime, CORRECT_STUB)
+    return {"answer": CORRECT_STUB}
 
 
 async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
@@ -83,7 +158,11 @@ async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
     result: ChatResult | None = None
     try:
         async for event in ctx.router.stream(
-            Step.ANSWER, system=system, messages=messages, prompt=route.prompt
+            Step.ANSWER,
+            system=system,
+            messages=messages,
+            prompt=route.prompt,
+            cache_prefix=ctx.core_prefix,
         ):
             if isinstance(event, TextDelta):
                 runtime.stream_writer(event.text)
@@ -102,8 +181,23 @@ async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
 def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, TurnState]:
     graph = StateGraph(TurnState, context_schema=TurnContext)
     graph.add_node("intent", intent_node)
+    graph.add_node("ingest", ingest_node)
+    graph.add_node("recall_stub", recall_stub_node)
+    graph.add_node("correct_stub", correct_stub_node)
     graph.add_node("answer", answer_node)
     graph.add_edge(START, "intent")
-    graph.add_edge("intent", "answer")
+    graph.add_conditional_edges(
+        "intent",
+        route_intent,
+        {
+            "ingest": "ingest",
+            "recall_stub": "recall_stub",
+            "correct_stub": "correct_stub",
+            "answer": "answer",
+        },
+    )
+    graph.add_conditional_edges("ingest", after_ingest, {"recall_stub": "recall_stub", END: END})
+    graph.add_edge("recall_stub", END)
+    graph.add_edge("correct_stub", END)
     graph.add_edge("answer", END)
     return graph.compile()

@@ -25,10 +25,17 @@ from secondmind.core import (
     WorkspaceScope,
     new_id,
 )
+from secondmind.memory import Memory
+from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer, configure_logging
 from secondmind.providers import FakeOutcome, FakeProvider, ModelRouter, ProviderErrorKind
 from tests.fakes import InMemoryTurns
 from tests.unit.providers.helpers import router as make_router
+
+
+def chit_chat(_: object) -> dict[str, object]:
+    return {"intent": "chit_chat", "confidence": 1.0, "reason": "test: small talk"}
+
 
 PROMPTS = PromptRegistry.load(DEFAULT_RESOURCES_DIR / "prompts")
 SCOPE = WorkspaceScope(workspace_id=uuid.uuid4(), user_id=uuid.uuid4())
@@ -44,6 +51,7 @@ def runner(r: ModelRouter, db: InMemoryTurns | None = None) -> tuple[TurnRunner,
             tracer=NullTracer(),
             config_hash="c" * 64,
             max_message_chars=100,
+            memory=Memory(InMemoryMemory().store),
         ),
         db,
     )
@@ -55,13 +63,15 @@ def fake_router(
     adapters = {"primary": FakeProvider("primary")}
     if fallback:
         adapters["backup"] = FakeProvider("backup")
+    for adapter in adapters.values():
+        adapter.script.responders["intent"] = chit_chat
     if outcomes:
-        adapters["primary"].script.add(*outcomes)
+        adapters["primary"].script.add(*outcomes, step="answer")
     r = make_router(
         adapters,  # type: ignore[arg-type]
         "primary:m",
         "backup:m" if fallback else None,
-        prompt="answer@1",
+        all_steps=True,
     )
     return r, adapters
 
@@ -83,23 +93,28 @@ async def test_turn_completes_with_streamed_reply_and_ordered_events() -> None:
     turn = events[-1].turn
     assert tokens == turn.output == "Hi! How can I help?"
     assert turn.status is TurnStatus.COMPLETED
-    assert turn.prompt_versions == ["answer@1"]
+    assert turn.prompt_versions == ["intent@1", "answer@2"]
     assert turn.models["answer"].provider == "primary"
     assert turn.config_hash == "c" * 64
     assert turn.usage.total_tokens > 0
     assert turn.usage.cost_usd > 0
 
     stored = await db.store(SCOPE).events(turn.id)
-    assert [e.seq for e in stored] == [1, 2]
-    assert isinstance(stored[0].event, IntentEvent)
-    assert stored[0].event.intent == "chit_chat"
-    call = stored[1].event
+    assert [e.seq for e in stored] == [1, 2, 3]
+    assert [e.event.type for e in stored] == ["model_call", "intent", "model_call"]
+    intent = stored[1].event
+    assert isinstance(intent, IntentEvent)
+    assert (intent.intent, intent.source) == ("chit_chat", "model")
+    call = stored[2].event
     assert isinstance(call, ModelCallEvent)
     assert call.step == "answer"
-    assert call.prompt == "answer@1"
-    assert call.usage.total_tokens == turn.usage.total_tokens
+    assert call.prompt == "answer@2"
+    assert (
+        sum(e.event.usage.total_tokens for e in stored if isinstance(e.event, ModelCallEvent))
+        == turn.usage.total_tokens
+    )
     # One usage-ledger row per model call, charged to the turn.
-    assert len(db.ledger) == 1
+    assert [entry.step for entry in db.ledger] == ["intent", "answer"]
     assert db.ledger[0].turn_id == turn.id
 
 
@@ -113,7 +128,7 @@ async def test_fallback_is_recorded_on_the_event_and_turn() -> None:
     turn = events[-1].turn
     assert turn.output == "from backup"
     assert turn.models["answer"].fallback_from == "primary:m"
-    call = (await db.store(SCOPE).events(turn.id))[1].event
+    call = (await db.store(SCOPE).events(turn.id))[-1].event
     assert isinstance(call, ModelCallEvent)
     assert call.fallback is not None
     assert "auth 401" in call.fallback.reason
@@ -134,10 +149,10 @@ async def test_provider_outage_fails_cleanly_with_a_user_message() -> None:
         "The model provider is unavailable right now. Please try again in a moment."
     )
     stored = [e.event for e in await db.store(SCOPE).events(turn.id)]
-    assert [e.type for e in stored] == ["intent", "error"]
+    assert [e.type for e in stored] == ["model_call", "intent", "error"]
     assert isinstance(stored[-1], ErrorEvent)
     assert stored[-1].step == "answer"
-    assert db.ledger == []
+    assert [entry.step for entry in db.ledger] == ["intent"]
 
 
 async def test_mid_stream_failure_stores_no_partial_reply() -> None:

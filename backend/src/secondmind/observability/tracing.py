@@ -23,7 +23,16 @@ class GenerationSpan(Protocol):
 class TurnTrace(Protocol):
     def start_generation(self, step: str) -> GenerationSpan: ...
 
-    def finish(self, *, status: str, output: object | None, error: str | None) -> None: ...
+    def finish(
+        self,
+        *,
+        status: str,
+        output: object | None,
+        error: str | None,
+        redacted_input: object | None = None,
+    ) -> None:
+        """End the trace. ``redacted_input`` replaces the input when a secret was found late."""
+        ...
 
 
 class Tracer(Protocol):
@@ -74,7 +83,14 @@ class _NullTrace:
     def start_generation(self, step: str) -> GenerationSpan:
         return _NullGeneration()
 
-    def finish(self, *, status: str, output: object | None, error: str | None) -> None:
+    def finish(
+        self,
+        *,
+        status: str,
+        output: object | None,
+        error: str | None,
+        redacted_input: object | None = None,
+    ) -> None:
         return None
 
 

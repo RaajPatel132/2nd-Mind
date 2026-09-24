@@ -1,9 +1,19 @@
 """Turn orchestration: the LangGraph turn graph, turn runner and turn/event storage ports."""
 
-from secondmind.agent.graph import AnswerPromptVars, TurnContext, TurnState, build_turn_graph
+from secondmind.agent.graph import (
+    CORRECT_STUB,
+    RECALL_STUB,
+    AnswerPromptVars,
+    IntentPromptVars,
+    TurnContext,
+    TurnState,
+    build_turn_graph,
+)
 from secondmind.agent.runner import (
     INTERNAL_ERROR_MESSAGE,
+    EntitiesRenamed,
     TokenDelta,
+    TurnAction,
     TurnCompleted,
     TurnFailed,
     TurnHandle,
@@ -16,6 +26,7 @@ from secondmind.agent.turns import (
     StoredEvent,
     TraceStatus,
     Turn,
+    TurnKind,
     TurnOutcome,
     TurnStatus,
     TurnStore,
@@ -23,17 +34,23 @@ from secondmind.agent.turns import (
 )
 
 __all__ = [
+    "CORRECT_STUB",
     "INTERNAL_ERROR_MESSAGE",
+    "RECALL_STUB",
     "AnswerPromptVars",
+    "EntitiesRenamed",
+    "IntentPromptVars",
     "StepModel",
     "StoredEvent",
     "TokenDelta",
     "TraceStatus",
     "Turn",
+    "TurnAction",
     "TurnCompleted",
     "TurnContext",
     "TurnFailed",
     "TurnHandle",
+    "TurnKind",
     "TurnOutcome",
     "TurnRunner",
     "TurnStarted",
