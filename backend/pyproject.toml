@@ -16,6 +16,7 @@ dependencies = [
     "openai>=3.19",
     "pydantic>=2.13",
     "pydantic-settings>=2.15",
+    "python-dateutil>=2.9",
     "pyyaml>=6.0",
     "redis>=5.0",
     "sqlalchemy[asyncio]>=2.0.54",
@@ -33,6 +34,7 @@ dev = [
     "pytest-asyncio>=1.4",
     "ruff>=0.16",
     "testcontainers>=4.15",
+    "types-python-dateutil>=2.9",
     "types-pyyaml>=6.0",
 ]
 
