@@ -182,8 +182,8 @@ function TimingCost({ turn, calls }: { turn: Turn; calls: ModelCallEvent[] }) {
               </dl>
               {call.fallback && (
                 <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900" data-testid="fallback">
-                  Answered by fallback. {call.fallback.from_provider} · {call.fallback.from_model} was skipped:{' '}
-                  {call.fallback.reason}
+                  Answered by fallback. The primary model ({call.fallback.from_provider} ·{' '}
+                  {call.fallback.from_model}) did not answer: {call.fallback.reason}
                 </p>
               )}
             </li>
