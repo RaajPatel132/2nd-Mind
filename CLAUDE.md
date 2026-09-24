@@ -58,8 +58,9 @@ Full standard and examples: `CONTRIBUTING.md`. Enforced by husky + commitlint.
 ```bash
 make up          # whole stack in docker compose (fake providers when no keys are set)
 make down        # stop it
-make check       # ruff, format check, mypy, import-linter, openapi snapshot, unit + integration
-                 # tests, frontend lint + typecheck + build (everything CI runs except E2E)
+make check       # commit messages, ruff, mypy, import-linter, OpenAPI snapshot, unit +
+                 # integration tests, frontend lint/types/build, gitleaks, audits, Trivy
+                 # (everything CI runs except E2E)
 make test        # backend unit tests
 make test-int    # backend integration tests (testcontainers; needs Docker)
 make e2e         # Playwright smoke against the compose stack
