@@ -19,6 +19,10 @@ class NotFoundError(SecondMindError):
     code = "not_found"
 
 
+class UnauthenticatedError(SecondMindError):
+    code = "unauthenticated"
+
+
 class ForbiddenError(SecondMindError):
     code = "forbidden"
 

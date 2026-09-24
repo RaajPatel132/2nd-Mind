@@ -6,6 +6,7 @@ from secondmind.core.errors import (
     ForbiddenError,
     NotFoundError,
     SecondMindError,
+    UnauthenticatedError,
     ValidationFailedError,
 )
 from secondmind.core.events import (
@@ -64,6 +65,7 @@ __all__ = [
     "TimeResolution",
     "ToolCallEvent",
     "TurnEvent",
+    "UnauthenticatedError",
     "Usage",
     "UsageTotals",
     "UsdAmount",
