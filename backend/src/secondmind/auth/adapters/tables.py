@@ -3,7 +3,17 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text, func, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -29,6 +39,8 @@ class WorkspaceRow(Base):
     )
     kind: Mapped[str] = mapped_column(String(16))
     timezone: Mapped[str] = mapped_column(Text)
+    # Default reminder lead time (FR-3.9), used when a message doesn't give one.
+    default_lead_minutes: Mapped[int] = mapped_column(Integer, server_default="1440")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

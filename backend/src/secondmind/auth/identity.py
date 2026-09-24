@@ -32,6 +32,7 @@ class Workspace(BaseModel):
     kind: WorkspaceKind
     timezone: str
     created_at: datetime
+    default_lead_minutes: int = 1440
 
 
 class IdentityStore(Protocol):

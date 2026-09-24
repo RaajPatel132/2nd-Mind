@@ -82,4 +82,5 @@ def _workspace(row: WorkspaceRow) -> Workspace:
         kind=WorkspaceKind(row.kind),
         timezone=row.timezone,
         created_at=row.created_at,
+        default_lead_minutes=row.default_lead_minutes,
     )

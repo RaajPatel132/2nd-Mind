@@ -51,10 +51,13 @@ class TurnRow(Base):
     error_code: Mapped[str | None] = mapped_column(String(64))
     error_message: Mapped[str | None] = mapped_column(Text)
     event_count: Mapped[int] = mapped_column(Integer, server_default="0")
+    kind: Mapped[str] = mapped_column(String(16), server_default="user")
+    parent_turn_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
 
     __table_args__ = (
         UniqueConstraint("id", "workspace_id"),
         CheckConstraint("status IN ('running', 'completed', 'failed')", name="status"),
+        CheckConstraint("kind IN ('user', 'undo', 'confirm', 'system')", name="kind"),
         CheckConstraint(
             "trace_status IN ('recorded', 'unavailable', 'disabled')", name="trace_status"
         ),
