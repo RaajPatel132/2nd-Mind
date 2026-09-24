@@ -2,16 +2,11 @@
 
 The login role gets a password and membership of the ``secondmind_rw`` group role, which the
 migrations grant table privileges to. It never owns tables and never has BYPASSRLS.
-Usage: ``python -m secondmind.memory.adapters.bootstrap`` with DATABASE_MIGRATION_URL (owner),
+Usage: ``python -m secondmind.memory.adapters.bootstrap_role`` with DATABASE_MIGRATION_URL (owner),
 DATABASE_URL (the app login, whose user name is used) and APP_DB_PASSWORD.
 """
 
-import asyncio
-import os
-import sys
-
 from sqlalchemy import text
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from secondmind.memory import APP_GROUP_ROLE
@@ -46,32 +41,3 @@ async def ensure_app_role(owner_url: str, app_role: str, app_password: str) -> N
             await conn.execute(text(f"GRANT {group} TO {ident}"))
     finally:
         await engine.dispose()
-
-
-def main() -> int:
-    owner_url = os.environ.get("DATABASE_MIGRATION_URL", "")
-    app_url = os.environ.get("DATABASE_URL", "")
-    password = os.environ.get("APP_DB_PASSWORD", "")
-    missing = [
-        n
-        for n, v in (
-            ("DATABASE_MIGRATION_URL", owner_url),
-            ("DATABASE_URL", app_url),
-            ("APP_DB_PASSWORD", password),
-        )
-        if not v
-    ]
-    if missing:
-        sys.stderr.write(f"bootstrap: missing {', '.join(missing)}\n")
-        return 2
-    role = make_url(app_url).username
-    if not role:
-        sys.stderr.write("bootstrap: DATABASE_URL has no user name\n")
-        return 2
-    asyncio.run(ensure_app_role(owner_url, role, password))
-    sys.stdout.write(f"bootstrap: role {role!r} ready (member of {APP_GROUP_ROLE})\n")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

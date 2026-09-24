@@ -173,7 +173,7 @@ services:
   # ------------------------------------------------------------ the app
   migrate:
     <<: *backend
-    command: ["sh", "-c", "python -m secondmind.memory.adapters.bootstrap && alembic upgrade head"]
+    command: ["sh", "-c", "python -m secondmind.memory.adapters.bootstrap_role && alembic upgrade head"]
     environment: *app-env
     depends_on:
       postgres: { condition: service_healthy }
