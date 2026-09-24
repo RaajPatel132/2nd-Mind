@@ -18,7 +18,12 @@ PRICE = ModelPrice(input=Decimal(1), cached_input=Decimal("0.1"), output=Decimal
 
 
 def routing(
-    primary: str, fallback: str | None = None, *, timeout_s: float = 5.0, step: Step = Step.ANSWER
+    primary: str,
+    fallback: str | None = None,
+    *,
+    timeout_s: float = 5.0,
+    step: Step = Step.ANSWER,
+    prompt: str | None = None,
 ) -> Routing:
     p = ModelRef.parse(primary)
     f = ModelRef.parse(fallback) if fallback else None
@@ -38,7 +43,7 @@ def routing(
                 timeout_s=timeout_s,
                 max_output_tokens=256,
                 effort=None,
-                prompt=None,
+                prompt=prompt,
             )
         },
     )
@@ -80,10 +85,11 @@ def router(
     clock: Clock | None = None,
     timeout_s: float = 5.0,
     step: Step = Step.ANSWER,
+    prompt: str | None = None,
 ) -> ModelRouter:
     refs = [primary] + ([fallback] if fallback else [])
     return ModelRouter(
-        routing=routing(primary, fallback, timeout_s=timeout_s, step=step),
+        routing=routing(primary, fallback, timeout_s=timeout_s, step=step, prompt=prompt),
         prices=prices(*refs),
         adapters=adapters,
         policy=policy or ResiliencePolicy(max_retries=2),
