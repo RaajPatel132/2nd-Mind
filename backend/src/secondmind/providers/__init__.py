@@ -1,1 +1,78 @@
 """Model provider layer: provider-agnostic interface, per-step router, resilience, adapters."""
+
+from secondmind.providers.contract import (
+    AdapterEmbedding,
+    AdapterReply,
+    AdapterRequest,
+    AdapterStreamEvent,
+    AdapterStructured,
+    ChatMessage,
+    KeepAlive,
+    ProviderAdapter,
+    RawUsage,
+    StreamEnd,
+    TextDelta,
+    ToolCall,
+    ToolSpec,
+)
+from secondmind.providers.errors import (
+    USER_MESSAGE,
+    Attempt,
+    ProviderError,
+    ProviderErrorKind,
+    ProviderUnavailableError,
+    StreamInterruptedError,
+)
+from secondmind.providers.fake import FakeOutcome, FakeProvider, FakeRule, FakeScript
+from secondmind.providers.resilience import (
+    BreakerRegistry,
+    BreakerState,
+    CircuitBreaker,
+    ResiliencePolicy,
+    backoff_delay,
+)
+from secondmind.providers.router import (
+    ChatResult,
+    EmbeddingResult,
+    ModelCall,
+    ModelRouter,
+    RouterStreamEvent,
+    StructuredResult,
+)
+
+__all__ = [
+    "USER_MESSAGE",
+    "AdapterEmbedding",
+    "AdapterReply",
+    "AdapterRequest",
+    "AdapterStreamEvent",
+    "AdapterStructured",
+    "Attempt",
+    "BreakerRegistry",
+    "BreakerState",
+    "ChatMessage",
+    "ChatResult",
+    "CircuitBreaker",
+    "EmbeddingResult",
+    "FakeOutcome",
+    "FakeProvider",
+    "FakeRule",
+    "FakeScript",
+    "KeepAlive",
+    "ModelCall",
+    "ModelRouter",
+    "ProviderAdapter",
+    "ProviderError",
+    "ProviderErrorKind",
+    "ProviderUnavailableError",
+    "RawUsage",
+    "ResiliencePolicy",
+    "RouterStreamEvent",
+    "StreamEnd",
+    "StreamInterruptedError",
+    "StructuredResult",
+    "TextDelta",
+    "ToolCall",
+    "ToolSpec",
+    "backoff_delay",
+]
