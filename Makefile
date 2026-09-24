@@ -43,7 +43,13 @@ migrate: ## Apply database migrations (against the compose database)
 
 # ------------------------------------------------------------------ quality gates
 .PHONY: check
-check: lint typecheck imports openapi-check test test-int web-check secrets audit scan-images ## Everything CI runs, except E2E
+check: commits lint typecheck imports openapi-check test test-int web-check secrets audit scan-images ## Everything CI runs, except E2E
+
+.PHONY: commits
+commits: ## Commit messages not yet on origin/main follow the standard (commitlint)
+	@if git rev-parse --verify --quiet origin/main >/dev/null; then \
+		npx --no -- commitlint --from origin/main --to HEAD; \
+	else npx --no -- commitlint --last; fi
 
 .PHONY: lint
 lint: ## Ruff lint + format check (backend)
