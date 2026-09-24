@@ -12,6 +12,9 @@ from secondmind.api import CheckResult, Services, create_app
 from secondmind.api.openapi import render
 from secondmind.auth import SessionSigner
 from secondmind.config import DEFAULT_RESOURCES_DIR, load_app_config
+from secondmind.ingestion.offline import offline_responders
+from secondmind.memory import Memory
+from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer
 from secondmind.providers import FakeOutcome, FakeScript, ProviderErrorKind
 from secondmind.providers.adapters import build_router
@@ -25,6 +28,8 @@ def _services(base_env: dict[str, str], script: FakeScript | None = None, **env:
         | env
     )
     turns = InMemoryTurns()
+    script = script or FakeScript()
+    script.responders = script.responders or offline_responders()
 
     async def ok() -> CheckResult:
         return CheckResult(ok=True, detail="ok")
@@ -39,6 +44,7 @@ def _services(base_env: dict[str, str], script: FakeScript | None = None, **env:
             tracer=NullTracer(),
             config_hash=config.config_hash,
             max_message_chars=config.settings.max_message_chars,
+            memory=Memory(InMemoryMemory().store),
         ),
         tracer=NullTracer(),
         signer=SessionSigner(config.settings.session_secret.get_secret_value()),
@@ -103,7 +109,7 @@ async def test_meta_exposes_config_hash_and_routing(client: httpx.AsyncClient) -
         "provider": "fake",
         "model": "fake-chat",
         "fallback": None,
-        "prompt": "answer@1",
+        "prompt": "answer@2",
         "timeout_s": 30.0,
     }
 
@@ -156,9 +162,9 @@ async def test_turn_streams_then_history_turn_and_events_are_readable(
     assert turn["trace"] == {"status": "disabled", "url": None}
 
     events = (await client.get(f"/v1/turns/{turn_id}/events")).json()["events"]
-    assert [e["seq"] for e in events] == [1, 2]
-    assert [e["event"]["type"] for e in events] == ["intent", "model_call"]
-    assert events[1]["event"]["usage"]["cost_usd"] > 0
+    assert [e["seq"] for e in events] == [1, 2, 3]
+    assert [e["event"]["type"] for e in events] == ["model_call", "intent", "model_call"]
+    assert events[2]["event"]["usage"]["cost_usd"] > 0
 
 
 async def test_history_pages_with_before_cursor(client: httpx.AsyncClient) -> None:

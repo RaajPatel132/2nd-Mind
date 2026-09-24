@@ -21,6 +21,7 @@
       },
       "Classification": {
         "additionalProperties": false,
+        "description": "What one proposed memory was taken to be.",
         "properties": {
           "category": {
             "anyOf": [
@@ -33,22 +34,66 @@
             ],
             "title": "Category"
           },
-          "item_type": {
-            "title": "Item Type",
-            "type": "string"
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
           },
           "label": {
             "title": "Label",
             "type": "string"
           },
+          "layer": {
+            "$ref": "#/components/schemas/Layer",
+            "default": "archive"
+          },
+          "modality": {
+            "$ref": "#/components/schemas/Modality",
+            "default": "asserted"
+          },
           "rationale": {
             "title": "Rationale",
             "type": "string"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/Sensitivity",
+            "default": "normal"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "subtype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtype"
           }
         },
         "required": [
           "label",
-          "item_type",
+          "kind",
           "rationale"
         ],
         "title": "Classification",
@@ -72,7 +117,7 @@
       },
       "DecisionEvent": {
         "additionalProperties": false,
-        "description": "Decision panel: types, date and person resolutions, rationale, rules applied.",
+        "description": "Decision panel: kinds, date and entity resolutions, reconciliation, rationale.",
         "properties": {
           "classifications": {
             "default": [],
@@ -82,18 +127,51 @@
             "title": "Classifications",
             "type": "array"
           },
-          "person_resolutions": {
+          "decided_by": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "step -> 'provider:model' that made the decision (FR-14.8).",
+            "title": "Decided By",
+            "type": "object"
+          },
+          "entity_resolutions": {
             "default": [],
             "items": {
-              "$ref": "#/components/schemas/PersonResolution"
+              "$ref": "#/components/schemas/EntityResolution"
             },
-            "title": "Person Resolutions",
+            "title": "Entity Resolutions",
+            "type": "array"
+          },
+          "normalisations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Normalisation"
+            },
+            "title": "Normalisations",
+            "type": "array"
+          },
+          "not_written": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Not Written",
             "type": "array"
           },
           "rationale": {
             "default": "",
             "title": "Rationale",
             "type": "string"
+          },
+          "reconciliations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Reconciliation"
+            },
+            "title": "Reconciliations",
+            "type": "array"
           },
           "rules_applied": {
             "default": [],
@@ -144,6 +222,30 @@
             "title": "Changes",
             "type": "array"
           },
+          "entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "held_write_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held Write Id"
+          },
           "item_id": {
             "anyOf": [
               {
@@ -164,8 +266,11 @@
               "added",
               "updated",
               "removed",
+              "superseded",
+              "fulfilled",
               "held",
-              "not_written"
+              "not_written",
+              "conflict"
             ],
             "title": "Op",
             "type": "string"
@@ -174,6 +279,27 @@
             "default": "",
             "title": "Reason",
             "type": "string"
+          },
+          "reconcile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReconcileInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
           },
           "title": {
             "title": "Title",
@@ -187,6 +313,248 @@
         ],
         "title": "DiffEntry",
         "type": "object"
+      },
+      "EntityDetailOut": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/EntityRecord"
+          },
+          "item_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Item Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entity",
+          "item_ids"
+        ],
+        "title": "EntityDetailOut",
+        "type": "object"
+      },
+      "EntityKind": {
+        "enum": [
+          "self",
+          "person",
+          "place",
+          "org",
+          "thing",
+          "work",
+          "topic",
+          "project",
+          "list"
+        ],
+        "title": "EntityKind",
+        "type": "string"
+      },
+      "EntityRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "attributes": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Attributes",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Turn Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_key": {
+            "default": false,
+            "title": "Is Key",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EntityKind"
+          },
+          "labels": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "default": "active",
+            "enum": [
+              "active",
+              "deleted"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "summary_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Updated At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by_turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By Turn Id"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "id",
+          "workspace_id",
+          "created_at",
+          "updated_at",
+          "created_by_turn_id",
+          "updated_by_turn_id"
+        ],
+        "title": "EntityRecord",
+        "type": "object"
+      },
+      "EntityResolution": {
+        "additionalProperties": false,
+        "description": "How a mention (\"my wife\", \"Severance\") was matched to an entity, or why one was made.",
+        "properties": {
+          "candidates": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "entity_kind": {
+            "$ref": "#/components/schemas/EntityKind"
+          },
+          "mention": {
+            "title": "Mention",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "matched",
+              "new",
+              "ambiguous",
+              "updated"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mention",
+          "entity_id",
+          "entity_kind",
+          "display_name",
+          "outcome",
+          "created",
+          "rationale"
+        ],
+        "title": "EntityResolution",
+        "type": "object"
+      },
+      "EntityRole": {
+        "enum": [
+          "about",
+          "with",
+          "for",
+          "by",
+          "at",
+          "owner",
+          "part_of"
+        ],
+        "title": "EntityRole",
+        "type": "string"
       },
       "ErrorBody": {
         "properties": {
@@ -337,6 +705,102 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "HeldWriteOut": {
+        "description": "A write the policy held for confirmation (S2.3).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "layer": {
+            "$ref": "#/components/schemas/Layer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "resolved_turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Turn Id"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "confirmed",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "turn_id": {
+            "format": "uuid",
+            "title": "Turn Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "turn_id",
+          "title",
+          "reason",
+          "rule_id",
+          "layer",
+          "status",
+          "created_at"
+        ],
+        "title": "HeldWriteOut",
+        "type": "object"
+      },
+      "HeldWritesOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HeldWriteOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HeldWritesOut",
+        "type": "object"
+      },
       "Intent": {
         "enum": [
           "save",
@@ -395,6 +859,519 @@
         "title": "IntentEvent",
         "type": "object"
       },
+      "ItemDetailOut": {
+        "description": "A plain view of one memory item, its entity roles, links and triggers (S2.11).",
+        "properties": {
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/ItemEntityRecord"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "item": {
+            "$ref": "#/components/schemas/ItemRecord"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/LinkRecord"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "triggers": {
+            "items": {
+              "$ref": "#/components/schemas/TriggerRecord"
+            },
+            "title": "Triggers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "item",
+          "entities",
+          "links",
+          "triggers"
+        ],
+        "title": "ItemDetailOut",
+        "type": "object"
+      },
+      "ItemEntityRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "created_by_turn_id": {
+            "format": "uuid",
+            "title": "Created By Turn Id",
+            "type": "string"
+          },
+          "entity_id": {
+            "format": "uuid",
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/EntityRole"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "item_id",
+          "entity_id",
+          "role",
+          "created_by_turn_id"
+        ],
+        "title": "ItemEntityRecord",
+        "type": "object"
+      },
+      "ItemRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "access_count": {
+            "default": 0,
+            "title": "Access Count",
+            "type": "integer"
+          },
+          "attributes": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Attributes",
+            "type": "object"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "confidence": {
+            "default": 1.0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "content_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Ref"
+          },
+          "core_confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Core Confirmed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_turn_id": {
+            "format": "uuid",
+            "title": "Created By Turn Id",
+            "type": "string"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "enrichment": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Enrichment",
+            "type": "object"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceFormat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "importance": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Importance",
+            "type": "integer"
+          },
+          "in_core": {
+            "default": false,
+            "title": "In Core",
+            "type": "boolean"
+          },
+          "in_quick": {
+            "default": false,
+            "title": "In Quick",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "last_accessed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Accessed At"
+          },
+          "mentioned_at": {
+            "format": "date-time",
+            "title": "Mentioned At",
+            "type": "string"
+          },
+          "modality": {
+            "$ref": "#/components/schemas/Modality",
+            "default": "asserted"
+          },
+          "occurred_end": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred End"
+          },
+          "occurred_start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred Start"
+          },
+          "predicate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate"
+          },
+          "quick_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quick Reason"
+          },
+          "quick_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quick Until"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "raw_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Content"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "sensitivity": {
+            "$ref": "#/components/schemas/Sensitivity",
+            "default": "normal"
+          },
+          "sentiment": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": -2.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentiment"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source",
+            "default": "user_message"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ItemStatus",
+            "default": "active"
+          },
+          "subject_entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Entity Id"
+          },
+          "subtype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtype"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "time_precision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimePrecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "trust": {
+            "$ref": "#/components/schemas/Trust",
+            "default": "user_stated"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by_turn_id": {
+            "format": "uuid",
+            "title": "Updated By Turn Id",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "state",
+          "text",
+          "title",
+          "mentioned_at",
+          "id",
+          "workspace_id",
+          "created_at",
+          "updated_at",
+          "created_by_turn_id",
+          "updated_by_turn_id"
+        ],
+        "title": "ItemRecord",
+        "type": "object"
+      },
+      "ItemStatus": {
+        "description": "About the record (\"deleted\"), not the world (that is ``state``).",
+        "enum": [
+          "active",
+          "archived",
+          "deleted"
+        ],
+        "title": "ItemStatus",
+        "type": "string"
+      },
+      "Kind": {
+        "description": "What a memory is, defined by how it behaves over time.",
+        "enum": [
+          "fact",
+          "preference",
+          "episode",
+          "plan",
+          "task",
+          "intention",
+          "resource",
+          "note",
+          "rule",
+          "pattern"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
       "Layer": {
         "enum": [
           "core",
@@ -402,6 +1379,64 @@
           "archive"
         ],
         "title": "Layer",
+        "type": "string"
+      },
+      "LinkRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "created_by_turn_id": {
+            "format": "uuid",
+            "title": "Created By Turn Id",
+            "type": "string"
+          },
+          "dst_item_id": {
+            "format": "uuid",
+            "title": "Dst Item Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "link_type": {
+            "$ref": "#/components/schemas/LinkType"
+          },
+          "src_item_id": {
+            "format": "uuid",
+            "title": "Src Item Id",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "src_item_id",
+          "link_type",
+          "dst_item_id",
+          "created_by_turn_id"
+        ],
+        "title": "LinkRecord",
+        "type": "object"
+      },
+      "LinkType": {
+        "enum": [
+          "supersedes",
+          "fulfils",
+          "part_of",
+          "follows",
+          "because",
+          "evidence_for",
+          "duplicate_of",
+          "derived_from",
+          "gift_for_event"
+        ],
+        "title": "LinkType",
         "type": "string"
       },
       "MeOut": {
@@ -441,6 +1476,18 @@
             "default": "memory_diff",
             "title": "Type",
             "type": "string"
+          },
+          "undo_of": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Undo Of"
           },
           "v": {
             "default": 1,
@@ -528,14 +1575,36 @@
         "title": "MetaOut",
         "type": "object"
       },
+      "Modality": {
+        "enum": [
+          "asserted",
+          "planned",
+          "hypothetical",
+          "reported"
+        ],
+        "title": "Modality",
+        "type": "string"
+      },
       "ModelCallEvent": {
         "additionalProperties": false,
         "description": "One model call: who served it, what it cost, how long it took (FR-14.8, FR-19.2).",
         "properties": {
           "attempts": {
-            "minimum": 1.0,
+            "minimum": 0.0,
             "title": "Attempts",
             "type": "integer"
+          },
+          "cache_hits": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Embeddings reused from the content-hash cache (FR-14.6).",
+            "title": "Cache Hits"
           },
           "fallback": {
             "anyOf": [
@@ -618,46 +1687,45 @@
         "title": "ModelCallEvent",
         "type": "object"
       },
-      "PersonResolution": {
+      "Normalisation": {
         "additionalProperties": false,
+        "description": "A slug the model proposed, and what normalisation chose (reuse beats invention).",
         "properties": {
-          "created": {
-            "title": "Created",
+          "chosen": {
+            "title": "Chosen",
+            "type": "string"
+          },
+          "how": {
+            "default": "",
+            "title": "How",
+            "type": "string"
+          },
+          "proposed": {
+            "title": "Proposed",
+            "type": "string"
+          },
+          "reused": {
+            "title": "Reused",
             "type": "boolean"
           },
-          "display_name": {
-            "title": "Display Name",
-            "type": "string"
-          },
-          "mention": {
-            "title": "Mention",
-            "type": "string"
-          },
-          "person_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+          "vocab": {
+            "enum": [
+              "category",
+              "subtype",
+              "predicate",
+              "relation"
             ],
-            "title": "Person Id"
-          },
-          "rationale": {
-            "title": "Rationale",
+            "title": "Vocab",
             "type": "string"
           }
         },
         "required": [
-          "mention",
-          "person_id",
-          "display_name",
-          "created",
-          "rationale"
+          "vocab",
+          "proposed",
+          "chosen",
+          "reused"
         ],
-        "title": "PersonResolution",
+        "title": "Normalisation",
         "type": "object"
       },
       "PolicyDecision": {
@@ -757,6 +1825,101 @@
         ],
         "title": "ReadyOut",
         "type": "object"
+      },
+      "ReconcileDecision": {
+        "enum": [
+          "new",
+          "add_detail",
+          "supersede",
+          "fulfil",
+          "link",
+          "no_op"
+        ],
+        "title": "ReconcileDecision",
+        "type": "string"
+      },
+      "ReconcileInfo": {
+        "additionalProperties": false,
+        "description": "How a proposed memory relates to what is stored (S2.8).",
+        "properties": {
+          "candidate_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Id"
+          },
+          "candidate_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Title"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ReconcileDecision"
+          },
+          "rule": {
+            "default": "",
+            "title": "Rule",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ReconcileInfo",
+        "type": "object"
+      },
+      "Reconciliation": {
+        "additionalProperties": false,
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/ReconcileInfo"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "info"
+        ],
+        "title": "Reconciliation",
+        "type": "object"
+      },
+      "ResourceFormat": {
+        "enum": [
+          "article",
+          "video",
+          "pdf",
+          "image",
+          "link",
+          "other"
+        ],
+        "title": "ResourceFormat",
+        "type": "string"
       },
       "RetrievalCandidate": {
         "additionalProperties": false,
@@ -943,6 +2106,26 @@
         "title": "RouteOut",
         "type": "object"
       },
+      "Sensitivity": {
+        "enum": [
+          "normal",
+          "personal",
+          "sensitive",
+          "secret"
+        ],
+        "title": "Sensitivity",
+        "type": "string"
+      },
+      "Source": {
+        "enum": [
+          "user_message",
+          "link",
+          "file",
+          "derived"
+        ],
+        "title": "Source",
+        "type": "string"
+      },
       "SseToken": {
         "properties": {
           "text": {
@@ -1072,17 +2255,75 @@
         "title": "StepModel",
         "type": "object"
       },
+      "TimeClock": {
+        "description": "Which clock a time expression sets: when it happened, when it was true, when it is due,\nor when to remind.",
+        "enum": [
+          "occurred",
+          "valid",
+          "due",
+          "trigger"
+        ],
+        "title": "TimeClock",
+        "type": "string"
+      },
+      "TimePrecision": {
+        "enum": [
+          "datetime",
+          "day",
+          "month",
+          "year"
+        ],
+        "title": "TimePrecision",
+        "type": "string"
+      },
       "TimeResolution": {
         "additionalProperties": false,
+        "description": "One time expression, resolved by code (never the model): expression -> value.",
         "properties": {
+          "alternative": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alternative"
+          },
           "assumed": {
             "default": false,
             "title": "Assumed",
             "type": "boolean"
           },
+          "clock": {
+            "$ref": "#/components/schemas/TimeClock"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
           "expression": {
             "title": "Expression",
             "type": "string"
+          },
+          "memory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory"
           },
           "now": {
             "format": "date-time",
@@ -1090,14 +2331,18 @@
             "type": "string"
           },
           "precision": {
-            "enum": [
-              "datetime",
-              "day",
-              "month",
-              "year"
+            "$ref": "#/components/schemas/TimePrecision"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Precision",
-            "type": "string"
+            "title": "Rrule"
           },
           "rule": {
             "title": "Rule",
@@ -1114,6 +2359,7 @@
         },
         "required": [
           "expression",
+          "clock",
           "value",
           "precision",
           "now",
@@ -1215,6 +2461,125 @@
           "disabled"
         ],
         "title": "TraceStatus",
+        "type": "string"
+      },
+      "TriggerOn": {
+        "enum": [
+          "time",
+          "person",
+          "place",
+          "topic",
+          "situation"
+        ],
+        "title": "TriggerOn",
+        "type": "string"
+      },
+      "TriggerRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by_turn_id": {
+            "format": "uuid",
+            "title": "Created By Turn Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "fires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fires At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "on": {
+            "$ref": "#/components/schemas/TriggerOn",
+            "default": "time"
+          },
+          "spec": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Spec",
+            "type": "object"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TriggerState",
+            "default": "pending"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by_turn_id": {
+            "format": "uuid",
+            "title": "Updated By Turn Id",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "item_id",
+          "created_at",
+          "updated_at",
+          "created_by_turn_id",
+          "updated_by_turn_id"
+        ],
+        "title": "TriggerRecord",
+        "type": "object"
+      },
+      "TriggerState": {
+        "enum": [
+          "pending",
+          "fired",
+          "done",
+          "cancelled",
+          "expired"
+        ],
+        "title": "TriggerState",
+        "type": "string"
+      },
+      "Trust": {
+        "enum": [
+          "user_stated",
+          "content_derived"
+        ],
+        "title": "Trust",
         "type": "string"
       },
       "TurnError": {
@@ -1320,6 +2685,17 @@
         "title": "TurnEventsOut",
         "type": "object"
       },
+      "TurnKind": {
+        "description": "What started a turn: a message, an undo, a confirmation of a held write, or the system\n(background jobs). Every kind is stored, auditable and undoable the same way.",
+        "enum": [
+          "user",
+          "undo",
+          "confirm",
+          "system"
+        ],
+        "title": "TurnKind",
+        "type": "string"
+      },
       "TurnOut": {
         "properties": {
           "config_hash": {
@@ -1357,6 +2733,11 @@
             "title": "Input",
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/TurnKind",
+            "default": "user",
+            "description": "user (a message), undo, confirm (a held write) or system (a background job)."
+          },
           "models": {
             "additionalProperties": {
               "$ref": "#/components/schemas/StepModel"
@@ -1374,6 +2755,19 @@
               }
             ],
             "title": "Output"
+          },
+          "parent_turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The undone turn, or the turn whose held write was confirmed.",
+            "title": "Parent Turn Id"
           },
           "prompt_versions": {
             "items": {
@@ -1807,6 +3201,259 @@
         ]
       }
     },
+    "/v1/entities/{entity_id}": {
+      "get": {
+        "operationId": "get_entity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Get Entity",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/held-writes/{held_id}/confirm": {
+      "post": {
+        "description": "Apply a held write as a new turn (with its own diff, so undo still works).",
+        "operationId": "confirm_held_write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "held_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Held Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Confirm Held Write",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/held-writes/{held_id}/reject": {
+      "post": {
+        "operationId": "reject_held_write",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "held_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Held Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldWriteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Reject Held Write",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/items/{item_id}": {
+      "get": {
+        "operationId": "get_item",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Get Item",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
     "/v1/me": {
       "get": {
         "operationId": "me",
@@ -2004,6 +3651,155 @@
         "summary": "Get Turn Events",
         "tags": [
           "turns"
+        ]
+      }
+    },
+    "/v1/turns/{turn_id}/undo": {
+      "post": {
+        "description": "Revert every memory write the turn made, as a new turn with its own diff (FR-10.1).\nUndoing an undo turn is a redo.",
+        "operationId": "undo_turn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "turn_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Turn Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Undo Turn",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/held-writes": {
+      "get": {
+        "operationId": "list_held_writes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "rejected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "pending",
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldWritesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "List Held Writes",
+        "tags": [
+          "memory"
         ]
       }
     },

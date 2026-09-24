@@ -6,9 +6,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnStatus
+from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind, TurnStatus
 from secondmind.auth import User, Workspace, WorkspaceKind
-from secondmind.core import TurnEvent, UsageTotals
+from secondmind.core import Layer, TurnEvent, UsageTotals
+from secondmind.memory import (
+    EntityRecord,
+    HeldWriteRecord,
+    ItemEntityRecord,
+    ItemRecord,
+    LinkRecord,
+    TriggerRecord,
+)
 
 
 class _Out(BaseModel):
@@ -51,6 +59,13 @@ class TurnOut(_Out):
     usage: UsageTotals
     trace: TraceLink
     error: TurnError | None = None
+    kind: TurnKind = Field(
+        default=TurnKind.USER,
+        description="user (a message), undo, confirm (a held write) or system (a background job).",
+    )
+    parent_turn_id: uuid.UUID | None = Field(
+        default=None, description="The undone turn, or the turn whose held write was confirmed."
+    )
 
     @classmethod
     def of(cls, turn: Turn, trace_url: str | None) -> "TurnOut":
@@ -74,6 +89,8 @@ class TurnOut(_Out):
                 url=trace_url if turn.trace_status is TraceStatus.RECORDED else None,
             ),
             error=error,
+            kind=turn.kind,
+            parent_turn_id=turn.parent_turn_id,
         )
 
 
@@ -97,6 +114,54 @@ class TurnEventOut(_Out):
 class TurnEventsOut(_Out):
     turn_id: uuid.UUID
     events: list[TurnEventOut] = Field(description="In emission order (seq ascending).")
+
+
+class HeldWriteOut(_Out):
+    """A write the policy held for confirmation (S2.3)."""
+
+    id: uuid.UUID
+    turn_id: uuid.UUID
+    title: str
+    reason: str
+    rule_id: str
+    layer: Layer
+    status: Literal["pending", "confirmed", "rejected"]
+    created_at: datetime
+    resolved_at: datetime | None = None
+    resolved_turn_id: uuid.UUID | None = None
+
+    @classmethod
+    def of(cls, held: HeldWriteRecord) -> "HeldWriteOut":
+        return cls(
+            id=held.id,
+            turn_id=held.turn_id,
+            title=held.title,
+            reason=held.reason,
+            rule_id=held.rule_id,
+            layer=held.layer,
+            status=held.status,
+            created_at=held.created_at,
+            resolved_at=held.resolved_at,
+            resolved_turn_id=held.resolved_turn_id,
+        )
+
+
+class HeldWritesOut(_Out):
+    items: list[HeldWriteOut]
+
+
+class ItemDetailOut(_Out):
+    """A plain view of one memory item, its entity roles, links and triggers (S2.11)."""
+
+    item: ItemRecord
+    entities: list[ItemEntityRecord]
+    links: list[LinkRecord]
+    triggers: list[TriggerRecord]
+
+
+class EntityDetailOut(_Out):
+    entity: EntityRecord
+    item_ids: list[uuid.UUID]
 
 
 class CreateTurnIn(BaseModel):

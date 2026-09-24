@@ -38,7 +38,12 @@ async def create_turn(
     scope, workspace = await resolve_scope(
         services.identity, user_id=user_id, workspace_id=workspace_id
     )
-    handle = await services.runner.start(scope, text=body.message, timezone=workspace.timezone)
+    handle = await services.runner.start(
+        scope,
+        text=body.message,
+        timezone=workspace.timezone,
+        default_lead_minutes=workspace.default_lead_minutes,
+    )
     return StreamingResponse(
         turn_stream(handle, lambda t: turn_out(services, t)),
         media_type="text/event-stream",

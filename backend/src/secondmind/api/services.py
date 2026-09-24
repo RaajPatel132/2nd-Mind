@@ -1,20 +1,23 @@
 """Composition root: the one place that builds adapters and wires them into the domain."""
 
 import asyncio
+import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 
 from secondmind.agent import TurnRunner
-from secondmind.agent.adapters import SqlTurnStore
+from secondmind.agent.adapters import (
+    build_runtime,
+    check_embedding_dimensions,
+    require_embedding_dimensions,
+)
 from secondmind.auth import IdentityStore, SessionSigner
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.config import AppConfig
-from secondmind.core import WorkspaceScope
+from secondmind.core import Clock, WorkspaceScope, utc_now
 from secondmind.jobs.adapters import QueueClient
-from secondmind.memory.adapters import SCHEMA_HEAD, Database
+from secondmind.memory.adapters import SCHEMA_HEAD
 from secondmind.observability import Tracer, get_logger
-from secondmind.observability.adapters import build_tracer
-from secondmind.providers.adapters import build_router
 
 log = get_logger(__name__)
 
@@ -39,6 +42,7 @@ class Services:
     signer: SessionSigner
     checks: Mapping[str, Check]
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
+    clock: Clock = utc_now
 
     async def run_checks(self) -> dict[str, CheckResult]:
         async def guarded(check: Check) -> CheckResult:
@@ -78,22 +82,19 @@ def provider_check(config: AppConfig) -> Check:
 
 async def build_services(config: AppConfig) -> Services:
     settings = config.settings
-    db = Database(str(settings.database_url), pool_size=settings.database_pool_size)
     queue = QueueClient(str(settings.redis_url))
-    router = build_router(config)
-    tracer = build_tracer(settings)
 
-    def stores(scope: WorkspaceScope) -> SqlTurnStore:
-        return SqlTurnStore(db, scope)
+    async def rerender(scope: WorkspaceScope, entity_ids: set[uuid.UUID]) -> None:
+        await queue.enqueue(
+            "rerender_entity_keys",
+            str(scope.workspace_id),
+            str(scope.user_id),
+            sorted(str(e) for e in entity_ids),
+        )
 
-    runner = TurnRunner(
-        router=router,
-        prompts=config.prompts,
-        stores=stores,
-        tracer=tracer,
-        config_hash=config.config_hash,
-        max_message_chars=settings.max_message_chars,
-    )
+    runtime = build_runtime(config, on_entities_renamed=rerender)
+    db = runtime.db
+    await require_embedding_dimensions(db, settings.embed_dimensions)
 
     async def database_check() -> CheckResult:
         await db.ping()
@@ -103,24 +104,24 @@ async def build_services(config: AppConfig) -> Services:
         role = await db.role_check()
         if not role.safe:
             return CheckResult(ok=False, detail=f"role {role.role!r} can bypass row-level security")
+        problem = await check_embedding_dimensions(db, settings.embed_dimensions)
+        if problem:
+            return CheckResult(ok=False, detail=problem)
         return CheckResult(ok=True, detail=f"schema {revision}; role {role.role} under RLS")
 
     async def redis_check() -> CheckResult:
         return CheckResult(ok=await queue.ping(), detail="ping")
 
-    async def close_tracer() -> None:
-        tracer.shutdown()
-
     return Services(
         config=config,
         identity=SqlIdentityStore(db),
-        runner=runner,
-        tracer=tracer,
+        runner=runtime.runner,
+        tracer=runtime.tracer,
         signer=SessionSigner(settings.session_secret.get_secret_value()),
         checks={
             "database": database_check,
             "redis": redis_check,
             "providers": provider_check(config),
         },
-        closers=[db.dispose, queue.aclose, router.aclose, close_tracer],
+        closers=[runtime.aclose, queue.aclose],
     )

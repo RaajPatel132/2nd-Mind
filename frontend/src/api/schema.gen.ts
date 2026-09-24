@@ -81,6 +81,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Entity */
+        get: operations["get_entity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/held-writes/{held_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Held Write
+         * @description Apply a held write as a new turn (with its own diff, so undo still works).
+         */
+        post: operations["confirm_held_write"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/held-writes/{held_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Held Write */
+        post: operations["reject_held_write"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Item */
+        get: operations["get_item"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -155,6 +226,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/turns/{turn_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo Turn
+         * @description Revert every memory write the turn made, as a new turn with its own diff (FR-10.1).
+         *     Undoing an undo turn is a redo.
+         */
+        post: operations["undo_turn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/held-writes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Held Writes */
+        get: operations["list_held_writes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/turns": {
         parameters: {
             query?: never;
@@ -190,16 +299,30 @@ export interface components {
             /** Ok */
             ok: boolean;
         };
-        /** Classification */
+        /**
+         * Classification
+         * @description What one proposed memory was taken to be.
+         */
         Classification: {
             /** Category */
             category?: string | null;
-            /** Item Type */
-            item_type: string;
+            /** Format */
+            format?: string | null;
+            kind: components["schemas"]["Kind"];
             /** Label */
             label: string;
+            /** @default archive */
+            layer: components["schemas"]["Layer"];
+            /** @default asserted */
+            modality: components["schemas"]["Modality"];
             /** Rationale */
             rationale: string;
+            /** @default normal */
+            sensitivity: components["schemas"]["Sensitivity"];
+            /** State */
+            state?: string | null;
+            /** Subtype */
+            subtype?: string | null;
         };
         /** CreateTurnIn */
         CreateTurnIn: {
@@ -208,7 +331,7 @@ export interface components {
         };
         /**
          * DecisionEvent
-         * @description Decision panel: types, date and person resolutions, rationale, rules applied.
+         * @description Decision panel: kinds, date and entity resolutions, reconciliation, rationale.
          */
         DecisionEvent: {
             /**
@@ -217,15 +340,38 @@ export interface components {
              */
             classifications: components["schemas"]["Classification"][];
             /**
-             * Person Resolutions
+             * Decided By
+             * @description step -> 'provider:model' that made the decision (FR-14.8).
+             * @default {}
+             */
+            decided_by: {
+                [key: string]: string;
+            };
+            /**
+             * Entity Resolutions
              * @default []
              */
-            person_resolutions: components["schemas"]["PersonResolution"][];
+            entity_resolutions: components["schemas"]["EntityResolution"][];
+            /**
+             * Normalisations
+             * @default []
+             */
+            normalisations: components["schemas"]["Normalisation"][];
+            /**
+             * Not Written
+             * @default []
+             */
+            not_written: string[];
             /**
              * Rationale
              * @default
              */
             rationale: string;
+            /**
+             * Reconciliations
+             * @default []
+             */
+            reconciliations: components["schemas"]["Reconciliation"][];
             /**
              * Rules Applied
              * @default []
@@ -256,6 +402,10 @@ export interface components {
              * @default []
              */
             changes: components["schemas"]["FieldChange"][];
+            /** Entity Id */
+            entity_id?: string | null;
+            /** Held Write Id */
+            held_write_id?: string | null;
             /** Item Id */
             item_id?: string | null;
             layer: components["schemas"]["Layer"];
@@ -263,15 +413,123 @@ export interface components {
              * Op
              * @enum {string}
              */
-            op: "added" | "updated" | "removed" | "held" | "not_written";
+            op: "added" | "updated" | "removed" | "superseded" | "fulfilled" | "held" | "not_written" | "conflict";
             /**
              * Reason
              * @default
              */
             reason: string;
+            reconcile?: components["schemas"]["ReconcileInfo"] | null;
+            /** Rule Id */
+            rule_id?: string | null;
             /** Title */
             title: string;
         };
+        /** EntityDetailOut */
+        EntityDetailOut: {
+            entity: components["schemas"]["EntityRecord"];
+            /** Item Ids */
+            item_ids: string[];
+        };
+        /**
+         * EntityKind
+         * @enum {string}
+         */
+        EntityKind: "self" | "person" | "place" | "org" | "thing" | "work" | "topic" | "project" | "list";
+        /** EntityRecord */
+        EntityRecord: {
+            /**
+             * Aliases
+             * @default []
+             */
+            aliases: string[];
+            /**
+             * Attributes
+             * @default {}
+             */
+            attributes: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By Turn Id */
+            created_by_turn_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Is Key
+             * @default false
+             */
+            is_key: boolean;
+            kind: components["schemas"]["EntityKind"];
+            /**
+             * Labels
+             * @default []
+             */
+            labels: string[];
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "deleted";
+            /** Summary */
+            summary?: string | null;
+            /** Summary Updated At */
+            summary_updated_at?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By Turn Id */
+            updated_by_turn_id: string | null;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /**
+         * EntityResolution
+         * @description How a mention ("my wife", "Severance") was matched to an entity, or why one was made.
+         */
+        EntityResolution: {
+            /**
+             * Candidates
+             * @default []
+             */
+            candidates: string[];
+            /** Created */
+            created: boolean;
+            /** Display Name */
+            display_name: string;
+            /** Entity Id */
+            entity_id: string | null;
+            entity_kind: components["schemas"]["EntityKind"];
+            /** Mention */
+            mention: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "matched" | "new" | "ambiguous" | "updated";
+            /** Rationale */
+            rationale: string;
+        };
+        /**
+         * EntityRole
+         * @enum {string}
+         */
+        EntityRole: "about" | "with" | "for" | "by" | "at" | "owner" | "part_of";
         /** ErrorBody */
         ErrorBody: {
             /**
@@ -348,6 +606,48 @@ export interface components {
             status: "ok";
         };
         /**
+         * HeldWriteOut
+         * @description A write the policy held for confirmation (S2.3).
+         */
+        HeldWriteOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            layer: components["schemas"]["Layer"];
+            /** Reason */
+            reason: string;
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** Resolved Turn Id */
+            resolved_turn_id?: string | null;
+            /** Rule Id */
+            rule_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "confirmed" | "rejected";
+            /** Title */
+            title: string;
+            /**
+             * Turn Id
+             * Format: uuid
+             */
+            turn_id: string;
+        };
+        /** HeldWritesOut */
+        HeldWritesOut: {
+            /** Items */
+            items: components["schemas"]["HeldWriteOut"][];
+        };
+        /**
          * Intent
          * @enum {string}
          */
@@ -379,10 +679,245 @@ export interface components {
             v: number;
         };
         /**
+         * ItemDetailOut
+         * @description A plain view of one memory item, its entity roles, links and triggers (S2.11).
+         */
+        ItemDetailOut: {
+            /** Entities */
+            entities: components["schemas"]["ItemEntityRecord"][];
+            item: components["schemas"]["ItemRecord"];
+            /** Links */
+            links: components["schemas"]["LinkRecord"][];
+            /** Triggers */
+            triggers: components["schemas"]["TriggerRecord"][];
+        };
+        /** ItemEntityRecord */
+        ItemEntityRecord: {
+            /**
+             * Created By Turn Id
+             * Format: uuid
+             */
+            created_by_turn_id: string;
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            role: components["schemas"]["EntityRole"];
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /** ItemRecord */
+        ItemRecord: {
+            /**
+             * Access Count
+             * @default 0
+             */
+            access_count: number;
+            /**
+             * Attributes
+             * @default {}
+             */
+            attributes: {
+                [key: string]: unknown;
+            };
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /** Content Ref */
+            content_ref?: string | null;
+            /** Core Confirmed At */
+            core_confirmed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By Turn Id
+             * Format: uuid
+             */
+            created_by_turn_id: string;
+            /** Due At */
+            due_at?: string | null;
+            /**
+             * Enrichment
+             * @default {}
+             */
+            enrichment: {
+                [key: string]: unknown;
+            };
+            format?: components["schemas"]["ResourceFormat"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Importance
+             * @default 3
+             */
+            importance: number;
+            /**
+             * In Core
+             * @default false
+             */
+            in_core: boolean;
+            /**
+             * In Quick
+             * @default false
+             */
+            in_quick: boolean;
+            kind: components["schemas"]["Kind"];
+            /** Last Accessed At */
+            last_accessed_at?: string | null;
+            /**
+             * Mentioned At
+             * Format: date-time
+             */
+            mentioned_at: string;
+            /** @default asserted */
+            modality: components["schemas"]["Modality"];
+            /** Occurred End */
+            occurred_end?: string | null;
+            /** Occurred Start */
+            occurred_start?: string | null;
+            /** Predicate */
+            predicate?: string | null;
+            /** Quick Reason */
+            quick_reason?: string | null;
+            /** Quick Until */
+            quick_until?: string | null;
+            /** Rating */
+            rating?: {
+                [key: string]: number;
+            } | null;
+            /** Rationale */
+            rationale?: string | null;
+            /** Raw Content */
+            raw_content?: string | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** @default normal */
+            sensitivity: components["schemas"]["Sensitivity"];
+            /** Sentiment */
+            sentiment?: number | null;
+            /** @default user_message */
+            source: components["schemas"]["Source"];
+            /** State */
+            state: string;
+            /** @default active */
+            status: components["schemas"]["ItemStatus"];
+            /** Subject Entity Id */
+            subject_entity_id?: string | null;
+            /** Subtype */
+            subtype?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /** Text */
+            text: string;
+            time_precision?: components["schemas"]["TimePrecision"] | null;
+            /** Title */
+            title: string;
+            /** @default user_stated */
+            trust: components["schemas"]["Trust"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Updated By Turn Id
+             * Format: uuid
+             */
+            updated_by_turn_id: string;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+            /** Value */
+            value?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /**
+         * ItemStatus
+         * @description About the record ("deleted"), not the world (that is ``state``).
+         * @enum {string}
+         */
+        ItemStatus: "active" | "archived" | "deleted";
+        /**
+         * Kind
+         * @description What a memory is, defined by how it behaves over time.
+         * @enum {string}
+         */
+        Kind: "fact" | "preference" | "episode" | "plan" | "task" | "intention" | "resource" | "note" | "rule" | "pattern";
+        /**
          * Layer
          * @enum {string}
          */
         Layer: "core" | "quick" | "archive";
+        /** LinkRecord */
+        LinkRecord: {
+            /**
+             * Created By Turn Id
+             * Format: uuid
+             */
+            created_by_turn_id: string;
+            /**
+             * Dst Item Id
+             * Format: uuid
+             */
+            dst_item_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            link_type: components["schemas"]["LinkType"];
+            /**
+             * Src Item Id
+             * Format: uuid
+             */
+            src_item_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /**
+         * LinkType
+         * @enum {string}
+         */
+        LinkType: "supersedes" | "fulfils" | "part_of" | "follows" | "because" | "evidence_for" | "duplicate_of" | "derived_from" | "gift_for_event";
         /** MeOut */
         MeOut: {
             user: components["schemas"]["UserOut"];
@@ -404,6 +939,8 @@ export interface components {
              * @enum {string}
              */
             type: "memory_diff";
+            /** Undo Of */
+            undo_of?: string | null;
             /**
              * V
              * @default 1
@@ -438,12 +975,22 @@ export interface components {
             version: string;
         };
         /**
+         * Modality
+         * @enum {string}
+         */
+        Modality: "asserted" | "planned" | "hypothetical" | "reported";
+        /**
          * ModelCallEvent
          * @description One model call: who served it, what it cost, how long it took (FR-14.8, FR-19.2).
          */
         ModelCallEvent: {
             /** Attempts */
             attempts: number;
+            /**
+             * Cache Hits
+             * @description Embeddings reused from the content-hash cache (FR-14.6).
+             */
+            cache_hits?: number | null;
             fallback?: components["schemas"]["FallbackInfo"] | null;
             /** Latency Ms */
             latency_ms: number;
@@ -474,18 +1021,27 @@ export interface components {
              */
             v: number;
         };
-        /** PersonResolution */
-        PersonResolution: {
-            /** Created */
-            created: boolean;
-            /** Display Name */
-            display_name: string;
-            /** Mention */
-            mention: string;
-            /** Person Id */
-            person_id: string | null;
-            /** Rationale */
-            rationale: string;
+        /**
+         * Normalisation
+         * @description A slug the model proposed, and what normalisation chose (reuse beats invention).
+         */
+        Normalisation: {
+            /** Chosen */
+            chosen: string;
+            /**
+             * How
+             * @default
+             */
+            how: string;
+            /** Proposed */
+            proposed: string;
+            /** Reused */
+            reused: boolean;
+            /**
+             * Vocab
+             * @enum {string}
+             */
+            vocab: "category" | "subtype" | "predicate" | "relation";
         };
         /**
          * PolicyDecision
@@ -533,6 +1089,40 @@ export interface components {
              */
             status: "ready" | "not_ready";
         };
+        /**
+         * ReconcileDecision
+         * @enum {string}
+         */
+        ReconcileDecision: "new" | "add_detail" | "supersede" | "fulfil" | "link" | "no_op";
+        /**
+         * ReconcileInfo
+         * @description How a proposed memory relates to what is stored (S2.8).
+         */
+        ReconcileInfo: {
+            /** Candidate Id */
+            candidate_id?: string | null;
+            /** Candidate Title */
+            candidate_title?: string | null;
+            decision: components["schemas"]["ReconcileDecision"];
+            /**
+             * Rule
+             * @default
+             */
+            rule: string;
+            /** Score */
+            score?: number | null;
+        };
+        /** Reconciliation */
+        Reconciliation: {
+            info: components["schemas"]["ReconcileInfo"];
+            /** Label */
+            label: string;
+        };
+        /**
+         * ResourceFormat
+         * @enum {string}
+         */
+        ResourceFormat: "article" | "video" | "pdf" | "image" | "link" | "other";
         /** RetrievalCandidate */
         RetrievalCandidate: {
             /** Dense Score */
@@ -617,6 +1207,16 @@ export interface components {
             /** Timeout S */
             timeout_s: number;
         };
+        /**
+         * Sensitivity
+         * @enum {string}
+         */
+        Sensitivity: "normal" | "personal" | "sensitive" | "secret";
+        /**
+         * Source
+         * @enum {string}
+         */
+        Source: "user_message" | "link" | "file" | "derived";
         /** SseToken */
         SseToken: {
             /** Text */
@@ -675,25 +1275,45 @@ export interface components {
             /** Provider */
             provider: string;
         };
-        /** TimeResolution */
+        /**
+         * TimeClock
+         * @description Which clock a time expression sets: when it happened, when it was true, when it is due,
+         *     or when to remind.
+         * @enum {string}
+         */
+        TimeClock: "occurred" | "valid" | "due" | "trigger";
+        /**
+         * TimePrecision
+         * @enum {string}
+         */
+        TimePrecision: "datetime" | "day" | "month" | "year";
+        /**
+         * TimeResolution
+         * @description One time expression, resolved by code (never the model): expression -> value.
+         */
         TimeResolution: {
+            /** Alternative */
+            alternative?: string | null;
             /**
              * Assumed
              * @default false
              */
             assumed: boolean;
+            clock: components["schemas"]["TimeClock"];
+            /** End */
+            end?: string | null;
             /** Expression */
             expression: string;
+            /** Memory */
+            memory?: string | null;
             /**
              * Now
              * Format: date-time
              */
             now: string;
-            /**
-             * Precision
-             * @enum {string}
-             */
-            precision: "datetime" | "day" | "month" | "year";
+            precision: components["schemas"]["TimePrecision"];
+            /** Rrule */
+            rrule?: string | null;
             /** Rule */
             rule: string;
             /** Timezone */
@@ -749,6 +1369,74 @@ export interface components {
          * @enum {string}
          */
         TraceStatus: "recorded" | "unavailable" | "disabled";
+        /**
+         * TriggerOn
+         * @enum {string}
+         */
+        TriggerOn: "time" | "person" | "place" | "topic" | "situation";
+        /** TriggerRecord */
+        TriggerRecord: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By Turn Id
+             * Format: uuid
+             */
+            created_by_turn_id: string;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Fires At */
+            fires_at?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** @default time */
+            on: components["schemas"]["TriggerOn"];
+            /**
+             * Spec
+             * @default {}
+             */
+            spec: {
+                [key: string]: unknown;
+            };
+            /** @default pending */
+            state: components["schemas"]["TriggerState"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Updated By Turn Id
+             * Format: uuid
+             */
+            updated_by_turn_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /**
+         * TriggerState
+         * @enum {string}
+         */
+        TriggerState: "pending" | "fired" | "done" | "cancelled" | "expired";
+        /**
+         * Trust
+         * @enum {string}
+         */
+        Trust: "user_stated" | "content_derived";
         /** TurnError */
         TurnError: {
             /** Code */
@@ -781,6 +1469,13 @@ export interface components {
              */
             turn_id: string;
         };
+        /**
+         * TurnKind
+         * @description What started a turn: a message, an undo, a confirmation of a held write, or the system
+         *     (background jobs). Every kind is stored, auditable and undoable the same way.
+         * @enum {string}
+         */
+        TurnKind: "user" | "undo" | "confirm" | "system";
         /** TurnOut */
         TurnOut: {
             /** Config Hash */
@@ -795,12 +1490,22 @@ export interface components {
             id: string;
             /** Input */
             input: string;
+            /**
+             * @description user (a message), undo, confirm (a held write) or system (a background job).
+             * @default user
+             */
+            kind: components["schemas"]["TurnKind"];
             /** Models */
             models: {
                 [key: string]: components["schemas"]["StepModel"];
             };
             /** Output */
             output: string | null;
+            /**
+             * Parent Turn Id
+             * @description The undone turn, or the turn whose held write was confirmed.
+             */
+            parent_turn_id?: string | null;
             /** Prompt Versions */
             prompt_versions: string[];
             /**
@@ -1065,6 +1770,202 @@ export interface operations {
             };
         };
     };
+    get_entity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityDetailOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_held_write: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                held_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reject_held_write: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                held_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldWriteOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDetailOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -1199,6 +2100,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TurnEventsOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    undo_turn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                turn_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_held_writes: {
+        parameters: {
+            query?: {
+                status?: ("pending" | "confirmed" | "rejected") | null;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeldWritesOut"];
                 };
             };
             /** @description Not signed in */

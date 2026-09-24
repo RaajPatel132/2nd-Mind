@@ -10,7 +10,7 @@ from pydantic.json_schema import models_json_schema
 
 from secondmind.api.errors import install_error_handlers
 from secondmind.api.middleware import RequestIdMiddleware
-from secondmind.api.routes import auth, system, turns
+from secondmind.api.routes import auth, memory, system, turns
 from secondmind.api.schemas import SSE_EVENTS
 from secondmind.api.services import Services
 from secondmind.observability import get_logger
@@ -64,6 +64,7 @@ def create_app(
     app.include_router(system.router)
     app.include_router(auth.router)
     app.include_router(turns.router)
+    app.include_router(memory.router)
     app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]
     return app
 
