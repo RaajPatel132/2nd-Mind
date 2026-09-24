@@ -1,0 +1,157 @@
+# Every push and PR: commit messages, backend (lint, types, boundaries, OpenAPI snapshot, unit +
+# integration tests, audit), frontend (lint, types, build, client drift, audit), secrets, image
+# scan, and the E2E smoke against the compose stack. Jobs call the same make targets as local.
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.7"
+  NODE_VERSION: "24"
+
+jobs:
+  commits:
+    name: commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+      - name: commitlint
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          from="${PR_BASE:-$PUSH_BEFORE}"
+          if [ -z "$from" ] || [ "$from" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$from^{commit}" 2>/dev/null; then
+            from="HEAD~1"
+          fi
+          npx --no -- commitlint --from "$from" --to HEAD --verbose
+
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: ruff (lint + format)
+        run: make -C .. lint
+      - name: mypy --strict
+        run: make -C .. typecheck
+      - name: import boundaries
+        run: make -C .. imports
+      - name: OpenAPI snapshot is up to date
+        run: make -C .. openapi-check
+      - name: unit tests
+        run: make -C .. test
+      - name: integration tests (testcontainers Postgres + Redis)
+        run: make -C .. test-int
+      - name: dependency audit (pip-audit)
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt > /tmp/req.txt
+          uv run --frozen pip-audit --strict --disable-pip --requirement /tmp/req.txt
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: generated client matches the OpenAPI snapshot
+        run: npm run gen-client && git diff --exit-code -- src/api/schema.gen.ts
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - name: dependency audit
+        run: npm audit --audit-level=high
+
+  secrets:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks (full history)
+        run: >
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1
+          git /repo --redact --verbose --exit-code 1
+
+  images:
+    name: images + trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: build api/worker and web images
+        run: docker compose build api web
+      - name: trivy (fail on fixable CRITICAL)
+        run: scripts/trivy-scan.sh secondmind-api:local secondmind-web:local
+
+  e2e:
+    name: e2e (compose, fake providers)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: start the stack (fake-provider mode)
+        env:
+          MODEL_PROVIDER_MODE: fake
+        run: docker compose up -d --build --wait --wait-timeout 600
+      - name: playwright smoke
+        working-directory: frontend
+        env:
+          CI: "true"
+          E2E_BASE_URL: http://localhost:8080
+        run: npx playwright test
+      - name: stack logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200 api worker web migrate langfuse-web
+      - uses: actions/upload-artifact@v7.0.1
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
