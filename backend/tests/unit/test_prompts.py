@@ -54,12 +54,12 @@ def test_editing_a_released_version_is_detected(tmp_path: Path) -> None:
 def test_new_version_is_appended_to_the_lock(tmp_path: Path) -> None:
     copy = tmp_path / "prompts"
     shutil.copytree(PROMPTS, copy)
-    v1 = (copy / "answer" / "v1.md").read_text()
-    (copy / "answer" / "v2.md").write_text(v1.replace("version: 1", "version: 2"))
+    v2 = (copy / "answer" / "v2.md").read_text()
+    (copy / "answer" / "v3.md").write_text(v2.replace("version: 2", "version: 3"))
     assert lock_violations(PromptRegistry.load(copy), read_lock(copy)) == [
-        "answer@2 is not in prompts.lock.json; run `python -m secondmind.config.prompt_lock`"
+        "answer@3 is not in prompts.lock.json; run `python -m secondmind.config.prompt_lock`"
     ]
-    assert update_lock(copy) == ["answer@2"]
+    assert update_lock(copy) == ["answer@3"]
     assert read_lock(copy)["answer@1"] == read_lock(PROMPTS)["answer@1"]
 
 

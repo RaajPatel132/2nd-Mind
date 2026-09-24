@@ -35,13 +35,15 @@ steps:
     timeout_s: 20
     max_output_tokens: 1024
     effort: low
+    prompt: intent@1
   extract:
     provider: anthropic
     model: claude-opus-5
     fallback: openai:gpt-6-sol
     timeout_s: 45
-    max_output_tokens: 4096
+    max_output_tokens: 8192
     effort: medium
+    prompt: extract@1
   resolve:
     provider: anthropic
     model: claude-opus-5
@@ -49,6 +51,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 2048
     effort: low
+    prompt: resolve@1
   enrich:
     provider: anthropic
     model: claude-opus-5
@@ -56,6 +59,16 @@ steps:
     timeout_s: 30
     max_output_tokens: 2048
     effort: low
+    prompt: enrich@1
+  # Only for the fuzzy cases the deterministic rules don't settle (S2.8), so a cheaper model.
+  reconcile:
+    provider: anthropic
+    model: claude-sonnet-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 1024
+    effort: low
+    prompt: reconcile@1
   plan:
     provider: anthropic
     model: claude-opus-5
@@ -70,7 +83,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 4096
     effort: low
-    prompt: answer@1
+    prompt: answer@2
   judge:
     provider: anthropic
     model: claude-opus-5

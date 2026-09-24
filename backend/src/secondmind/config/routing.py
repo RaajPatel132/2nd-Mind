@@ -23,6 +23,7 @@ class Step(StrEnum):
     EXTRACT = "extract"
     RESOLVE = "resolve"
     ENRICH = "enrich"
+    RECONCILE = "reconcile"
     PLAN = "plan"
     ANSWER = "answer"
     JUDGE = "judge"

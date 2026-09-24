@@ -81,6 +81,18 @@ class Settings(BaseSettings):
     max_message_chars: Annotated[int, Field(ge=1, le=100_000)] = 8_000
     default_timezone: str = "UTC"
 
+    # --- memory: write policy, layers, reconciliation, keys (S2)
+    policy_bulk_threshold: Annotated[int, Field(ge=1, le=1_000)] = 5
+    core_token_budget: Annotated[int, Field(ge=100, le=50_000)] = 1_500
+    quick_horizon_days: Annotated[int, Field(ge=1, le=365)] = 30
+    quick_recent_days: Annotated[int, Field(ge=0, le=90)] = 7
+    reconcile_similarity_threshold: Annotated[float, Field(gt=0, le=1)] = 0.85
+    cue_keys_max: Annotated[int, Field(ge=0, le=10)] = 3
+    embed_dimensions: Annotated[int, Field(ge=8, le=4_096)] = 1_536
+    enrich_enabled: bool = True
+    verbal_keys_enabled: bool = True
+    soft_channel_enabled: bool = True
+
     # --- reserved for S4: quotas, spend caps and the kill switch
     quota_tokens_guest: Annotated[int, Field(ge=0)] = 50_000
     quota_tokens_standard: Annotated[int, Field(ge=0)] = 1_000_000
