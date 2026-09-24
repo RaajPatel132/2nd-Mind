@@ -23,6 +23,36 @@ make up                  # builds and starts everything, runs migrations, prints
 With no provider keys the app runs in **fake-provider mode** (deterministic canned replies), so
 everything works offline. `make down` stops the stack.
 
+## Module map
+
+The backend (`backend/src/secondmind/`) has one package per domain. Each exposes a small typed
+interface in its `__init__`; infrastructure code lives in an `adapters/` subpackage.
+
+| Module | Owns |
+|---|---|
+| `api` | FastAPI routes, schemas, SSE, and the composition root that wires adapters |
+| `agent` | The LangGraph turn graph, the turn runner, turn/event storage ports |
+| `providers` | The provider-agnostic model interface, per-step router, resilience, fake provider |
+| `memory` | Workspace-scoped persistence: RLS-scoped sessions (items arrive in S2) |
+| `auth` | Users, workspaces, sessions |
+| `metering` | The usage ledger (quotas and spend caps later) |
+| `observability` | JSON logs, request/turn context, the tracing port (Langfuse adapter) |
+| `jobs` | Background jobs run by the arq worker |
+| `config` | Env settings, model routing, prices, prompt registry, config hash |
+| `core` | Shared types only: ids, scopes, usage, events, errors |
+| `ingestion`, `retrieval`, `policy`, `evals` | Placeholders for the save, recall, write-policy and eval work |
+
+Rules, enforced by `make check` and CI (import-linter, see
+[ADR-0011](docs/adr/0011-import-boundaries.md)):
+
+- `core` imports no other module and does no I/O.
+- Only `api` imports FastAPI. SDKs and drivers (`sqlalchemy`, `anthropic`, `openai`,
+  `redis`, `arq`, `langfuse`) are imported only in `*/adapters/`.
+- Modules use each other only through `secondmind.<module>` or, from composition roots and
+  adapters, `secondmind.<module>.adapters`. Anything deeper is internal.
+- Workspace-owned data is reachable only through repositories built with a `WorkspaceScope`,
+  and Postgres row-level security backs that up ([ADR-0003](docs/adr/0003-workspace-isolation-rls.md)).
+
 ## Develop
 
 ```bash
