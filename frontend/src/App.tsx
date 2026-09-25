@@ -127,7 +127,12 @@ function Workspace({ session }: { session: Session }) {
             <GlassBox
               turn={selected}
               pending={conversation.sending}
+              workspaceId={session.workspace.id}
               regionRef={glassRef}
+              onTurnCreated={(turn) => {
+                conversation.addTurn(turn)
+                setSelectedTurnId(turn.id)
+              }}
               onClose={() => {
                 setDrawerOpen(false)
                 composerRef.current?.focus()

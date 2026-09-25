@@ -63,46 +63,50 @@ export function Chat(props: Props) {
               long it took, and what it cost.
             </li>
           )}
-          {turns.map((turn) => (
-            <li key={turn.key} className="flex flex-col gap-2">
-              <p className="max-w-[85%] self-end whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-slate-900 px-4 py-2.5 text-white">
-                {turn.input}
-              </p>
-              <div className="flex max-w-[85%] flex-col items-start gap-1.5 self-start">
-                <div
-                  data-testid="assistant-message"
-                  className={`whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm px-4 py-2.5 ${
-                    turn.status === 'failed'
-                      ? 'border border-red-200 bg-red-50 text-red-900'
-                      : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
-                  }`}
-                >
-                  {turn.output}
-                  {turn.status === 'streaming' && (
-                    <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-slate-400 align-middle" aria-hidden />
-                  )}
-                  {turn.status === 'streaming' && !turn.output && <span className="sr-only">Thinking…</span>}
-                  {turn.status === 'running' && (
-                    <span className="text-sm text-slate-600">Still being answered. Refresh to see the reply.</span>
-                  )}
-                  {turn.status === 'failed' && <span role="alert">{turn.error ?? 'This turn failed.'}</span>}
-                </div>
-                {turn.id && turn.status !== 'streaming' && (
-                  <button
-                    type="button"
-                    data-testid="open-glass-box"
-                    aria-pressed={selectedTurnId === turn.id}
-                    onClick={() => {
-                      if (turn.id) props.onSelect(turn.id)
-                    }}
-                    className={`btn-chip ${selectedTurnId === turn.id ? 'bg-indigo-50 text-indigo-800 ring-indigo-300' : ''}`}
+          {turns.map((turn) =>
+            turn.kind !== 'user' ? (
+              <SystemNote key={turn.key} turn={turn} selected={selectedTurnId === turn.id} onSelect={props.onSelect} />
+            ) : (
+              <li key={turn.key} className="flex flex-col gap-2">
+                <p className="max-w-[85%] self-end whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-slate-900 px-4 py-2.5 text-white">
+                  {turn.input}
+                </p>
+                <div className="flex max-w-[85%] flex-col items-start gap-1.5 self-start">
+                  <div
+                    data-testid="assistant-message"
+                    className={`whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm px-4 py-2.5 ${
+                      turn.status === 'failed'
+                        ? 'border border-red-200 bg-red-50 text-red-900'
+                        : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                    }`}
                   >
-                    <GlassIcon /> Glass box
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
+                    {turn.output}
+                    {turn.status === 'streaming' && (
+                      <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-slate-400 align-middle" aria-hidden />
+                    )}
+                    {turn.status === 'streaming' && !turn.output && <span className="sr-only">Thinking…</span>}
+                    {turn.status === 'running' && (
+                      <span className="text-sm text-slate-600">Still being answered. Refresh to see the reply.</span>
+                    )}
+                    {turn.status === 'failed' && <span role="alert">{turn.error ?? 'This turn failed.'}</span>}
+                  </div>
+                  {turn.id && turn.status !== 'streaming' && (
+                    <button
+                      type="button"
+                      data-testid="open-glass-box"
+                      aria-pressed={selectedTurnId === turn.id}
+                      onClick={() => {
+                        if (turn.id) props.onSelect(turn.id)
+                      }}
+                      className={`btn-chip ${selectedTurnId === turn.id ? 'bg-indigo-50 text-indigo-800 ring-indigo-300' : ''}`}
+                    >
+                      <GlassIcon /> Glass box
+                    </button>
+                  )}
+                </div>
+              </li>
+            ),
+          )}
         </ol>
         <div ref={bottomRef} />
       </div>
@@ -133,6 +137,38 @@ export function Chat(props: Props) {
         </p>
       </form>
     </section>
+  )
+}
+
+const NOTE_LABELS: Record<ChatTurn['kind'], string> = {
+  user: '',
+  undo: 'Undo',
+  confirm: 'Confirmed',
+  system: 'Housekeeping',
+}
+
+/** An undo, confirmation or system turn: not a message, but visible and inspectable. */
+function SystemNote({ turn, selected, onSelect }: { turn: ChatTurn; selected: boolean; onSelect: (turnId: string) => void }) {
+  return (
+    <li data-testid="system-note" data-kind={turn.kind} className="flex flex-col items-center gap-1.5">
+      <p className="max-w-[90%] rounded-lg bg-slate-200/70 px-3 py-1.5 text-center text-sm text-slate-800">
+        <span className="font-semibold">{NOTE_LABELS[turn.kind]}:</span>{' '}
+        {turn.status === 'failed' ? <span role="alert">{turn.error ?? 'This failed.'}</span> : turn.output}
+      </p>
+      {turn.id && (
+        <button
+          type="button"
+          data-testid="open-glass-box"
+          aria-pressed={selected}
+          onClick={() => {
+            if (turn.id) onSelect(turn.id)
+          }}
+          className={`btn-chip ${selected ? 'bg-indigo-50 text-indigo-800 ring-indigo-300' : ''}`}
+        >
+          <GlassIcon /> Glass box
+        </button>
+      )}
+    </li>
   )
 }
 

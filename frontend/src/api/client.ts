@@ -15,6 +15,13 @@ export type TurnEvent = Schemas['TurnEventOut']['event']
 export type StoredEvent = Schemas['TurnEventOut']
 export type ModelCallEvent = Schemas['ModelCallEvent']
 export type IntentEvent = Schemas['IntentEvent']
+export type DecisionEvent = Schemas['DecisionEvent']
+export type MemoryDiffEvent = Schemas['MemoryDiffEvent']
+export type ToolCallEvent = Schemas['ToolCallEvent']
+export type DiffEntry = Schemas['DiffEntry']
+export type HeldWrite = Schemas['HeldWriteOut']
+export type ItemDetail = Schemas['ItemDetailOut']
+export type EntityDetail = Schemas['EntityDetailOut']
 export type TurnStreamFrame = Schemas['TurnStreamFrame']
 
 const api = createClient<paths>({ baseUrl: '', credentials: 'same-origin' })
@@ -66,6 +73,37 @@ export async function listTurns(workspaceId: string, before?: string, limit = 30
 export async function getTurnEvents(turnId: string): Promise<StoredEvent[]> {
   const page = unwrap(await api.GET('/v1/turns/{turn_id}/events', { params: { path: { turn_id: turnId } } }))
   return page.events
+}
+
+/** Revert every memory write of a turn, as a new undo turn (undoing an undo is a redo). */
+export async function undoTurn(turnId: string): Promise<Turn> {
+  return unwrap(await api.POST('/v1/turns/{turn_id}/undo', { params: { path: { turn_id: turnId } } }))
+}
+
+export async function listHeldWrites(workspaceId: string): Promise<HeldWrite[]> {
+  const page = unwrap(
+    await api.GET('/v1/workspaces/{workspace_id}/held-writes', {
+      params: { path: { workspace_id: workspaceId }, query: {} },
+    }),
+  )
+  return page.items
+}
+
+/** Apply a held write; it runs as a new confirmation turn with its own diff. */
+export async function confirmHeldWrite(heldId: string): Promise<Turn> {
+  return unwrap(await api.POST('/v1/held-writes/{held_id}/confirm', { params: { path: { held_id: heldId } } }))
+}
+
+export async function rejectHeldWrite(heldId: string): Promise<HeldWrite> {
+  return unwrap(await api.POST('/v1/held-writes/{held_id}/reject', { params: { path: { held_id: heldId } } }))
+}
+
+export async function getItem(itemId: string): Promise<ItemDetail> {
+  return unwrap(await api.GET('/v1/items/{item_id}', { params: { path: { item_id: itemId } } }))
+}
+
+export async function getEntity(entityId: string): Promise<EntityDetail> {
+  return unwrap(await api.GET('/v1/entities/{entity_id}', { params: { path: { entity_id: entityId } } }))
 }
 
 /** Frames are produced by the typed server; the name picks the matching data shape. */

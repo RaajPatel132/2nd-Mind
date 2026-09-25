@@ -4,6 +4,8 @@ import { ApiError, listTurns, streamTurn, type Turn } from '../api/client'
 export type ChatTurn = {
   key: string
   id: string | null
+  /** user turns are messages; undo, confirm and system turns show as notes in the chat. */
+  kind: Turn['kind']
   input: string
   output: string
   status: 'streaming' | 'completed' | 'failed' | 'running'
@@ -15,6 +17,7 @@ function fromTurn(turn: Turn): ChatTurn {
   return {
     key: turn.id,
     id: turn.id,
+    kind: turn.kind,
     input: turn.input,
     output: turn.output ?? '',
     status: turn.status,
@@ -81,7 +84,7 @@ export function useConversation(
       }
       setTurns((current) => [
         ...current,
-        { key, id: null, input: message, output: '', status: 'streaming', turn: null, error: null },
+        { key, id: null, kind: 'user', input: message, output: '', status: 'streaming', turn: null, error: null },
       ])
       setSending(true)
       let output = ''
@@ -115,5 +118,10 @@ export function useConversation(
     [workspaceId, onTurnDone],
   )
 
-  return { turns, loading, loadError, sending, send, loadEarlier, hasEarlier: nextBefore !== null }
+  /** A finished turn made elsewhere (an undo or a confirmation from the glass box). */
+  const addTurn = useCallback((turn: Turn) => {
+    setTurns((current) => (current.some((t) => t.id === turn.id) ? current : [...current, fromTurn(turn)]))
+  }, [])
+
+  return { turns, loading, loadError, sending, send, addTurn, loadEarlier, hasEarlier: nextBefore !== null }
 }
