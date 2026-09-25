@@ -5,20 +5,24 @@ from fastapi import APIRouter, Response
 
 from secondmind.api.deps import SESSION_COOKIE, ServicesDep, UserIdDep
 from secondmind.api.errors import ERROR_RESPONSES
-from secondmind.api.schemas import MeOut
+from secondmind.api.schemas import DevLoginIn, MeOut
 from secondmind.core import NotFoundError, UnauthenticatedError
 
 router = APIRouter(prefix="/v1", tags=["auth"])
 
 
 @router.post("/auth/dev-login", response_model=MeOut, responses=ERROR_RESPONSES)
-async def dev_login(services: ServicesDep, response: Response) -> MeOut:
-    """Create or reuse the dev user and their private workspace; set the session cookie."""
+async def dev_login(
+    services: ServicesDep, response: Response, body: DevLoginIn | None = None
+) -> MeOut:
+    """Create or reuse the dev user (or the one named in the body) and their private workspace;
+    set the session cookie."""
     settings = services.config.settings
     if not settings.dev_auth:
         raise NotFoundError("not found")
+    email = body.email if body is not None and body.email else settings.dev_user_email
     user, workspace = await services.identity.ensure_user_with_private_workspace(
-        email=settings.dev_user_email, timezone=settings.default_timezone
+        email=email, timezone=settings.default_timezone
     )
     response.set_cookie(
         SESSION_COOKIE,

@@ -164,6 +164,14 @@ class EntityDetailOut(_Out):
     item_ids: list[uuid.UUID]
 
 
+class DevLoginIn(BaseModel):
+    """Optional: log in as another dev user (dev auth only), e.g. a fresh one per E2E test."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+$")
+
+
 class CreateTurnIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -55,7 +55,8 @@ export interface paths {
         put?: never;
         /**
          * Dev Login
-         * @description Create or reuse the dev user and their private workspace; set the session cookie.
+         * @description Create or reuse the dev user (or the one named in the body) and their private workspace;
+         *     set the session cookie.
          */
         post: operations["dev_login"];
         delete?: never;
@@ -394,6 +395,14 @@ export interface components {
              * @default 1
              */
             v: number;
+        };
+        /**
+         * DevLoginIn
+         * @description Optional: log in as another dev user (dev auth only), e.g. a fresh one per E2E test.
+         */
+        DevLoginIn: {
+            /** Email */
+            email?: string | null;
         };
         /** DiffEntry */
         DiffEntry: {
@@ -1712,7 +1721,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DevLoginIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

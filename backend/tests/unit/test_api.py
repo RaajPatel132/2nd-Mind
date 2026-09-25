@@ -133,6 +133,21 @@ async def test_dev_login_is_404_when_dev_auth_is_off(base_env: dict[str, str]) -
         assert (await c.post("/v1/auth/dev-login")).status_code == 404
 
 
+async def test_dev_login_can_name_another_dev_user_with_their_own_workspace(
+    client: httpx.AsyncClient,
+) -> None:
+    default = await login(client)
+    other = await client.post("/v1/auth/dev-login", json={"email": "e2e-1@example.test"})
+    assert other.status_code == 200
+    body = other.json()
+    assert body["user"]["email"] == "e2e-1@example.test"
+    assert body["workspaces"][0]["id"] != default
+    me = (await client.get("/v1/me")).json()
+    assert me["user"]["email"] == "e2e-1@example.test"
+    bad = await client.post("/v1/auth/dev-login", json={"email": "not an email"})
+    assert bad.status_code == 422
+
+
 async def test_turn_streams_then_history_turn_and_events_are_readable(
     client: httpx.AsyncClient,
 ) -> None:

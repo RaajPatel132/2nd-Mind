@@ -211,6 +211,27 @@
         "title": "DecisionEvent",
         "type": "object"
       },
+      "DevLoginIn": {
+        "additionalProperties": false,
+        "description": "Optional: log in as another dev user (dev auth only), e.g. a fresh one per E2E test.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 254,
+                "pattern": "^[^@\\s]+@[^@\\s]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "title": "DevLoginIn",
+        "type": "object"
+      },
       "DiffEntry": {
         "additionalProperties": false,
         "properties": {
@@ -3137,8 +3158,25 @@
     },
     "/v1/auth/dev-login": {
       "post": {
-        "description": "Create or reuse the dev user and their private workspace; set the session cookie.",
+        "description": "Create or reuse the dev user (or the one named in the body) and their private workspace;\nset the session cookie.",
         "operationId": "dev_login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DevLoginIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
