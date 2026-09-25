@@ -293,6 +293,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AgentStep
+         * @description The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
+         *
+         *     ``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the
+         *     schema so the UI's catalogue is complete, not emitted yet.
+         * @enum {string}
+         */
+        AgentStep: "understand" | "extract" | "dates" | "entities" | "reconcile" | "enrich" | "guard" | "save" | "answer" | "undo" | "confirm" | "plan" | "search" | "rank" | "triggers" | "fetch";
         /** CheckOut */
         CheckOut: {
             /** Detail */
@@ -1226,6 +1235,18 @@ export interface components {
          * @enum {string}
          */
         Source: "user_message" | "link" | "file" | "derived";
+        /**
+         * SseStepStarted
+         * @description An agent step began (ADR-0029). Its ``step`` event follows in a ``turn.event`` frame.
+         */
+        SseStepStarted: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            step: components["schemas"]["AgentStep"];
+        };
         /** SseToken */
         SseToken: {
             /** Text */
@@ -1240,6 +1261,16 @@ export interface components {
              */
             turn_id: string;
             usage: components["schemas"]["UsageTotals"];
+        };
+        /**
+         * SseTurnEvent
+         * @description A turn event, as it was persisted (the same ``seq`` and body as ``/events``).
+         */
+        SseTurnEvent: {
+            /** Event */
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
+            /** Seq */
+            seq: number;
         };
         /** SseTurnFailed */
         SseTurnFailed: {
@@ -1271,6 +1302,31 @@ export interface components {
             workspace_id: string;
         };
         /**
+         * StepEvent
+         * @description One agent step that ran: how it ended and how long it took (ADR-0029).
+         */
+        StepEvent: {
+            /** Latency Ms */
+            latency_ms: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            status: components["schemas"]["StepStatus"];
+            step: components["schemas"]["AgentStep"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "step";
+            /**
+             * V
+             * @default 1
+             */
+            v: number;
+        };
+        /**
          * StepModel
          * @description Which provider and model served a step, and with which prompt version (FR-19.2).
          */
@@ -1284,6 +1340,11 @@ export interface components {
             /** Provider */
             provider: string;
         };
+        /**
+         * StepStatus
+         * @enum {string}
+         */
+        StepStatus: "done" | "held" | "refused" | "failed";
         /**
          * TimeClock
          * @description Which clock a time expression sets: when it happened, when it was true, when it is due,
@@ -1461,7 +1522,7 @@ export interface components {
              */
             created_at: string;
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -1561,6 +1622,14 @@ export interface components {
             data: components["schemas"]["SseToken"];
             /** @constant */
             event: "token";
+        } | {
+            data: components["schemas"]["SseStepStarted"];
+            /** @constant */
+            event: "step.started";
+        } | {
+            data: components["schemas"]["SseTurnEvent"];
+            /** @constant */
+            event: "turn.event";
         } | {
             data: components["schemas"]["SseTurnCompleted"];
             /** @constant */
@@ -2312,7 +2381,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description A `text/event-stream` of frames: `turn.started`, then `token` (repeated), then exactly one of `turn.completed` or `turn.failed`. Comment lines are keep-alives. */
+            /** @description A `text/event-stream` of frames: `turn.started`, then `token`, `step.started` and `turn.event` (each repeated, in the order they happened), then exactly one of `turn.completed` or `turn.failed`. Comment lines are keep-alives. Clients may ignore `step.started` and `turn.event`. */
             200: {
                 headers: {
                     [name: string]: unknown;

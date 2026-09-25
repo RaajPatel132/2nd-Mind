@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind, TurnStatus
 from secondmind.auth import User, Workspace, WorkspaceKind
-from secondmind.core import Layer, TurnEvent, UsageTotals
+from secondmind.core import AgentStep, Layer, TurnEvent, UsageTotals
 from secondmind.memory import (
     EntityRecord,
     HeldWriteRecord,
@@ -257,6 +257,20 @@ class SseToken(_Out):
     text: str
 
 
+class SseStepStarted(_Out):
+    """An agent step began (ADR-0029). Its ``step`` event follows in a ``turn.event`` frame."""
+
+    step: AgentStep
+    at: datetime
+
+
+class SseTurnEvent(_Out):
+    """A turn event, as it was persisted (the same ``seq`` and body as ``/events``)."""
+
+    seq: int
+    event: TurnEvent
+
+
 class SseTurnCompleted(_Out):
     turn_id: uuid.UUID
     usage: UsageTotals
@@ -273,6 +287,8 @@ class SseTurnFailed(_Out):
 SSE_EVENTS: dict[str, type[_Out]] = {
     "turn.started": SseTurnStarted,
     "token": SseToken,
+    "step.started": SseStepStarted,
+    "turn.event": SseTurnEvent,
     "turn.completed": SseTurnCompleted,
     "turn.failed": SseTurnFailed,
 }

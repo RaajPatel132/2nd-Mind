@@ -1,6 +1,29 @@
 {
   "components": {
     "schemas": {
+      "AgentStep": {
+        "description": "The agent steps a turn can report, in the UI's catalogue (docs/design/system.md \u00a78).\n\n``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the\nschema so the UI's catalogue is complete, not emitted yet.",
+        "enum": [
+          "understand",
+          "extract",
+          "dates",
+          "entities",
+          "reconcile",
+          "enrich",
+          "guard",
+          "save",
+          "answer",
+          "undo",
+          "confirm",
+          "plan",
+          "search",
+          "rank",
+          "triggers",
+          "fetch"
+        ],
+        "title": "AgentStep",
+        "type": "string"
+      },
       "CheckOut": {
         "properties": {
           "detail": {
@@ -2147,6 +2170,25 @@
         "title": "Source",
         "type": "string"
       },
+      "SseStepStarted": {
+        "description": "An agent step began (ADR-0029). Its ``step`` event follows in a ``turn.event`` frame.",
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "step": {
+            "$ref": "#/components/schemas/AgentStep"
+          }
+        },
+        "required": [
+          "step",
+          "at"
+        ],
+        "title": "SseStepStarted",
+        "type": "object"
+      },
       "SseToken": {
         "properties": {
           "text": {
@@ -2180,6 +2222,67 @@
           "turn"
         ],
         "title": "SseTurnCompleted",
+        "type": "object"
+      },
+      "SseTurnEvent": {
+        "description": "A turn event, as it was persisted (the same ``seq`` and body as ``/events``).",
+        "properties": {
+          "event": {
+            "discriminator": {
+              "mapping": {
+                "decision": "#/components/schemas/DecisionEvent",
+                "error": "#/components/schemas/ErrorEvent",
+                "intent": "#/components/schemas/IntentEvent",
+                "memory_diff": "#/components/schemas/MemoryDiffEvent",
+                "model_call": "#/components/schemas/ModelCallEvent",
+                "policy": "#/components/schemas/PolicyEvent",
+                "retrieval": "#/components/schemas/RetrievalEvent",
+                "step": "#/components/schemas/StepEvent",
+                "tool_call": "#/components/schemas/ToolCallEvent"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IntentEvent"
+              },
+              {
+                "$ref": "#/components/schemas/DecisionEvent"
+              },
+              {
+                "$ref": "#/components/schemas/MemoryDiffEvent"
+              },
+              {
+                "$ref": "#/components/schemas/RetrievalEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ToolCallEvent"
+              },
+              {
+                "$ref": "#/components/schemas/PolicyEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ModelCallEvent"
+              },
+              {
+                "$ref": "#/components/schemas/ErrorEvent"
+              },
+              {
+                "$ref": "#/components/schemas/StepEvent"
+              }
+            ],
+            "title": "Event"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seq",
+          "event"
+        ],
+        "title": "SseTurnEvent",
         "type": "object"
       },
       "SseTurnFailed": {
@@ -2234,6 +2337,47 @@
         "title": "SseTurnStarted",
         "type": "object"
       },
+      "StepEvent": {
+        "additionalProperties": false,
+        "description": "One agent step that ran: how it ended and how long it took (ADR-0029).",
+        "properties": {
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StepStatus"
+          },
+          "step": {
+            "$ref": "#/components/schemas/AgentStep"
+          },
+          "type": {
+            "const": "step",
+            "default": "step",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "step",
+          "status",
+          "started_at",
+          "latency_ms"
+        ],
+        "title": "StepEvent",
+        "type": "object"
+      },
       "StepModel": {
         "additionalProperties": false,
         "description": "Which provider and model served a step, and with which prompt version (FR-19.2).",
@@ -2275,6 +2419,16 @@
         ],
         "title": "StepModel",
         "type": "object"
+      },
+      "StepStatus": {
+        "enum": [
+          "done",
+          "held",
+          "refused",
+          "failed"
+        ],
+        "title": "StepStatus",
+        "type": "string"
       },
       "TimeClock": {
         "description": "Which clock a time expression sets: when it happened, when it was true, when it is due,\nor when to remind.",
@@ -2638,6 +2792,7 @@
                 "model_call": "#/components/schemas/ModelCallEvent",
                 "policy": "#/components/schemas/PolicyEvent",
                 "retrieval": "#/components/schemas/RetrievalEvent",
+                "step": "#/components/schemas/StepEvent",
                 "tool_call": "#/components/schemas/ToolCallEvent"
               },
               "propertyName": "type"
@@ -2666,6 +2821,9 @@
               },
               {
                 "$ref": "#/components/schemas/ErrorEvent"
+              },
+              {
+                "$ref": "#/components/schemas/StepEvent"
               }
             ],
             "title": "Event"
@@ -2908,6 +3066,40 @@
               "data"
             ],
             "title": "SseTokenFrame",
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseStepStarted"
+              },
+              "event": {
+                "const": "step.started",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseStepStartedFrame",
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SseTurnEvent"
+              },
+              "event": {
+                "const": "turn.event",
+                "type": "string"
+              }
+            },
+            "required": [
+              "event",
+              "data"
+            ],
+            "title": "SseTurnEventFrame",
             "type": "object"
           },
           {
@@ -3969,7 +4161,7 @@
                 }
               }
             },
-            "description": "A `text/event-stream` of frames: `turn.started`, then `token` (repeated), then exactly one of `turn.completed` or `turn.failed`. Comment lines are keep-alives."
+            "description": "A `text/event-stream` of frames: `turn.started`, then `token`, `step.started` and `turn.event` (each repeated, in the order they happened), then exactly one of `turn.completed` or `turn.failed`. Comment lines are keep-alives. Clients may ignore `step.started` and `turn.event`."
           },
           "401": {
             "content": {

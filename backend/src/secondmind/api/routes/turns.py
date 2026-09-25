@@ -17,8 +17,10 @@ from secondmind.auth import resolve_scope
 router = APIRouter(prefix="/v1", tags=["turns"])
 
 SSE_DESCRIPTION = (
-    "A `text/event-stream` of frames: `turn.started`, then `token` (repeated), then exactly "
-    "one of `turn.completed` or `turn.failed`. Comment lines are keep-alives."
+    "A `text/event-stream` of frames: `turn.started`, then `token`, `step.started` and "
+    "`turn.event` (each repeated, in the order they happened), then exactly one of "
+    "`turn.completed` or `turn.failed`. Comment lines are keep-alives. Clients may ignore "
+    "`step.started` and `turn.event`."
 )
 
 

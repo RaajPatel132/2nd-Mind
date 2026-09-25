@@ -177,9 +177,27 @@ async def test_turn_streams_then_history_turn_and_events_are_readable(
     assert turn["trace"] == {"status": "disabled", "url": None}
 
     events = (await client.get(f"/v1/turns/{turn_id}/events")).json()["events"]
-    assert [e["seq"] for e in events] == [1, 2, 3]
-    assert [e["event"]["type"] for e in events] == ["model_call", "intent", "model_call"]
-    assert events[2]["event"]["usage"]["cost_usd"] > 0
+    assert [e["seq"] for e in events] == [1, 2, 3, 4, 5]
+    assert [e["event"]["type"] for e in events] == [
+        "model_call",
+        "intent",
+        "step",
+        "model_call",
+        "step",
+    ]
+    assert [e["event"]["step"] for e in events if e["event"]["type"] == "step"] == [
+        "understand",
+        "answer",
+    ]
+    assert events[3]["event"]["usage"]["cost_usd"] > 0
+    # Every stored event was streamed as it was persisted, with the same seq and body; each
+    # step's start came first (ADR-0029).
+    live = [d for n, d in got if n == "turn.event"]
+    assert live == [{"seq": e["seq"], "event": e["event"]} for e in events]
+    started = [d["step"] for n, d in got if n == "step.started"]
+    assert started == ["understand", "answer"]
+    order = [n for n, _ in got if n in {"step.started", "turn.event", "token"}]
+    assert order.index("token") > order.index("step.started", 1)  # reply inside the answer step
 
 
 async def test_history_pages_with_before_cursor(client: httpx.AsyncClient) -> None:
@@ -245,7 +263,18 @@ def test_openapi_documents_the_sse_frames() -> None:
         f["properties"]["event"]["const"]
         for f in schema["components"]["schemas"]["TurnStreamFrame"]["oneOf"]
     }
-    assert frame_events == {"turn.started", "token", "turn.completed", "turn.failed"}
+    assert frame_events == {
+        "turn.started",
+        "token",
+        "step.started",
+        "turn.event",
+        "turn.completed",
+        "turn.failed",
+    }
+    steps = schema["components"]["schemas"]["AgentStep"]["enum"]
+    assert {"understand", "guard", "save", "answer", "undo", "confirm", "search", "fetch"} <= set(
+        steps
+    )
 
 
 async def _turn_id(c: httpx.AsyncClient, ws: str, message: str) -> str:

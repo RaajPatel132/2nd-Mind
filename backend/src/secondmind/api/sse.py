@@ -1,10 +1,13 @@
-"""Server-sent events for a running turn: turn.started, token*, turn.completed | turn.failed."""
+"""Server-sent events for a running turn: turn.started, then token, step.started and turn.event
+in the order they happened, then turn.completed | turn.failed (ADR-0015, ADR-0029)."""
 
 from collections.abc import AsyncIterator, Callable
 
 from pydantic import BaseModel
 
 from secondmind.agent import (
+    EventRecorded,
+    StepStarted,
     TokenDelta,
     Turn,
     TurnCompleted,
@@ -13,8 +16,10 @@ from secondmind.agent import (
     TurnStarted,
 )
 from secondmind.api.schemas import (
+    SseStepStarted,
     SseToken,
     SseTurnCompleted,
+    SseTurnEvent,
     SseTurnFailed,
     SseTurnStarted,
     TurnError,
@@ -50,6 +55,10 @@ async def turn_stream(
                 )
             case TokenDelta(text=text):
                 yield frame("token", SseToken(text=text))
+            case StepStarted(step=step, at=at):
+                yield frame("step.started", SseStepStarted(step=step, at=at))
+            case EventRecorded(stored=stored):
+                yield frame("turn.event", SseTurnEvent(seq=stored.seq, event=stored.event))
             case TurnCompleted(turn=turn):
                 yield frame(
                     "turn.completed",
