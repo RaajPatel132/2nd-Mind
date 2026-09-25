@@ -874,3 +874,284 @@ def reminder_time(
     local_day = start.astimezone(ZoneInfo(timezone)).date()
     days = math.ceil(lead / timedelta(days=1))
     return _at(local_day - timedelta(days=days), time(REMINDER_HOUR), timezone)
+
+
+# ------------------------------------------------------------------ recall windows (S3.4)
+
+WindowDirection = Literal["past", "future", "any"]
+
+# Wider than PARTS (which are typical event times): a window should hold anything said to
+# have happened in that part of the day.
+_WINDOW_PARTS = {"morning": (5, 12), "afternoon": (12, 17), "evening": (17, 21), "night": (21, 29)}
+_OPEN_ENDED = re.compile(r"^(ever|all time|any ?time|always)$")
+_UPCOMING = re.compile(r"^(upcoming|coming up|soon|ahead|in the future|later)$")
+_RECENT = re.compile(r"^(recently|lately|of late|these days)$")
+_SPAN_UNITS = {"day": 1, "week": 7, "fortnight": 14, "month": 30, "year": 365}
+_LOOKUP: dict[WindowDirection, Direction] = {"past": "past", "future": "future", "any": "auto"}
+
+
+@dataclass(frozen=True, slots=True)
+class Window:
+    """A half-open span ``[start, end)`` a recall filter uses; ``None`` is unbounded."""
+
+    expression: str
+    clock: TimeClock
+    start: datetime | None
+    end: datetime | None
+    precision: TimePrecision
+    rule: str
+    anchor: str | None = None
+    assumed: bool = False
+    alternative: str | None = None
+
+    def contains(self, instant: datetime) -> bool:
+        return (self.start is None or instant >= self.start) and (
+            self.end is None or instant < self.end
+        )
+
+    def overlaps(self, start: datetime, end: datetime | None) -> bool:
+        """Whether ``[start, end)`` (a point when ``end`` is None) meets this window."""
+        if end is None or end <= start:
+            return self.contains(start)
+        return (self.end is None or start < self.end) and (self.start is None or end > self.start)
+
+
+def resolve_window(
+    expression: str,
+    clock: TimeClock,
+    now: TurnNow,
+    *,
+    direction: WindowDirection = "any",
+    anchor: tuple[datetime, datetime | None] | None = None,
+    anchor_label: str | None = None,
+) -> Window:
+    """A recall time expression -> ``[start, end)`` at the expression's precision.
+
+    ``anchor`` is the span of an event the expression is relative to ("the weekend before
+    **Goa**": the caller looks the Goa trip up first). ``direction`` clips a window that
+    straddles now: ``past`` ends it at now, ``future`` starts it at now. Raises
+    :class:`UnresolvableTimeError` when no rule understands the expression.
+    """
+    text = _norm(expression)
+    text = re.sub(
+        r"^(in|during|over|within|for|from|on|at)\s+(?=the\s|last|past|next|this)", "", text
+    )
+    if anchor is not None:
+        window = _anchored(text, now, anchor)
+    else:
+        window = (
+            _range(text, now, direction)
+            or _relative_span(text, now)
+            or _calendar(text, now, direction)
+        )
+    if window is None:
+        raise UnresolvableTimeError(f"no window rule understood {expression!r}")
+    start, end, precision, rule = window
+    start, end = _clip(start, end, now.instant, direction)
+    return Window(
+        expression=expression,
+        clock=clock,
+        start=start,
+        end=end,
+        precision=precision,
+        rule=rule,
+        anchor=anchor_label,
+    )
+
+
+_Span = tuple[datetime | None, datetime | None, TimePrecision, str]
+
+
+def _clip(
+    start: datetime | None, end: datetime | None, now: datetime, direction: WindowDirection
+) -> tuple[datetime | None, datetime | None]:
+    straddles = (start is None or start < now) and (end is None or end > now)
+    if direction == "past" and straddles:
+        return start, now
+    if direction == "future" and straddles:
+        return now, end
+    return start, end
+
+
+def _day_span(d: _Day, tz: str) -> tuple[datetime, datetime]:
+    start = _at(d.start, time(0), tz)
+    if d.precision is TimePrecision.MONTH:
+        return start, _at(d.start + relativedelta(months=1), time(0), tz)
+    if d.precision is TimePrecision.YEAR:
+        return start, _at(date(d.start.year + 1, 1, 1), time(0), tz)
+    return start, _at(d.start + timedelta(days=d.days), time(0), tz)
+
+
+def _calendar(text: str, now: TurnNow, direction: WindowDirection) -> _Span | None:
+    """One calendar span: a day, week, weekend, month, year, or a part of today."""
+    if _OPEN_ENDED.match(text):
+        return None, None, TimePrecision.YEAR, "open"
+    if _UPCOMING.match(text):
+        return now.instant, now.instant + timedelta(days=30), TimePrecision.DAY, "upcoming_30_days"
+    if _RECENT.match(text):
+        return now.instant - timedelta(days=30), now.instant, TimePrecision.DAY, "recent_30_days"
+    part = re.fullmatch(r"(?:(this|yesterday|today|tomorrow)\s+)?(morning|afternoon|evening|night)"
+                        r"|(tonight|last night)", text)  # fmt: skip
+    if part:
+        return _part_of_day(part, now)
+    day = _calendar_day(text, now, _LOOKUP[direction])
+    if day is None:
+        return None
+    if direction == "any" and day.rule.startswith(("day_month_", "month_name_")):
+        # No direction given and no year: the nearer of the last and the next occurrence.
+        past = _calendar_day(text, now, "past")
+        future = _calendar_day(text, now, "future")
+        if past is not None and future is not None:
+            day = min(past, future, key=lambda d: _distance(_day_span(d, now.timezone), now))
+    start, end = _day_span(day, now.timezone)
+    return start, end, day.precision, day.rule
+
+
+def _calendar_day(text: str, now: TurnNow, direction: Direction) -> _Day | None:
+    day = _span(text, now, direction)
+    if day is None:
+        bare = re.sub(r"^(on|at|in the|in|the|around|about|during)\s+", "", text)
+        day = _span(bare, now, direction) or _weekday_and_date(bare, now, direction)
+    return day
+
+
+def _distance(span: tuple[datetime, datetime], now: TurnNow) -> timedelta:
+    start, end = span
+    if start <= now.instant < end:
+        return timedelta(0)
+    return min(abs(start - now.instant), abs(end - now.instant))
+
+
+def _part_of_day(match: re.Match[str], now: TurnNow) -> _Span:
+    today = now.today
+    if match.group(3):
+        day = today if match.group(3) == "tonight" else today - timedelta(days=1)
+        part = "night"
+    else:
+        word = match.group(1) or "this"
+        offset = {"this": 0, "today": 0, "yesterday": -1, "tomorrow": 1}[word]
+        day, part = today + timedelta(days=offset), match.group(2)
+    first, last = _WINDOW_PARTS[part]
+    start = _at(day, time(0), now.timezone) + timedelta(hours=first)
+    end = _at(day, time(0), now.timezone) + timedelta(hours=last)
+    return start, end, TimePrecision.DATETIME, f"part_of_day_{part}"
+
+
+def _relative_span(text: str, now: TurnNow) -> _Span | None:
+    """ "the last 7 days", "past two weeks", "the next 30 days": counted from now."""
+    match = re.fullmatch(
+        r"(?:the\s+)?(last|past|previous|next|coming|following)\s+(?:(\d+)\s+)?"
+        r"(day|week|fortnight|month|year)s?",
+        text,
+    )
+    if match is None or (match.group(2) is None and match.group(1) in ("last", "next", "coming")):
+        # "last week" / "next month" are calendar periods, handled by _calendar.
+        return None
+    n = int(match.group(2) or 1)
+    unit = match.group(3)
+    delta = timedelta(days=n * _SPAN_UNITS[unit])
+    if match.group(1) in ("next", "coming", "following"):
+        return now.instant, now.instant + delta, TimePrecision.DAY, f"next_{n}_{unit}s"
+    return now.instant - delta, now.instant, TimePrecision.DAY, f"last_{n}_{unit}s"
+
+
+def _range(text: str, now: TurnNow, direction: WindowDirection) -> _Span | None:  # noqa: PLR0911
+    """Bounds: "since X", "before X", "after X", "until X", "between X and Y", "from X to Y"."""
+    between = re.fullmatch(r"(?:between|from)\s+(.+?)\s+(?:and|to|until|till)\s+(.+)", text)
+    if between:
+        left, right = between.group(1), between.group(2)
+        if re.fullmatch(r"\d{1,2}", left) and re.search(r"[a-z]", right):
+            # "between 1 and 7 September": the month is written once, on the right.
+            month = re.sub(r"^\d{1,2}\s+", "", right)
+            left = f"{left} {month}"
+        a = _calendar(left, now, direction)
+        b = _calendar(right, now, direction)
+        if a is None or b is None or a[0] is None:
+            return None
+        return a[0], b[1], min(a[2], b[2], key=_PRECISION_ORDER.index), "between"
+    bound = re.fullmatch(r"(since|before|after|until|till|up to|by)\s+(.+)", text)
+    if not bound:
+        return None
+    word, rest = bound.group(1), bound.group(2)
+    span = _calendar(rest, now, direction)
+    if span is None:
+        return None
+    start, end, precision, rule = span
+    if word == "since":
+        return (
+            start,
+            now.instant if (start is None or start < now.instant) else None,
+            precision,
+            f"since_{rule}",
+        )
+    if word == "before":
+        return None, start, precision, f"before_{rule}"
+    if word == "after":
+        return end, None, precision, f"after_{rule}"
+    # until / by: from now (looking ahead) or from the beginning (looking back) to its end
+    first = now.instant if direction == "future" else None
+    return first, end, precision, f"until_{rule}"
+
+
+_PRECISION_ORDER = [
+    TimePrecision.DATETIME,
+    TimePrecision.DAY,
+    TimePrecision.MONTH,
+    TimePrecision.YEAR,
+]
+
+
+def _anchored(  # noqa: PLR0911
+    text: str, now: TurnNow, anchor: tuple[datetime, datetime | None]
+) -> _Span | None:
+    """A window relative to an event: "the weekend before", "the week after", "since"."""
+    tz = now.timezone
+    a_start, a_end = anchor
+    first_day = a_start.astimezone(ZoneInfo(tz)).date()
+    end_instant = (
+        a_end
+        if a_end is not None and a_end > a_start
+        else _at(first_day + timedelta(days=1), time(0), tz)
+    )
+    last_day = (end_instant - timedelta(microseconds=1)).astimezone(ZoneInfo(tz)).date()
+    text = re.sub(r"\s+(it|that|then|this)$", "", text)
+    if text in ("", "during", "at", "on", "when", "in", "at the time", "the same time"):
+        return a_start, end_instant, TimePrecision.DAY, "anchor_during"
+    if text in ("before", "earlier", "prior"):
+        return None, a_start, TimePrecision.DAY, "anchor_before"
+    if text in ("after", "later", "afterwards"):
+        return end_instant, None, TimePrecision.DAY, "anchor_after"
+    if text == "since":
+        return a_start, now.instant, TimePrecision.DAY, "anchor_since"
+    match = re.fullmatch(
+        r"(?:the\s+)?(?:(\d+)\s+)?(day|days|week|weeks|weekend|month)\s+(before|after)", text
+    )
+    if match is None:
+        return None
+    n = int(match.group(1) or 1)
+    unit, side = match.group(2).rstrip("s"), match.group(3)
+    if unit == "weekend":
+        if side == "before":
+            back = (first_day.weekday() - 5) % 7 or 7
+            saturday = first_day - timedelta(days=back)
+        else:
+            ahead = (5 - last_day.weekday()) % 7 or 7
+            saturday = last_day + timedelta(days=ahead)
+        start = _at(saturday, time(0), tz)
+        return start, start + timedelta(days=2), TimePrecision.DAY, f"anchor_weekend_{side}"
+    days = {"day": 1, "week": 7, "month": 30}[unit] * n
+    if side == "before":
+        start_day = first_day - timedelta(days=days)
+        return (
+            _at(start_day, time(0), tz),
+            _at(first_day, time(0), tz),
+            TimePrecision.DAY,
+            (f"anchor_{unit}_before"),
+        )
+    after_day = last_day + timedelta(days=1)
+    return (
+        _at(after_day, time(0), tz),
+        _at(after_day + timedelta(days=days), time(0), tz),
+        (TimePrecision.DAY),
+        f"anchor_{unit}_after",
+    )
