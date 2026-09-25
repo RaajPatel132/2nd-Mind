@@ -276,7 +276,7 @@ A minimal way to see what is stored, which the correction loop needs.
 
 ### 7.9 Glass-box view (P0; signature feature)
 
-Beside the chat, **open by default on desktop** (a toggleable drawer on narrow screens), the glass box shows the selected turn in five panels, ordered by importance.
+The glass box lives **inside the conversation**. Each turn shows the agent's work live as the **Trail**: one row per step (understood, found, dated, recognised, checked, allowed, saved, replied), in plain words, each expanding into what happened and the technical detail. The **Inspector** is a sheet opened from any turn (docked beside the chat on wide screens, a bottom sheet on phones) that shows the whole glass box for that turn in five panels, ordered by importance. The Trail and the Inspector are built from the same events and show the same facts; see `docs/design/system.md` §8.
 
 | Panel | Must show | Example |
 |---|---|---|
@@ -530,7 +530,7 @@ These are properties the codebase must have. The technical plan chooses how.
 **Screens (Phase 1):**
 
 1. **Landing:** one line, three numbers, "Try the sample persona", sign up / log in, links to `/evals` and `/architecture`.
-2. **Main app:** chat (left) and glass box (right, open by default). Header: workspace switcher (My memory / Sample persona), remaining quota, Upcoming, Memory, Settings.
+2. **Main app:** the chat is the whole screen. Every turn carries its glass box inline as the Trail of agent steps, and Inspect opens the Inspector sheet with the five panels. Header: workspace switcher (My memory / Sample persona) on the left; Upcoming, Memory, Settings as each ships, and the avatar with its remaining-quota ring on the right.
 3. **Upcoming:** events, reminders, open tasks.
 4. **Memory browser:** items, people, core memory and rules.
 5. **Item detail:** fields, origin turn, history, edit / undo.
@@ -539,7 +539,7 @@ These are properties the codebase must have. The technical plan chooses how.
 8. **API keys and usage** (in settings): create/revoke keys, per-key usage, remaining quota.
 9. **`/evals`**, **`/architecture`**, **`/status`**, **`/docs/api`**, **privacy note**.
 
-**The first 30 seconds for a guest:** land → "Try the sample persona" → the chat has two suggested prompts and the glass box is already open → click the save prompt → watch the memory diff appear → click the recall prompt → see the retrieval explanation with scores and cited items.
+**The first 30 seconds for a guest:** land → "Try the sample persona" → the chat has two suggested prompts → click the save prompt → watch the Trail's steps appear one by one and the memory diff land in its save step → click the recall prompt → see the retrieval steps with scores and cited items, and Inspect for the whole glass box.
 
 ---
 
