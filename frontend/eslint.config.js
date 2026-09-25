@@ -40,6 +40,20 @@ export default tseslint.config(
     },
   },
   {
+    // Ink (docs/design/system.md §12.3): features compose the primitives in src/ui.
+    files: ['src/**/*.tsx'],
+    ignores: ['src/ui/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXOpeningElement[name.name=/^(button|input|textarea|select)$/]',
+          message: 'Use a primitive from src/ui (Button, IconButton, TextArea, …). Raw form controls live only in src/ui.',
+        },
+      ],
+    },
+  },
+  {
     // The client module is the one place allowed to touch the network.
     files: ['src/api/**/*.ts'],
     rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off' },
