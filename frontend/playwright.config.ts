@@ -16,7 +16,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile-360', use: { ...devices['Pixel 5'], viewport: { width: 360, height: 740 } } },
+    { name: 'desktop', testIgnore: /motion\.spec/, use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
+    { name: 'mobile-360', testIgnore: /motion\.spec/, use: { ...devices['Pixel 5'], viewport: { width: 360, height: 740 } } },
+    // UI.13: the docked inspector and the widest layout.
+    { name: 'wide-1440', testMatch: /(layout|a11y)\.spec/, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // UI.13: a whole turn with the OS asking for less motion.
+    {
+      name: 'reduced-motion',
+      testMatch: /motion\.spec/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, contextOptions: { reducedMotion: 'reduce' } },
+    },
   ],
 })
