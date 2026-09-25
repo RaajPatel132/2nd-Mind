@@ -55,3 +55,50 @@ export function formatInZone(iso: string, timeZone: string): string {
     return iso
   }
 }
+
+/** Seconds with two decimals under 10 s ("2.14 s"), else one. */
+export function formatSeconds(ms: number): string {
+  return ms < 1000 ? formatMs(ms) : `${(ms / 1000).toFixed(ms < 10_000 ? 2 : 1)} s`
+}
+
+/** "−1.2k" style: a compact signed token count. */
+export function formatCompact(n: number): string {
+  if (Math.abs(n) < 1000) return String(n)
+  return `${(n / 1000).toFixed(1)}k`
+}
+
+/** "Thu 24 Sep" for a resolved date value ("2026-09-24", "2026-09-24T19:00", "2027-05"). */
+export function formatDay(value: string): string {
+  const day = /^\d{4}-\d{2}-\d{2}/.exec(value)?.[0]
+  if (!day) {
+    const month = /^(\d{4})-(\d{2})$/.exec(value)
+    if (month) {
+      const d = new Date(Date.UTC(Number(month[1]), Number(month[2]) - 1, 1))
+      return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    }
+    return value
+  }
+  const d = new Date(`${day}T12:00:00Z`)
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(',', '')
+}
+
+/** The weekday of an instant in a timezone ("Friday"). */
+export function weekdayIn(iso: string, timeZone: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', timeZone })
+  } catch {
+    return ''
+  }
+}
+
+/** "10:42" in the viewer's clock. */
+export function formatClock(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
+export function initialsOf(email: string): string {
+  const name = email.split('@')[0] ?? ''
+  const parts = name.split(/[._-]+/).filter(Boolean)
+  const letters = parts.length > 1 ? `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}` : name.slice(0, 2)
+  return letters.toUpperCase() || '?'
+}

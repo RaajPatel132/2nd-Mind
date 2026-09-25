@@ -18,7 +18,16 @@ export type IntentEvent = Schemas['IntentEvent']
 export type DecisionEvent = Schemas['DecisionEvent']
 export type MemoryDiffEvent = Schemas['MemoryDiffEvent']
 export type ToolCallEvent = Schemas['ToolCallEvent']
+export type PolicyEvent = Schemas['PolicyEvent']
+export type StepEvent = Schemas['StepEvent']
+export type ErrorEvent = Schemas['ErrorEvent']
+export type AgentStep = Schemas['AgentStep']
+export type Usage = Schemas['UsageOut']
 export type DiffEntry = Schemas['DiffEntry']
+export type EntityResolution = Schemas['EntityResolution']
+export type Reconciliation = Schemas['Reconciliation']
+export type TimeResolution = Schemas['TimeResolution']
+export type Classification = Schemas['Classification']
 export type HeldWrite = Schemas['HeldWriteOut']
 export type ItemDetail = Schemas['ItemDetailOut']
 export type EntityDetail = Schemas['EntityDetailOut']
@@ -56,6 +65,16 @@ export async function getMe(): Promise<Me | null> {
 
 export async function devLogin(): Promise<Me> {
   return unwrap(await api.POST('/v1/auth/dev-login'))
+}
+
+export async function logout(): Promise<void> {
+  const { response } = await api.POST('/v1/auth/logout')
+  if (!response.ok) throw toError(response.status, undefined)
+}
+
+/** The signed-in user's quota: tier, limit, used and remaining tokens (read only until S4). */
+export async function getUsage(): Promise<Usage> {
+  return unwrap(await api.GET('/v1/me/usage'))
 }
 
 export async function getMeta(): Promise<Meta> {
@@ -111,7 +130,14 @@ function toFrame(event: TurnStreamFrame['event'], data: unknown): TurnStreamFram
   return { event, data } as TurnStreamFrame
 }
 
-const FRAME_NAMES = new Set<TurnStreamFrame['event']>(['turn.started', 'token', 'turn.completed', 'turn.failed'])
+const FRAME_NAMES = new Set<TurnStreamFrame['event']>([
+  'turn.started',
+  'token',
+  'step.started',
+  'turn.event',
+  'turn.completed',
+  'turn.failed',
+])
 
 /** Send a message; yields the typed server-sent frames of the turn as they arrive. */
 export async function* streamTurn(
