@@ -1,0 +1,27 @@
+# Labelled messages for the intent step (S2.4). Synthetic. Run live with `pytest -m live -s`:
+# the accuracy printed is a baseline for the sprint report, not a target.
+- {message: "I'm vegetarian", intent: save}
+- {message: "Kabir's birthday is 14 March", intent: save}
+- {message: "Spare keys are in the kitchen cabinet", intent: save}
+- {message: "Nisha recommended Severance", intent: save}
+- {message: "Ran 5 km in 31 min this morning", intent: save}
+- {message: "Remind me to call the plumber on Friday", intent: save}
+- {message: "Want to learn Rust properly this year", intent: save}
+- {message: "I moved to Pune last month", intent: save}
+- {message: "What's Kabir's birthday?", intent: recall}
+- {message: "Where did I put the spare keys", intent: recall}
+- {message: "Which shows did Nisha recommend?", intent: recall}
+- {message: "What did I do last weekend?", intent: recall}
+- {message: "Do I have anything on Friday?", intent: recall}
+- {message: "Remind me what gift ideas I have for Kabir", intent: recall}
+- {message: "Dinner with Rohan on Saturday; what does he like to eat again?", intent: save_and_recall}
+- {message: "Just finished Mindhunter. What else was on my watch list?", intent: save_and_recall}
+- {message: "Bought the fountain pen for Kabir. Is anything else still on the gift list?", intent: save_and_recall}
+- {message: "Actually the dentist is on Saturday, not Friday", intent: correct}
+- {message: "No, Nisha is my cousin, not my sister", intent: correct}
+- {message: "That's wrong, I live in Pune now", intent: correct}
+- {message: "Forget what I said about the trading idea", intent: correct}
+- {message: "hello!", intent: chit_chat}
+- {message: "thanks, that's helpful", intent: chit_chat}
+- {message: "how are you today?", intent: chit_chat}
+- {message: "can you explain what you can do?", intent: chit_chat}
