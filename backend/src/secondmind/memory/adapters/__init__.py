@@ -6,7 +6,11 @@ from secondmind.memory.adapters.bootstrap import ensure_app_role
 from secondmind.memory.adapters.db import NAMING, SCHEMA_HEAD, Base, Database, RoleCheck
 from secondmind.memory.adapters.inmemory import InjectedFaultError, InMemoryMemory
 from secondmind.memory.adapters.store import SqlMemoryStore, embedding_dimensions
-from secondmind.memory.adapters.tables import EMBED_DIMENSIONS, WORKSPACE_OWNED_MEMORY_TABLES
+from secondmind.memory.adapters.tables import (
+    EMBED_DIMENSIONS,
+    WORKSPACE_OWNED_MEMORY_TABLES,
+    Vector,
+)
 
 
 def sql_memory(db: Database) -> "SqlMemoryFactory":
@@ -33,6 +37,7 @@ __all__ = [
     "InjectedFaultError",
     "RoleCheck",
     "SqlMemoryFactory",
+    "Vector",
     "embedding_dimensions",
     "ensure_app_role",
     "sql_memory",
