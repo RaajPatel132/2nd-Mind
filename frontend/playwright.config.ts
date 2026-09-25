@@ -6,6 +6,8 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // Locally the whole stack shares a small Docker VM; more workers only add contention.
+  workers: process.env.CI ? undefined : 2,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {

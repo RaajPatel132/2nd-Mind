@@ -40,10 +40,12 @@ test.describe('chat and glass box', () => {
     await page.goto('/')
     await page.getByTestId('composer').fill(message)
     await page.getByTestId('composer').press('Enter')
-    await expect(page.getByTestId('assistant-message').last()).toContainText(message)
+    // Since S2 this is a save (several model calls and a write), not chit-chat.
+    await expect(page.getByTestId('assistant-message').last()).toContainText(message, { timeout: 60_000 })
 
     await page.reload()
-    await expect(page.getByText(message, { exact: true })).toBeVisible()
+    // The saved note also shows in the glass box, so look in the message list.
+    await expect(page.getByTestId('messages').getByText(message, { exact: true })).toBeVisible()
   })
 
   test('no horizontal scroll at this width', async ({ page }) => {
