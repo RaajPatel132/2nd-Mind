@@ -13,15 +13,22 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc -b --noEmit",
     "gen-client": "openapi-typescript ../backend/openapi.json -o src/api/schema.gen.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "check:design": "node scripts/check-design.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
     "eventsource-parser": "^4.1.1",
+    "lucide-react": "^1.48.0",
+    "motion": "^13.4.4",
     "openapi-fetch": "^0.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
