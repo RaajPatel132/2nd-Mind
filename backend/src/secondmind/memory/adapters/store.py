@@ -26,6 +26,7 @@ from secondmind.memory.adapters.tables import (
     EntityRelationRow,
     EntityRow,
     HeldWriteRow,
+    ItemAccessRow,
     ItemVersionRow,
     MemoryEntityRow,
     MemoryItemRow,
@@ -62,6 +63,10 @@ _KEYS: Table = MemoryKeyRow.__table__  # type: ignore[assignment]
 _LOG: Table = WriteLogRow.__table__  # type: ignore[assignment]
 _HELD: Table = HeldWriteRow.__table__  # type: ignore[assignment]
 _VERSIONS: Table = ItemVersionRow.__table__  # type: ignore[assignment]
+_ACCESS: Table = ItemAccessRow.__table__  # type: ignore[assignment]
+
+# Only retrieval bookkeeping changes these; a writer's replace never overwrites them.
+_ACCESS_COLUMNS = ("access_count", "last_accessed_at")
 
 
 def _values(table: Table, record: BaseModel, **extra: Any) -> dict[str, Any]:
@@ -299,13 +304,57 @@ class SqlMemoryTx:
             c.fires_at < now,
         )
 
+    async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
+        a = _ACCESS.c
+        stmt = (
+            select(a.item_id)
+            .join(_ITEMS, _ITEMS.c.id == a.item_id)
+            .where(a.cited.is_(True), a.at >= since, _ITEMS.c.status == "active")
+            .group_by(a.item_id)
+            .having(func.count(func.distinct(a.turn_id)) >= min_turns)
+            .order_by(a.item_id)
+        )
+        return list((await self._s.execute(stmt)).scalars())
+
+    # ------------------------------------------------------------------ bookkeeping
+    async def record_access(
+        self,
+        turn_id: uuid.UUID,
+        at: datetime,
+        retrieved: Sequence[uuid.UUID],
+        cited: Sequence[uuid.UUID],
+    ) -> None:
+        ids = list(dict.fromkeys([*retrieved, *cited]))
+        if not ids:
+            return
+        cited_set = set(cited)
+        await self._s.execute(
+            insert(_ACCESS),
+            [
+                {
+                    "workspace_id": self._ws,
+                    "item_id": item_id,
+                    "turn_id": turn_id,
+                    "at": at,
+                    "cited": item_id in cited_set,
+                }
+                for item_id in ids
+            ],
+        )
+        await self._s.execute(
+            update(_ITEMS)
+            .where(_ITEMS.c.id.in_(ids))
+            .values(access_count=_ITEMS.c.access_count + 1, last_accessed_at=at)
+        )
+
     # ------------------------------------------------------------------ writes
     async def insert_item(self, record: ItemRecord) -> None:
         await self._s.execute(insert(_ITEMS).values(_values(_ITEMS, record)))
 
     async def replace_item(self, record: ItemRecord) -> None:
         values = _values(_ITEMS, record)
-        values.pop("id")
+        for name in ("id", *_ACCESS_COLUMNS):
+            values.pop(name)
         await self._s.execute(update(_ITEMS).where(_ITEMS.c.id == record.id).values(values))
 
     async def insert_entity(self, record: EntityRecord) -> None:

@@ -11,6 +11,7 @@ from secondmind.memory.keys import (
 )
 from secondmind.memory.ops import (
     AttachEntity,
+    CorrectItem,
     CreateItem,
     DeleteEntity,
     DeleteItem,
@@ -93,6 +94,7 @@ __all__ = [
     "CategoryRecord",
     "CommitResult",
     "CoreView",
+    "CorrectItem",
     "CreateItem",
     "DeleteEntity",
     "DeleteItem",

@@ -164,6 +164,7 @@ class KeyIndexer:
                 superseded_by=_linked(links, related, item.id, LinkType.SUPERSEDES, incoming=True),
                 replaced=_linked(links, related, item.id, LinkType.SUPERSEDES, incoming=False),
                 fulfilled_by=_linked(links, related, item.id, LinkType.FULFILS, incoming=True),
+                corrected_by=_linked(links, related, item.id, LinkType.CORRECTS, incoming=True),
             )
             keys: list[tuple[KeyKind, str]] = [(KeyKind.TEXT, " ".join(item.text.split()))]
             if self._verbal:

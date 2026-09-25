@@ -2,7 +2,8 @@
 
 Every event carries ``type`` (the discriminator) and ``v`` (its schema version). Add a field
 with a default to evolve an event; bump ``v`` for anything that changes meaning. ``retrieval``
-is defined but not emitted until S3.
+and ``citations`` arrived with recall (S3.13); ``retrieval`` was reshaped before it was ever
+emitted, so it is still ``v=1``.
 
 A ``step`` event records one agent step that ran (ADR-0029): the Trail in the UI is drawn from
 these, and each step's other events are written with it.
@@ -17,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from secondmind.core.memory_model import (
     EntityKind,
+    KeyKind,
     Kind,
     Modality,
     ReconcileDecision,
@@ -56,8 +58,8 @@ class PolicyDecision(StrEnum):
 class AgentStep(StrEnum):
     """The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
 
-    ``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the
-    schema so the UI's catalogue is complete, not emitted yet.
+    ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is
+    reserved: in the schema so the UI's catalogue is complete, not emitted yet.
     """
 
     UNDERSTAND = "understand"
@@ -157,6 +159,12 @@ class TimeResolution(BaseModel):
     assumed: bool = False
     alternative: str | None = None
     memory: str | None = None
+    item_id: uuid.UUID | None = Field(
+        default=None, description="The memory this date was written to (for a one-tap fix)."
+    )
+    anchor: str | None = Field(
+        default=None, description="Recall: the event a window was computed from ('Goa trip')."
+    )
 
 
 class EntityResolution(BaseModel):
@@ -189,6 +197,7 @@ class Classification(BaseModel):
     sensitivity: Sensitivity = Sensitivity.NORMAL
     layer: Layer = Layer.ARCHIVE
     rationale: str
+    item_id: uuid.UUID | None = None
 
 
 class Normalisation(BaseModel):
@@ -249,7 +258,15 @@ class FieldChange(BaseModel):
 
 
 DiffOp = Literal[
-    "added", "updated", "removed", "superseded", "fulfilled", "held", "not_written", "conflict"
+    "added",
+    "updated",
+    "removed",
+    "superseded",
+    "fulfilled",
+    "corrected",
+    "held",
+    "not_written",
+    "conflict",
 ]
 
 
@@ -276,32 +293,205 @@ class MemoryDiffEvent(_Event):
     undo_of: uuid.UUID | None = None
 
 
-# ------------------------------------------------------------------ S3: defined, not yet emitted
+# ------------------------------------------------------------------ S3: recall
+
+
+class Shape(StrEnum):
+    """What kind of question a sub-query is (S3.4). Code maps each shape to its tools."""
+
+    EXACT = "exact"
+    LIST = "list"
+    LATEST = "latest"
+    HISTORY = "history"
+    TIME_WINDOW = "time_window"
+    ORDER = "order"
+    COUNT = "count"
+    SET = "set"
+    ENTITY = "entity"
+    SEMANTIC = "semantic"
+    WHY = "why"
+    SITUATIONAL = "situational"
+    CONVERSATION = "conversation"
+
+
+class FoundBy(BaseModel):
+    """One channel that found a candidate, and the candidate's rank in it (1 = top)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    channel: str
+    rank: int = Field(ge=1)
 
 
 class RetrievalCandidate(BaseModel):
+    """A memory (or, for conversation recall, a past turn) that reached fusion."""
+
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    item_id: uuid.UUID
+    item_id: uuid.UUID | None = None
+    turn_id: uuid.UUID | None = Field(default=None, description="Set for a conversation snippet.")
     title: str
-    layer: Layer
+    kind: Kind | None = None
+    state: str | None = None
+    layer: Layer = Layer.ARCHIVE
+    found_by: list[FoundBy] = []
+    matched_key: KeyKind | None = Field(
+        default=None, description="The key kind the search matched on ('matched via cue key')."
+    )
     lexical_score: float | None = None
     dense_score: float | None = None
+    fused_score: float | None = Field(default=None, description="RRF across every channel.")
     rerank_score: float | None = None
-    fused_score: float | None = None
+    rerank_reason: str = ""
+    soft_only: bool = Field(default=False, description="Found by the soft channel only.")
+    demoted: bool = Field(default=False, description="History: superseded, moved, dropped.")
     selected: bool = False
+    cited: bool = False
     reason: str = ""
 
 
+class ToolRun(BaseModel):
+    """One retrieval tool call of a sub-query."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    tool: str
+    arguments: dict[str, str] = {}
+    count: int = 0
+    latency_ms: int = 0
+    error: str | None = None
+
+
+class RelaxStep(BaseModel):
+    """One loosening of the filters after every filtered channel came back empty (S3.6)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    step: Literal["category", "subtype", "state", "window_month", "window_wide", "entity"]
+    change: str
+    count: int
+
+
+class EntityTrace(BaseModel):
+    """How a mention in the question was resolved, including relation paths followed."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mention: str
+    outcome: Literal["matched", "unknown", "no_relation"]
+    path: list[str] = Field(default=[], description="e.g. ['Nisha', 'spouse_of', 'Rohan'].")
+    entity_ids: list[uuid.UUID] = []
+    names: list[str] = []
+
+
+class GroupValue(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    key: str
+    value: float
+    count: int
+
+
+class AggregateTrace(BaseModel):
+    """An exact number from SQL, with the ids it counted (S3.5)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    op: Literal["count", "sum", "min", "max", "average"]
+    field: str | None = None
+    group_by: str | None = None
+    value: float | None = None
+    groups: list[GroupValue] = []
+    counted_ids: list[uuid.UUID] = []
+
+
+class CountCheck(BaseModel):
+    """Soft-channel hits that look like what was counted but weren't (S3.6)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    label: str
+    extra_ids: list[uuid.UUID] = []
+    note: str = ""
+    offer: str | None = None
+    fix: dict[str, str] = Field(default={}, description="The reclassification a 'yes' applies.")
+
+
+class Expansion(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    source: Literal["planner", "code"]
+    core_entry: str | None = None
+    reason: str
+
+
+class SubQueryTrace(BaseModel):
+    """One part of the plan, what ran for it, and what it found."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    index: int
+    shape: Shape
+    question: str
+    topic: str = ""
+    filters: dict[str, str] = {}
+    dropped: list[str] = Field(default=[], description="Filter hints dropped as unknown.")
+    windows: list[TimeResolution] = []
+    entities: list[EntityTrace] = []
+    tools: list[ToolRun] = []
+    soft_query: str | None = None
+    relaxation: list[RelaxStep] = []
+    expansion: Expansion | None = None
+    aggregate: AggregateTrace | None = None
+    count_check: CountCheck | None = None
+    candidates: list[RetrievalCandidate] = []
+    abstained: bool = False
+
+
+class TimingSpan(BaseModel):
+    """A non-model span for the waterfall (fusion, selection)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: str
+    started_at: datetime
+    latency_ms: int = Field(ge=0)
+
+
 class RetrievalEvent(_Event):
-    """Retrieval panel: plan, filters, candidates with scores, what reached the answer."""
+    """Retrieval panel: the plan, what each tool and the soft channel found, fusion, relaxation,
+    rerank and what reached the answer (S3.13)."""
 
     type: Literal["retrieval"] = "retrieval"
-    query: str
-    filters: dict[str, str] = {}
-    layers: list[Layer] = []
-    candidates: list[RetrievalCandidate] = []
+    question: str
+    plan_source: Literal["model", "retry", "fallback"] = "model"
+    plan_note: str = ""
+    sub_queries: list[SubQueryTrace] = []
+    soft_channel: bool = True
+    rerank: Literal["model", "disabled", "failed", "skipped"] = "model"
+    rerank_note: str = ""
+    timings: list[TimingSpan] = []
     explanation: str = ""
+
+
+class Citation(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    marker: int = Field(ge=1)
+    kind: Literal["item", "turn"]
+    item_id: uuid.UUID | None = None
+    turn_id: uuid.UUID | None = None
+    title: str
+
+
+class CitationsEvent(_Event):
+    """The ``[n]`` markers of the reply, mapped by code to memories or past turns (S3.8).
+    A marker that matched no evidence was stripped from the reply and is counted here."""
+
+    type: Literal["citations"] = "citations"
+    citations: list[Citation] = []
+    stripped: int = Field(default=0, ge=0)
+    evidence: int = Field(default=0, ge=0)
 
 
 class PolicyVerdict(BaseModel):
@@ -313,7 +503,8 @@ class PolicyVerdict(BaseModel):
 
 
 class ToolCallEvent(_Event):
-    """Tool calls panel: tool, summarised arguments and result, policy verdict."""
+    """Tool calls panel: tool, summarised arguments and result, policy verdict. Retrieval tools
+    are ``read`` (no write policy applies); memory writer ops are ``write``."""
 
     type: Literal["tool_call"] = "tool_call"
     tool: str
@@ -321,6 +512,10 @@ class ToolCallEvent(_Event):
     result_summary: str = ""
     policy: PolicyVerdict | None = None
     latency_ms: int | None = None
+    access: Literal["read", "write"] = "write"
+    started_at: datetime | None = None
+    count: int | None = None
+    error: str | None = None
 
 
 class PolicyEvent(_Event):
@@ -347,6 +542,7 @@ TurnEvent = Annotated[
     | DecisionEvent
     | MemoryDiffEvent
     | RetrievalEvent
+    | CitationsEvent
     | ToolCallEvent
     | PolicyEvent
     | ModelCallEvent

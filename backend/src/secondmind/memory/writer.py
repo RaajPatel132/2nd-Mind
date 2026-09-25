@@ -44,6 +44,7 @@ from secondmind.memory.core_layer import core_tokens_with
 from secondmind.memory.diff import diff_entries
 from secondmind.memory.ops import (
     AttachEntity,
+    CorrectItem,
     CreateItem,
     DeleteEntity,
     DeleteItem,
@@ -215,6 +216,9 @@ class MemoryWriter:
         self._notes: list[DiffEntry] = []
         self._vocab: list[tuple[VocabKind, str, list[str]]] = []
         self._committed = False
+        # A turn may commit more than once (a save, then its fired triggers): its write-log
+        # rows continue the turn's sequence.
+        self._seq_base = 0
 
     @property
     def turn(self) -> WriterTurn:
@@ -267,6 +271,7 @@ class MemoryWriter:
         self._committed = True
         result = CommitResult()
         async with self._store.transaction() as tx:
+            self._seq_base = max((r.seq for r in await tx.write_log(self._turn.turn_id)), default=0)
             for vocab, slug, aliases in self._vocab:
                 await tx.upsert_vocab(
                     VocabRecord(
@@ -349,7 +354,7 @@ class MemoryWriter:
         for op in self._ops:
             if isinstance(op, _ITEM_EDIT_TYPES) and not _layer_only(op):
                 edited.add(op.item_id)
-            elif isinstance(op, SupersedeItem):
+            elif isinstance(op, SupersedeItem | CorrectItem):
                 edited.add(op.old_id)
             elif isinstance(op, FulfilIntention):
                 edited.add(op.intention_id)
@@ -522,6 +527,8 @@ class MemoryWriter:
             return {"state": op.state}
         if isinstance(op, SupersedeItem):
             return {"state": op.state, "valid_to": op.valid_to}
+        if isinstance(op, CorrectItem):
+            return {"status": ItemStatus.ARCHIVED}
         if isinstance(op, FulfilIntention):
             return {"state": op.state}
         if isinstance(op, DeleteItem):
@@ -543,6 +550,8 @@ class MemoryWriter:
                 return log.done(_describe_item_change(before, after))
             case SupersedeItem():
                 return await self._supersede(tx, op, log)
+            case CorrectItem():
+                return await self._correct(tx, op, log)
             case FulfilIntention():
                 return await self._fulfil(tx, op, log)
             case LinkItems():
@@ -630,6 +639,18 @@ class MemoryWriter:
         link = await self._insert_link(tx, op.link_id, new.id, LinkType.SUPERSEDES, old.id)
         log.add((TargetType.LINK, link.id), None, link, old.layer)
         return log.done(f"superseded {old.kind.value} ({op.state})")
+
+    async def _correct(self, tx: MemoryTx, op: CorrectItem, log: "_RowLog") -> _Applied:
+        old = await self._live_item(tx, op.old_id)
+        new = await self._live_item(tx, op.new_id)
+        if old.status is not ItemStatus.ACTIVE:
+            raise _Skip("the old memory was already corrected")
+        after = self._changed_item(old, {"status": ItemStatus.ARCHIVED})
+        await tx.replace_item(after)
+        log.add((TargetType.ITEM, old.id), old, after, old.layer)
+        link = await self._insert_link(tx, op.link_id, new.id, LinkType.CORRECTS, old.id)
+        log.add((TargetType.LINK, link.id), None, link, old.layer)
+        return log.done(f"corrected {old.kind.value}: the old one was a mistake")
 
     async def _fulfil(self, tx: MemoryTx, op: FulfilIntention, log: "_RowLog") -> _Applied:
         intention = await self._live_item(tx, op.intention_id)
@@ -828,7 +849,7 @@ class MemoryWriter:
     ) -> WriteLogRecord:
         return WriteLogRecord(
             turn_id=self._turn.turn_id,
-            seq=seq,
+            seq=self._seq_base + seq,
             op=label or op_label(op),
             target_type=target[0],
             target_id=target[1],
@@ -903,7 +924,7 @@ def _target(op: Op) -> tuple[TargetType, uuid.UUID]:  # noqa: PLR0911
             return TargetType.ITEM, op.item_id
         case UpdateItem() | SetItemState() | DeleteItem() | RestoreItem():
             return TargetType.ITEM, op.item_id
-        case SupersedeItem():
+        case SupersedeItem() | CorrectItem():
             return TargetType.ITEM, op.old_id
         case FulfilIntention():
             return TargetType.ITEM, op.intention_id

@@ -21,7 +21,7 @@ type Props = {
   busy: boolean
 }
 
-const NOTE_LABEL: Record<ChatTurn['kind'], string> = { user: 'You', undo: 'Undo', confirm: 'Confirmed', system: 'Housekeeping' }
+const NOTE_LABEL: Record<ChatTurn['kind'], string> = { user: 'You', undo: 'Undo', confirm: 'Confirmed', edit: 'Edited', system: 'Housekeeping' }
 
 /** One turn: who and when, the message, the Trail, the answer and the receipt (rulebook §7). */
 export function TurnView({ turn, timezone, folded, onFold, onInspect, onUndo, busy }: Props) {

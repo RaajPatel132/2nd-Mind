@@ -108,6 +108,22 @@ class MemoryTx(Protocol):
 
     async def passed_triggers(self, now: datetime) -> list[TriggerRecord]: ...
 
+    async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
+        """Active items cited in at least ``min_turns`` recall turns since ``since`` (FR-6.7)."""
+        ...
+
+    # ------------------------------------------------------------------ bookkeeping, not memory
+    async def record_access(
+        self,
+        turn_id: uuid.UUID,
+        at: datetime,
+        retrieved: Sequence[uuid.UUID],
+        cited: Sequence[uuid.UUID],
+    ) -> None:
+        """Append ``item_access`` rows and bump ``access_count`` / ``last_accessed_at``. Not a
+        memory write: no write log, no version, ``updated_at`` untouched."""
+        ...
+
     # ------------------------------------------------------------------ writes (writer only)
     async def insert_item(self, record: ItemRecord) -> None: ...
 

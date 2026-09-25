@@ -3,9 +3,9 @@
 * plans within ``horizon_days`` stay until they pass;
 * items with a pending time trigger stay until it fires;
 * open tasks stay until they're done;
-* anything mentioned in the last ``recent_days`` stays for that long.
-
-"Frequently retrieved" arrives with retrieval in S3.
+* anything mentioned in the last ``recent_days`` stays for that long;
+* anything cited in enough recall turns lately ("frequently retrieved", FR-6.7) stays while it
+  keeps being cited.
 """
 
 from collections.abc import Sequence
@@ -16,6 +16,8 @@ from dateutil.rrule import rrulestr
 
 from secondmind.core import Kind, TimePrecision, TriggerOn, TriggerState
 from secondmind.memory.records import ItemContent, TriggerContent
+
+FREQUENT_REASON = "frequently retrieved"
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +64,7 @@ def quick_layer(
     triggers: Sequence[TriggerContent] = (),
     horizon_days: int,
     recent_days: int,
+    frequent: bool = False,
 ) -> QuickDecision:
     reasons: list[str] = []
     untils: list[datetime | None] = []
@@ -92,6 +95,9 @@ def quick_layer(
     if recent_days > 0 and recent_until > now:
         reasons.append(f"mentioned in the last {recent_days} days")
         untils.append(recent_until)
+    if frequent:
+        reasons.append(FREQUENT_REASON)
+        untils.append(now + timedelta(days=max(recent_days, 1)))
     if not reasons:
         return QuickDecision(in_quick=False)
     until = None if any(u is None for u in untils) else max(u for u in untils if u is not None)

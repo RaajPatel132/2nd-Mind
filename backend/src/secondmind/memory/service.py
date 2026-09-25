@@ -4,7 +4,7 @@ held-write confirmation. Write methods of the store never leave this module."""
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from secondmind.core import (
     EntityKind,
@@ -19,7 +19,7 @@ from secondmind.core import (
 from secondmind.memory.core_layer import CoreView, render_core
 from secondmind.memory.keys import Embedder, KeyIndexer
 from secondmind.memory.ops import CreateItem, Op, SetTriggerState, UpdateItem, load_op
-from secondmind.memory.quick import quick_layer
+from secondmind.memory.quick import FREQUENT_REASON, quick_layer
 from secondmind.memory.records import (
     CategoryRecord,
     EntityRecord,
@@ -44,6 +44,7 @@ class MemorySettings:
     core_token_budget: int = 1_500
     quick_horizon_days: int = 30
     quick_recent_days: int = 7
+    quick_frequent_min: int = 3
     verbal_keys_enabled: bool = True
 
 
@@ -156,6 +157,10 @@ class MemoryReader:
         async with self._store.transaction() as tx:
             return await tx.passed_triggers(now)
 
+    async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
+        async with self._store.transaction() as tx:
+            return await tx.frequent_items(since, min_turns)
+
     async def core(self) -> CoreView:
         """Core memory rendered within the token budget (S2.9)."""
         async with self._store.transaction() as tx:
@@ -186,6 +191,22 @@ class Memory:
 
     def reader(self, scope: WorkspaceScope) -> MemoryReader:
         return MemoryReader(self._stores(scope), self.settings)
+
+    async def record_access(
+        self,
+        scope: WorkspaceScope,
+        *,
+        turn_id: uuid.UUID,
+        at: datetime,
+        retrieved: Sequence[uuid.UUID],
+        cited: Sequence[uuid.UUID],
+    ) -> None:
+        """Which items a recall turn retrieved and cited (FR-6.7). Bookkeeping, not a memory
+        write: it never goes through the writer, the write log or a diff."""
+        if not retrieved and not cited:
+            return
+        async with self._stores(scope).transaction() as tx:
+            await tx.record_access(turn_id, at, retrieved, cited)
 
     def writer(
         self,
@@ -241,10 +262,13 @@ class Memory:
     async def expiry_ops(self, scope: WorkspaceScope, now: datetime) -> list[Op]:
         """Quick-layer housekeeping due at ``now`` (S2.9), for a system turn to apply. A quick
         entry whose time is up leaves the layer, or stays under the next rule that still
-        applies; a pending time trigger whose time passed becomes ``expired``."""
+        applies; a pending time trigger whose time passed becomes ``expired``; an item cited
+        in enough recall turns lately enters the layer as "frequently retrieved" (FR-6.7)."""
         reader = self.reader(scope)
         passed = await reader.passed_triggers(now)
         expired = await reader.expired_quick(now)
+        since = now - timedelta(days=max(self.settings.quick_recent_days, 1))
+        frequent = set(await reader.frequent_items(since, self.settings.quick_frequent_min))
         owners = {i.id: i for i in await reader.items(sorted({t.item_id for t in passed}))}
         triggers = await reader.triggers([i.id for i in expired])
         ops: list[Op] = [
@@ -264,6 +288,7 @@ class Memory:
                 triggers=[t for t in triggers if t.item_id == item.id],
                 horizon_days=self.settings.quick_horizon_days,
                 recent_days=self.settings.quick_recent_days,
+                frequent=item.id in frequent,
             )
             ops.append(
                 UpdateItem(
@@ -277,6 +302,27 @@ class Memory:
                     title=item.title,
                     rationale=(
                         f"quick: now {decision.reason}" if decision.in_quick else "quick time is up"
+                    ),
+                )
+            )
+        seen = {i.id for i in expired}
+        stay = now + timedelta(days=max(self.settings.quick_recent_days, 1))
+        for item in await reader.items(sorted(frequent - seen)):
+            if item.in_quick:
+                continue
+            ops.append(
+                UpdateItem(
+                    item_id=item.id,
+                    changes={
+                        "in_quick": True,
+                        "quick_reason": FREQUENT_REASON,
+                        "quick_until": stay,
+                    },
+                    origin="system",
+                    title=item.title,
+                    rationale=(
+                        f"quick: cited in {self.settings.quick_frequent_min}+ recall turns "
+                        f"in the last {self.settings.quick_recent_days} days"
                     ),
                 )
             )

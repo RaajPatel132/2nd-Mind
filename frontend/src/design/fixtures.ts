@@ -74,8 +74,8 @@ export const SAVE_EVENTS: TurnEvent[] = [
   },
   step('reconcile', 'done', 610, 1880),
   { type: 'policy', v: 1, op: 'write', target: 'Watched Severance', verdict: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'nothing sensitive' } },
-  { type: 'tool_call', v: 1, tool: 'memory.write', arguments: { kind: 'episode', title: 'Watched Severance' }, result_summary: 'created', policy: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'nothing sensitive' } },
-  { type: 'tool_call', v: 1, tool: 'memory.supersede', arguments: { title: 'Lives in Bengaluru' }, result_summary: 'superseded', policy: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'nothing sensitive' } },
+  { type: 'tool_call', v: 1, access: 'write', tool: 'memory.write', arguments: { kind: 'episode', title: 'Watched Severance' }, result_summary: 'created', policy: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'nothing sensitive' } },
+  { type: 'tool_call', v: 1, access: 'write', tool: 'memory.supersede', arguments: { title: 'Lives in Bengaluru' }, result_summary: 'superseded', policy: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'nothing sensitive' } },
   step('guard', 'done', 4, 2500),
   {
     type: 'memory_diff',
@@ -95,14 +95,14 @@ export const SAVE_EVENTS: TurnEvent[] = [
 
 export const HELD_EVENTS: TurnEvent[] = [
   { type: 'policy', v: 1, op: 'write', target: 'Prefers aisle seats', verdict: { decision: 'held', rule_id: 'P-CORE-1', reason: 'a change to your core profile' } },
-  { type: 'tool_call', v: 1, tool: 'memory.write', arguments: { layer: 'core', title: 'Prefers aisle seats' }, result_summary: 'held', policy: { decision: 'held', rule_id: 'P-CORE-1', reason: 'a change to your core profile' } },
+  { type: 'tool_call', v: 1, access: 'write', tool: 'memory.write', arguments: { layer: 'core', title: 'Prefers aisle seats' }, result_summary: 'held', policy: { decision: 'held', rule_id: 'P-CORE-1', reason: 'a change to your core profile' } },
   { type: 'memory_diff', v: 1, entries: [{ op: 'held', layer: 'core', title: 'Prefers aisle seats', changes: [], reason: 'Held for your confirmation', rule_id: 'P-CORE-1', held_write_id: 'demo-held' }] },
   step('guard', 'held', 4, 0),
 ]
 
 export const REFUSED_EVENTS: TurnEvent[] = [
   { type: 'policy', v: 1, op: 'write', target: 'a secret (not shown)', verdict: { decision: 'blocked', rule_id: 'P-SECRET-1', reason: 'looks like a credential' } },
-  { type: 'tool_call', v: 1, tool: 'memory.write', arguments: { title: 'a secret (not shown)' }, result_summary: 'refused', policy: { decision: 'blocked', rule_id: 'P-SECRET-1', reason: 'looks like a credential' } },
+  { type: 'tool_call', v: 1, access: 'write', tool: 'memory.write', arguments: { title: 'a secret (not shown)' }, result_summary: 'refused', policy: { decision: 'blocked', rule_id: 'P-SECRET-1', reason: 'looks like a credential' } },
   step('guard', 'refused', 2, 0),
 ]
 

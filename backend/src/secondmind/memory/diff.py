@@ -10,6 +10,7 @@ from typing import Any
 from secondmind.core import DiffEntry, DiffOp, FieldChange, Layer, TargetType, WriteOp
 from secondmind.memory.ops import (
     AttachEntity,
+    CorrectItem,
     CreateItem,
     DeleteEntity,
     DeleteItem,
@@ -123,6 +124,14 @@ def diff_entries(  # noqa: PLR0911, PLR0912
             ]
         case FulfilIntention():
             return [entry("fulfilled", field_changes(main.before, main.after, ("state",)))]
+        case CorrectItem():
+            return [
+                entry(
+                    "corrected",
+                    field_changes(main.before, main.after, ("status",)),
+                    reason="recorded by mistake; kept for the record, left out of recall",
+                )
+            ]
         case DeleteItem():
             return [entry("removed", field_changes(main.before, main.after, ("status",)))]
         case RestoreItem():

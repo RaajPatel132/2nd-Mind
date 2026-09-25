@@ -107,12 +107,13 @@ class TimePrecision(StrEnum):
 
 class TimeClock(StrEnum):
     """Which clock a time expression sets: when it happened, when it was true, when it is due,
-    or when to remind."""
+    or when to remind. Recall also filters on when something was mentioned (said or saved)."""
 
     OCCURRED = "occurred"
     VALID = "valid"
     DUE = "due"
     TRIGGER = "trigger"
+    MENTIONED = "mentioned"
 
 
 class EntityKind(StrEnum):
@@ -147,6 +148,9 @@ class LinkType(StrEnum):
     DUPLICATE_OF = "duplicate_of"
     DERIVED_FROM = "derived_from"
     GIFT_FOR_EVENT = "gift_for_event"
+    # The new row replaces an old one that was recorded by mistake (S3.12), not a change in
+    # the world (that is ``supersedes``).
+    CORRECTS = "corrects"
 
 
 class KeyKind(StrEnum):
@@ -195,6 +199,7 @@ class WriteOp(StrEnum):
     UPSERT_ENTITY = "upsert_entity"
     RELATE = "relate"
     UNRELATE = "unrelate"
+    CORRECT = "correct"
 
 
 class TargetType(StrEnum):

@@ -318,17 +318,92 @@ export interface components {
          * AgentStep
          * @description The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
          *
-         *     ``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the
-         *     schema so the UI's catalogue is complete, not emitted yet.
+         *     ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is
+         *     reserved: in the schema so the UI's catalogue is complete, not emitted yet.
          * @enum {string}
          */
         AgentStep: "understand" | "extract" | "dates" | "entities" | "reconcile" | "enrich" | "guard" | "save" | "answer" | "undo" | "confirm" | "plan" | "search" | "rank" | "triggers" | "fetch";
+        /**
+         * AggregateTrace
+         * @description An exact number from SQL, with the ids it counted (S3.5).
+         */
+        AggregateTrace: {
+            /**
+             * Counted Ids
+             * @default []
+             */
+            counted_ids: string[];
+            /** Field */
+            field?: string | null;
+            /** Group By */
+            group_by?: string | null;
+            /**
+             * Groups
+             * @default []
+             */
+            groups: components["schemas"]["GroupValue"][];
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "count" | "sum" | "min" | "max" | "average";
+            /** Value */
+            value?: number | null;
+        };
         /** CheckOut */
         CheckOut: {
             /** Detail */
             detail: string;
             /** Ok */
             ok: boolean;
+        };
+        /** Citation */
+        Citation: {
+            /** Item Id */
+            item_id?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "item" | "turn";
+            /** Marker */
+            marker: number;
+            /** Title */
+            title: string;
+            /** Turn Id */
+            turn_id?: string | null;
+        };
+        /**
+         * CitationsEvent
+         * @description The ``[n]`` markers of the reply, mapped by code to memories or past turns (S3.8).
+         *     A marker that matched no evidence was stripped from the reply and is counted here.
+         */
+        CitationsEvent: {
+            /**
+             * Citations
+             * @default []
+             */
+            citations: components["schemas"]["Citation"][];
+            /**
+             * Evidence
+             * @default 0
+             */
+            evidence: number;
+            /**
+             * Stripped
+             * @default 0
+             */
+            stripped: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "citations";
+            /**
+             * V
+             * @default 1
+             */
+            v: number;
         };
         /**
          * Classification
@@ -339,6 +414,8 @@ export interface components {
             category?: string | null;
             /** Format */
             format?: string | null;
+            /** Item Id */
+            item_id?: string | null;
             kind: components["schemas"]["Kind"];
             /** Label */
             label: string;
@@ -354,6 +431,34 @@ export interface components {
             state?: string | null;
             /** Subtype */
             subtype?: string | null;
+        };
+        /**
+         * CountCheck
+         * @description Soft-channel hits that look like what was counted but weren't (S3.6).
+         */
+        CountCheck: {
+            /**
+             * Extra Ids
+             * @default []
+             */
+            extra_ids: string[];
+            /**
+             * Fix
+             * @description The reclassification a 'yes' applies.
+             * @default {}
+             */
+            fix: {
+                [key: string]: string;
+            };
+            /** Label */
+            label: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Offer */
+            offer?: string | null;
         };
         /** CreateTurnIn */
         CreateTurnIn: {
@@ -457,7 +562,7 @@ export interface components {
              * Op
              * @enum {string}
              */
-            op: "added" | "updated" | "removed" | "superseded" | "fulfilled" | "held" | "not_written" | "conflict";
+            op: "added" | "updated" | "removed" | "superseded" | "fulfilled" | "corrected" | "held" | "not_written" | "conflict";
             /**
              * Reason
              * @default
@@ -574,6 +679,35 @@ export interface components {
          * @enum {string}
          */
         EntityRole: "about" | "with" | "for" | "by" | "at" | "owner" | "part_of";
+        /**
+         * EntityTrace
+         * @description How a mention in the question was resolved, including relation paths followed.
+         */
+        EntityTrace: {
+            /**
+             * Entity Ids
+             * @default []
+             */
+            entity_ids: string[];
+            /** Mention */
+            mention: string;
+            /**
+             * Names
+             * @default []
+             */
+            names: string[];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "matched" | "unknown" | "no_relation";
+            /**
+             * Path
+             * @description e.g. ['Nisha', 'spouse_of', 'Rohan'].
+             * @default []
+             */
+            path: string[];
+        };
         /** ErrorBody */
         ErrorBody: {
             /**
@@ -620,6 +754,18 @@ export interface components {
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
         };
+        /** Expansion */
+        Expansion: {
+            /** Core Entry */
+            core_entry?: string | null;
+            /** Reason */
+            reason: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "planner" | "code";
+        };
         /**
          * FallbackInfo
          * @description Set on a model call that was served by the step's fallback model (FR-14.4).
@@ -640,6 +786,25 @@ export interface components {
             before?: unknown;
             /** Field */
             field: string;
+        };
+        /**
+         * FoundBy
+         * @description One channel that found a candidate, and the candidate's rank in it (1 = top).
+         */
+        FoundBy: {
+            /** Channel */
+            channel: string;
+            /** Rank */
+            rank: number;
+        };
+        /** GroupValue */
+        GroupValue: {
+            /** Count */
+            count: number;
+            /** Key */
+            key: string;
+            /** Value */
+            value: number;
         };
         /** HealthOut */
         HealthOut: {
@@ -918,6 +1083,11 @@ export interface components {
          */
         ItemStatus: "active" | "archived" | "deleted";
         /**
+         * KeyKind
+         * @enum {string}
+         */
+        KeyKind: "text" | "verbal" | "alt" | "cue" | "question" | "change";
+        /**
          * Kind
          * @description What a memory is, defined by how it behaves over time.
          * @enum {string}
@@ -961,7 +1131,7 @@ export interface components {
          * LinkType
          * @enum {string}
          */
-        LinkType: "supersedes" | "fulfils" | "part_of" | "follows" | "because" | "evidence_for" | "duplicate_of" | "derived_from" | "gift_for_event";
+        LinkType: "supersedes" | "fulfils" | "part_of" | "follows" | "because" | "evidence_for" | "duplicate_of" | "derived_from" | "gift_for_event" | "corrects";
         /** MeOut */
         MeOut: {
             user: components["schemas"]["UserOut"];
@@ -1208,29 +1378,72 @@ export interface components {
             label: string;
         };
         /**
+         * RelaxStep
+         * @description One loosening of the filters after every filtered channel came back empty (S3.6).
+         */
+        RelaxStep: {
+            /** Change */
+            change: string;
+            /** Count */
+            count: number;
+            /**
+             * Step
+             * @enum {string}
+             */
+            step: "category" | "subtype" | "state" | "window_month" | "window_wide" | "entity";
+        };
+        /**
          * ResourceFormat
          * @enum {string}
          */
         ResourceFormat: "article" | "video" | "pdf" | "image" | "link" | "other";
-        /** RetrievalCandidate */
+        /**
+         * RetrievalCandidate
+         * @description A memory (or, for conversation recall, a past turn) that reached fusion.
+         */
         RetrievalCandidate: {
+            /**
+             * Cited
+             * @default false
+             */
+            cited: boolean;
+            /**
+             * Demoted
+             * @description History: superseded, moved, dropped.
+             * @default false
+             */
+            demoted: boolean;
             /** Dense Score */
             dense_score?: number | null;
-            /** Fused Score */
-            fused_score?: number | null;
             /**
-             * Item Id
-             * Format: uuid
+             * Found By
+             * @default []
              */
-            item_id: string;
+            found_by: components["schemas"]["FoundBy"][];
+            /**
+             * Fused Score
+             * @description RRF across every channel.
+             */
+            fused_score?: number | null;
+            /** Item Id */
+            item_id?: string | null;
+            kind?: components["schemas"]["Kind"] | null;
+            /** @default archive */
             layer: components["schemas"]["Layer"];
             /** Lexical Score */
             lexical_score?: number | null;
+            /** @description The key kind the search matched on ('matched via cue key'). */
+            matched_key?: components["schemas"]["KeyKind"] | null;
             /**
              * Reason
              * @default
              */
             reason: string;
+            /**
+             * Rerank Reason
+             * @default
+             */
+            rerank_reason: string;
             /** Rerank Score */
             rerank_score?: number | null;
             /**
@@ -1238,38 +1451,72 @@ export interface components {
              * @default false
              */
             selected: boolean;
+            /**
+             * Soft Only
+             * @description Found by the soft channel only.
+             * @default false
+             */
+            soft_only: boolean;
+            /** State */
+            state?: string | null;
             /** Title */
             title: string;
+            /**
+             * Turn Id
+             * @description Set for a conversation snippet.
+             */
+            turn_id?: string | null;
         };
         /**
          * RetrievalEvent
-         * @description Retrieval panel: plan, filters, candidates with scores, what reached the answer.
+         * @description Retrieval panel: the plan, what each tool and the soft channel found, fusion, relaxation,
+         *     rerank and what reached the answer (S3.13).
          */
         RetrievalEvent: {
-            /**
-             * Candidates
-             * @default []
-             */
-            candidates: components["schemas"]["RetrievalCandidate"][];
             /**
              * Explanation
              * @default
              */
             explanation: string;
             /**
-             * Filters
-             * @default {}
+             * Plan Note
+             * @default
              */
-            filters: {
-                [key: string]: string;
-            };
+            plan_note: string;
             /**
-             * Layers
+             * Plan Source
+             * @default model
+             * @enum {string}
+             */
+            plan_source: "model" | "retry" | "fallback";
+            /** Question */
+            question: string;
+            /**
+             * Rerank
+             * @default model
+             * @enum {string}
+             */
+            rerank: "model" | "disabled" | "failed" | "skipped";
+            /**
+             * Rerank Note
+             * @default
+             */
+            rerank_note: string;
+            /**
+             * Soft Channel
+             * @default true
+             */
+            soft_channel: boolean;
+            /**
+             * Sub Queries
              * @default []
              */
-            layers: components["schemas"]["Layer"][];
-            /** Query */
-            query: string;
+            sub_queries: components["schemas"]["SubQueryTrace"][];
+            /**
+             * Timings
+             * @default []
+             */
+            timings: components["schemas"]["TimingSpan"][];
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -1301,6 +1548,12 @@ export interface components {
          * @enum {string}
          */
         Sensitivity: "normal" | "personal" | "sensitive" | "secret";
+        /**
+         * Shape
+         * @description What kind of question a sub-query is (S3.4). Code maps each shape to its tools.
+         * @enum {string}
+         */
+        Shape: "exact" | "list" | "latest" | "history" | "time_window" | "order" | "count" | "set" | "entity" | "semantic" | "why" | "situational" | "conversation";
         /**
          * Source
          * @enum {string}
@@ -1344,7 +1597,7 @@ export interface components {
          */
         SseTurnEvent: {
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -1427,6 +1680,70 @@ export interface components {
          */
         StepStatus: "done" | "held" | "refused" | "failed";
         /**
+         * SubQueryTrace
+         * @description One part of the plan, what ran for it, and what it found.
+         */
+        SubQueryTrace: {
+            /**
+             * Abstained
+             * @default false
+             */
+            abstained: boolean;
+            aggregate?: components["schemas"]["AggregateTrace"] | null;
+            /**
+             * Candidates
+             * @default []
+             */
+            candidates: components["schemas"]["RetrievalCandidate"][];
+            count_check?: components["schemas"]["CountCheck"] | null;
+            /**
+             * Dropped
+             * @description Filter hints dropped as unknown.
+             * @default []
+             */
+            dropped: string[];
+            /**
+             * Entities
+             * @default []
+             */
+            entities: components["schemas"]["EntityTrace"][];
+            expansion?: components["schemas"]["Expansion"] | null;
+            /**
+             * Filters
+             * @default {}
+             */
+            filters: {
+                [key: string]: string;
+            };
+            /** Index */
+            index: number;
+            /** Question */
+            question: string;
+            /**
+             * Relaxation
+             * @default []
+             */
+            relaxation: components["schemas"]["RelaxStep"][];
+            shape: components["schemas"]["Shape"];
+            /** Soft Query */
+            soft_query?: string | null;
+            /**
+             * Tools
+             * @default []
+             */
+            tools: components["schemas"]["ToolRun"][];
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Windows
+             * @default []
+             */
+            windows: components["schemas"]["TimeResolution"][];
+        };
+        /**
          * Tier
          * @enum {string}
          */
@@ -1434,10 +1751,10 @@ export interface components {
         /**
          * TimeClock
          * @description Which clock a time expression sets: when it happened, when it was true, when it is due,
-         *     or when to remind.
+         *     or when to remind. Recall also filters on when something was mentioned (said or saved).
          * @enum {string}
          */
-        TimeClock: "occurred" | "valid" | "due" | "trigger";
+        TimeClock: "occurred" | "valid" | "due" | "trigger" | "mentioned";
         /**
          * TimePrecision
          * @enum {string}
@@ -1451,6 +1768,11 @@ export interface components {
             /** Alternative */
             alternative?: string | null;
             /**
+             * Anchor
+             * @description Recall: the event a window was computed from ('Goa trip').
+             */
+            anchor?: string | null;
+            /**
              * Assumed
              * @default false
              */
@@ -1460,6 +1782,11 @@ export interface components {
             end?: string | null;
             /** Expression */
             expression: string;
+            /**
+             * Item Id
+             * @description The memory this date was written to (for a one-tap fix).
+             */
+            item_id?: string | null;
             /** Memory */
             memory?: string | null;
             /**
@@ -1478,10 +1805,32 @@ export interface components {
             value: string;
         };
         /**
+         * TimingSpan
+         * @description A non-model span for the waterfall (fusion, selection).
+         */
+        TimingSpan: {
+            /** Latency Ms */
+            latency_ms: number;
+            /** Name */
+            name: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
+        /**
          * ToolCallEvent
-         * @description Tool calls panel: tool, summarised arguments and result, policy verdict.
+         * @description Tool calls panel: tool, summarised arguments and result, policy verdict. Retrieval tools
+         *     are ``read`` (no write policy applies); memory writer ops are ``write``.
          */
         ToolCallEvent: {
+            /**
+             * Access
+             * @default write
+             * @enum {string}
+             */
+            access: "read" | "write";
             /**
              * Arguments
              * @default {}
@@ -1489,6 +1838,10 @@ export interface components {
             arguments: {
                 [key: string]: string;
             };
+            /** Count */
+            count?: number | null;
+            /** Error */
+            error?: string | null;
             /** Latency Ms */
             latency_ms?: number | null;
             policy?: components["schemas"]["PolicyVerdict"] | null;
@@ -1497,6 +1850,8 @@ export interface components {
              * @default
              */
             result_summary: string;
+            /** Started At */
+            started_at?: string | null;
             /** Tool */
             tool: string;
             /**
@@ -1509,6 +1864,33 @@ export interface components {
              * @default 1
              */
             v: number;
+        };
+        /**
+         * ToolRun
+         * @description One retrieval tool call of a sub-query.
+         */
+        ToolRun: {
+            /**
+             * Arguments
+             * @default {}
+             */
+            arguments: {
+                [key: string]: string;
+            };
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Error */
+            error?: string | null;
+            /**
+             * Latency Ms
+             * @default 0
+             */
+            latency_ms: number;
+            /** Tool */
+            tool: string;
         };
         /** TraceLink */
         TraceLink: {
@@ -1608,7 +1990,7 @@ export interface components {
              */
             created_at: string;
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -1627,11 +2009,12 @@ export interface components {
         };
         /**
          * TurnKind
-         * @description What started a turn: a message, an undo, a confirmation of a held write, or the system
-         *     (background jobs). Every kind is stored, auditable and undoable the same way.
+         * @description What started a turn: a message, an undo, a confirmation of a held write, an edit from the
+         *     glass box or Upcoming, or the system (background jobs). Every kind is stored, auditable and
+         *     undoable the same way.
          * @enum {string}
          */
-        TurnKind: "user" | "undo" | "confirm" | "system";
+        TurnKind: "user" | "undo" | "confirm" | "edit" | "system";
         /** TurnOut */
         TurnOut: {
             /** Config Hash */

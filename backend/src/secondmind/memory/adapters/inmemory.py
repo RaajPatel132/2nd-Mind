@@ -56,6 +56,8 @@ class _Tables:
     write_log: list[WriteLogRecord] = field(default_factory=list)
     held: dict[uuid.UUID, HeldWriteRecord] = field(default_factory=dict)
     versions: list[VersionRecord] = field(default_factory=list)
+    # (item_id, turn_id, at, cited): retrieval bookkeeping, append-only.
+    access: list[tuple[uuid.UUID, uuid.UUID, datetime, bool]] = field(default_factory=list)
 
 
 class InMemoryMemory:
@@ -286,6 +288,37 @@ class InMemoryTx:
             and t.fires_at < now
         ]
 
+    async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
+        turns: dict[uuid.UUID, set[uuid.UUID]] = {}
+        for item_id, turn_id, at, cited in self._t.access:
+            if cited and at >= since:
+                turns.setdefault(item_id, set()).add(turn_id)
+        return sorted(
+            item_id
+            for item_id, seen in turns.items()
+            if len(seen) >= min_turns
+            and item_id in self._t.items
+            and self._t.items[item_id].status is ItemStatus.ACTIVE
+        )
+
+    # ------------------------------------------------------------------ bookkeeping
+    async def record_access(
+        self,
+        turn_id: uuid.UUID,
+        at: datetime,
+        retrieved: Sequence[uuid.UUID],
+        cited: Sequence[uuid.UUID],
+    ) -> None:
+        cited_set = set(cited)
+        for item_id in dict.fromkeys([*retrieved, *cited]):
+            item = self._t.items.get(item_id)
+            if item is None:
+                continue
+            self._t.access.append((item_id, turn_id, at, item_id in cited_set))
+            self._t.items[item_id] = item.model_copy(
+                update={"access_count": item.access_count + 1, "last_accessed_at": at}
+            )
+
     # ------------------------------------------------------------------ writes
     async def insert_item(self, record: ItemRecord) -> None:
         self._db.fault("insert_item")
@@ -294,6 +327,14 @@ class InMemoryTx:
 
     async def replace_item(self, record: ItemRecord) -> None:
         self._db.fault("replace_item")
+        stored = self._t.items.get(record.id)
+        if stored is not None:  # only retrieval bookkeeping changes the access fields
+            record = record.model_copy(
+                update={
+                    "access_count": stored.access_count,
+                    "last_accessed_at": stored.last_accessed_at,
+                }
+            )
         self._t.items[record.id] = record
 
     async def insert_entity(self, record: EntityRecord) -> None:

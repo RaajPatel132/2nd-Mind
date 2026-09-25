@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "AgentStep": {
-        "description": "The agent steps a turn can report, in the UI's catalogue (docs/design/system.md \u00a78).\n\n``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the\nschema so the UI's catalogue is complete, not emitted yet.",
+        "description": "The agent steps a turn can report, in the UI's catalogue (docs/design/system.md \u00a78).\n\n``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is\nreserved: in the schema so the UI's catalogue is complete, not emitted yet.",
         "enum": [
           "understand",
           "extract",
@@ -24,6 +24,78 @@
         "title": "AgentStep",
         "type": "string"
       },
+      "AggregateTrace": {
+        "additionalProperties": false,
+        "description": "An exact number from SQL, with the ids it counted (S3.5).",
+        "properties": {
+          "counted_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Counted Ids",
+            "type": "array"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "group_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group By"
+          },
+          "groups": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/GroupValue"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "op": {
+            "enum": [
+              "count",
+              "sum",
+              "min",
+              "max",
+              "average"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "title": "AggregateTrace",
+        "type": "object"
+      },
       "CheckOut": {
         "properties": {
           "detail": {
@@ -40,6 +112,98 @@
           "detail"
         ],
         "title": "CheckOut",
+        "type": "object"
+      },
+      "Citation": {
+        "additionalProperties": false,
+        "properties": {
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "kind": {
+            "enum": [
+              "item",
+              "turn"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "marker": {
+            "minimum": 1.0,
+            "title": "Marker",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turn Id"
+          }
+        },
+        "required": [
+          "marker",
+          "kind",
+          "title"
+        ],
+        "title": "Citation",
+        "type": "object"
+      },
+      "CitationsEvent": {
+        "additionalProperties": false,
+        "description": "The ``[n]`` markers of the reply, mapped by code to memories or past turns (S3.8).\nA marker that matched no evidence was stripped from the reply and is counted here.",
+        "properties": {
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "evidence": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Evidence",
+            "type": "integer"
+          },
+          "stripped": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Stripped",
+            "type": "integer"
+          },
+          "type": {
+            "const": "citations",
+            "default": "citations",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "title": "CitationsEvent",
         "type": "object"
       },
       "Classification": {
@@ -67,6 +231,18 @@
               }
             ],
             "title": "Format"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
           },
           "kind": {
             "$ref": "#/components/schemas/Kind"
@@ -120,6 +296,55 @@
           "rationale"
         ],
         "title": "Classification",
+        "type": "object"
+      },
+      "CountCheck": {
+        "additionalProperties": false,
+        "description": "Soft-channel hits that look like what was counted but weren't (S3.6).",
+        "properties": {
+          "extra_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Extra Ids",
+            "type": "array"
+          },
+          "fix": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "The reclassification a 'yes' applies.",
+            "title": "Fix",
+            "type": "object"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "offer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "CountCheck",
         "type": "object"
       },
       "CreateTurnIn": {
@@ -325,6 +550,7 @@
               "removed",
               "superseded",
               "fulfilled",
+              "corrected",
               "held",
               "not_written",
               "conflict"
@@ -613,6 +839,57 @@
         "title": "EntityRole",
         "type": "string"
       },
+      "EntityTrace": {
+        "additionalProperties": false,
+        "description": "How a mention in the question was resolved, including relation paths followed.",
+        "properties": {
+          "entity_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Entity Ids",
+            "type": "array"
+          },
+          "mention": {
+            "title": "Mention",
+            "type": "string"
+          },
+          "names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Names",
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "matched",
+              "unknown",
+              "no_relation"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "path": {
+            "default": [],
+            "description": "e.g. ['Nisha', 'spouse_of', 'Rohan'].",
+            "items": {
+              "type": "string"
+            },
+            "title": "Path",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mention",
+          "outcome"
+        ],
+        "title": "EntityTrace",
+        "type": "object"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -703,6 +980,40 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "Expansion": {
+        "additionalProperties": false,
+        "properties": {
+          "core_entry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Core Entry"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "planner",
+              "code"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "reason"
+        ],
+        "title": "Expansion",
+        "type": "object"
+      },
       "FallbackInfo": {
         "additionalProperties": false,
         "description": "Set on a model call that was served by the step's fallback model (FR-14.4).",
@@ -746,6 +1057,51 @@
           "field"
         ],
         "title": "FieldChange",
+        "type": "object"
+      },
+      "FoundBy": {
+        "additionalProperties": false,
+        "description": "One channel that found a candidate, and the candidate's rank in it (1 = top).",
+        "properties": {
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "rank": {
+            "minimum": 1.0,
+            "title": "Rank",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "channel",
+          "rank"
+        ],
+        "title": "FoundBy",
+        "type": "object"
+      },
+      "GroupValue": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "count"
+        ],
+        "title": "GroupValue",
         "type": "object"
       },
       "HealthOut": {
@@ -1412,6 +1768,18 @@
         "title": "ItemStatus",
         "type": "string"
       },
+      "KeyKind": {
+        "enum": [
+          "text",
+          "verbal",
+          "alt",
+          "cue",
+          "question",
+          "change"
+        ],
+        "title": "KeyKind",
+        "type": "string"
+      },
       "Kind": {
         "description": "What a memory is, defined by how it behaves over time.",
         "enum": [
@@ -1491,7 +1859,8 @@
           "evidence_for",
           "duplicate_of",
           "derived_from",
-          "gift_for_event"
+          "gift_for_event",
+          "corrects"
         ],
         "title": "LinkType",
         "type": "string"
@@ -2056,6 +2425,39 @@
         "title": "Reconciliation",
         "type": "object"
       },
+      "RelaxStep": {
+        "additionalProperties": false,
+        "description": "One loosening of the filters after every filtered channel came back empty (S3.6).",
+        "properties": {
+          "change": {
+            "title": "Change",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "step": {
+            "enum": [
+              "category",
+              "subtype",
+              "state",
+              "window_month",
+              "window_wide",
+              "entity"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step",
+          "change",
+          "count"
+        ],
+        "title": "RelaxStep",
+        "type": "object"
+      },
       "ResourceFormat": {
         "enum": [
           "article",
@@ -2070,7 +2472,19 @@
       },
       "RetrievalCandidate": {
         "additionalProperties": false,
+        "description": "A memory (or, for conversation recall, a past turn) that reached fusion.",
         "properties": {
+          "cited": {
+            "default": false,
+            "title": "Cited",
+            "type": "boolean"
+          },
+          "demoted": {
+            "default": false,
+            "description": "History: superseded, moved, dropped.",
+            "title": "Demoted",
+            "type": "boolean"
+          },
           "dense_score": {
             "anyOf": [
               {
@@ -2082,6 +2496,14 @@
             ],
             "title": "Dense Score"
           },
+          "found_by": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FoundBy"
+            },
+            "title": "Found By",
+            "type": "array"
+          },
           "fused_score": {
             "anyOf": [
               {
@@ -2091,15 +2513,34 @@
                 "type": "null"
               }
             ],
+            "description": "RRF across every channel.",
             "title": "Fused Score"
           },
           "item_id": {
-            "format": "uuid",
-            "title": "Item Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Kind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "layer": {
-            "$ref": "#/components/schemas/Layer"
+            "$ref": "#/components/schemas/Layer",
+            "default": "archive"
           },
           "lexical_score": {
             "anyOf": [
@@ -2112,9 +2553,25 @@
             ],
             "title": "Lexical Score"
           },
+          "matched_key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeyKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The key kind the search matched on ('matched via cue key')."
+          },
           "reason": {
             "default": "",
             "title": "Reason",
+            "type": "string"
+          },
+          "rerank_reason": {
+            "default": "",
+            "title": "Rerank Reason",
             "type": "string"
           },
           "rerank_score": {
@@ -2133,55 +2590,111 @@
             "title": "Selected",
             "type": "boolean"
           },
+          "soft_only": {
+            "default": false,
+            "description": "Found by the soft channel only.",
+            "title": "Soft Only",
+            "type": "boolean"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "turn_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set for a conversation snippet.",
+            "title": "Turn Id"
           }
         },
         "required": [
-          "item_id",
-          "title",
-          "layer"
+          "title"
         ],
         "title": "RetrievalCandidate",
         "type": "object"
       },
       "RetrievalEvent": {
         "additionalProperties": false,
-        "description": "Retrieval panel: plan, filters, candidates with scores, what reached the answer.",
+        "description": "Retrieval panel: the plan, what each tool and the soft channel found, fusion, relaxation,\nrerank and what reached the answer (S3.13).",
         "properties": {
-          "candidates": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/RetrievalCandidate"
-            },
-            "title": "Candidates",
-            "type": "array"
-          },
           "explanation": {
             "default": "",
             "title": "Explanation",
             "type": "string"
           },
-          "filters": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "default": {},
-            "title": "Filters",
-            "type": "object"
+          "plan_note": {
+            "default": "",
+            "title": "Plan Note",
+            "type": "string"
           },
-          "layers": {
+          "plan_source": {
+            "default": "model",
+            "enum": [
+              "model",
+              "retry",
+              "fallback"
+            ],
+            "title": "Plan Source",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "rerank": {
+            "default": "model",
+            "enum": [
+              "model",
+              "disabled",
+              "failed",
+              "skipped"
+            ],
+            "title": "Rerank",
+            "type": "string"
+          },
+          "rerank_note": {
+            "default": "",
+            "title": "Rerank Note",
+            "type": "string"
+          },
+          "soft_channel": {
+            "default": true,
+            "title": "Soft Channel",
+            "type": "boolean"
+          },
+          "sub_queries": {
             "default": [],
             "items": {
-              "$ref": "#/components/schemas/Layer"
+              "$ref": "#/components/schemas/SubQueryTrace"
             },
-            "title": "Layers",
+            "title": "Sub Queries",
             "type": "array"
           },
-          "query": {
-            "title": "Query",
-            "type": "string"
+          "timings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TimingSpan"
+            },
+            "title": "Timings",
+            "type": "array"
           },
           "type": {
             "const": "retrieval",
@@ -2196,7 +2709,7 @@
           }
         },
         "required": [
-          "query"
+          "question"
         ],
         "title": "RetrievalEvent",
         "type": "object"
@@ -2261,6 +2774,26 @@
           "secret"
         ],
         "title": "Sensitivity",
+        "type": "string"
+      },
+      "Shape": {
+        "description": "What kind of question a sub-query is (S3.4). Code maps each shape to its tools.",
+        "enum": [
+          "exact",
+          "list",
+          "latest",
+          "history",
+          "time_window",
+          "order",
+          "count",
+          "set",
+          "entity",
+          "semantic",
+          "why",
+          "situational",
+          "conversation"
+        ],
+        "title": "Shape",
         "type": "string"
       },
       "Source": {
@@ -2345,6 +2878,7 @@
           "event": {
             "discriminator": {
               "mapping": {
+                "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
                 "intent": "#/components/schemas/IntentEvent",
@@ -2369,6 +2903,9 @@
               },
               {
                 "$ref": "#/components/schemas/RetrievalEvent"
+              },
+              {
+                "$ref": "#/components/schemas/CitationsEvent"
               },
               {
                 "$ref": "#/components/schemas/ToolCallEvent"
@@ -2557,6 +3094,138 @@
         "title": "StepStatus",
         "type": "string"
       },
+      "SubQueryTrace": {
+        "additionalProperties": false,
+        "description": "One part of the plan, what ran for it, and what it found.",
+        "properties": {
+          "abstained": {
+            "default": false,
+            "title": "Abstained",
+            "type": "boolean"
+          },
+          "aggregate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AggregateTrace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidates": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RetrievalCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "count_check": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CountCheck"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dropped": {
+            "default": [],
+            "description": "Filter hints dropped as unknown.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped",
+            "type": "array"
+          },
+          "entities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EntityTrace"
+            },
+            "title": "Entities",
+            "type": "array"
+          },
+          "expansion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Expansion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Filters",
+            "type": "object"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "relaxation": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RelaxStep"
+            },
+            "title": "Relaxation",
+            "type": "array"
+          },
+          "shape": {
+            "$ref": "#/components/schemas/Shape"
+          },
+          "soft_query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Soft Query"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ToolRun"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "topic": {
+            "default": "",
+            "title": "Topic",
+            "type": "string"
+          },
+          "windows": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TimeResolution"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "index",
+          "shape",
+          "question"
+        ],
+        "title": "SubQueryTrace",
+        "type": "object"
+      },
       "Tier": {
         "enum": [
           "guest",
@@ -2567,12 +3236,13 @@
         "type": "string"
       },
       "TimeClock": {
-        "description": "Which clock a time expression sets: when it happened, when it was true, when it is due,\nor when to remind.",
+        "description": "Which clock a time expression sets: when it happened, when it was true, when it is due,\nor when to remind. Recall also filters on when something was mentioned (said or saved).",
         "enum": [
           "occurred",
           "valid",
           "due",
-          "trigger"
+          "trigger",
+          "mentioned"
         ],
         "title": "TimeClock",
         "type": "string"
@@ -2602,6 +3272,18 @@
             ],
             "title": "Alternative"
           },
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Recall: the event a window was computed from ('Goa trip').",
+            "title": "Anchor"
+          },
           "assumed": {
             "default": false,
             "title": "Assumed",
@@ -2624,6 +3306,19 @@
           "expression": {
             "title": "Expression",
             "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The memory this date was written to (for a one-tap fix).",
+            "title": "Item Id"
           },
           "memory": {
             "anyOf": [
@@ -2680,10 +3375,46 @@
         "title": "TimeResolution",
         "type": "object"
       },
+      "TimingSpan": {
+        "additionalProperties": false,
+        "description": "A non-model span for the waterfall (fusion, selection).",
+        "properties": {
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "started_at",
+          "latency_ms"
+        ],
+        "title": "TimingSpan",
+        "type": "object"
+      },
       "ToolCallEvent": {
         "additionalProperties": false,
-        "description": "Tool calls panel: tool, summarised arguments and result, policy verdict.",
+        "description": "Tool calls panel: tool, summarised arguments and result, policy verdict. Retrieval tools\nare ``read`` (no write policy applies); memory writer ops are ``write``.",
         "properties": {
+          "access": {
+            "default": "write",
+            "enum": [
+              "read",
+              "write"
+            ],
+            "title": "Access",
+            "type": "string"
+          },
           "arguments": {
             "additionalProperties": {
               "type": "string"
@@ -2691,6 +3422,28 @@
             "default": {},
             "title": "Arguments",
             "type": "object"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
           },
           "latency_ms": {
             "anyOf": [
@@ -2718,6 +3471,18 @@
             "title": "Result Summary",
             "type": "string"
           },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
           "tool": {
             "title": "Tool",
             "type": "string"
@@ -2738,6 +3503,50 @@
           "tool"
         ],
         "title": "ToolCallEvent",
+        "type": "object"
+      },
+      "ToolRun": {
+        "additionalProperties": false,
+        "description": "One retrieval tool call of a sub-query.",
+        "properties": {
+          "arguments": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Arguments",
+            "type": "object"
+          },
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "latency_ms": {
+            "default": 0,
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool"
+        ],
+        "title": "ToolRun",
         "type": "object"
       },
       "TraceLink": {
@@ -2921,6 +3730,7 @@
           "event": {
             "discriminator": {
               "mapping": {
+                "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
                 "intent": "#/components/schemas/IntentEvent",
@@ -2945,6 +3755,9 @@
               },
               {
                 "$ref": "#/components/schemas/RetrievalEvent"
+              },
+              {
+                "$ref": "#/components/schemas/CitationsEvent"
               },
               {
                 "$ref": "#/components/schemas/ToolCallEvent"
@@ -3001,11 +3814,12 @@
         "type": "object"
       },
       "TurnKind": {
-        "description": "What started a turn: a message, an undo, a confirmation of a held write, or the system\n(background jobs). Every kind is stored, auditable and undoable the same way.",
+        "description": "What started a turn: a message, an undo, a confirmation of a held write, an edit from the\nglass box or Upcoming, or the system (background jobs). Every kind is stored, auditable and\nundoable the same way.",
         "enum": [
           "user",
           "undo",
           "confirm",
+          "edit",
           "system"
         ],
         "title": "TurnKind",

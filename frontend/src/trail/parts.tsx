@@ -98,6 +98,7 @@ const GLYPH: Record<DiffEntry['op'], DiffGlyph> = {
   updated: '~',
   superseded: '~',
   fulfilled: '~',
+  corrected: '~',
   removed: '−',
   held: '⏸',
   not_written: '∅',
@@ -133,7 +134,7 @@ function Entry({ entry }: { entry: DiffEntry }) {
       glyph={GLYPH[entry.op]}
       layer={entry.layer}
       title={entry.title}
-      strike={entry.op === 'superseded' || entry.op === 'removed'}
+      strike={entry.op === 'superseded' || entry.op === 'removed' || entry.op === 'corrected'}
       note={entry.op.replace('_', ' ')}
       testId="diff-entry"
       op={entry.op}

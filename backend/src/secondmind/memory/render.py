@@ -97,6 +97,7 @@ class RenderInput:
     superseded_by: ItemContent | None = None
     replaced: ItemContent | None = None
     fulfilled_by: ItemContent | None = None
+    corrected_by: ItemContent | None = None
     extra: dict[str, str] = field(default_factory=dict)
 
 
@@ -281,6 +282,8 @@ def _where_who(entities: Sequence[RenderEntity]) -> str:
 
 def render_verbal(inp: RenderInput) -> str:  # noqa: PLR0911
     item, tz = inp.item, inp.timezone
+    if inp.corrected_by is not None:
+        return _mistake(inp, inp.corrected_by)
     match item.kind:
         case Kind.EPISODE:
             return _episode(inp)
@@ -452,6 +455,15 @@ def _fact(inp: RenderInput) -> str:
     else:
         since = f" Noted {format_day(item.mentioned_at, tz)}."
     return f"{label}: {text}.{about_text}{since}"
+
+
+def _mistake(inp: RenderInput, fix: ItemContent) -> str:
+    """A row corrected as a mistake (S3.12): never true, so no validity and no history."""
+    on = format_day(fix.mentioned_at, inp.timezone, weekday=False)
+    return (
+        f"Recorded by mistake, corrected on {on}: {_clause(inp.item.text)}. "
+        f"The right version: {_clause(fix.text)}."
+    )
 
 
 def render_change(inp: RenderInput) -> str | None:

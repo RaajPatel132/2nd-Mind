@@ -83,6 +83,7 @@ function ctxFor(step: AgentStep, views: StepView[], facts: Facts, turn: ChatTurn
 function decisionReason(turn: ChatTurn, facts: Facts): string {
   if (turn.kind === 'undo') return 'An undo replays the write log backwards, so nothing new was decided.'
   if (turn.kind === 'confirm') return 'A confirmation applies a change you approved; nothing new was decided.'
+  if (turn.kind === 'edit') return 'An edit you made directly; no model decided anything.'
   if (turn.kind === 'system') return 'Housekeeping by the system; no model decided anything.'
   if (facts.intent?.intent === 'recall') return "Recall isn't wired up yet, so nothing was looked up or saved."
   if (facts.intent?.intent === 'correct') return "Correcting by chat isn't wired up yet, so nothing was changed."

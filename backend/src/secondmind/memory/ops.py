@@ -18,8 +18,9 @@ from secondmind.core import (
 )
 from secondmind.memory.records import EntityContent, ItemContent, TriggerContent
 
-# Where an op came from. Only "user_message", "undo" and "confirm" are the user's own action.
-Origin = Literal["user_message", "content", "system", "undo", "confirm"]
+# Where an op came from. "user_message", "ui_edit" (the glass box, Upcoming), "undo" and
+# "confirm" are the user's own action.
+Origin = Literal["user_message", "ui_edit", "content", "system", "undo", "confirm"]
 
 
 class _Op(BaseModel):
@@ -82,6 +83,16 @@ class SupersedeItem(_Op):
     link_id: uuid.UUID
     valid_to: datetime
     state: str = "superseded"
+
+
+class CorrectItem(_Op):
+    """The old row was recorded by mistake (S3.12): it is archived (kept for the record, out of
+    recall) and the new row links to it with ``corrects``. Not history: that is a supersede."""
+
+    type: Literal["correct_item"] = "correct_item"
+    old_id: uuid.UUID
+    new_id: uuid.UUID
+    link_id: uuid.UUID
 
 
 class FulfilIntention(_Op):
@@ -174,6 +185,7 @@ Op = Annotated[
     | UpdateItem
     | SetItemState
     | SupersedeItem
+    | CorrectItem
     | FulfilIntention
     | DeleteItem
     | RestoreItem
@@ -198,6 +210,7 @@ OP_LABELS: dict[str, WriteOp] = {
     "update_item": WriteOp.UPDATE,
     "set_item_state": WriteOp.SET_STATE,
     "supersede_item": WriteOp.SUPERSEDE,
+    "correct_item": WriteOp.CORRECT,
     "fulfil_intention": WriteOp.FULFIL,
     "delete_item": WriteOp.DELETE,
     "restore_item": WriteOp.RESTORE,
