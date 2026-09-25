@@ -54,8 +54,7 @@ def item(
         state=state or initial_state(kind),
         text=text,
         title=title or text,
-        mentioned_at=NOW,
-        **fields,  # type: ignore[arg-type]
+        **({"mentioned_at": NOW} | fields),  # type: ignore[arg-type]
     )
 
 

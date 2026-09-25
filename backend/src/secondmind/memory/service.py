@@ -11,13 +11,15 @@ from secondmind.core import (
     ItemStatus,
     Kind,
     NotFoundError,
+    TriggerState,
     ValidationFailedError,
     VocabKind,
     WorkspaceScope,
 )
 from secondmind.memory.core_layer import CoreView, render_core
 from secondmind.memory.keys import Embedder, KeyIndexer
-from secondmind.memory.ops import CreateItem, Op, load_op
+from secondmind.memory.ops import CreateItem, Op, SetTriggerState, UpdateItem, load_op
+from secondmind.memory.quick import quick_layer
 from secondmind.memory.records import (
     CategoryRecord,
     EntityRecord,
@@ -235,6 +237,50 @@ class Memory:
         if plan.nothing_to_undo:
             writer.note_not_written("nothing to undo", "that turn made no memory changes")
         return await writer.commit()
+
+    async def expiry_ops(self, scope: WorkspaceScope, now: datetime) -> list[Op]:
+        """Quick-layer housekeeping due at ``now`` (S2.9), for a system turn to apply. A quick
+        entry whose time is up leaves the layer, or stays under the next rule that still
+        applies; a pending time trigger whose time passed becomes ``expired``."""
+        reader = self.reader(scope)
+        passed = await reader.passed_triggers(now)
+        expired = await reader.expired_quick(now)
+        owners = {i.id: i for i in await reader.items(sorted({t.item_id for t in passed}))}
+        triggers = await reader.triggers([i.id for i in expired])
+        ops: list[Op] = [
+            SetTriggerState(
+                trigger_id=t.id,
+                state=TriggerState.EXPIRED,
+                origin="system",
+                title=f"reminder: {owners[t.item_id].title}" if t.item_id in owners else "reminder",
+                rationale="its time passed",
+            )
+            for t in passed
+        ]
+        for item in expired:
+            decision = quick_layer(
+                item,
+                now=now,
+                triggers=[t for t in triggers if t.item_id == item.id],
+                horizon_days=self.settings.quick_horizon_days,
+                recent_days=self.settings.quick_recent_days,
+            )
+            ops.append(
+                UpdateItem(
+                    item_id=item.id,
+                    changes={
+                        "in_quick": decision.in_quick,
+                        "quick_reason": decision.reason,
+                        "quick_until": decision.until,
+                    },
+                    origin="system",
+                    title=item.title,
+                    rationale=(
+                        f"quick: now {decision.reason}" if decision.in_quick else "quick time is up"
+                    ),
+                )
+            )
+        return ops
 
     async def confirm_held(
         self,
