@@ -1,11 +1,11 @@
-"""Deterministic time resolution (S2.5, FR-3.2, ADR-0023). The model never does date arithmetic:
+"""Deterministic time resolution (S2.5, FR-3.2, ADR-0022). The model never does date arithmetic:
 extraction returns expressions verbatim with the clock they belong to, and ``resolve`` turns
 each into a value, an honest precision, an RRULE for routines, and the name of the rule that
 fired. ``now`` (a UTC instant plus the workspace timezone) is always passed in.
 
 Calendar arithmetic and RRULE validation use python-dateutil; the grammar for what people say
 ("next Friday", "the 3rd of next month", "every other Sunday") is ours, because general parsers
-get exactly these cases wrong (ADR-0023). Ambiguous readings take the most likely one, mark it
+get exactly these cases wrong (ADR-0022). Ambiguous readings take the most likely one, mark it
 ``assumed`` and name the alternative (FR-1.4).
 """
 

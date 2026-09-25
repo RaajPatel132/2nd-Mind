@@ -22,3 +22,9 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0015](0015-turn-events-and-streaming.md) | Typed turn events as source of truth; SSE streaming | accepted |
 | [0016](0016-dev-auth.md) | Dev-only auth with a signed cookie | accepted |
 | [0017](0017-container-images.md) | Slim non-root images; one image for api and worker | accepted |
+| [0018](0018-memory-model.md) | Memory model: closed kinds, entities and three clocks | accepted |
+| [0019](0019-reconciliation.md) | Reconciliation instead of near-duplicate merge | accepted |
+| [0020](0020-retrieval-keys.md) | Retrieval keys, verbalised keys and the soft channel | accepted |
+| [0021](0021-sensitivity-and-secrets.md) | Sensitivity levels; secrets refused, not vaulted | accepted |
+| [0022](0022-time-resolution.md) | Time resolution: python-dateutil plus our own grammar | accepted |
+| [0023](0023-extract-and-enrich.md) | Extract and enrich as two model calls | accepted |
