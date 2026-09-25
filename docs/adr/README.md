@@ -29,3 +29,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0022](0022-time-resolution.md) | Time resolution: python-dateutil plus our own grammar | accepted |
 | [0023](0023-extract-and-enrich.md) | Extract and enrich as two model calls | accepted |
 | [0028](0028-ink-design-system.md) | Ink design system; the glass box inline as the Trail | accepted |
+| [0029](0029-agent-steps-on-the-stream.md) | Agent steps on the turn stream (amends 0015) | accepted |

@@ -1,6 +1,6 @@
 # ADR-0015: Typed turn events are the glass box's source of truth; replies stream over SSE
 
-- **Status:** accepted
+- **Status:** accepted; amended by ADR-0029 (step events and frames)
 - **Date:** 2026-09-24
 
 ## Context
