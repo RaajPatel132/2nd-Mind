@@ -3,12 +3,14 @@ auditable and undoable like anything a user does (S2.9, S2.14)."""
 
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from secondmind.agent import TurnRunner
-from secondmind.auth import IdentityStore
 from secondmind.core import WorkspaceScope
 from secondmind.observability import get_logger
+
+if TYPE_CHECKING:  # the worker's health check imports this module; keep it light
+    from secondmind.agent import TurnRunner
+    from secondmind.auth import IdentityStore
 
 log = get_logger(__name__)
 
@@ -21,8 +23,8 @@ EXPIRE_QUICK_EVERY_MINUTES = 10
 class JobDeps:
     """What memory jobs need, put into the arq context by the worker at start-up."""
 
-    runner: TurnRunner
-    identity: IdentityStore
+    runner: "TurnRunner"
+    identity: "IdentityStore"
 
 
 def _deps(ctx: dict[str, Any]) -> JobDeps:

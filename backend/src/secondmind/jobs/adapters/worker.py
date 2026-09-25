@@ -2,7 +2,8 @@
 
 Config is loaded from the environment and validated at import (start-up); an invalid config
 exits with a message naming the variable. ``arq --check`` uses the health key for readiness.
-The runtime (database, models, memory, turn runner) is built once when the worker starts.
+The runtime (database, models, memory, turn runner) is built once when the worker starts, and
+imported only then: ``arq --check`` imports this module every 10 s and must stay fast.
 """
 
 import sys
@@ -11,8 +12,6 @@ from typing import Any, ClassVar
 from arq import cron
 from arq.connections import RedisSettings
 
-from secondmind.agent.adapters import Runtime, build_runtime, require_embedding_dimensions
-from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.config import load_app_config
 from secondmind.core import ConfigError
 from secondmind.jobs import DEPS_KEY, EXPIRE_QUICK_EVERY_MINUTES, JOBS, JobDeps, expire_quick
@@ -36,6 +35,12 @@ RUNTIME_KEY = "runtime"
 
 
 async def _startup(ctx: dict[str, Any]) -> None:
+    from secondmind.agent.adapters import (  # noqa: PLC0415
+        build_runtime,
+        require_embedding_dimensions,
+    )
+    from secondmind.auth.adapters import SqlIdentityStore  # noqa: PLC0415
+
     runtime = build_runtime(_config)
     await require_embedding_dimensions(runtime.db, _settings.embed_dimensions)
     ctx[RUNTIME_KEY] = runtime
@@ -45,7 +50,7 @@ async def _startup(ctx: dict[str, Any]) -> None:
 
 async def _shutdown(ctx: dict[str, Any]) -> None:
     runtime = ctx.pop(RUNTIME_KEY, None)
-    if isinstance(runtime, Runtime):
+    if runtime is not None:
         await runtime.aclose()
     log.info("worker.stopped")
 
