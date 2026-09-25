@@ -68,7 +68,10 @@ class _Generation:
                 output=output if self._include_content else None,
                 level="WARNING" if call.fallback else "DEFAULT",
             )
-            self._obs.end()  # type: ignore[attr-defined]
+            # The call's own end: generations are finished when the turn ends (content is
+            # redacted then), so "now" would be the wrong end time.
+            ended = call.started_at + timedelta(milliseconds=call.latency_ms)
+            self._obs.end(end_time=int(ended.timestamp() * 1_000_000_000))  # type: ignore[attr-defined]
         except Exception:
             log.warning("trace.generation_failed", exc_info=True)
 

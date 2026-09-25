@@ -16,6 +16,7 @@ own events and diff, so they are auditable and can themselves be undone.
 
 import asyncio
 import contextlib
+import json
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
@@ -36,6 +37,7 @@ from secondmind.config import PromptRegistry
 from secondmind.core import (
     Clock,
     ErrorEvent,
+    ModelCallEvent,
     TurnEvent,
     UsageTotals,
     ValidationFailedError,
@@ -148,6 +150,12 @@ class _TurnRun:
     tally: _Tally = field(default_factory=_Tally)
     trace: TurnTrace | None = None
     redacted_input: str | None = None
+    # Secret values found during the turn, and generations waiting to be sent to the trace:
+    # a secret the model labels late must not reach the trace through an earlier call.
+    secret_values: list[str] = field(default_factory=list)
+    generations: list[tuple[GenerationSpan, ModelCallEvent, object, str]] = field(
+        default_factory=list
+    )
 
 
 # An action run as a non-chat turn (undo, confirm, system job): given the writer turn, the
@@ -262,7 +270,7 @@ class TurnRunner:
             event = call.to_event()
             await run.store.record_model_call(run.turn.id, event)
             run.tally.add(call)
-            span.finish(event, prompt_input=prompt_input, output=output)
+            run.generations.append((span, event, prompt_input, output))
 
         return record
 
@@ -347,6 +355,7 @@ class TurnRunner:
             if answer is None:
                 raise RuntimeError("turn graph finished without an answer")
             secret_values += steps.secrets
+            run.secret_values = secret_values
             if secret_values:
                 run.redacted_input = redact_values(turn.input, secret_values)
                 await store.redact_input(turn.id, run.redacted_input)
@@ -583,6 +592,7 @@ class TurnRunner:
             if run.queue is not None:
                 await run.queue.put(done)
             try:
+                self._send_generations(run)
                 if run.trace is not None:
                     run.trace.finish(
                         status=final.status.value,
@@ -604,6 +614,22 @@ class TurnRunner:
             if run.queue is not None:
                 await run.queue.put(None)
         return final
+
+    @staticmethod
+    def _send_generations(run: _TurnRun) -> None:
+        """Finish the turn's generation spans, scrubbed of every secret the turn found."""
+        secrets = run.secret_values
+        for span, event, prompt_input, output in run.generations:
+            if not secrets:
+                span.finish(event, prompt_input=prompt_input, output=output)
+                continue
+            text = prompt_input if isinstance(prompt_input, str) else json.dumps(prompt_input)
+            span.finish(
+                event,
+                prompt_input=redact_values(text, secrets),
+                output=redact_values(output, secrets),
+            )
+        run.generations.clear()
 
     async def _trace_status(self) -> TraceStatus:
         if not self._tracer.enabled:
