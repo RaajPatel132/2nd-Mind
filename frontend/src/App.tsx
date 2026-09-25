@@ -1,63 +1,82 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Chat } from './components/Chat'
-import { GlassBox } from './components/GlassBox'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Turn } from './api/client'
+import { Composer } from './components/Composer'
+import { Conversation } from './components/Conversation'
+import { Inspector } from './components/Inspector'
+import { BootError, Connecting, SignedOut } from './components/Screens'
+import { TopBar } from './components/TopBar'
 import { useConversation } from './hooks/useConversation'
+import { useHeldActions } from './hooks/useHeldActions'
+import { useMediaQuery } from './hooks/useMediaQuery'
 import { useSession, type Session } from './hooks/useSession'
+import { useUsage } from './hooks/useUsage'
+import { HeldContext } from './trail/context'
+import { cx, useToast, type SheetMode } from './ui'
 
 export default function App() {
   const state = useSession()
-  if (state.status === 'loading') {
-    return <Centered>Connecting…</Centered>
-  }
-  if (state.status === 'error') {
-    return (
-      <Centered>
-        <p role="alert" className="text-red-800">
-          {state.message}
-        </p>
-      </Centered>
-    )
-  }
+  if (state.status === 'loading') return <Connecting />
+  if (state.status === 'signed-out') return <SignedOut onSignIn={state.retry} />
+  if (state.status === 'error') return <BootError message={state.message} onRetry={state.retry} />
   return <Workspace key={state.session.workspace.id} session={state.session} />
 }
 
+function isTyping(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+}
+
 function Workspace({ session }: { session: Session }) {
-  const [selectedTurnId, setSelectedTurnId] = useState<string | null>(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const { workspace, meta, me } = session
+  const usage = useUsage()
+  const toast = useToast()
+  const [draft, setDraft] = useState('')
+  const [inspecting, setInspecting] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
   const composerRef = useRef<HTMLTextAreaElement>(null)
-  const glassRef = useRef<HTMLElement>(null)
-  const selectIfNone = useCallback((turnId: string) => {
-    setSelectedTurnId((current) => current ?? turnId)
-  }, [])
-  const conversation = useConversation(session.workspace.id, setSelectedTurnId, selectIfNone)
-  const selected = conversation.turns.find((t) => t.id === selectedTurnId)?.turn ?? null
-  const answer = session.meta.routes.find((r) => r.step === 'answer')
+  const wide = useMediaQuery('(min-width: 1440px)')
+  const phone = useMediaQuery('(max-width: 767px)')
+  const mode: SheetMode = wide ? 'docked' : phone ? 'bottom' : 'overlay'
 
-  const focusGlassBox = useCallback(() => {
-    setDrawerOpen(true)
-    requestAnimationFrame(() => glassRef.current?.focus())
-  }, [])
-
-  const selectTurn = useCallback(
-    (turnId: string) => {
-      setSelectedTurnId(turnId)
-      focusGlassBox()
+  const conversation = useConversation(workspace.id, { onQuota: usage.report })
+  const { turns, addTurn } = conversation
+  const refreshUsage = usage.refresh
+  const onTurnCreated = useCallback(
+    (turn: Turn) => {
+      addTurn(turn)
+      void refreshUsage()
     },
-    [focusGlassBox],
+    [addTurn, refreshUsage],
   )
-
+  const anyHeld = useMemo(
+    () => turns.some((t) => t.events?.some((e) => e.event.type === 'memory_diff' && e.event.entries.some((x) => x.op === 'held'))),
+    [turns],
+  )
+  const held = useHeldActions(workspace.id, anyHeld, onTurnCreated)
   useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'F6') {
-        event.preventDefault()
-        if (glassRef.current?.contains(document.activeElement)) {
-          setDrawerOpen(false)
-          composerRef.current?.focus()
-        } else {
-          focusGlassBox()
-        }
-      } else if (event.key === 'Escape' && drawerOpen) {
-        setDrawerOpen(false)
+    if (held.error) toast(held.error)
+  }, [held.error, toast])
+
+  const latestId = [...turns].reverse().find((t) => t.id !== null)?.id ?? null
+  const inspected = turns.find((t) => t.id === inspecting) ?? null
+  const docked = mode === 'docked' && open && inspected !== null
+
+  const inspect = useCallback((turnId: string) => {
+    setInspecting(turnId)
+    setOpen(true)
+  }, [])
+  const close = useCallback(() => {
+    setOpen(false)
+  }, [])
+
+  // F6 toggles the inspector for the latest turn; / focuses the composer from anywhere else.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'F6') {
+        e.preventDefault()
+        if (open) setOpen(false)
+        else if (latestId) inspect(latestId)
+      } else if (e.key === '/' && !isTyping(e.target) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
         composerRef.current?.focus()
       }
     }
@@ -65,86 +84,44 @@ function Workspace({ session }: { session: Session }) {
     return () => {
       window.removeEventListener('keydown', onKey)
     }
-  }, [drawerOpen, focusGlassBox])
+  }, [open, latestId, inspect])
+
+  const send = useCallback(
+    (message: string) => {
+      setDraft('')
+      void conversation.send(message).then(() => composerRef.current?.focus())
+    },
+    [conversation],
+  )
 
   return (
-    <div className="flex h-dvh flex-col bg-slate-100 text-slate-900">
-      <a href="#composer" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+    <HeldContext.Provider value={held.actions}>
+      <a
+        href="#composer"
+        className="sr-only z-50 rounded-sm bg-surface-3 px-3 py-2 text-label text-fg focus:not-sr-only focus:fixed focus:left-2 focus:top-2"
+      >
         Skip to message box
       </a>
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-200 bg-white px-4 py-2.5">
-        <h1 className="text-base font-semibold tracking-tight">2nd Mind</h1>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">My memory</span>
-        {answer && (
-          <span className="hidden truncate text-xs text-slate-600 sm:inline" data-testid="answer-model">
-            answer: {answer.provider} · {answer.model}
-            {session.meta.provider_mode !== 'live' ? ` (${session.meta.provider_mode})` : ''}
-          </span>
-        )}
-        <button
-          type="button"
-          className="btn-chip ml-auto lg:hidden"
-          aria-expanded={drawerOpen}
-          aria-controls="glass-box-panel"
-          onClick={() => {
-            if (drawerOpen) setDrawerOpen(false)
-            else focusGlassBox()
-          }}
-          data-testid="toggle-glass-box"
-        >
-          Glass box
-        </button>
-      </header>
-      <div className="relative flex min-h-0 flex-1">
-        <Chat
-          turns={conversation.turns}
+      <TopBar me={me} providerMode={meta.provider_mode} usage={usage.usage} last={usage.last} delta={usage.delta} docked={docked} />
+      <main id="main" className={cx('px-4 pb-48 pt-20 md:px-6 lg:px-8', docked && '2xl:mr-115')}>
+        <Conversation
+          turns={turns}
           loading={conversation.loading}
           loadError={conversation.loadError}
-          sending={conversation.sending}
           hasEarlier={conversation.hasEarlier}
-          selectedTurnId={selectedTurnId}
-          composerRef={composerRef}
-          onSend={conversation.send}
-          onSelect={selectTurn}
+          timezone={workspace.timezone}
+          busy={held.busy}
           onLoadEarlier={conversation.loadEarlier}
+          onInspect={inspect}
+          onUndo={held.undo}
+          onPick={(text) => {
+            setDraft(text)
+            composerRef.current?.focus()
+          }}
         />
-        {drawerOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-slate-900/30 lg:hidden"
-            aria-hidden
-            onClick={() => {
-              setDrawerOpen(false)
-            }}
-          />
-        )}
-        <aside
-          id="glass-box-panel"
-          className={`${
-            drawerOpen ? 'fixed inset-y-0 right-0 z-30 flex w-full max-w-md shadow-2xl' : 'hidden'
-          } border-l border-slate-200 lg:static lg:z-auto lg:flex lg:w-[26rem] lg:max-w-none lg:shrink-0 lg:shadow-none`}
-        >
-          <div className="w-full">
-            <GlassBox
-              turn={selected}
-              pending={conversation.sending}
-              workspaceId={session.workspace.id}
-              regionRef={glassRef}
-              onTurnCreated={(turn) => {
-                conversation.addTurn(turn)
-                setSelectedTurnId(turn.id)
-              }}
-              onClose={() => {
-                setDrawerOpen(false)
-                composerRef.current?.focus()
-              }}
-            />
-          </div>
-        </aside>
-      </div>
-    </div>
+      </main>
+      <Composer value={draft} onChange={setDraft} onSend={send} sending={conversation.sending} inputRef={composerRef} docked={docked} />
+      <Inspector turn={inspected} open={open} mode={mode} onClose={close} timezone={workspace.timezone} quotaNow={usage.usage} />
+    </HeldContext.Provider>
   )
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return <main className="flex min-h-dvh items-center justify-center bg-slate-100 p-6 text-slate-700">{children}</main>
 }

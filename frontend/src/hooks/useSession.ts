@@ -6,17 +6,27 @@ export type Session = { me: Me; workspace: Me['workspaces'][number]; meta: Meta 
 type State =
   | { status: 'loading' }
   | { status: 'ready'; session: Session }
+  | { status: 'signed-out' }
   | { status: 'error'; message: string }
 
-/** Signs in with the dev identity when there is no session (DEV_AUTH only). */
-export function useSession(): State {
+/**
+ * Signs in with the dev identity when there is no session (DEV_AUTH only), except right after
+ * signing out (`/?signed-out`), which shows the signed-out screen instead.
+ */
+export function useSession(): State & { retry: () => void } {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
+    const signedOut = new URLSearchParams(window.location.search).has('signed-out')
     async function load(): Promise<void> {
       try {
         const [meta, existing] = await Promise.all([getMeta(), getMe()])
+        if (!existing && signedOut && attempt === 0) {
+          if (!cancelled) setState({ status: 'signed-out' })
+          return
+        }
         const me = existing ?? (await devLogin())
         const workspace = me.workspaces[0]
         if (!workspace) throw new Error('No workspace found for this account.')
@@ -35,7 +45,14 @@ export function useSession(): State {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [attempt])
 
-  return state
+  return {
+    ...state,
+    retry: () => {
+      if (window.location.search) window.history.replaceState(null, '', '/')
+      setState({ status: 'loading' })
+      setAttempt((a) => a + 1)
+    },
+  }
 }
