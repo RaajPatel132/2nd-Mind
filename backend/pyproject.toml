@@ -170,6 +170,18 @@ ignore_imports = [
 unmatched_ignore_imports_alerting = "none"
 
 [[tool.importlinter.contracts]]
+name = "Only memory touches the store port: everything else writes through MemoryWriter"
+type = "forbidden"
+source_modules = [
+    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval",
+    "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
+    "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
+    "secondmind.core",
+]
+forbidden_modules = ["secondmind.memory.store", "secondmind.memory.adapters.store"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
 name = "Modules talk through public interfaces (secondmind.<m> or secondmind.<m>.adapters) only"
 type = "public_interface"
 root = "secondmind"
