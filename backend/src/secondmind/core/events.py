@@ -3,6 +3,9 @@
 Every event carries ``type`` (the discriminator) and ``v`` (its schema version). Add a field
 with a default to evolve an event; bump ``v`` for anything that changes meaning. ``retrieval``
 is defined but not emitted until S3.
+
+A ``step`` event records one agent step that ran (ADR-0029): the Trail in the UI is drawn from
+these, and each step's other events are written with it.
 """
 
 import uuid
@@ -48,6 +51,38 @@ class PolicyDecision(StrEnum):
     ALLOWED = "allowed"
     HELD = "held"
     BLOCKED = "blocked"
+
+
+class AgentStep(StrEnum):
+    """The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
+
+    ``plan``, ``search``, ``rank``, ``triggers`` (S3) and ``fetch`` (S4) are reserved: in the
+    schema so the UI's catalogue is complete, not emitted yet.
+    """
+
+    UNDERSTAND = "understand"
+    EXTRACT = "extract"
+    DATES = "dates"
+    ENTITIES = "entities"
+    RECONCILE = "reconcile"
+    ENRICH = "enrich"
+    GUARD = "guard"
+    SAVE = "save"
+    ANSWER = "answer"
+    UNDO = "undo"
+    CONFIRM = "confirm"
+    PLAN = "plan"
+    SEARCH = "search"
+    RANK = "rank"
+    TRIGGERS = "triggers"
+    FETCH = "fetch"
+
+
+class StepStatus(StrEnum):
+    DONE = "done"
+    HELD = "held"
+    REFUSED = "refused"
+    FAILED = "failed"
 
 
 # ------------------------------------------------------------------ S1: emitted now
@@ -297,6 +332,16 @@ class PolicyEvent(_Event):
     verdict: PolicyVerdict
 
 
+class StepEvent(_Event):
+    """One agent step that ran: how it ended and how long it took (ADR-0029)."""
+
+    type: Literal["step"] = "step"
+    step: AgentStep
+    status: StepStatus
+    started_at: datetime
+    latency_ms: int = Field(ge=0)
+
+
 TurnEvent = Annotated[
     IntentEvent
     | DecisionEvent
@@ -305,7 +350,8 @@ TurnEvent = Annotated[
     | ToolCallEvent
     | PolicyEvent
     | ModelCallEvent
-    | ErrorEvent,
+    | ErrorEvent
+    | StepEvent,
     Field(discriminator="type"),
 ]
 

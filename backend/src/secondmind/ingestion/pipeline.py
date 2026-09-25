@@ -8,8 +8,10 @@ built from the committed diff. The model proposes; code decides and writes.
 
 import json
 import re
+import time
 import uuid
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
@@ -18,6 +20,7 @@ from pydantic import BaseModel
 
 from secondmind.config import Step
 from secondmind.core import (
+    AgentStep,
     Classification,
     DecisionEvent,
     EntityKind,
@@ -29,19 +32,25 @@ from secondmind.core import (
     LinkType,
     Modality,
     Normalisation,
+    NullTrail,
+    PolicyDecision,
     ReconcileDecision,
     Reconciliation,
     ResourceFormat,
     Sensitivity,
+    StepRun,
+    StepStatus,
     TimeClock,
     TimePrecision,
     TimeResolution,
+    Trail,
     TriggerOn,
     TurnEvent,
     VocabKind,
     WorkspaceScope,
     initial_state,
     new_id,
+    utc_now,
 )
 from secondmind.ingestion.ack import AckFacts, acknowledge, refusal
 from secondmind.ingestion.entities import EntityPlan, resolve_entities
@@ -77,6 +86,7 @@ from secondmind.memory import (
     ItemRecord,
     LinkItems,
     Memory,
+    MemoryWriter,
     NewTrigger,
     Op,
     RelateEntities,
@@ -127,6 +137,7 @@ class IngestContext:
     default_lead_minutes: int = 1440
     secret_found: bool = False
     secret_kinds: Sequence[str] = ()
+    trail: Trail = field(default_factory=NullTrail)
 
 
 @dataclass(slots=True)
@@ -195,7 +206,8 @@ class IngestionPipeline:
         vocab = await reader.vocab()
         notes = _Notes(models={"extract": ctx.steps.model_of(Step.EXTRACT)})
 
-        extraction = await self._extract(ctx, known, categories, vocab)
+        async with ctx.trail.run(AgentStep.EXTRACT):
+            extraction = await self._extract(ctx, known, categories, vocab)
         secret_values = list(extraction.secret_spans)
         secrets = [m for m in extraction.memories if m.sensitivity == "secret"]
         memories = [m for m in extraction.memories if m.sensitivity != "secret"]
@@ -204,24 +216,14 @@ class IngestionPipeline:
             outcome.secret_values = secret_values or [_secret_guess(m) for m in secrets]
             return outcome
 
-        plans_by_ref = await resolve_entities(
-            extraction.entities,
-            known,
-            me,
-            now=ctx.now.instant,
-            choose=self._entity_chooser(ctx, notes),
-        )
-        subtype_terms = terms_for(
-            "subtype", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.SUBTYPE]
-        )
-        predicate_terms = terms_for(
-            "predicate", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.PREDICATE]
-        )
-        relation_terms = terms_for(
-            "relation", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.RELATION]
-        )
-        category_terms = [Term(c.slug, tuple(c.aliases)) for c in categories]
-
+        async with _step(ctx, AgentStep.ENTITIES, ran=bool(extraction.entities)):
+            plans_by_ref = await resolve_entities(
+                extraction.entities,
+                known,
+                me,
+                now=ctx.now.instant,
+                choose=self._entity_chooser(ctx, notes),
+            )
         writer = ctx.memory.writer(
             ctx.scope,
             WriterTurn(
@@ -232,11 +234,83 @@ class IngestionPipeline:
             ),
             emit=ctx.emit,
         )
+        plans = await self._plan_all(
+            ctx, memories, plans_by_ref, notes, vocab=vocab, categories=categories, writer=writer
+        )
+
+        async with _step(ctx, AgentStep.RECONCILE, ran=bool(plans)):
+            reconciler = Reconciler(
+                reader,
+                threshold=self._settings.reconcile_threshold,
+                embed=self._embed_one(ctx),
+                model=ctx.steps.embedding_model,
+                choose=self._reconcile_chooser(ctx, notes),
+            )
+            for plan in plans:
+                plan.decision = await reconciler.decide(plan.draft)
+
+            relations = await self._relations(
+                ctx, extraction, plans, plans_by_ref, notes=notes, vocab=vocab, writer=writer
+            )
+
+            ops = self._ops(ctx, plans, plans_by_ref, relations, writer)
+            writer.add(*ops)
+            for skipped in extraction.not_written:
+                writer.note_not_written(skipped.what, skipped.reason, rule_id="MODEL")
+            if secrets:
+                writer.add(_secret_op(ctx))
+
+            decision = _decision_event(plans, plans_by_ref, notes, extraction, secrets)
+            await ctx.emit(decision)
+        commit = await _commit(ctx, writer)
+
+        async with _step(ctx, AgentStep.ENRICH, ran=bool(commit.touched_items)):
+            await self._after_commit(ctx, commit, plans)
+        facts = AckFacts(
+            commit=commit,
+            now=ctx.now,
+            new_people=[p for p in plans_by_ref.values() if p.assumed_new_person],
+            assumed_times=[t for t in notes.times if t.assumed],
+            unresolved=notes.unresolved,
+        )
+        return IngestOutcome(
+            reply=acknowledge(facts),
+            commit=commit,
+            decision=decision,
+            secret_values=secret_values,
+            renamed_entities=commit.renamed_entities,
+        )
+
+    async def _plan_all(
+        self,
+        ctx: IngestContext,
+        memories: list[ProposedMemory],
+        plans_by_ref: dict[str, EntityPlan],
+        notes: _Notes,
+        *,
+        vocab: Sequence[Any],
+        categories: Sequence[Any],
+        writer: MemoryWriter,
+    ) -> list[_Plan]:
+        """Dates first (their own step on the Trail), then each memory's plan."""
+        subtype_terms = terms_for(
+            "subtype", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.SUBTYPE]
+        )
+        predicate_terms = terms_for(
+            "predicate", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.PREDICATE]
+        )
+        category_terms = [Term(c.slug, tuple(c.aliases)) for c in categories]
+
+        times: dict[str, dict[str, Resolved]] = {}
+        async with _step(ctx, AgentStep.DATES, ran=any(m.times for m in memories)):
+            for proposed in memories:
+                times[proposed.ref] = _resolve_times(ctx, proposed, notes)
         plans: list[_Plan] = []
         for proposed in memories:
             plan = await self._plan(
                 ctx,
                 proposed,
+                times[proposed.ref],
                 plans_by_ref,
                 notes,
                 subtypes=subtype_terms,
@@ -250,17 +324,22 @@ class IngestionPipeline:
             ):
                 if slug:
                     writer.register_vocab(vocab_kind, slug)
+        return plans
 
-        reconciler = Reconciler(
-            reader,
-            threshold=self._settings.reconcile_threshold,
-            embed=self._embed_one(ctx),
-            model=ctx.steps.embedding_model,
-            choose=self._reconcile_chooser(ctx, notes),
+    async def _relations(
+        self,
+        ctx: IngestContext,
+        extraction: ExtractOutput,
+        plans: list[_Plan],
+        plans_by_ref: dict[str, EntityPlan],
+        *,
+        notes: _Notes,
+        vocab: Sequence[Any],
+        writer: MemoryWriter,
+    ) -> list[RelateEntities]:
+        relation_terms = terms_for(
+            "relation", [(v.slug, v.aliases) for v in vocab if v.vocab is VocabKind.RELATION]
         )
-        for plan in plans:
-            plan.decision = await reconciler.decide(plan.draft)
-
         relations: list[RelateEntities] = []
         ids = _ids_by_ref(plans)
         for rel in extraction.relations:
@@ -283,33 +362,7 @@ class IngestionPipeline:
                     rationale="stated relation between entities",
                 )
             )
-
-        ops = self._ops(ctx, plans, plans_by_ref, relations, writer)
-        writer.add(*ops)
-        for skipped in extraction.not_written:
-            writer.note_not_written(skipped.what, skipped.reason, rule_id="MODEL")
-        if secrets:
-            writer.add(_secret_op(ctx))
-
-        decision = _decision_event(plans, plans_by_ref, notes, extraction, secrets)
-        await ctx.emit(decision)
-        commit = await writer.commit()
-
-        await self._after_commit(ctx, commit, plans)
-        facts = AckFacts(
-            commit=commit,
-            now=ctx.now,
-            new_people=[p for p in plans_by_ref.values() if p.assumed_new_person],
-            assumed_times=[t for t in notes.times if t.assumed],
-            unresolved=notes.unresolved,
-        )
-        return IngestOutcome(
-            reply=acknowledge(facts),
-            commit=commit,
-            decision=decision,
-            secret_values=secret_values,
-            renamed_entities=commit.renamed_entities,
-        )
+        return relations
 
     # ------------------------------------------------------------------ extraction
 
@@ -349,10 +402,11 @@ class IngestionPipeline:
 
     # ------------------------------------------------------------------ one memory
 
-    async def _plan(  # noqa: PLR0915
+    async def _plan(
         self,
         ctx: IngestContext,
         m: ProposedMemory,
+        resolved: dict[str, Resolved],
         entities: dict[str, EntityPlan],
         notes: _Notes,
         *,
@@ -362,25 +416,6 @@ class IngestionPipeline:
     ) -> _Plan:
         kind = Kind(m.kind)
         tz = ctx.now.timezone
-        direction_default = "past" if kind is Kind.EPISODE else "future"
-        resolved: dict[str, Resolved] = {}
-        for t in m.times:
-            try:
-                r = resolve(
-                    t.expression,
-                    TimeClock(t.clock),
-                    ctx.now,
-                    direction=t.direction
-                    or ("past" if t.clock == "occurred" and kind is Kind.EPISODE else "auto"),
-                    recurring=t.recurring,
-                )
-            except UnresolvableTimeError:
-                notes.unresolved.append(t.expression)
-                continue
-            resolved[t.id] = r
-            notes.times.append(_time_event(r, ctx.now, m.ref))
-        del direction_default
-
         fields: dict[str, Any] = {}
         for r in resolved.values():
             if r.clock is TimeClock.OCCURRED and "occurred_start" not in fields:
@@ -802,11 +837,82 @@ class IngestionPipeline:
             ),
         )
         await ctx.emit(decision)
-        commit = await writer.commit()
+        commit = await _commit(ctx, writer)
         return IngestOutcome(reply=refusal(), commit=commit, decision=decision)
 
 
 # ------------------------------------------------------------------ helpers
+
+
+def _resolve_times(ctx: IngestContext, m: ProposedMemory, notes: _Notes) -> dict[str, Resolved]:
+    """Resolve a memory's time expressions by code (the Trail's dates step)."""
+    kind = Kind(m.kind)
+    resolved: dict[str, Resolved] = {}
+    for t in m.times:
+        try:
+            r = resolve(
+                t.expression,
+                TimeClock(t.clock),
+                ctx.now,
+                direction=t.direction
+                or ("past" if t.clock == "occurred" and kind is Kind.EPISODE else "auto"),
+                recurring=t.recurring,
+            )
+        except UnresolvableTimeError:
+            notes.unresolved.append(t.expression)
+            continue
+        resolved[t.id] = r
+        notes.times.append(_time_event(r, ctx.now, m.ref))
+    return resolved
+
+
+@asynccontextmanager
+async def _no_step(step: AgentStep) -> AsyncIterator[StepRun]:
+    yield StepRun(step=step, started_at=utc_now())
+
+
+def _step(
+    ctx: IngestContext, step: AgentStep, *, ran: bool
+) -> AbstractAsyncContextManager[StepRun]:
+    """The step on the Trail when it has work to do; otherwise it isn't reported at all."""
+    return ctx.trail.run(step) if ran else _no_step(step)
+
+
+_CHANGES = frozenset({"added", "updated", "removed", "superseded", "fulfilled"})
+
+
+def _guard_status(commit: CommitResult) -> StepStatus:
+    verdicts = [o.verdict for o in commit.outcomes]
+    if any(
+        v.decision is PolicyDecision.BLOCKED and v.rule_id != "NOT-APPLICABLE" for v in verdicts
+    ):
+        return StepStatus.REFUSED
+    if any(v.decision is PolicyDecision.HELD for v in verdicts):
+        return StepStatus.HELD
+    return StepStatus.DONE
+
+
+async def _commit(ctx: IngestContext, writer: MemoryWriter) -> CommitResult:
+    """Commit the writer as two Trail steps: ``guard`` (the policy verdicts) and ``save`` (the
+    writes). They share one transaction, so the split is measured inside it; ``save`` is
+    reported only when something was actually saved."""
+    began = time.perf_counter()
+    async with ctx.trail.run(AgentStep.GUARD) as guard:
+        commit = await writer.commit()
+        total_ms = (time.perf_counter() - began) * 1000
+        guard.status = _guard_status(commit)
+        guard.latency_ms = round(commit.policy_ms)
+        saved = any(e.op in _CHANGES for e in commit.diff.entries)
+        diff = guard.take(lambda e: e.type == "memory_diff") if saved else []
+    if saved:
+        await ctx.trail.report(
+            AgentStep.SAVE,
+            status=StepStatus.DONE,
+            started_at=guard.started_at + timedelta(milliseconds=commit.policy_ms),
+            latency_ms=round(total_ms - commit.policy_ms),
+            events=diff,
+        )
+    return commit
 
 
 def _secret_op(ctx: IngestContext) -> CreateItem:

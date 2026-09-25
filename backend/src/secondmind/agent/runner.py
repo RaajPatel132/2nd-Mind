@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from zoneinfo import ZoneInfo
 
 from secondmind.agent.graph import TurnContext, build_turn_graph
+from secondmind.agent.trail import EventRecorded, StepStarted, TurnTrail
 from secondmind.agent.turns import (
     StepModel,
     TraceStatus,
@@ -35,6 +36,7 @@ from secondmind.agent.turns import (
 )
 from secondmind.config import PromptRegistry
 from secondmind.core import (
+    AgentStep,
     Clock,
     ErrorEvent,
     ModelCallEvent,
@@ -95,7 +97,9 @@ class TurnFailed:
     turn: Turn
 
 
-TurnStreamEvent = TurnStarted | TokenDelta | TurnCompleted | TurnFailed
+TurnStreamEvent = (
+    TurnStarted | TokenDelta | StepStarted | EventRecorded | TurnCompleted | TurnFailed
+)
 
 
 @dataclass(slots=True)
@@ -149,6 +153,7 @@ class _TurnRun:
     secret_kinds: list[str] = field(default_factory=list)
     tally: _Tally = field(default_factory=_Tally)
     trace: TurnTrace | None = None
+    trail: TurnTrail | None = None
     redacted_input: str | None = None
     # Secret values found during the turn, and generations waiting to be sent to the trace:
     # a secret the model labels late must not reach the trace through an earlier call.
@@ -237,6 +242,7 @@ class TurnRunner:
             default_lead_minutes=default_lead_minutes,
             secret_kinds=scan.kinds,
         )
+        run.trail = TurnTrail(store, turn.id, queue.put, clock=self._clock)
         task = asyncio.create_task(self._run(run), name=f"turn-{turn.id}")
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
@@ -268,7 +274,7 @@ class TurnRunner:
             call: ModelCall, span: GenerationSpan, prompt_input: object, output: str
         ) -> None:
             event = call.to_event()
-            await run.store.record_model_call(run.turn.id, event)
+            await self._trail(run).emit(event)
             run.tally.add(call)
             run.generations.append((span, event, prompt_input, output))
 
@@ -296,9 +302,13 @@ class TurnRunner:
             metadata={"config_hash": self._config_hash, "kind": turn.kind.value},
         )
         run.trace = trace
+        trail = self._trail(run)
+        emit = trail.emit
+        queue = run.queue
 
-        async def emit(event: TurnEvent) -> None:
-            await store.append(turn.id, event)
+        def write(text: str) -> None:
+            if queue is not None:
+                queue.put_nowait(TokenDelta(text))
 
         answer: str | None = None
         error: ErrorEvent | None = None
@@ -322,6 +332,7 @@ class TurnRunner:
                         default_lead_minutes=run.default_lead_minutes,
                         secret_found=bool(run.secret_kinds),
                         secret_kinds=run.secret_kinds,
+                        trail=trail,
                     )
                 )
                 outcomes.append(outcome)
@@ -340,15 +351,14 @@ class TurnRunner:
                 ingest=ingest,
                 secret_found=bool(run.secret_kinds),
                 core_prefix=core.text,
+                trail=trail,
+                write=write,
             )
             secret_values: list[str] = []
-            async for mode, chunk in self._graph.astream(
-                {"message": turn.input}, context=context, stream_mode=["custom", "values"]
+            async for chunk in self._graph.astream(
+                {"message": turn.input}, context=context, stream_mode="values"
             ):
-                if mode == "custom":
-                    if run.queue is not None:
-                        await run.queue.put(TokenDelta(str(chunk)))
-                elif isinstance(chunk, dict):
+                if isinstance(chunk, dict):
                     if chunk.get("answer") is not None:
                         answer = str(chunk["answer"])
                     secret_values = list(chunk.get("secret_values") or secret_values)
@@ -510,9 +520,8 @@ class TurnRunner:
             metadata={"config_hash": self._config_hash, "kind": kind.value},
         )
         run.trace = trace
-
-        async def emit(event: TurnEvent) -> None:
-            await store.append(turn.id, event)
+        trail = self._trail(run)
+        step = {TurnKind.UNDO: AgentStep.UNDO, TurnKind.CONFIRM: AgentStep.CONFIRM}.get(kind)
 
         writer_turn = WriterTurn(
             turn_id=turn.id, workspace_id=scope.workspace_id, kind=kind.value, now=turn.started_at
@@ -520,7 +529,11 @@ class TurnRunner:
         reply: str | None = None
         error: ErrorEvent | None = None
         try:
-            reply = await action(writer_turn, emit, self._steps(run, trace, None))
+            if step is None:
+                reply = await action(writer_turn, trail.emit, self._steps(run, trace, None))
+            else:
+                async with trail.run(step):
+                    reply = await action(writer_turn, trail.emit, self._steps(run, trace, None))
         except ValidationFailedError as exc:
             error = ErrorEvent(code=exc.code, message=exc.message)
         except Exception:
@@ -561,7 +574,7 @@ class TurnRunner:
         try:
             if error is not None:
                 with contextlib.suppress(Exception):
-                    await store.append(turn.id, error)
+                    await self._trail(run).emit(error)
             outcome = TurnOutcome(
                 status=TurnStatus.FAILED if error else TurnStatus.COMPLETED,
                 output=None if error else answer,
@@ -614,6 +627,11 @@ class TurnRunner:
             if run.queue is not None:
                 await run.queue.put(None)
         return final
+
+    def _trail(self, run: _TurnRun) -> TurnTrail:
+        if run.trail is None:
+            run.trail = TurnTrail(run.store, run.turn.id, clock=self._clock)
+        return run.trail
 
     @staticmethod
     def _send_generations(run: _TurnRun) -> None:

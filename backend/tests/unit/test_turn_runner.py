@@ -21,6 +21,7 @@ from secondmind.core import (
     ErrorEvent,
     IntentEvent,
     ModelCallEvent,
+    StepEvent,
     ValidationFailedError,
     WorkspaceScope,
     new_id,
@@ -100,12 +101,12 @@ async def test_turn_completes_with_streamed_reply_and_ordered_events() -> None:
     assert turn.usage.cost_usd > 0
 
     stored = await db.store(SCOPE).events(turn.id)
-    assert [e.seq for e in stored] == [1, 2, 3]
-    assert [e.event.type for e in stored] == ["model_call", "intent", "model_call"]
+    assert [e.seq for e in stored] == [1, 2, 3, 4, 5]
+    assert [e.event.type for e in stored] == ["model_call", "intent", "step", "model_call", "step"]
     intent = stored[1].event
     assert isinstance(intent, IntentEvent)
     assert (intent.intent, intent.source) == ("chit_chat", "model")
-    call = stored[2].event
+    call = stored[3].event
     assert isinstance(call, ModelCallEvent)
     assert call.step == "answer"
     assert call.prompt == "answer@2"
@@ -128,7 +129,7 @@ async def test_fallback_is_recorded_on_the_event_and_turn() -> None:
     turn = events[-1].turn
     assert turn.output == "from backup"
     assert turn.models["answer"].fallback_from == "primary:m"
-    call = (await db.store(SCOPE).events(turn.id))[-1].event
+    call = [e.event for e in await db.store(SCOPE).events(turn.id)][-2]
     assert isinstance(call, ModelCallEvent)
     assert call.fallback is not None
     assert "auth 401" in call.fallback.reason
@@ -149,7 +150,11 @@ async def test_provider_outage_fails_cleanly_with_a_user_message() -> None:
         "The model provider is unavailable right now. Please try again in a moment."
     )
     stored = [e.event for e in await db.store(SCOPE).events(turn.id)]
-    assert [e.type for e in stored] == ["model_call", "intent", "error"]
+    assert [e.type for e in stored] == ["model_call", "intent", "step", "step", "error"]
+    assert [(e.step, e.status) for e in stored if isinstance(e, StepEvent)] == [
+        ("understand", "done"),
+        ("answer", "failed"),
+    ]
     assert isinstance(stored[-1], ErrorEvent)
     assert stored[-1].step == "answer"
     assert [entry.step for entry in db.ledger] == ["intent"]

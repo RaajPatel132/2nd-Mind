@@ -11,6 +11,7 @@ one ``memory_diff`` event built from the logged rows, so the diff can't disagree
 happened. Keys are not written here: they are derived data, rebuilt after the commit.
 """
 
+import time
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
@@ -131,6 +132,8 @@ class CommitResult:
     changed_entities: set[uuid.UUID] = field(default_factory=set)
     renamed_entities: set[uuid.UUID] = field(default_factory=set)
     held: list[HeldWriteRecord] = field(default_factory=list)
+    policy_ms: float = 0.0
+    """Time spent deciding the policy verdicts, inside the commit (the Trail's guard step)."""
 
     @property
     def rows(self) -> list[WriteLogRecord]:
@@ -300,15 +303,19 @@ class MemoryWriter:
             bulk_threshold=self._settings.bulk_threshold,
         )
         if not self._confirmed and len(edited) > self._settings.bulk_threshold:
+            checked = time.perf_counter()
             await self._hold_everything(result, context)
+            result.policy_ms += (time.perf_counter() - checked) * 1000
             return
         seq = 0
         for op in self._ops:
+            checked = time.perf_counter()
             facts = await self._facts(tx, op, created)
             verdict = evaluate(facts, context)
             if verdict.decision is PolicyDecision.ALLOWED and facts.core_write:
                 verdict = await self._core_budget(tx, op, verdict)
             label = op_label(op)
+            result.policy_ms += (time.perf_counter() - checked) * 1000
             if verdict.decision is not PolicyDecision.ALLOWED:
                 seq += 1
                 result.outcomes.append(await self._refuse(tx, op, verdict, seq, result))

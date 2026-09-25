@@ -1,7 +1,7 @@
 """Turns and their events: the record of one message and everything the agent did for it."""
 
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
@@ -116,6 +116,13 @@ class TurnStore(Protocol):
 
     async def record_model_call(self, turn_id: uuid.UUID, event: ModelCallEvent) -> StoredEvent:
         """Persist the event and its usage-ledger row together (FR-12.1)."""
+        ...
+
+    async def append_many(
+        self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
+    ) -> list[StoredEvent]:
+        """Persist several events in order, in one write; every ``model_call`` among them gets
+        its usage-ledger row in the same transaction (a step and its events, ADR-0029)."""
         ...
 
     async def finish(self, turn_id: uuid.UUID, outcome: TurnOutcome) -> Turn: ...

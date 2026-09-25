@@ -11,6 +11,7 @@ from secondmind.core.errors import (
 )
 from secondmind.core.events import (
     TURN_EVENT_ADAPTER,
+    AgentStep,
     Classification,
     DecisionEvent,
     DiffEntry,
@@ -32,6 +33,8 @@ from secondmind.core.events import (
     Reconciliation,
     RetrievalCandidate,
     RetrievalEvent,
+    StepEvent,
+    StepStatus,
     TimeResolution,
     ToolCallEvent,
     TurnEvent,
@@ -66,6 +69,7 @@ from secondmind.core.memory_model import (
 )
 from secondmind.core.money import UsdAmount, usd
 from secondmind.core.scope import WorkspaceScope
+from secondmind.core.trail import NullTrail, StepRun, Trail
 from secondmind.core.usage import Usage, UsageTotals
 
 __all__ = [
@@ -73,6 +77,7 @@ __all__ = [
     "KIND_STATES",
     "LIVE_STATES",
     "TURN_EVENT_ADAPTER",
+    "AgentStep",
     "Classification",
     "Clock",
     "ConfigError",
@@ -98,6 +103,7 @@ __all__ = [
     "ModelCallEvent",
     "Normalisation",
     "NotFoundError",
+    "NullTrail",
     "PolicyDecision",
     "PolicyEvent",
     "PolicyVerdict",
@@ -110,11 +116,15 @@ __all__ = [
     "SecondMindError",
     "Sensitivity",
     "Source",
+    "StepEvent",
+    "StepRun",
+    "StepStatus",
     "TargetType",
     "TimeClock",
     "TimePrecision",
     "TimeResolution",
     "ToolCallEvent",
+    "Trail",
     "TriggerOn",
     "TriggerState",
     "Trust",

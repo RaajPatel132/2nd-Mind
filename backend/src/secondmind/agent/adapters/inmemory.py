@@ -1,7 +1,7 @@
 """In-memory turn store (tests and offline evals): the TurnStore port without a database."""
 
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 
 from secondmind.agent.turns import (
@@ -85,6 +85,17 @@ class InMemoryTurnStore:
                 workspace_id=self._scope.workspace_id, turn_id=turn_id, event=event
             )
         )
+        return stored
+
+    async def append_many(
+        self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
+    ) -> list[StoredEvent]:
+        stored: list[StoredEvent] = []
+        for event in events:
+            if isinstance(event, ModelCallEvent):
+                stored.append(await self.record_model_call(turn_id, event))
+            else:
+                stored.append(await self.append(turn_id, event))
         return stored
 
     async def finish(self, turn_id: uuid.UUID, outcome: TurnOutcome) -> Turn:

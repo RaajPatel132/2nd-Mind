@@ -1,6 +1,7 @@
 """SQL implementation of the TurnStore port. Every instance is bound to one WorkspaceScope."""
 
 import uuid
+from collections.abc import Sequence
 from typing import Any
 
 from sqlalchemy import select, update
@@ -79,6 +80,20 @@ class SqlTurnStore:
             stored = await self._insert_event(session, turn_id, event)
             await insert_ledger_entry(session, entry)
             return stored
+
+    async def append_many(
+        self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
+    ) -> list[StoredEvent]:
+        stored: list[StoredEvent] = []
+        async with self._db.workspace(self._scope) as session:
+            for event in events:
+                stored.append(await self._insert_event(session, turn_id, event))
+                if isinstance(event, ModelCallEvent):
+                    entry = LedgerEntry.from_model_call(
+                        workspace_id=self._scope.workspace_id, turn_id=turn_id, event=event
+                    )
+                    await insert_ledger_entry(session, entry)
+        return stored
 
     async def finish(self, turn_id: uuid.UUID, outcome: TurnOutcome) -> Turn:
         values: dict[str, Any] = {

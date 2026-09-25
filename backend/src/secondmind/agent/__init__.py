@@ -21,6 +21,7 @@ from secondmind.agent.runner import (
     TurnStarted,
     TurnStreamEvent,
 )
+from secondmind.agent.trail import EventRecorded, StepStarted, TurnTrail
 from secondmind.agent.turns import (
     StepModel,
     StoredEvent,
@@ -39,8 +40,10 @@ __all__ = [
     "RECALL_STUB",
     "AnswerPromptVars",
     "EntitiesRenamed",
+    "EventRecorded",
     "IntentPromptVars",
     "StepModel",
+    "StepStarted",
     "StoredEvent",
     "TokenDelta",
     "TraceStatus",
@@ -59,5 +62,6 @@ __all__ = [
     "TurnStore",
     "TurnStoreFactory",
     "TurnStreamEvent",
+    "TurnTrail",
     "build_turn_graph",
 ]

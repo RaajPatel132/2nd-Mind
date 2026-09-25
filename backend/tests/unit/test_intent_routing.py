@@ -89,7 +89,7 @@ async def test_correct_gets_its_stub_and_writes_nothing() -> None:
 async def test_chit_chat_is_answered_by_the_answer_step() -> None:
     reply, events = await _turn("chit_chat", "hello!")
     assert "fake provider" in reply
-    assert events == ["model_call", "intent", "model_call"]
+    assert events == ["model_call", "intent", "step", "model_call", "step"]
 
 
 @pytest.mark.live
