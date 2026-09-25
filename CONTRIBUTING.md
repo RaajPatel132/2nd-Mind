@@ -79,3 +79,4 @@ probably two commits.
 3. No real personal data anywhere. Fixtures are synthetic.
 4. A real decision (library, schema shape, trade-off) gets a short ADR in `docs/adr/`.
 5. No secrets in the repo; `.env.example` lists every variable.
+6. UI follows `docs/design/system.md` (Ink): tokens, primitives and the checklist in §13.

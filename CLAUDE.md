@@ -44,6 +44,16 @@ Full standard and examples: `CONTRIBUTING.md`. Enforced by husky + commitlint.
 - Config comes from the environment only, validated at start-up. Add every new variable to
   `.env.example` with a comment.
 
+## UI rules
+
+- The rulebook is `docs/design/system.md` (Ink): read it before touching `frontend/`.
+- Colours, type, space, radii and motion come only from `frontend/src/styles/tokens.css`. No hex,
+  palette names, arbitrary values, raw durations or `transition-all` (`npm run check:design`).
+- Features compose `frontend/src/ui/` primitives; raw `<button>`/`<input>` live only there.
+  A new primitive goes on `/design` first. Motion presets come from `src/ui/motion.ts`.
+- A new agent step needs a `steps.ts` entry (the type check fails without one).
+- Works at 360px, by keyboard and under reduced motion (rulebook §13).
+
 ## Data hygiene
 
 - Fixtures, seeds and examples are synthetic. No real personal data. Nothing about payments,
