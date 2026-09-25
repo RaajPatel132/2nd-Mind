@@ -28,3 +28,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0021](0021-sensitivity-and-secrets.md) | Sensitivity levels; secrets refused, not vaulted | accepted |
 | [0022](0022-time-resolution.md) | Time resolution: python-dateutil plus our own grammar | accepted |
 | [0023](0023-extract-and-enrich.md) | Extract and enrich as two model calls | accepted |
+| [0028](0028-ink-design-system.md) | Ink design system; the glass box inline as the Trail | accepted |
