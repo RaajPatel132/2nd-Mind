@@ -58,7 +58,7 @@ class TurnRow(Base):
     __table_args__ = (
         UniqueConstraint("id", "workspace_id"),
         CheckConstraint("status IN ('running', 'completed', 'failed')", name="status"),
-        CheckConstraint("kind IN ('user', 'undo', 'confirm', 'system')", name="kind"),
+        CheckConstraint("kind IN ('user', 'undo', 'confirm', 'edit', 'system')", name="kind"),
         CheckConstraint(
             "trace_status IN ('recorded', 'unavailable', 'disabled')", name="trace_status"
         ),

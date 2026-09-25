@@ -21,7 +21,7 @@ BACKEND = Path(__file__).resolve().parents[2]
 
 
 async def test_schema_is_at_head(app_db: Database) -> None:
-    assert await app_db.schema_revision() == SCHEMA_HEAD == "0003"
+    assert await app_db.schema_revision() == SCHEMA_HEAD == "0004"
 
 
 async def test_models_match_migrations(pg_urls: PgUrls) -> None:
@@ -75,6 +75,8 @@ async def test_every_workspace_owned_table_has_rls_and_a_policy(owner_db: Databa
         "item_versions",
         "write_log",
         "held_writes",
+        "conversation_keys",
+        "item_access",
     }
     for name, (rls_on, policies) in tables.items():
         assert rls_on, f"{name} has workspace_id but RLS is off"
@@ -192,6 +194,54 @@ async def test_0003_backfills_charged_tokens_at_weight_one(pg_urls: PgUrls) -> N
         cfg = Config(str(BACKEND / "alembic.ini"))
         cfg.attributes["url"] = scratch
         await asyncio.to_thread(command.downgrade, cfg, "0002")
+        await asyncio.to_thread(run_migrations, scratch, "head")
+    finally:
+        await engine.dispose()
+        async with admin.connect() as conn:
+            await conn.execute(text(f'DROP DATABASE IF EXISTS "{scratch_name}" WITH (FORCE)'))
+        await admin.dispose()
+
+
+async def test_0004_keeps_turns_and_links_and_goes_down_and_up(pg_urls: PgUrls) -> None:
+    """0004 adds the recall tables without touching existing rows; going down turns edit turns
+    back into user turns (their rows stay) and drops corrects links; up again works."""
+    owner = make_url(pg_urls.owner)
+    admin = create_async_engine(owner, isolation_level="AUTOCOMMIT")
+    scratch_name = f"scratch_{new_id().hex[:12]}"
+    async with admin.connect() as conn:
+        await conn.execute(text(f'CREATE DATABASE "{scratch_name}"'))
+    scratch = owner.set(database=scratch_name).render_as_string(hide_password=False)
+    engine = create_async_engine(scratch)
+    try:
+        await asyncio.to_thread(run_migrations, scratch, "head")
+        ids = {"u": new_id(), "w": new_id(), "t": new_id()}
+        async with engine.begin() as conn:
+            await conn.execute(text("INSERT INTO users (id) VALUES (:u)"), ids)
+            await conn.execute(
+                text(
+                    "INSERT INTO workspaces (id, owner_user_id, kind, timezone) "
+                    "VALUES (:w, :u, 'private', 'UTC')"
+                ),
+                ids,
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO turns (id, workspace_id, user_id, input, status, config_hash,"
+                    " started_at, kind) VALUES (:t, :w, :u, 'edit', 'completed', 'h', now(),"
+                    " 'edit')"
+                ),
+                ids,
+            )
+        cfg = Config(str(BACKEND / "alembic.ini"))
+        cfg.attributes["url"] = scratch
+        await asyncio.to_thread(command.downgrade, cfg, "0003")
+        async with engine.connect() as conn:
+            kind = (await conn.execute(text("SELECT kind FROM turns"))).scalar()
+            recall = (
+                await conn.execute(text("SELECT to_regclass('conversation_keys') IS NULL"))
+            ).scalar()
+        assert kind == "user"
+        assert recall is True
         await asyncio.to_thread(run_migrations, scratch, "head")
     finally:
         await engine.dispose()

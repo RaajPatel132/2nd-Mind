@@ -18,12 +18,14 @@ class TurnStatus(StrEnum):
 
 
 class TurnKind(StrEnum):
-    """What started a turn: a message, an undo, a confirmation of a held write, or the system
-    (background jobs). Every kind is stored, auditable and undoable the same way."""
+    """What started a turn: a message, an undo, a confirmation of a held write, an edit from the
+    glass box or Upcoming, or the system (background jobs). Every kind is stored, auditable and
+    undoable the same way."""
 
     USER = "user"
     UNDO = "undo"
     CONFIRM = "confirm"
+    EDIT = "edit"
     SYSTEM = "system"
 
 

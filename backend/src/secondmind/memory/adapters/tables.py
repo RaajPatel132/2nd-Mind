@@ -349,7 +349,7 @@ class MemoryLinkRow(Base):
         UniqueConstraint("src_item_id", "link_type", "dst_item_id"),
         CheckConstraint(
             "link_type IN ('supersedes', 'fulfils', 'part_of', 'follows', 'because', "
-            "'evidence_for', 'duplicate_of', 'derived_from', 'gift_for_event')",
+            "'evidence_for', 'duplicate_of', 'derived_from', 'gift_for_event', 'corrects')",
             name="link_type",
         ),
         Index("ix_memory_links_dst_item_id", "dst_item_id"),
@@ -513,6 +513,30 @@ class WriteLogRow(Base):
     )
 
 
+class ItemAccessRow(Base):
+    """Retrieval bookkeeping for "frequently retrieved" (FR-6.7, S3.2). Append-only (the app
+    role has no UPDATE or DELETE on it) and not memory: never in the write log or a diff."""
+
+    __tablename__ = "item_access"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    item_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    turn_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    at: Mapped[datetime] = _ts()
+    cited: Mapped[bool] = mapped_column(Boolean, server_default="false")
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["item_id", "workspace_id"],
+            ["memory_items.id", "memory_items.workspace_id"],
+            ondelete="CASCADE",
+        ),
+        _turn_fk("turn_id", "item_access"),
+        Index("ix_item_access_workspace_id_item_id_at", "workspace_id", "item_id", "at"),
+    )
+
+
 class HeldWriteRow(Base):
     __tablename__ = "held_writes"
 
@@ -549,4 +573,5 @@ WORKSPACE_OWNED_MEMORY_TABLES = (
     "item_versions",
     "write_log",
     "held_writes",
+    "item_access",
 )

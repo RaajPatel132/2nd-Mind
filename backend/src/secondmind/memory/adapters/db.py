@@ -22,7 +22,7 @@ from secondmind.core import WorkspaceScope
 from secondmind.memory import WORKSPACE_SETTING
 
 # Latest migration revision; readiness fails until the database is at it.
-SCHEMA_HEAD = "0003"
+SCHEMA_HEAD = "0004"
 
 NAMING = {
     "ix": "ix_%(table_name)s_%(column_0_N_name)s",

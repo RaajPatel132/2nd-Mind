@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 import secondmind.agent.adapters
 import secondmind.auth.adapters
-import secondmind.metering.adapters  # noqa: F401 - register tables on the metadata
+import secondmind.metering.adapters
+import secondmind.retrieval.adapters  # noqa: F401 - register tables on the metadata
 from secondmind.memory.adapters import Base, Vector
 
 # Let reflection read pgvector columns, so autogenerate compares them instead of warning.
