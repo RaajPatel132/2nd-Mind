@@ -1,22 +1,397 @@
 @import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/fonts.css';
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    background: var(--color-canvas);
   }
   body {
-    @apply bg-slate-100 font-sans antialiased;
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-ui);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  /* The canvas texture: a top-centre glow and film grain, fixed and inert (rulebook §2). */
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    background: var(--glow);
+  }
+  body::after {
+    background-image: var(--grain);
+    opacity: var(--grain-opacity);
+  }
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-fg);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-line-strong);
+    color: var(--color-fg);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  button {
+    font: inherit;
+    color: inherit;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-indigo-700 px-4 text-sm font-semibold text-white hover:bg-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400;
+  /* Numbers that line up. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
-  .btn-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+
+  /* The brand mark: a ring with its left half in chrome. */
+  .brand-mark {
+    position: relative;
+    display: inline-block;
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 0 0 1.5px var(--color-fg-2);
+    flex: none;
   }
-  .btn-link {
-    @apply font-medium text-indigo-700 underline underline-offset-2 hover:text-indigo-900 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500;
+  .brand-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-full);
+    background: var(--gradient-chrome);
+    clip-path: inset(0 50% 0 0);
+  }
+
+  /* Primary button: the chrome sheen crosses on hover. */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient-sheen);
+    transform: translateX(-130%);
+    transition: transform var(--dur-4) var(--ease-out);
+    pointer-events: none;
+  }
+  .sheen:hover::after {
+    transform: translateX(130%);
+  }
+
+  /* The send button's chrome arc while sending. */
+  .send-arc::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-arc);
+    -webkit-mask: var(--mask-ring);
+    mask: var(--mask-ring);
+    animation: ink-spin var(--loop-spin) linear infinite;
+  }
+
+  /* The Trail: node, rail, shimmer, pulse (rulebook §8). */
+  .trail-step {
+    position: relative;
+  }
+  .trail-step::after {
+    content: '';
+    position: absolute;
+    left: 9.5px;
+    top: 24px;
+    bottom: -12px;
+    width: 1px;
+    background: var(--color-line-strong);
+    transform-origin: top;
+    pointer-events: none;
+  }
+  .trail-step:last-child::after {
+    display: none;
+  }
+  .trail-step[data-draw='true']::after {
+    animation: ink-rail var(--dur-3) var(--ease-out) both;
+  }
+  .trail-node {
+    position: relative;
+    justify-self: center;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-fg-2);
+  }
+  .trail-step[data-state='running'] .trail-node {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--color-fg);
+  }
+  .trail-step[data-state='running'] .trail-node::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-full);
+    box-shadow: 0 0 0 1.5px var(--color-fg);
+    animation: ink-pulse var(--loop-pulse) var(--ease-out) infinite;
+  }
+  .trail-step[data-state='held'] .trail-node {
+    background: var(--color-warn);
+  }
+  .trail-step[data-state='refused'] .trail-node {
+    background: var(--color-bad);
+  }
+  .trail-step[data-state='failed'] .trail-node {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--color-bad);
+  }
+  .shimmer-text {
+    color: transparent;
+    background: var(--gradient-shimmer);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: ink-shimmer var(--loop-shimmer) linear infinite;
+  }
+
+  /* The streaming caret. */
+  .caret {
+    display: inline-block;
+    width: 2px;
+    height: 18px;
+    margin-left: 3px;
+    border-radius: 1px;
+    background: var(--color-fg);
+    vertical-align: -3px;
+    animation: ink-blink var(--loop-caret) var(--ease-in-out) infinite alternate;
+  }
+  .chunk-in {
+    animation: ink-fade var(--dur-chunk) var(--ease-out) both;
+  }
+
+  /* Skeleton sheen, only for content that is loading. */
+  .skeleton {
+    background: linear-gradient(
+        100deg,
+        transparent 30%,
+        var(--color-surface-3) 50%,
+        transparent 70%
+      )
+      var(--color-surface-2);
+    background-size: 300% 100%;
+    animation: ink-shimmer var(--loop-sheen) linear infinite;
+  }
+
+  /* Height animation through grid rows (Disclosure). */
+  .grid-reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dur-3) var(--ease-out);
+  }
+  .grid-reveal[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  .grid-reveal > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@keyframes ink-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ink-rail {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes ink-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+@keyframes ink-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@keyframes ink-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+@keyframes ink-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion (rulebook §5.8): loops stop, the rail is drawn, transforms become fades. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: var(--dur-instant) !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--dur-1) !important;
+    scroll-behavior: auto !important;
+  }
+  .trail-step[data-state='running'] .trail-node::after,
+  .sheen::after {
+    display: none;
+  }
+  .trail-step[data-draw='true']::after {
+    animation: none;
+  }
+  .shimmer-text {
+    animation: none;
+    background: none;
+    color: var(--color-fg);
+  }
+  .shimmer-text::after {
+    content: '…';
+  }
+  .caret,
+  .skeleton,
+  .send-arc::after {
+    animation: none;
+  }
+}
+
+/* Forced colours: no texture, no gradients; dots get outlines. */
+@media (forced-colors: active) {
+  body::before,
+  body::after,
+  .sheen::after,
+  .brand-mark::before {
+    display: none;
+  }
+  .trail-node {
+    outline: 1px solid CanvasText;
+  }
+  .shimmer-text {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* The chrome gradient's stops, for SVG (the quota arc). */
+.chrome-stop-1 {
+  stop-color: var(--chrome-stop-1);
+}
+.chrome-stop-2 {
+  stop-color: var(--chrome-stop-2);
+}
+.chrome-stop-3 {
+  stop-color: var(--chrome-stop-3);
+}
+.chrome-stop-4 {
+  stop-color: var(--chrome-stop-4);
+}
+
+@layer components {
+  .diff-grid {
+    grid-template-columns: 14px 64px minmax(0, 1fr);
+  }
+}
+
+@layer components {
+  .grow-rows {
+    transition: grid-template-rows var(--dur-2) var(--ease-out);
+  }
+}
+
+@layer components {
+  .kv-grid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 16px;
+    row-gap: 4px;
+  }
+  .step-grid {
+    display: grid;
+    grid-template-columns: 20px 16px minmax(0, 1fr) auto auto 16px;
+    column-gap: 10px;
+    align-items: center;
+  }
+  @media (max-width: 639px) {
+    .step-grid {
+      grid-template-columns: 20px 16px minmax(0, 1fr) auto 16px;
+    }
+  }
+  .wf-grid {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 56px;
+    column-gap: 10px;
+    align-items: center;
+  }
+}
+
+@layer components {
+  /* Answers and plain sentences cap at 64 characters a line. */
+  .measure {
+    max-width: 64ch;
+  }
+}
+
+@layer components {
+  /* The waterfall's time axis: a hairline through each row. */
+  .wf-track {
+    background: linear-gradient(var(--color-line), var(--color-line)) center / 100% 1px no-repeat;
+  }
+}
+
+@layer components {
+  @media (min-width: 640px) {
+    .type-row {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+    .preset-row {
+      grid-template-columns: 170px minmax(0, 1fr) 200px;
+    }
   }
 }

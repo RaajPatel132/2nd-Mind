@@ -1,0 +1,196 @@
+/*
+ * Ink tokens: the only place colours, fonts, type sizes, radii, shadows, durations and easings
+ * are defined (docs/design/system.md §2 to §5, §12). Tailwind's defaults are reset, so palette
+ * classes such as bg-slate-100 compile to nothing. `npm run check:design` reads this file for
+ * the contrast check and rejects raw values anywhere else.
+ */
+
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --ease-*: initial;
+  --animate-*: initial;
+  --blur-*: initial;
+  --breakpoint-*: initial;
+
+  /* Surfaces and lines */
+  --color-canvas: #08080A;
+  --color-surface: #101013;
+  --color-surface-2: #17171B;
+  --color-surface-3: #1F1F24;
+  --color-line: #26262C;
+  --color-line-strong: #3A3A42;
+  --color-line-control: #66666F;
+
+  /* Text */
+  --color-fg: #F4F4F6;
+  --color-fg-2: #B4B4BC;
+  --color-fg-3: #8A8A94;
+  --color-fg-4: #56565F;
+  --color-inverse: #F4F4F6;
+  --color-on-inverse: #08080A;
+
+  /* Meaning: the only hues, and their 10% tints */
+  --color-ok: #86D9AE;
+  --color-warn: #E8C170;
+  --color-bad: #F08A80;
+  --color-ok-tint: rgb(134 217 174 / 0.1);
+  --color-warn-tint: rgb(232 193 112 / 0.1);
+  --color-bad-tint: rgb(240 138 128 / 0.1);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Three voices */
+  --font-voice: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-ui: "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-machine: "Geist Mono Variable", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale: size / line height / tracking / weight */
+  --text-display: 44px;
+  --text-display--line-height: 48px;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 400;
+  --text-title-lg: 28px;
+  --text-title-lg--line-height: 34px;
+  --text-title-lg--letter-spacing: -0.01em;
+  --text-title-lg--font-weight: 400;
+  --text-title: 17px;
+  --text-title--line-height: 24px;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 600;
+  --text-prompt: 20px;
+  --text-prompt--line-height: 30px;
+  --text-prompt--letter-spacing: -0.01em;
+  --text-prompt--font-weight: 500;
+  --text-answer: 17px;
+  --text-answer--line-height: 28px;
+  --text-answer--letter-spacing: 0;
+  --text-answer--font-weight: 400;
+  --text-body: 15px;
+  --text-body--line-height: 24px;
+  --text-body--letter-spacing: 0;
+  --text-body--font-weight: 400;
+  --text-label: 14px;
+  --text-label--line-height: 20px;
+  --text-label--letter-spacing: 0;
+  --text-label--font-weight: 500;
+  --text-overline: 11px;
+  --text-overline--line-height: 16px;
+  --text-overline--letter-spacing: 0.12em;
+  --text-overline--font-weight: 600;
+  --text-mono: 13px;
+  --text-mono--line-height: 20px;
+  --text-mono--letter-spacing: 0;
+  --text-mono--font-weight: 400;
+  --text-mono-sm: 12px;
+  --text-mono-sm--line-height: 16px;
+  --text-mono-sm--letter-spacing: 0;
+  --text-mono-sm--font-weight: 400;
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* Surfaces are flat; only overlays get a shadow. The edge is the raised surfaces' top light. */
+  --shadow-edge: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --shadow-overlay: 0 24px 64px -16px rgb(0 0 0 / 0.7);
+  --shadow-focus-soft: 0 0 0 4px rgb(244 244 246 / 0.07);
+
+  /* Motion curves (durations are below, used through the dur-* utilities and motion.ts) */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --blur-bar: 16px;
+
+  /* What a bare `transition` utility uses when a component names no duration. */
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1440px;
+}
+
+:root {
+  color-scheme: dark;
+
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 480ms;
+  --dur-5: 900ms;
+  --dur-chunk: 160ms;
+  --dur-instant: 1ms;
+  --stagger: 40ms;
+  /* Loops run only on something that is actually running (rulebook §5, rule 7). */
+  --loop-shimmer: 1600ms;
+  --loop-pulse: 1400ms;
+  --loop-spin: 900ms;
+  --loop-caret: 1000ms;
+  --loop-sheen: 1800ms;
+
+  /* The one flourish: brand mark, quota arc, primary hover sheen, running-step shimmer. */
+  --gradient-chrome: linear-gradient(135deg, #FFFFFF 0%, #9A9AA3 38%, #F4F4F6 52%, #6E6E78 100%);
+  --gradient-sheen: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgb(154 154 163 / 0.45) 46%,
+    rgb(255 255 255 / 0.9) 50%,
+    rgb(110 110 120 / 0.35) 56%,
+    transparent 70%
+  );
+  --gradient-shimmer: linear-gradient(
+    100deg,
+    #B4B4BC 0%,
+    #B4B4BC 38%,
+    #FFFFFF 50%,
+    #B4B4BC 62%,
+    #B4B4BC 100%
+  );
+  --gradient-arc: conic-gradient(from 0deg, transparent 0 50%, #6E6E78 70%, #FFFFFF 100%);
+  --chrome-stop-1: #FFFFFF;
+  --chrome-stop-2: #9A9AA3;
+  --chrome-stop-3: #F4F4F6;
+  --chrome-stop-4: #6E6E78;
+
+  /* Texture: a top-centre glow and film grain, fixed and inert. */
+  --glow: radial-gradient(1100px 560px at 50% -12%, rgb(255 255 255 / 0.035), transparent 70%);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-opacity: 0.03;
+  --scrim: rgb(8 8 10 / 0.5);
+  --bar-fill: rgb(16 16 19 / 0.8);
+  --composer-fade: linear-gradient(to bottom, rgb(8 8 10 / 0), #08080A 44%);
+  --tint-bad-line: rgb(240 138 128 / 0.4);
+  --mask-ring: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+}
+
+/* Durations and stagger as utilities, so no class ever carries a raw number of ms. */
+@utility dur-1 {
+  transition-duration: var(--dur-1);
+}
+@utility dur-2 {
+  transition-duration: var(--dur-2);
+}
+@utility dur-3 {
+  transition-duration: var(--dur-3);
+}
+@utility dur-4 {
+  transition-duration: var(--dur-4);
+}
+@utility dur-5 {
+  transition-duration: var(--dur-5);
+}
