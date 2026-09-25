@@ -51,4 +51,4 @@ expect:
   diff_ops: [fulfilled]
   counts: {episode: 1, intention: 1}
   reply_contains: ["Marked Severance as watched."]
-  keys_contain: ["Watched Severance on Tuesday 22 September 2026, in the night. It was on my to-watch list from 18 September 2026, recommended by Nisha."]
+  keys_contain: ["Watched Severance on Tuesday 22 September 2026, at night. It was on my to-watch list from 18 September 2026, recommended by Nisha."]

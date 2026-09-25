@@ -143,7 +143,8 @@ def format_when(
             return f"{_MONTHS[d.month - 1]} {d.year}"
         case TimePrecision.DATETIME:
             if part:
-                return f"{format_day(dt, tz)}, in the {part_of_day(d)}"
+                period = part_of_day(d)
+                return f"{format_day(dt, tz)}, {'at' if period == 'night' else 'in the'} {period}"
             return f"{format_day(dt, tz)}, {clock_time(d)}"
         case _:
             return format_day(dt, tz)
@@ -258,7 +259,10 @@ def _tail(
         bits.append(f"{_MONTHS[d.month - 1]} {d.year}")
     if category:
         bits.append(category.rsplit("/", 1)[-1].replace("-", " "))
-    return (" " + ", ".join(bits) + ".") if bits else ""
+    if not bits:
+        return ""
+    text = ", ".join(bits)
+    return f" {text[0].upper()}{text[1:]}."
 
 
 def _where_who(entities: Sequence[RenderEntity]) -> str:
