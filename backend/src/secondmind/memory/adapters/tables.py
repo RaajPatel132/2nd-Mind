@@ -21,7 +21,9 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    cast,
     func,
+    type_coerce,
 )
 from sqlalchemy import (
     text as sql_text,
@@ -52,7 +54,8 @@ class Vector(UserDefinedType[list[float]]):
         return func.cast(bindvalue, self)
 
     def column_expression(self, colexpr: Any) -> ColumnElement[Any]:
-        return func.cast(colexpr, Text)
+        # Keep this type on the text cast, so result_processor parses the value.
+        return type_coerce(cast(colexpr, Text), self)
 
     def bind_processor(self, dialect: Any) -> Any:
         def process(value: list[float] | None) -> str | None:
