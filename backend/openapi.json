@@ -2204,6 +2204,18 @@
       },
       "SseTurnCompleted": {
         "properties": {
+          "quota": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsageOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The user's quota after this turn (null if it can't be read)."
+          },
           "turn": {
             "$ref": "#/components/schemas/TurnOut"
           },
@@ -2289,6 +2301,18 @@
         "properties": {
           "error": {
             "$ref": "#/components/schemas/TurnError"
+          },
+          "quota": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UsageOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The user's quota after this turn (null if it can't be read)."
           },
           "turn": {
             "$ref": "#/components/schemas/TurnOut"
@@ -2428,6 +2452,15 @@
           "failed"
         ],
         "title": "StepStatus",
+        "type": "string"
+      },
+      "Tier": {
+        "enum": [
+          "guest",
+          "standard",
+          "premium"
+        ],
+        "title": "Tier",
         "type": "string"
       },
       "TimeClock": {
@@ -3193,6 +3226,34 @@
         "title": "Usage",
         "type": "object"
       },
+      "UsageOut": {
+        "description": "The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4.",
+        "properties": {
+          "limit_tokens": {
+            "title": "Limit Tokens",
+            "type": "integer"
+          },
+          "remaining_tokens": {
+            "title": "Remaining Tokens",
+            "type": "integer"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/Tier"
+          },
+          "used_tokens": {
+            "title": "Used Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tier",
+          "limit_tokens",
+          "used_tokens",
+          "remaining_tokens"
+        ],
+        "title": "UsageOut",
+        "type": "object"
+      },
       "UsageTotals": {
         "additionalProperties": false,
         "description": "Sum of usage across a turn's model calls.",
@@ -3730,6 +3791,58 @@
           }
         },
         "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/me/usage": {
+      "get": {
+        "description": "The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).\nRead only: enforcement arrives in S4.",
+        "operationId": "my_usage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "My Usage",
         "tags": [
           "auth"
         ]

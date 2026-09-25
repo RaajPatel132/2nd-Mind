@@ -10,11 +10,13 @@ import pytest
 from secondmind.agent import TurnRunner
 from secondmind.api import CheckResult, Services, create_app
 from secondmind.api.openapi import render
+from secondmind.api.services import quota_limits
 from secondmind.auth import SessionSigner
 from secondmind.config import DEFAULT_RESOURCES_DIR, load_app_config
 from secondmind.ingestion import load_replay, offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
+from secondmind.metering import Quotas
 from secondmind.observability import NullTracer
 from secondmind.providers import FakeOutcome, FakeScript, ProviderErrorKind
 from secondmind.providers.adapters import build_router
@@ -48,6 +50,7 @@ def _services(base_env: dict[str, str], script: FakeScript | None = None, **env:
         ),
         tracer=NullTracer(),
         signer=SessionSigner(config.settings.session_secret.get_secret_value()),
+        quotas=Quotas(turns, quota_limits(config.settings)),
         checks={"database": ok, "redis": ok},
     )
 
@@ -198,6 +201,24 @@ async def test_turn_streams_then_history_turn_and_events_are_readable(
     assert started == ["understand", "answer"]
     order = [n for n, _ in got if n in {"step.started", "turn.event", "token"}]
     assert order.index("token") > order.index("step.started", 1)  # reply inside the answer step
+
+
+async def test_usage_is_read_only_and_moves_with_each_turn(client: httpx.AsyncClient) -> None:
+    assert (await client.get("/v1/me/usage")).status_code == 401
+    ws = await login(client)
+    before = (await client.get("/v1/me/usage")).json()
+    assert before["tier"] == "standard"
+    assert before["used_tokens"] == 0
+    assert before["remaining_tokens"] == before["limit_tokens"] > 0
+
+    response = await client.post(f"/v1/workspaces/{ws}/turns", json={"message": "hello"})
+    name, completed = frames(response.text)[-1]
+    assert name == "turn.completed"
+    used = completed["usage"]["input_tokens"] + completed["usage"]["output_tokens"]
+    used += completed["usage"]["cached_input_tokens"]
+    assert completed["quota"]["used_tokens"] == used
+    assert completed["quota"]["remaining_tokens"] == before["limit_tokens"] - used
+    assert (await client.get("/v1/me/usage")).json() == completed["quota"]
 
 
 async def test_history_pages_with_before_cursor(client: httpx.AsyncClient) -> None:

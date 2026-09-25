@@ -5,7 +5,8 @@ from fastapi import APIRouter, Response
 
 from secondmind.api.deps import SESSION_COOKIE, ServicesDep, UserIdDep
 from secondmind.api.errors import ERROR_RESPONSES
-from secondmind.api.schemas import DevLoginIn, MeOut
+from secondmind.api.routes.turns import usage_for
+from secondmind.api.schemas import DevLoginIn, MeOut, UsageOut
 from secondmind.core import NotFoundError, UnauthenticatedError
 
 router = APIRouter(prefix="/v1", tags=["auth"])
@@ -47,3 +48,10 @@ async def me(services: ServicesDep, user_id: UserIdDep) -> MeOut:
     if user is None:
         raise UnauthenticatedError("Sign in first.")
     return MeOut.of(user, await services.identity.workspaces_for(user_id))
+
+
+@router.get("/me/usage", response_model=UsageOut, responses=ERROR_RESPONSES)
+async def my_usage(services: ServicesDep, user_id: UserIdDep) -> UsageOut:
+    """The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).
+    Read only: enforcement arrives in S4."""
+    return await usage_for(services, user_id)

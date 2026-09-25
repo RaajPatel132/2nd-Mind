@@ -1,7 +1,7 @@
 """Server-sent events for a running turn: turn.started, then token, step.started and turn.event
 in the order they happened, then turn.completed | turn.failed (ADR-0015, ADR-0029)."""
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 
 from pydantic import BaseModel
 
@@ -24,7 +24,13 @@ from secondmind.api.schemas import (
     SseTurnStarted,
     TurnError,
     TurnOut,
+    UsageOut,
 )
+from secondmind.observability import get_logger
+
+log = get_logger(__name__)
+
+QuotaAfter = Callable[[], Awaitable[UsageOut]]
 
 KEEPALIVE = b": keep-alive\n\n"
 
@@ -33,8 +39,22 @@ def frame(event: str, data: BaseModel) -> bytes:
     return f"event: {event}\ndata: {data.model_dump_json()}\n\n".encode()
 
 
+async def _quota(quota_after: QuotaAfter | None) -> UsageOut | None:
+    if quota_after is None:
+        return None
+    try:
+        return await quota_after()
+    except Exception:
+        log.exception("turn.quota_read_failed")  # the ring refetches; never block the frame
+        return None
+
+
 async def turn_stream(
-    handle: TurnHandle, to_out: Callable[[Turn], TurnOut], *, keepalive_s: float = 10.0
+    handle: TurnHandle,
+    to_out: Callable[[Turn], TurnOut],
+    *,
+    quota_after: QuotaAfter | None = None,
+    keepalive_s: float = 10.0,
 ) -> AsyncIterator[bytes]:
     """Relay the turn's events. Keep-alive comments stop proxies closing a quiet stream."""
     while True:
@@ -62,7 +82,12 @@ async def turn_stream(
             case TurnCompleted(turn=turn):
                 yield frame(
                     "turn.completed",
-                    SseTurnCompleted(turn_id=turn.id, usage=turn.usage, turn=to_out(turn)),
+                    SseTurnCompleted(
+                        turn_id=turn.id,
+                        usage=turn.usage,
+                        turn=to_out(turn),
+                        quota=await _quota(quota_after),
+                    ),
                 )
             case TurnFailed(turn=turn):
                 error = TurnError(
@@ -71,6 +96,10 @@ async def turn_stream(
                 yield frame(
                     "turn.failed",
                     SseTurnFailed(
-                        turn_id=turn.id, error=error, usage=turn.usage, turn=to_out(turn)
+                        turn_id=turn.id,
+                        error=error,
+                        usage=turn.usage,
+                        turn=to_out(turn),
+                        quota=await _quota(quota_after),
                     ),
                 )

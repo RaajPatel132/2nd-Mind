@@ -17,6 +17,7 @@ from secondmind.memory import (
     LinkRecord,
     TriggerRecord,
 )
+from secondmind.metering import QuotaUsage, Tier
 
 
 class _Out(BaseModel):
@@ -206,6 +207,19 @@ class MeOut(_Out):
         )
 
 
+class UsageOut(_Out):
+    """The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4."""
+
+    tier: Tier
+    limit_tokens: int
+    used_tokens: int
+    remaining_tokens: int
+
+    @classmethod
+    def of(cls, usage: QuotaUsage) -> "UsageOut":
+        return cls(**usage.model_dump())
+
+
 class RouteOut(_Out):
     step: str
     provider: str
@@ -275,6 +289,9 @@ class SseTurnCompleted(_Out):
     turn_id: uuid.UUID
     usage: UsageTotals
     turn: TurnOut
+    quota: UsageOut | None = Field(
+        default=None, description="The user's quota after this turn (null if it can't be read)."
+    )
 
 
 class SseTurnFailed(_Out):
@@ -282,6 +299,9 @@ class SseTurnFailed(_Out):
     error: TurnError
     usage: UsageTotals
     turn: TurnOut
+    quota: UsageOut | None = Field(
+        default=None, description="The user's quota after this turn (null if it can't be read)."
+    )
 
 
 SSE_EVENTS: dict[str, type[_Out]] = {

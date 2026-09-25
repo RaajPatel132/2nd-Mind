@@ -9,7 +9,14 @@ from fastapi.responses import StreamingResponse
 from secondmind.agent import Turn
 from secondmind.api.deps import ServicesDep, UserIdDep, find_turn
 from secondmind.api.errors import ERROR_RESPONSES
-from secondmind.api.schemas import CreateTurnIn, TurnEventOut, TurnEventsOut, TurnOut, TurnPage
+from secondmind.api.schemas import (
+    CreateTurnIn,
+    TurnEventOut,
+    TurnEventsOut,
+    TurnOut,
+    TurnPage,
+    UsageOut,
+)
 from secondmind.api.services import Services
 from secondmind.api.sse import turn_stream
 from secondmind.auth import resolve_scope
@@ -22,6 +29,12 @@ SSE_DESCRIPTION = (
     "`turn.completed` or `turn.failed`. Comment lines are keep-alives. Clients may ignore "
     "`step.started` and `turn.event`."
 )
+
+
+async def usage_for(services: Services, user_id: uuid.UUID) -> UsageOut:
+    workspaces = await services.identity.workspaces_for(user_id)
+    usage = await services.quotas.usage(user_id, [w.id for w in workspaces])
+    return UsageOut.of(usage)
 
 
 def turn_out(services: Services, turn: Turn) -> TurnOut:
@@ -46,8 +59,12 @@ async def create_turn(
         timezone=workspace.timezone,
         default_lead_minutes=workspace.default_lead_minutes,
     )
+
+    async def quota_after() -> UsageOut:
+        return await usage_for(services, user_id)
+
     return StreamingResponse(
-        turn_stream(handle, lambda t: turn_out(services, t)),
+        turn_stream(handle, lambda t: turn_out(services, t), quota_after=quota_after),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

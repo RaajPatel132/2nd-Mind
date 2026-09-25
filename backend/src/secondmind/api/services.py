@@ -13,10 +13,12 @@ from secondmind.agent.adapters import (
 )
 from secondmind.auth import IdentityStore, SessionSigner
 from secondmind.auth.adapters import SqlIdentityStore
-from secondmind.config import AppConfig
+from secondmind.config import AppConfig, Settings
 from secondmind.core import Clock, WorkspaceScope, utc_now
 from secondmind.jobs.adapters import QueueClient
 from secondmind.memory.adapters import SCHEMA_HEAD
+from secondmind.metering import QuotaLimits, Quotas
+from secondmind.metering.adapters import SqlLedgerReader
 from secondmind.observability import Tracer, get_logger
 
 log = get_logger(__name__)
@@ -40,6 +42,7 @@ class Services:
     runner: TurnRunner
     tracer: Tracer
     signer: SessionSigner
+    quotas: Quotas
     checks: Mapping[str, Check]
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     clock: Clock = utc_now
@@ -64,6 +67,14 @@ class Services:
                 await close()
             except Exception:
                 log.exception("services.close_failed")
+
+
+def quota_limits(settings: Settings) -> QuotaLimits:
+    return QuotaLimits(
+        guest=settings.quota_tokens_guest,
+        standard=settings.quota_tokens_standard,
+        premium=settings.quota_tokens_premium,
+    )
 
 
 def provider_check(config: AppConfig) -> Check:
@@ -118,6 +129,7 @@ async def build_services(config: AppConfig) -> Services:
         runner=runtime.runner,
         tracer=runtime.tracer,
         signer=SessionSigner(settings.session_secret.get_secret_value()),
+        quotas=Quotas(SqlLedgerReader(db), quota_limits(settings)),
         checks={
             "database": database_check,
             "redis": redis_check,

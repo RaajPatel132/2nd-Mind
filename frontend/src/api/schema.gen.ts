@@ -170,6 +170,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Usage
+         * @description The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).
+         *     Read only: enforcement arrives in S4.
+         */
+        get: operations["my_usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/meta": {
         parameters: {
             query?: never;
@@ -1254,6 +1275,11 @@ export interface components {
         };
         /** SseTurnCompleted */
         SseTurnCompleted: {
+            /**
+             * @description The user's quota after this turn (null if it can't be read).
+             * @default null
+             */
+            quota: components["schemas"]["UsageOut"] | null;
             turn: components["schemas"]["TurnOut"];
             /**
              * Turn Id
@@ -1275,6 +1301,11 @@ export interface components {
         /** SseTurnFailed */
         SseTurnFailed: {
             error: components["schemas"]["TurnError"];
+            /**
+             * @description The user's quota after this turn (null if it can't be read).
+             * @default null
+             */
+            quota: components["schemas"]["UsageOut"] | null;
             turn: components["schemas"]["TurnOut"];
             /**
              * Turn Id
@@ -1345,6 +1376,11 @@ export interface components {
          * @enum {string}
          */
         StepStatus: "done" | "held" | "refused" | "failed";
+        /**
+         * Tier
+         * @enum {string}
+         */
+        Tier: "guest" | "standard" | "premium";
         /**
          * TimeClock
          * @description Which clock a time expression sets: when it happened, when it was true, when it is due,
@@ -1667,6 +1703,19 @@ export interface components {
             price_version: string;
             /** Provider */
             provider: string;
+        };
+        /**
+         * UsageOut
+         * @description The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4.
+         */
+        UsageOut: {
+            /** Limit Tokens */
+            limit_tokens: number;
+            /** Remaining Tokens */
+            remaining_tokens: number;
+            tier: components["schemas"]["Tier"];
+            /** Used Tokens */
+            used_tokens: number;
         };
         /**
          * UsageTotals
@@ -2064,6 +2113,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageOut"];
                 };
             };
             /** @description Not signed in */
