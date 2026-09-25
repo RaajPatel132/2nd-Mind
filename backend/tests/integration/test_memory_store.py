@@ -5,10 +5,13 @@ from typing import Any
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 
 from secondmind.agent import TurnKind
+from secondmind.agent.adapters import check_embedding_dimensions, require_embedding_dimensions
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.core import (
+    ConfigError,
     EntityRole,
     ItemStatus,
     KeyKind,
@@ -212,3 +215,31 @@ async def test_keys_store_vectors_and_text_search_and_reuse_embeddings_by_hash(
     assert report.embedded == 0
     assert report.cache_hits >= 1
     assert embedder.calls == [[]]  # told about the hits (for the event), asked to embed nothing
+
+
+async def test_the_database_refuses_a_state_that_is_not_the_kinds(
+    app_db: Database, memory: Memory, ws: WorkspaceScope
+) -> None:
+    """The CHECK constraint backs the model: a fact can't be 'wanted'."""
+    turn = await real_turn(app_db, ws)
+    note = create(item("I live in Pune", Kind.FACT))
+    writer = memory.writer(ws, turn)
+    writer.add(note)
+    await writer.commit()
+    with pytest.raises(DBAPIError, match="ck_memory_items"):
+        async with app_db.workspace(ws) as session:
+            await session.execute(
+                text("UPDATE memory_items SET state = 'wanted' WHERE id = :id"),
+                {"id": note.item_id},
+            )
+
+
+async def test_start_up_refuses_embed_dimensions_that_differ_from_the_column(
+    app_db: Database,
+) -> None:
+    assert await check_embedding_dimensions(app_db, EMBED_DIMENSIONS) is None
+    problem = await check_embedding_dimensions(app_db, 768)
+    assert problem is not None
+    assert "EMBED_DIMENSIONS=768" in problem
+    with pytest.raises(ConfigError):
+        await require_embedding_dimensions(app_db, 768)

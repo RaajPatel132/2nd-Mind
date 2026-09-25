@@ -12,7 +12,7 @@ from secondmind.api import CheckResult, Services, create_app
 from secondmind.api.openapi import render
 from secondmind.auth import SessionSigner
 from secondmind.config import DEFAULT_RESOURCES_DIR, load_app_config
-from secondmind.ingestion.offline import offline_responders
+from secondmind.ingestion import load_replay, offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer
@@ -246,3 +246,42 @@ def test_openapi_documents_the_sse_frames() -> None:
         for f in schema["components"]["schemas"]["TurnStreamFrame"]["oneOf"]
     }
     assert frame_events == {"turn.started", "token", "turn.completed", "turn.failed"}
+
+
+async def _turn_id(c: httpx.AsyncClient, ws: str, message: str) -> str:
+    response = await c.post(f"/v1/workspaces/{ws}/turns", json={"message": message})
+    name, data = frames(response.text)[-1]
+    assert name == "turn.completed", data
+    return str(data["turn_id"])
+
+
+async def test_held_writes_can_be_listed_confirmed_once_and_are_private(
+    base_env: dict[str, str],
+) -> None:
+    """S2.3 / S2.11 through /v1: a held core write is listed, confirmed as its own turn, and
+    neither it nor the memory is visible to another user."""
+    replay = load_replay(DEFAULT_RESOURCES_DIR / "evals" / "cases" / "ingest")
+    app = create_app(
+        services=_services(base_env, FakeScript(responders=offline_responders(replay)))
+    )
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        ws = await login(c)
+        saved = await _turn_id(c, ws, "I've been seeing a therapist for anxiety since March")
+        [held] = (await c.get(f"/v1/workspaces/{ws}/held-writes?status=pending")).json()["items"]
+        assert (held["rule_id"], held["turn_id"], held["layer"]) == ("P-SENS-1", saved, "core")
+        events = (await c.get(f"/v1/turns/{saved}/events")).json()["events"]
+        diff = next(e["event"] for e in events if e["event"]["type"] == "memory_diff")
+        item_id = next(e["item_id"] for e in diff["entries"] if e["op"] == "held")
+
+        confirmed = await c.post(f"/v1/held-writes/{held['id']}/confirm")
+        assert confirmed.status_code == 200, confirmed.text
+        assert (confirmed.json()["kind"], confirmed.json()["parent_turn_id"]) == ("confirm", saved)
+        again = await c.post(f"/v1/held-writes/{held['id']}/reject")
+        assert again.status_code == 422
+        item = (await c.get(f"/v1/items/{item_id}")).json()
+        assert item["item"]["in_core"] is True
+
+        await c.post("/v1/auth/dev-login", json={"email": "someone-else@example.test"})
+        assert (await c.get(f"/v1/items/{item_id}")).status_code == 404
+        assert (await c.post(f"/v1/held-writes/{held['id']}/confirm")).status_code == 404
+        assert (await c.post(f"/v1/turns/{saved}/undo")).status_code == 404
