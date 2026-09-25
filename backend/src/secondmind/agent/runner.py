@@ -53,7 +53,7 @@ from secondmind.ingestion import (
     TurnNow,
     summarise_commit,
 )
-from secondmind.memory import CommitResult, Memory, WriterTurn
+from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
 from secondmind.observability import (
     GenerationSpan,
     Tracer,
@@ -418,6 +418,58 @@ class TurnRunner:
             parent_turn_id=held.turn_id,
         )
 
+    async def expire_quick(self, scope: WorkspaceScope, *, timezone: str) -> Turn | None:
+        """Quick-layer housekeeping as a system turn, so it's auditable and undoable (S2.9).
+        No turn is recorded when there is nothing to do."""
+        ops = await self._memory.expiry_ops(scope, self._clock())
+        if not ops:
+            return None
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            # Ops are re-planned at the turn's own instant; the quick flags don't feed keys.
+            writer = self._memory.writer(scope, writer_turn, emit=emit)
+            writer.add(*await self._memory.expiry_ops(scope, writer_turn.now))
+            return summarise_commit(await writer.commit(), prefix="Quick layer tidied")
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.SYSTEM,
+            text="Tidy the quick layer",
+            timezone=timezone,
+            action=action,
+        )
+
+    async def rerender_entity_keys(
+        self, scope: WorkspaceScope, *, entity_ids: Sequence[uuid.UUID], timezone: str
+    ) -> Turn:
+        """Re-render the keys of every item linked to renamed or relabelled entities, as a
+        system turn (S2.14). Keys are derived data, so the turn has no memory diff."""
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            reader = self._memory.reader(scope)
+            items: set[uuid.UUID] = set()
+            for entity_id in entity_ids:
+                items.update(await reader.entity_items(entity_id))
+            if not items:
+                return "No memories to re-render."
+            report = await self._memory.keys(
+                scope, timezone=timezone, embed=self._embedder(steps), model=steps.embedding_model
+            ).rebuild(sorted(items))
+            noun = "memory" if report.items == 1 else "memories"
+            return f"Re-rendered the search keys of {report.items} {noun}."
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.SYSTEM,
+            text="Re-render search keys after an entity change",
+            timezone=timezone,
+            action=action,
+        )
+
     async def run_action(
         self,
         scope: WorkspaceScope,
@@ -475,6 +527,14 @@ class TurnRunner:
     ) -> None:
         if not commit.touched_items:
             return
+        indexer = self._memory.keys(
+            scope, timezone=timezone, embed=self._embedder(steps), model=steps.embedding_model
+        )
+        await indexer.rebuild(sorted(commit.touched_items))
+
+    @staticmethod
+    def _embedder(steps: ModelSteps) -> Embedder:
+        """Embeddings through the ``embed`` step; keys are stored without vectors if it's down."""
 
         async def embed(texts: Sequence[str], hits: int) -> list[list[float]] | None:
             try:
@@ -482,10 +542,7 @@ class TurnRunner:
             except ProviderUnavailableError:
                 return None
 
-        indexer = self._memory.keys(
-            scope, timezone=timezone, embed=embed, model=steps.embedding_model
-        )
-        await indexer.rebuild(sorted(commit.touched_items))
+        return embed
 
     # ------------------------------------------------------------------ finishing
 
