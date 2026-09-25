@@ -1,14 +1,19 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { logout, type Me, type Usage } from '../api/client'
+import { logout, type Me, type Picker, type Usage } from '../api/client'
 import type { LastSpend } from '../hooks/useUsage'
 import { formatTokens, formatUsd, initialsOf } from '../lib/format'
 import { BrandMark, Button, CountUp, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
 import { t } from '../ui/motion'
+import { ModelPicker } from './ModelPicker'
 
 type Props = {
   me: Me
   providerMode: string
+  /** The model picker; null when the server offers none (the provider-mode tag shows instead). */
+  picker: Picker | null
+  model: string | null
+  onModel: (id: string) => void
   usage: Usage | null
   last: LastSpend | null
   delta: { key: number; text: string } | null
@@ -17,10 +22,10 @@ type Props = {
 }
 
 /**
- * Brand, wordmark and workspace on the left; the provider-mode tag and the avatar with its quota
+ * Brand, wordmark and workspace on the left; the model picker and the avatar with its quota
  * ring on the right. Transparent at rest; surface, blur and a hairline once content scrolls under.
  */
-export function TopBar({ me, providerMode, usage, last, delta, docked }: Props) {
+export function TopBar({ me, providerMode, picker, model, onModel, usage, last, delta, docked }: Props) {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => {
@@ -54,20 +59,22 @@ export function TopBar({ me, providerMode, usage, last, delta, docked }: Props) 
             My memory
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          {providerMode !== 'live' && (
+        <div className="flex min-w-0 items-center gap-3">
+          {picker && model ? (
+            <ModelPicker picker={picker} value={model} onChange={onModel} />
+          ) : providerMode !== 'live' && (
             <span className="rounded-full px-2 py-0.5 font-machine text-mono-sm text-fg-3 ring-1 ring-inset ring-line-strong" data-testid="provider-mode">
               {providerMode}
             </span>
           )}
-          <Account me={me} usage={usage} last={last} delta={delta} />
+          <Account me={me} usage={usage} last={last} delta={delta} baseline={picker?.baseline_label ?? null} />
         </div>
       </div>
     </header>
   )
 }
 
-function Account({ me, usage, last, delta }: Pick<Props, 'me' | 'usage' | 'last' | 'delta'>) {
+function Account({ me, usage, last, delta, baseline }: Pick<Props, 'me' | 'usage' | 'last' | 'delta'> & { baseline: string | null }) {
   const [open, setOpen] = useState(false)
   const ring = useRef<HTMLButtonElement>(null)
   const popId = useId()
@@ -131,7 +138,9 @@ function Account({ me, usage, last, delta }: Pick<Props, 'me' | 'usage' | 'last'
             </dd>
           </dl>
           <p className="m-0 mt-3 text-label font-normal text-fg-3">
-            A lifetime allowance. Every model call counts, embeddings included.
+            {baseline
+              ? `A lifetime allowance, counted in ${baseline} tokens. Bigger models use it faster; every call counts, embeddings included.`
+              : 'A lifetime allowance. Every model call counts, embeddings included.'}
           </p>
           <div className="-mx-4 my-3.5 h-px bg-line-strong" />
           <div className="flex items-center gap-3">

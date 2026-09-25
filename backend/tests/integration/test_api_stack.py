@@ -158,9 +158,10 @@ async def test_usage_sums_the_users_ledger_and_no_one_else_sees_it(
         async with owner_db.identity() as session:
             ledger = (
                 await session.execute(
+                    # The quota counts charged (weighted) tokens (ADR-0030).
                     text(
-                        "SELECT COALESCE(SUM(input_tokens + cached_input_tokens + output_tokens),"
-                        " 0) FROM usage_ledger WHERE owner_user_id = :u"
+                        "SELECT COALESCE(SUM(charged_tokens), 0) FROM usage_ledger"
+                        " WHERE owner_user_id = :u"
                     ),
                     {"u": user_id},
                 )

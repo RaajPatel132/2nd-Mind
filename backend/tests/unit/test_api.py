@@ -214,11 +214,61 @@ async def test_usage_is_read_only_and_moves_with_each_turn(client: httpx.AsyncCl
     response = await client.post(f"/v1/workspaces/{ws}/turns", json={"message": "hello"})
     name, completed = frames(response.text)[-1]
     assert name == "turn.completed"
-    used = completed["usage"]["input_tokens"] + completed["usage"]["output_tokens"]
-    used += completed["usage"]["cached_input_tokens"]
+    usage = completed["usage"]
+    raw = usage["input_tokens"] + usage["output_tokens"] + usage["cached_input_tokens"]
+    used = usage["charged_tokens"]
+    # The quota counts weighted tokens: fake-chat weighs half the baseline.
+    assert 0 < used < raw
     assert completed["quota"]["used_tokens"] == used
     assert completed["quota"]["remaining_tokens"] == before["limit_tokens"] - used
     assert (await client.get("/v1/me/usage")).json() == completed["quota"]
+
+
+async def test_meta_lists_the_picker_by_provider_with_weights(
+    client: httpx.AsyncClient,
+) -> None:
+    picker = (await client.get("/v1/meta")).json()["picker"]
+    assert picker["default"] == picker["baseline"] == "anthropic:claude-sonnet-5"
+    assert picker["baseline_label"] == "Claude Sonnet 5"
+    weights = {c["id"]: c["weight"] for c in picker["choices"]}
+    assert weights["anthropic:claude-sonnet-5"] == 1.0
+    assert weights["anthropic:claude-opus-5"] == 2.5
+    assert weights["anthropic:claude-fable-5-1"] == 5.0
+    assert weights["openai:gpt-6-luna"] == 0.05
+    providers = [c["provider"] for c in picker["choices"]]
+    assert providers == sorted(providers)  # grouped: every Anthropic model, then OpenAI
+    assert all(c["simulated"] and c["available"] for c in picker["choices"])
+
+
+async def test_a_picked_model_serves_every_chat_step_and_charges_its_weight(
+    client: httpx.AsyncClient,
+) -> None:
+    ws = await login(client)
+    body = {"message": "what should I cook tonight?", "model": "anthropic:claude-opus-5"}
+    response = await client.post(f"/v1/workspaces/{ws}/turns", json=body)
+    name, completed = frames(response.text)[-1]
+    assert name == "turn.completed"
+    turn = completed["turn"]
+    assert {m["model"] for m in turn["models"].values()} == {"claude-opus-5"}
+    events = (await client.get(f"/v1/turns/{turn['id']}/events")).json()["events"]
+    calls = [e["event"] for e in events if e["event"]["type"] == "model_call"]
+    assert calls
+    for call in calls:
+        u = call["usage"]
+        raw = u["input_tokens"] + u["cached_input_tokens"] + u["output_tokens"]
+        assert u["charged_tokens"] == int(raw * 2.5 + 0.5)
+    assert completed["usage"]["charged_tokens"] == sum(c["usage"]["charged_tokens"] for c in calls)
+    assert completed["quota"]["used_tokens"] == completed["usage"]["charged_tokens"]
+
+
+async def test_picking_a_model_not_on_the_list_is_refused(client: httpx.AsyncClient) -> None:
+    ws = await login(client)
+    for model in ("anthropic:claude-2", "not-a-ref"):
+        response = await client.post(
+            f"/v1/workspaces/{ws}/turns", json={"message": "hi", "model": model}
+        )
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "validation_failed"
 
 
 async def test_history_pages_with_before_cursor(client: httpx.AsyncClient) -> None:

@@ -5,6 +5,11 @@ can override a step (``MODEL_ANSWER=openai:gpt-6-sol``, ``MODEL_ANSWER_FALLBACK=
 switching a step is a config change only. Provider mode decides what happens to a step whose
 provider has no credentials: ``auto`` swaps in the fake provider, ``live`` refuses to start,
 ``fake`` routes every step to the fake provider.
+
+The ``picker`` lists the models a person can pick for a turn. A pick replaces the model of
+every chat step in that turn (embeddings keep their route). Where the picked model's provider
+has no credentials, ``auto`` and ``fake`` let the fake provider stand in for it (priced as the
+model it stands in for); ``live`` marks it unavailable.
 """
 
 from collections.abc import Mapping
@@ -68,9 +73,32 @@ class ProviderConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     kind: Literal["anthropic", "openai", "fake"]
+    label: str | None = None
     api_key_env: str | None = None
     base_url: str | None = None
     base_url_env: str | None = None
+
+
+class PickerConfig(BaseModel):
+    """Models a person can pick, ``provider:model`` to display name, and the default pick."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    default: str
+    models: dict[str, str]
+
+    @field_validator("default")
+    @classmethod
+    def _valid_default(cls, value: str) -> str:
+        ModelRef.parse(value)
+        return value
+
+    @field_validator("models")
+    @classmethod
+    def _valid_models(cls, value: dict[str, str]) -> dict[str, str]:
+        for ref in value:
+            ModelRef.parse(ref)
+        return value
 
 
 class StepConfig(BaseModel):
@@ -98,6 +126,7 @@ class RoutingFile(BaseModel):
     version: int
     providers: dict[str, ProviderConfig]
     steps: dict[Step, StepConfig]
+    picker: PickerConfig | None = None
 
 
 class ResolvedProvider(BaseModel):
@@ -107,6 +136,7 @@ class ResolvedProvider(BaseModel):
 
     name: str
     kind: Literal["anthropic", "openai", "fake"]
+    label: str | None = None
     base_url: str | None = None
     has_credentials: bool
 
@@ -129,23 +159,69 @@ class ResolvedRoute(BaseModel):
     substituted: list[str] = []
 
 
+class ModelChoice(BaseModel):
+    """One model in the picker, settled against credentials and provider mode."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    ref: ModelRef
+    label: str
+    provider_label: str
+    served_by: ModelRef
+    available: bool
+
+    @property
+    def simulated(self) -> bool:
+        """The fake provider stands in for this model (no credentials, or fake mode)."""
+        return self.served_by != self.ref
+
+
 class Routing(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     mode: Literal["auto", "live", "fake"]
     providers: dict[str, ResolvedProvider]
     routes: dict[Step, ResolvedRoute]
+    choices: list[ModelChoice] = []
+    default_choice: ModelRef | None = None
 
     def route(self, step: Step) -> ResolvedRoute:
         return self.routes[step]
 
     def refs(self) -> set[ModelRef]:
+        """Every model a call can go to: routes, fallbacks and available picks."""
         out: set[ModelRef] = set()
         for route in self.routes.values():
             out.add(route.primary)
             if route.fallback:
                 out.add(route.fallback)
+        out.update(c.served_by for c in self.choices if c.available)
         return out
+
+    def choice(self, ref: ModelRef) -> ModelChoice | None:
+        return next((c for c in self.choices if c.ref == ref), None)
+
+    def with_pick(self, ref: ModelRef) -> "Routing":
+        """This routing with every chat step on the picked model. The step's fallback stays,
+        unless it is the same model or the pick is simulated."""
+        choice = self.choice(ref)
+        if choice is None:
+            raise ValueError(f"{ref} is not a model you can pick")
+        if not choice.available:
+            raise ValueError(f"{ref} can't be used: its provider has no credentials")
+        served = choice.served_by
+        routes: dict[Step, ResolvedRoute] = {}
+        for step, route in self.routes.items():
+            if route.kind is not StepKind.CHAT:
+                routes[step] = route
+                continue
+            fallback = route.fallback
+            if choice.simulated or fallback == served:
+                fallback = None
+            routes[step] = route.model_copy(
+                update={"primary": served, "fallback": fallback, "substituted": []}
+            )
+        return self.model_copy(update={"routes": routes})
 
     @property
     def substitutions(self) -> list[str]:
@@ -222,7 +298,50 @@ def resolve_routing(
             "MODEL_PROVIDER_MODE=live but provider credentials are missing:\n  "
             + "\n  ".join(sorted(set(missing_creds)))
         )
-    return Routing(mode=mode, providers=providers, routes=routes)
+    choices, default = _resolve_picker(file.picker, providers, mode)
+    return Routing(
+        mode=mode, providers=providers, routes=routes, choices=choices, default_choice=default
+    )
+
+
+def _resolve_picker(
+    picker: PickerConfig | None,
+    providers: Mapping[str, ResolvedProvider],
+    mode: Literal["auto", "live", "fake"],
+) -> tuple[list[ModelChoice], ModelRef | None]:
+    if picker is None:
+        return [], None
+    choices: list[ModelChoice] = []
+    for raw, label in picker.models.items():
+        ref = ModelRef.parse(raw)
+        provider = providers.get(ref.provider)
+        if provider is None:
+            raise ConfigError(
+                f"picker model {ref} uses unknown provider {ref.provider!r} "
+                f"(declared: {', '.join(sorted(providers))})"
+            )
+        if ref.provider == FAKE_PROVIDER:
+            raise ConfigError(f"picker model {ref}: the fake provider can't be picked")
+        stand_in = ModelRef(provider=FAKE_PROVIDER, model=ref.model)
+        if mode == "fake":
+            served, available = stand_in, True
+        elif provider.has_credentials:
+            served, available = ref, True
+        else:
+            served, available = (stand_in, True) if mode == "auto" else (ref, False)
+        choices.append(
+            ModelChoice(
+                ref=ref,
+                label=label,
+                provider_label=provider.label or provider.name,
+                served_by=served,
+                available=available,
+            )
+        )
+    default = ModelRef.parse(picker.default)
+    if not any(c.ref == default for c in choices):
+        raise ConfigError(f"picker default {default} is not one of the picker's models")
+    return choices, default
 
 
 def _apply_mode(
@@ -277,6 +396,7 @@ def _resolve_providers(
         out[name] = ResolvedProvider(
             name=name,
             kind=cfg.kind,
+            label=cfg.label,
             base_url=base_url,
             has_credentials=has_creds,
             api_key_env=cfg.api_key_env,

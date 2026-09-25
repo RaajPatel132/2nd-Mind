@@ -47,6 +47,7 @@ class TurnRow(Base):
     cached_input_tokens: Mapped[int] = mapped_column(Integer, server_default="0")
     output_tokens: Mapped[int] = mapped_column(Integer, server_default="0")
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 8), server_default="0")
+    charged_tokens: Mapped[int] = mapped_column(Integer, server_default="0")
     trace_status: Mapped[str] = mapped_column(String(16), server_default="disabled")
     error_code: Mapped[str | None] = mapped_column(String(64))
     error_message: Mapped[str | None] = mapped_column(Text)

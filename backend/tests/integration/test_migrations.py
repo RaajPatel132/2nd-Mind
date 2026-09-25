@@ -21,7 +21,7 @@ BACKEND = Path(__file__).resolve().parents[2]
 
 
 async def test_schema_is_at_head(app_db: Database) -> None:
-    assert await app_db.schema_revision() == SCHEMA_HEAD == "0002"
+    assert await app_db.schema_revision() == SCHEMA_HEAD == "0003"
 
 
 async def test_models_match_migrations(pg_urls: PgUrls) -> None:
@@ -134,6 +134,64 @@ async def test_0002_backfills_self_entities_and_downgrades_cleanly(pg_urls: PgUr
         cfg = Config(str(BACKEND / "alembic.ini"))
         cfg.attributes["url"] = scratch
         await asyncio.to_thread(command.downgrade, cfg, "0001")
+        await asyncio.to_thread(run_migrations, scratch, "head")
+    finally:
+        await engine.dispose()
+        async with admin.connect() as conn:
+            await conn.execute(text(f'DROP DATABASE IF EXISTS "{scratch_name}" WITH (FORCE)'))
+        await admin.dispose()
+
+
+async def test_0003_backfills_charged_tokens_at_weight_one(pg_urls: PgUrls) -> None:
+    """Ledger rows and turns from before weighted quota are charged their raw tokens, so the
+    quota already spent doesn't move; 0003 goes down and up again."""
+    owner = make_url(pg_urls.owner)
+    admin = create_async_engine(owner, isolation_level="AUTOCOMMIT")
+    scratch_name = f"scratch_{new_id().hex[:12]}"
+    async with admin.connect() as conn:
+        await conn.execute(text(f'CREATE DATABASE "{scratch_name}"'))
+    scratch = owner.set(database=scratch_name).render_as_string(hide_password=False)
+    engine = create_async_engine(scratch)
+    try:
+        await asyncio.to_thread(run_migrations, scratch, "0002")
+        user_id, ws_id, turn_id = new_id(), new_id(), new_id()
+        ids = {"u": user_id, "w": ws_id, "t": turn_id}
+        async with engine.begin() as conn:
+            await conn.execute(text("INSERT INTO users (id) VALUES (:u)"), ids)
+            await conn.execute(
+                text(
+                    "INSERT INTO workspaces (id, owner_user_id, kind, timezone) "
+                    "VALUES (:w, :u, 'private', 'UTC')"
+                ),
+                ids,
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO turns (id, workspace_id, user_id, input, status, config_hash,"
+                    " started_at, input_tokens, cached_input_tokens, output_tokens)"
+                    " VALUES (:t, :w, :u, 'hi', 'completed', 'h', now(), 100, 20, 30)"
+                ),
+                ids,
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO usage_ledger (id, workspace_id, owner_user_id, turn_id, step,"
+                    " provider, model, input_tokens, cached_input_tokens, output_tokens,"
+                    " cost_usd, price_version)"
+                    " VALUES (:i, :w, :u, :t, 'answer', 'fake', 'fake-chat', 100, 20, 30, 0, 'v')"
+                ),
+                ids | {"i": new_id()},
+            )
+
+        await asyncio.to_thread(run_migrations, scratch, "head")
+        async with engine.connect() as conn:
+            ledger = (await conn.execute(text("SELECT charged_tokens FROM usage_ledger"))).scalar()
+            turn = (await conn.execute(text("SELECT charged_tokens FROM turns"))).scalar()
+        assert ledger == turn == 150
+
+        cfg = Config(str(BACKEND / "alembic.ini"))
+        cfg.attributes["url"] = scratch
+        await asyncio.to_thread(command.downgrade, cfg, "0002")
         await asyncio.to_thread(run_migrations, scratch, "head")
     finally:
         await engine.dispose()

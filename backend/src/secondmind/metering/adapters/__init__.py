@@ -15,10 +15,12 @@ _INSERT = text(
     """
     INSERT INTO usage_ledger (
         id, workspace_id, owner_user_id, turn_id, step, provider, model,
-        input_tokens, cached_input_tokens, output_tokens, cost_usd, price_version
+        input_tokens, cached_input_tokens, output_tokens, cost_usd, charged_tokens,
+        price_version
     )
     SELECT :id, w.id, w.owner_user_id, :turn_id, :step, :provider, :model,
-           :input_tokens, :cached_input_tokens, :output_tokens, :cost_usd, :price_version
+           :input_tokens, :cached_input_tokens, :output_tokens, :cost_usd, :charged_tokens,
+           :price_version
     FROM workspaces w WHERE w.id = :workspace_id
     """
 )
@@ -46,14 +48,8 @@ async def ledger_tokens_for_turn(session: AsyncSession, turn_id: uuid.UUID) -> i
     return int((await session.execute(stmt)).scalar_one())
 
 
-_TOKENS = func.coalesce(
-    func.sum(
-        UsageLedgerRow.input_tokens
-        + UsageLedgerRow.cached_input_tokens
-        + UsageLedgerRow.output_tokens
-    ),
-    0,
-)
+# The quota counts charged (weighted) tokens, not raw ones.
+_TOKENS = func.coalesce(func.sum(UsageLedgerRow.charged_tokens), 0)
 
 
 class SqlLedgerReader:

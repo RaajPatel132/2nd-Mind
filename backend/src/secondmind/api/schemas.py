@@ -177,6 +177,12 @@ class CreateTurnIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     message: str = Field(min_length=1, max_length=100_000)
+    model: str | None = Field(
+        default=None,
+        max_length=200,
+        description="A picker model (`id` from `/v1/meta` `picker.choices`) for every chat step "
+        "of this turn. Omitted: the configured per-step routing.",
+    )
 
 
 class WorkspaceOut(_Out):
@@ -229,6 +235,27 @@ class RouteOut(_Out):
     timeout_s: float
 
 
+class ModelChoiceOut(_Out):
+    id: str = Field(description="provider:model, as sent in a turn's `model`.")
+    label: str
+    provider: str
+    provider_label: str
+    weight: float = Field(
+        description="Quota tokens per token on this model, against the baseline (1 = baseline)."
+    )
+    simulated: bool = Field(description="The fake provider stands in for it (no credentials).")
+    available: bool = Field(description="False when it can't be used (live mode, no key).")
+
+
+class PickerOut(_Out):
+    """The model picker (ADR-0030): choices in display order, grouped by provider."""
+
+    default: str
+    baseline: str
+    baseline_label: str
+    choices: list[ModelChoiceOut]
+
+
 class MetaOut(_Out):
     name: str
     version: str
@@ -237,6 +264,7 @@ class MetaOut(_Out):
     config_hash_short: str
     provider_mode: str
     price_version: str
+    picker: PickerOut | None = Field(default=None, description="Null when no picker is configured.")
     routes: list[RouteOut]
     prompts: list[str]
     substitutions: list[str]

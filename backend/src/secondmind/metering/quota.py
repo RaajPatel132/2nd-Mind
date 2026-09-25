@@ -1,6 +1,7 @@
 """Quota: how much of a user's lifetime token allowance is left (FR-12.5). Read only until S4,
 which adds enforcement. ``used`` is the sum of the user's usage ledger across their
-workspaces; every model call counts, embeddings included."""
+workspaces; every model call counts, embeddings included, at its model's weight against the
+baseline (ADR-0030), so the allowance is counted in baseline-model tokens."""
 
 import uuid
 from collections.abc import Sequence
@@ -44,8 +45,7 @@ class QuotaUsage(BaseModel):
 
 class LedgerReader(Protocol):
     async def tokens_used(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> int:
-        """Total tokens (input, cached input and output) the user was charged in these
-        workspaces."""
+        """Total quota tokens (weighted) the user was charged in these workspaces."""
         ...
 
 

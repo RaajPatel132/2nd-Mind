@@ -130,6 +130,19 @@
             "minLength": 1,
             "title": "Message",
             "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A picker model (`id` from `/v1/meta` `picker.choices`) for every chat step of this turn. Omitted: the configured per-step routing.",
+            "title": "Model"
           }
         },
         "required": [
@@ -1564,6 +1577,17 @@
             "title": "Name",
             "type": "string"
           },
+          "picker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PickerOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when no picker is configured."
+          },
           "price_version": {
             "title": "Price Version",
             "type": "string"
@@ -1731,6 +1755,53 @@
         "title": "ModelCallEvent",
         "type": "object"
       },
+      "ModelChoiceOut": {
+        "properties": {
+          "available": {
+            "description": "False when it can't be used (live mode, no key).",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "provider:model, as sent in a turn's `model`.",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_label": {
+            "title": "Provider Label",
+            "type": "string"
+          },
+          "simulated": {
+            "description": "The fake provider stands in for it (no credentials).",
+            "title": "Simulated",
+            "type": "boolean"
+          },
+          "weight": {
+            "description": "Quota tokens per token on this model, against the baseline (1 = baseline).",
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "provider",
+          "provider_label",
+          "weight",
+          "simulated",
+          "available"
+        ],
+        "title": "ModelChoiceOut",
+        "type": "object"
+      },
       "Normalisation": {
         "additionalProperties": false,
         "description": "A slug the model proposed, and what normalisation chose (reuse beats invention).",
@@ -1770,6 +1841,38 @@
           "reused"
         ],
         "title": "Normalisation",
+        "type": "object"
+      },
+      "PickerOut": {
+        "description": "The model picker (ADR-0030): choices in display order, grouped by provider.",
+        "properties": {
+          "baseline": {
+            "title": "Baseline",
+            "type": "string"
+          },
+          "baseline_label": {
+            "title": "Baseline Label",
+            "type": "string"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ModelChoiceOut"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "default": {
+            "title": "Default",
+            "type": "string"
+          }
+        },
+        "required": [
+          "default",
+          "baseline",
+          "baseline_label",
+          "choices"
+        ],
+        "title": "PickerOut",
         "type": "object"
       },
       "PolicyDecision": {
@@ -3182,6 +3285,19 @@
             "title": "Cached Input Tokens",
             "type": "integer"
           },
+          "charged_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Quota tokens: all tokens at the model's weight against the baseline. Null on calls recorded before quota was weighted (they count as total tokens).",
+            "title": "Charged Tokens"
+          },
           "cost_usd": {
             "title": "Cost Usd",
             "type": "number"
@@ -3261,6 +3377,12 @@
           "cached_input_tokens": {
             "default": 0,
             "title": "Cached Input Tokens",
+            "type": "integer"
+          },
+          "charged_tokens": {
+            "default": 0,
+            "description": "What the turn took from the quota.",
+            "title": "Charged Tokens",
             "type": "integer"
           },
           "cost_usd": {

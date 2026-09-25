@@ -208,7 +208,7 @@ text colour of their row. An icon-only control always has an `aria-label` and a 
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│ ◐ 2nd Mind   My memory ▾                                         (◯ RP) │  top bar, 56px
+│ ◐ 2nd Mind   My memory ▾                  Claude Sonnet 5 1× ▾  (◯ RP) │  top bar, 56px
 │                                                                          │
 │                 ┌── conversation column, max 720px ──┐                   │
 │                 │ YOU · 10:42                         │                   │
@@ -227,8 +227,10 @@ text colour of their row. An icon-only control always has an `aria-label` and a 
 
 - **Top bar** (56px): transparent over the canvas; gains `surface` at 80% with a 16px backdrop
   blur and a bottom hairline once content scrolls under it. Left: brand mark, wordmark,
-  workspace switcher. Right: provider-mode tag (only when not `live`), then the avatar with
-  its quota ring. Nav tabs (Upcoming, Memory, Settings) appear left of the avatar in the
+  workspace switcher. Right: the model picker (the model, its quota weight such as `2.5×`, and
+  a `FAKE` tag when the fake provider stands in; an icon replaces the name below `sm`), then
+  the avatar with its quota ring. With no picker configured, the provider-mode tag shows
+  instead (only when not `live`). Nav tabs (Upcoming, Memory, Settings) appear left of the avatar in the
   sprint that ships each one.
 - **Conversation column**: centred, max 720px. Answers cap at 64ch inside it.
 - **Composer**: floats 16px above the bottom edge, same width as the column, over a fade from
@@ -338,6 +340,7 @@ it to `ui/` and to `/design` first.
 | `Chip` | Pill, `surface-2`, `label` or `mono-sm`. Optional leading status dot. |
 | `Tag` | `radius-xs`, `overline` type: layers (`CORE`, `QUICK`, `ARCHIVE`), tiers. |
 | `Disclosure` | The expand/collapse primitive behind step rows and panels. Animated height via grid rows. |
+| `Select` | A 32px pill (label, then a chevron) that opens a grouped listbox in a popover, 320px wide. Groups have an `overline` head; options are 44px rows: a check for the selected one, the label, an optional note in `fg-3` and a trailing Machine-type fact. Disabled options sit at 40% and can't be picked. ↑ ↓ Home End move, Enter or Space picks, Esc or Tab closes, and focus returns to the pill. |
 | `Popover`, `Tooltip` | `surface-3`, `radius-md`, overlay shadow. Enter: 4px rise + fade (`dur-2`). Tooltip delay 400ms. |
 | `Sheet` | Inspector and mobile drawers. Enter: 24px slide + fade (`dur-4`). Focus-trapped, Esc closes. |
 | `Toast` | Bottom centre above the composer. One at a time, 4s, with an action where one exists ("Undo"). |

@@ -9,6 +9,8 @@ import type { components, paths } from './schema.gen'
 export type Schemas = components['schemas']
 export type Me = Schemas['MeOut']
 export type Meta = Schemas['MetaOut']
+export type Picker = Schemas['PickerOut']
+export type ModelChoice = Schemas['ModelChoiceOut']
 export type Turn = Schemas['TurnOut']
 export type TurnPage = Schemas['TurnPage']
 export type TurnEvent = Schemas['TurnEventOut']['event']
@@ -139,15 +141,19 @@ const FRAME_NAMES = new Set<TurnStreamFrame['event']>([
   'turn.failed',
 ])
 
-/** Send a message; yields the typed server-sent frames of the turn as they arrive. */
+/**
+ * Send a message; yields the typed server-sent frames of the turn as they arrive. `model` is a
+ * picker choice for every chat step of the turn; null keeps the configured routing.
+ */
 export async function* streamTurn(
   workspaceId: string,
   message: string,
+  model: string | null = null,
   signal?: AbortSignal,
 ): AsyncGenerator<TurnStreamFrame> {
   const { data, error, response } = await api.POST('/v1/workspaces/{workspace_id}/turns', {
     params: { path: { workspace_id: workspaceId } },
-    body: { message },
+    body: { message, model },
     parseAs: 'stream',
     signal,
   })

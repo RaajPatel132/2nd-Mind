@@ -359,6 +359,11 @@ export interface components {
         CreateTurnIn: {
             /** Message */
             message: string;
+            /**
+             * Model
+             * @description A picker model (`id` from `/v1/meta` `picker.choices`) for every chat step of this turn. Omitted: the configured per-step routing.
+             */
+            model?: string | null;
         };
         /**
          * DecisionEvent
@@ -998,6 +1003,8 @@ export interface components {
             env: string;
             /** Name */
             name: string;
+            /** @description Null when no picker is configured. */
+            picker?: components["schemas"]["PickerOut"] | null;
             /** Price Version */
             price_version: string;
             /** Prompts */
@@ -1060,6 +1067,35 @@ export interface components {
              */
             v: number;
         };
+        /** ModelChoiceOut */
+        ModelChoiceOut: {
+            /**
+             * Available
+             * @description False when it can't be used (live mode, no key).
+             */
+            available: boolean;
+            /**
+             * Id
+             * @description provider:model, as sent in a turn's `model`.
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Provider */
+            provider: string;
+            /** Provider Label */
+            provider_label: string;
+            /**
+             * Simulated
+             * @description The fake provider stands in for it (no credentials).
+             */
+            simulated: boolean;
+            /**
+             * Weight
+             * @description Quota tokens per token on this model, against the baseline (1 = baseline).
+             */
+            weight: number;
+        };
         /**
          * Normalisation
          * @description A slug the model proposed, and what normalisation chose (reuse beats invention).
@@ -1081,6 +1117,20 @@ export interface components {
              * @enum {string}
              */
             vocab: "category" | "subtype" | "predicate" | "relation";
+        };
+        /**
+         * PickerOut
+         * @description The model picker (ADR-0030): choices in display order, grouped by provider.
+         */
+        PickerOut: {
+            /** Baseline */
+            baseline: string;
+            /** Baseline Label */
+            baseline_label: string;
+            /** Choices */
+            choices: components["schemas"]["ModelChoiceOut"][];
+            /** Default */
+            default: string;
         };
         /**
          * PolicyDecision
@@ -1689,6 +1739,11 @@ export interface components {
              * @default 0
              */
             cached_input_tokens: number;
+            /**
+             * Charged Tokens
+             * @description Quota tokens: all tokens at the model's weight against the baseline. Null on calls recorded before quota was weighted (they count as total tokens).
+             */
+            charged_tokens?: number | null;
             /** Cost Usd */
             cost_usd: number;
             /** Input Tokens */
@@ -1727,6 +1782,12 @@ export interface components {
              * @default 0
              */
             cached_input_tokens: number;
+            /**
+             * Charged Tokens
+             * @description What the turn took from the quota.
+             * @default 0
+             */
+            charged_tokens: number;
             /**
              * Cost Usd
              * @default 0

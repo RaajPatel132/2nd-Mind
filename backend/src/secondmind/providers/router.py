@@ -10,7 +10,11 @@ Callers name a *step*, never a provider. For each call the router:
 * falls back to the step's fallback model when the primary fails or is skipped, marking the
   result ``fallback`` with the reason;
 * raises :class:`ProviderUnavailableError` when every option fails;
-* returns normalised :class:`Usage` with cost from the price table and measured latency.
+* returns normalised :class:`Usage` with cost from the price table, the quota tokens charged
+  at the model's weight, and measured latency.
+
+A turn with a picked model runs on :meth:`ModelRouter.with_pick`: the same adapters and
+circuit breakers, with every chat step routed to the pick.
 """
 
 import asyncio
@@ -161,6 +165,25 @@ class ModelRouter:
     @property
     def breakers(self) -> BreakerRegistry:
         return self._breakers
+
+    @property
+    def routing(self) -> Routing:
+        return self._routing
+
+    def with_pick(self, ref: ModelRef) -> "ModelRouter":
+        """A router for one turn with every chat step on ``ref`` (a picker model). Shares
+        this router's adapters and breakers. Raises ``ValueError`` if ``ref`` can't be picked."""
+        return ModelRouter(
+            routing=self._routing.with_pick(ref),
+            prices=self._prices,
+            adapters=self._adapters,
+            policy=self._policy,
+            breakers=self._breakers,
+            monotonic=self._monotonic,
+            now=self._now,
+            sleep=self._sleep,
+            rand=self._rand,
+        )
 
     def route(self, step: Step) -> ResolvedRoute:
         return self._routing.route(step)
@@ -399,6 +422,7 @@ class ModelRouter:
         self, state: _CallState, ref: ModelRef, raw: RawUsage, index: int, ttft_ms: int | None
     ) -> ModelCall:
         latency_ms = self._ms_since(state.t0, self._monotonic())
+        total = raw.input_tokens + raw.cached_input_tokens + raw.output_tokens
         usage = Usage(
             provider=ref.provider,
             model=ref.model,
@@ -413,6 +437,7 @@ class ModelRouter:
             ),
             latency_ms=latency_ms,
             price_version=self._prices.version,
+            charged_tokens=self._prices.charged_tokens(ref, total),
         )
         fallback = None
         if index > 0:

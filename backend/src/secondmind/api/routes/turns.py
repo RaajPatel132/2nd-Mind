@@ -58,6 +58,7 @@ async def create_turn(
         text=body.message,
         timezone=workspace.timezone,
         default_lead_minutes=workspace.default_lead_minutes,
+        model=body.model,
     )
 
     async def quota_after() -> UsageOut:

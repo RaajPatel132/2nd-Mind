@@ -8,6 +8,7 @@ import { TopBar } from './components/TopBar'
 import { useConversation } from './hooks/useConversation'
 import { useHeldActions } from './hooks/useHeldActions'
 import { useMediaQuery } from './hooks/useMediaQuery'
+import { useModelPick } from './hooks/useModelPick'
 import { useSession, type Session } from './hooks/useSession'
 import { useUsage } from './hooks/useUsage'
 import { HeldContext } from './trail/context'
@@ -28,6 +29,7 @@ function isTyping(target: EventTarget | null): boolean {
 function Workspace({ session }: { session: Session }) {
   const { workspace, meta, me } = session
   const usage = useUsage()
+  const { model, pick } = useModelPick(meta.picker)
   const toast = useToast()
   const [draft, setDraft] = useState('')
   const [inspecting, setInspecting] = useState<string | null>(null)
@@ -89,9 +91,9 @@ function Workspace({ session }: { session: Session }) {
   const send = useCallback(
     (message: string) => {
       setDraft('')
-      void conversation.send(message).then(() => composerRef.current?.focus())
+      void conversation.send(message, model).then(() => composerRef.current?.focus())
     },
-    [conversation],
+    [conversation, model],
   )
 
   return (
@@ -102,7 +104,17 @@ function Workspace({ session }: { session: Session }) {
       >
         Skip to message box
       </a>
-      <TopBar me={me} providerMode={meta.provider_mode} usage={usage.usage} last={usage.last} delta={usage.delta} docked={docked} />
+      <TopBar
+        me={me}
+        providerMode={meta.provider_mode}
+        picker={meta.picker ?? null}
+        model={model}
+        onModel={pick}
+        usage={usage.usage}
+        last={usage.last}
+        delta={usage.delta}
+        docked={docked}
+      />
       <main id="main" className={cx('px-4 pb-48 pt-20 md:px-6 lg:px-8', docked && '2xl:mr-115')}>
         <Conversation
           turns={turns}

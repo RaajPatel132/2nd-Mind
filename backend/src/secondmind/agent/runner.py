@@ -10,6 +10,8 @@ typed status: ``completed`` with its reply, or ``failed`` with a user-safe messa
 The secret pre-check runs before the turn row is created, so a secret never reaches the
 database, the trace backend or a model provider (ADR-0021).
 
+A message can name a picker model: that turn's chat steps all run on it (ADR-0030).
+
 Undo, confirming a held write and background jobs run as turns too (``TurnKind``), with their
 own events and diff, so they are auditable and can themselves be undone.
 """
@@ -34,7 +36,7 @@ from secondmind.agent.turns import (
     TurnStore,
     TurnStoreFactory,
 )
-from secondmind.config import PromptRegistry
+from secondmind.config import ModelRef, PromptRegistry, Step
 from secondmind.core import (
     AgentStep,
     Clock,
@@ -149,6 +151,8 @@ class _TurnRun:
     history: list[ChatMessage]
     timezone: str
     queue: asyncio.Queue[TurnStreamEvent | None] | None
+    # The router this turn runs on: the configured one, or one with every chat step on a pick.
+    router: ModelRouter
     default_lead_minutes: int = 1440
     secret_kinds: list[str] = field(default_factory=list)
     tally: _Tally = field(default_factory=_Tally)
@@ -216,12 +220,14 @@ class TurnRunner:
         text: str,
         timezone: str,
         default_lead_minutes: int = 1440,
+        model: str | None = None,
     ) -> TurnHandle:
         message = text.strip()
         if not message:
             raise ValidationFailedError("message is empty")
         if len(message) > self._max_chars:
             raise ValidationFailedError(f"message is longer than {self._max_chars} characters")
+        router = self._picked(model)
         # Before anything is stored or sent anywhere: a secret never leaves this function.
         scan = scan_secrets(message)
         store = self._stores(scope)
@@ -239,6 +245,7 @@ class TurnRunner:
             history=history,
             timezone=timezone,
             queue=queue,
+            router=router,
             default_lead_minutes=default_lead_minutes,
             secret_kinds=scan.kinds,
         )
@@ -247,6 +254,15 @@ class TurnRunner:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
         return TurnHandle(turn=turn, task=task, _queue=queue)
+
+    def _picked(self, model: str | None) -> ModelRouter:
+        """The router for a turn: the configured routing, or every chat step on ``model``."""
+        if model is None:
+            return self._router
+        try:
+            return self._router.with_pick(ModelRef.parse(model))
+        except ValueError as exc:
+            raise ValidationFailedError(str(exc)) from exc
 
     async def aclose(self, timeout_s: float = 10.0) -> None:
         """Let running turns finish (bounded), then cancel the rest (they end as failed)."""
@@ -282,7 +298,7 @@ class TurnRunner:
 
     def _steps(self, run: _TurnRun, trace: TurnTrace, core_prefix: str | None) -> ModelSteps:
         return ModelSteps(
-            router=self._router,
+            router=run.router,
             prompts=self._prompts,
             trace=trace,
             record=self._recorder(run),
@@ -299,7 +315,11 @@ class TurnRunner:
             workspace_id=run.scope.workspace_id,
             user_id=run.scope.user_id,
             turn_input=turn.input,
-            metadata={"config_hash": self._config_hash, "kind": turn.kind.value},
+            metadata={
+                "config_hash": self._config_hash,
+                "kind": turn.kind.value,
+                "answer_model": str(run.router.route(Step.ANSWER).primary),
+            },
         )
         run.trace = trace
         trail = self._trail(run)
@@ -339,7 +359,7 @@ class TurnRunner:
                 return outcome
 
             context = TurnContext(
-                router=self._router,
+                router=run.router,
                 prompts=self._prompts,
                 trace=trace,
                 now=turn.started_at.astimezone(ZoneInfo(run.timezone)),
@@ -510,7 +530,13 @@ class TurnRunner:
             parent_turn_id=parent_turn_id,
         )
         run = _TurnRun(
-            scope=scope, store=store, turn=turn, history=[], timezone=timezone, queue=None
+            scope=scope,
+            store=store,
+            turn=turn,
+            history=[],
+            timezone=timezone,
+            queue=None,
+            router=self._router,
         )
         trace = self._tracer.start_turn(
             turn_id=turn.id,

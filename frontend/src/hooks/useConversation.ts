@@ -125,7 +125,7 @@ export function useConversation(workspaceId: string, options: Options = {}) {
   }, [workspaceId, nextBefore, loadEvents])
 
   const send = useCallback(
-    async (message: string) => {
+    async (message: string, model: string | null = null) => {
       const key = `local-${String(Date.now())}`
       const mine = (t: ChatTurn) => t.key === key
       const now = new Date().toISOString()
@@ -149,7 +149,7 @@ export function useConversation(workspaceId: string, options: Options = {}) {
       ])
       setSending(true)
       try {
-        for await (const frame of streamTurn(workspaceId, message)) {
+        for await (const frame of streamTurn(workspaceId, message, model)) {
           switch (frame.event) {
             case 'turn.started':
               patch(mine, () => ({ id: frame.data.turn_id, sentAt: frame.data.started_at }))
@@ -177,10 +177,8 @@ export function useConversation(workspaceId: string, options: Options = {}) {
                 quotaAfter: quota ?? null,
               }))
               opts.current.onTurnDone?.(turn.id, output, failed)
-              if (quota) {
-                const u = turn.usage
-                opts.current.onQuota?.(quota, u.input_tokens + u.cached_input_tokens + u.output_tokens, u.cost_usd)
-              }
+              // What the ring loses is the weighted charge, not the raw token count.
+              if (quota) opts.current.onQuota?.(quota, turn.usage.charged_tokens, turn.usage.cost_usd)
               break
             }
           }

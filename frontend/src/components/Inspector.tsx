@@ -163,6 +163,7 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
         <span className="font-voice text-title-lg text-fg">{formatSeconds(end - start)}</span>
         <span>{tokens ? `${formatTokens(tokens)} tokens` : 'no tokens'}</span>
         <span data-testid="turn-cost">{formatUsd(u.cost_usd)}</span>
+        <span data-testid="turn-charged">−{formatTokens(u.charged_tokens)} quota</span>
       </div>
       <Waterfall views={views} start={start} end={end} />
       <ModelTable calls={facts.calls} />

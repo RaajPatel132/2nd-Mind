@@ -1,5 +1,5 @@
 /** Synthetic turns for /design: every step in every state. Made-up people and places only. */
-import type { AgentStep, ModelCallEvent, StepEvent, TurnEvent } from '../api/client'
+import type { AgentStep, ModelCallEvent, Picker, StepEvent, TurnEvent } from '../api/client'
 import type { StepStart, TrailEvent } from '../trail/model'
 
 const NOW = '2026-09-25T05:11:00Z'
@@ -116,3 +116,18 @@ export function withSeq(events: TurnEvent[]): TrailEvent[] {
 }
 
 export const RUNNING_START: StepStart[] = [{ step: 'reconcile', at: NOW }]
+
+/** The model picker in every state: selected, a fake stand-in, and one with no API key. */
+export const PICKER: Picker = {
+  default: 'anthropic:claude-sonnet-5',
+  baseline: 'anthropic:claude-sonnet-5',
+  baseline_label: 'Claude Sonnet 5',
+  choices: [
+    { id: 'anthropic:claude-fable-5-1', label: 'Claude Fable 5.1', provider: 'anthropic', provider_label: 'Anthropic', weight: 5, simulated: false, available: true },
+    { id: 'anthropic:claude-opus-5', label: 'Claude Opus 5', provider: 'anthropic', provider_label: 'Anthropic', weight: 2.5, simulated: false, available: true },
+    { id: 'anthropic:claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'anthropic', provider_label: 'Anthropic', weight: 1, simulated: false, available: true },
+    { id: 'anthropic:claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'anthropic', provider_label: 'Anthropic', weight: 0.5, simulated: true, available: true },
+    { id: 'openai:gpt-6-sol', label: 'GPT-6 Sol', provider: 'openai', provider_label: 'OpenAI', weight: 1, simulated: false, available: false },
+    { id: 'openai:gpt-6-luna', label: 'GPT-6 Luna', provider: 'openai', provider_label: 'OpenAI', weight: 0.05, simulated: false, available: false },
+  ],
+}

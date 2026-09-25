@@ -96,6 +96,20 @@ export function formatClock(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
+/** A model's quota weight against the baseline: "1×", "2.5×", "0.42×". */
+export function formatWeight(weight: number): string {
+  const text = weight >= 1 ? String(Math.round(weight * 100) / 100) : weight.toFixed(2).replace(/0$/, '')
+  return `${text}×`
+}
+
+/** How fast a model uses the quota against the baseline, in words ("Uses quota 2.5× as fast"). */
+export function weightNote(weight: number, isBaseline: boolean): string {
+  if (isBaseline) return 'The baseline for your quota'
+  if (weight === 1) return 'Uses quota at the baseline rate'
+  if (weight > 1) return `Uses quota ${formatWeight(weight)} as fast`
+  return `Uses ${String(Math.round((1 - weight) * 100))}% less quota`
+}
+
 export function initialsOf(email: string): string {
   const name = email.split('@')[0] ?? ''
   const parts = name.split(/[._-]+/).filter(Boolean)

@@ -4,7 +4,16 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from secondmind.api.deps import ServicesDep
-from secondmind.api.schemas import CheckOut, HealthOut, MetaOut, ReadyOut, RouteOut
+from secondmind.api.schemas import (
+    CheckOut,
+    HealthOut,
+    MetaOut,
+    ModelChoiceOut,
+    PickerOut,
+    ReadyOut,
+    RouteOut,
+)
+from secondmind.config import AppConfig
 
 router = APIRouter()
 
@@ -45,6 +54,7 @@ async def meta(services: ServicesDep) -> MetaOut:
         config_hash_short=config.config_hash_short,
         provider_mode=config.routing.mode,
         price_version=config.prices.version,
+        picker=picker_out(config),
         routes=[
             RouteOut(
                 step=r.step.value,
@@ -60,4 +70,29 @@ async def meta(services: ServicesDep) -> MetaOut:
         substitutions=config.routing.substitutions,
         dev_auth=settings.dev_auth,
         tracing_enabled=services.tracer.enabled,
+    )
+
+
+def picker_out(config: AppConfig) -> PickerOut | None:
+    routing, prices = config.routing, config.prices
+    if routing.default_choice is None:
+        return None
+    baseline = prices.baseline_ref
+    base_choice = routing.choice(baseline)
+    return PickerOut(
+        default=str(routing.default_choice),
+        baseline=str(baseline),
+        baseline_label=base_choice.label if base_choice else baseline.model,
+        choices=[
+            ModelChoiceOut(
+                id=str(c.ref),
+                label=c.label,
+                provider=c.ref.provider,
+                provider_label=c.provider_label,
+                weight=float(prices.weight(c.ref)),
+                simulated=c.simulated,
+                available=c.available,
+            )
+            for c in routing.choices
+        ],
     )

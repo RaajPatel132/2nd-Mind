@@ -30,3 +30,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0023](0023-extract-and-enrich.md) | Extract and enrich as two model calls | accepted |
 | [0028](0028-ink-design-system.md) | Ink design system; the glass box inline as the Trail | accepted |
 | [0029](0029-agent-steps-on-the-stream.md) | Agent steps on the turn stream (amends 0015) | accepted |
+| [0030](0030-model-picker-and-weighted-quota.md) | A model picker and a quota weighted by model price | accepted |

@@ -1,4 +1,7 @@
-"""Usage ledger entries (FR-12.1). Quota enforcement reads this ledger from S4."""
+"""Usage ledger entries (FR-12.1). Quota enforcement reads this ledger from S4.
+
+``charged_tokens`` is what the quota counts: the call's tokens at its model's weight against
+the baseline (ADR-0030), fixed when the call is recorded."""
 
 import uuid
 
@@ -21,6 +24,7 @@ class LedgerEntry(BaseModel):
     cached_input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     cost_usd: UsdAmount
+    charged_tokens: int = Field(ge=0)
     price_version: str
 
     @classmethod
@@ -38,5 +42,6 @@ class LedgerEntry(BaseModel):
             cached_input_tokens=u.cached_input_tokens,
             output_tokens=u.output_tokens,
             cost_usd=u.cost_usd,
+            charged_tokens=u.charged,
             price_version=u.price_version,
         )

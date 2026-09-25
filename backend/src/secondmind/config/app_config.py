@@ -39,7 +39,7 @@ def load_app_config(environ: Mapping[str, str] | None = None) -> AppConfig:
         read_routing_file(config_dir / "models.yaml"), env, settings.model_provider_mode
     )
     prices = read_price_table(config_dir / "prices.yaml")
-    prices.require(routing.refs())
+    prices.require(routing.refs() | {c.ref for c in routing.choices})
     prompts = PromptRegistry.load(settings.resources_dir / "prompts")
     for route in routing.routes.values():
         if route.prompt is None:
@@ -74,6 +74,10 @@ def compute_config_hash(routing: Routing, prices: PriceTable, prompts: PromptReg
             "providers": {
                 name: {"kind": p.kind, "base_url": p.base_url}
                 for name, p in sorted(routing.providers.items())
+            },
+            "picker": {
+                "default": str(routing.default_choice) if routing.default_choice else None,
+                "choices": [c.model_dump(mode="json") for c in routing.choices],
             },
         },
         "prices": prices.model_dump(mode="json"),

@@ -36,6 +36,7 @@ class UsageLedgerRow(Base):
     cached_input_tokens: Mapped[int] = mapped_column(Integer)
     output_tokens: Mapped[int] = mapped_column(Integer)
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 8))
+    charged_tokens: Mapped[int] = mapped_column(Integer)
     price_version: Mapped[str] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

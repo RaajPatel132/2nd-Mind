@@ -20,7 +20,8 @@ test.describe('chat and glass box', () => {
 
     const timing = glassBox.getByTestId('timing-cost')
     await expect(timing).toHaveAttribute('data-open', 'true')
-    await expect(timing.getByTestId('model-call-model').first()).toHaveText('fake · fake-chat')
+    // The UI sends the picker's default model; with no keys the fake provider stands in for it.
+    await expect(timing.getByTestId('model-call-model').first()).toHaveText('fake · claude-sonnet-5')
     await expect(timing.getByTestId('call-latency').first()).toHaveText(/\d+(\.\d+)? m?s/)
     await expect(timing.getByTestId('call-cost').first()).toHaveText(/^\$\d/)
     await expect(timing.getByTestId('turn-cost')).toHaveText(/^\$\d/)

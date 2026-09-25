@@ -139,8 +139,4 @@ class InMemoryTurns:
         their workspaces)."""
         del user_id
         wanted = set(workspace_ids)
-        return sum(
-            e.input_tokens + e.cached_input_tokens + e.output_tokens
-            for e in self.ledger
-            if e.workspace_id in wanted
-        )
+        return sum(e.charged_tokens for e in self.ledger if e.workspace_id in wanted)

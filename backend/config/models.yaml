@@ -11,9 +11,11 @@ version: 1
 providers:
   anthropic:
     kind: anthropic
+    label: Anthropic
     api_key_env: ANTHROPIC_API_KEY
   openai:
     kind: openai
+    label: OpenAI
     api_key_env: OPENAI_API_KEY
     base_url_env: OPENAI_BASE_URL
   # An OpenAI-compatible server (for example vLLM) registers as one more provider,
@@ -24,6 +26,23 @@ providers:
   #   api_key_env: VLLM_API_KEY
   fake:
     kind: fake
+
+# The model picker: what a person can pick for their turns, grouped by provider in this order.
+# A pick replaces the model of every chat step in that turn; embeddings keep their route. With
+# no credentials for a model's provider, `auto` and `fake` let the fake provider stand in for it
+# (priced as that model); `live` shows it as unavailable. Every model needs a price; its weight
+# against the baseline in prices.yaml is how fast it uses the quota.
+picker:
+  default: anthropic:claude-sonnet-5
+  models:
+    anthropic:claude-fable-5-1: Claude Fable 5.1
+    anthropic:claude-opus-5-5: Claude Opus 5.5
+    anthropic:claude-opus-5: Claude Opus 5
+    anthropic:claude-sonnet-5: Claude Sonnet 5
+    anthropic:claude-haiku-4-5: Claude Haiku 4.5
+    openai:gpt-6-sol: GPT-6 Sol
+    openai:gpt-5.4-mini: GPT-5.4 mini
+    openai:gpt-6-luna: GPT-6 Luna
 
 # timeout_s: time allowed to the first token and between streamed chunks (non-streaming:
 # the whole call). effort: reasoning depth where the provider supports it.

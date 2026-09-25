@@ -71,7 +71,8 @@ def prices(*refs: str) -> PriceTable:
     for raw in refs:
         ref = ModelRef.parse(raw)
         models.setdefault(ref.provider, {})[ref.model] = PRICE
-    return PriceTable(version="test-prices", models=models)
+    # Every model has the same price, so each weighs 1 and the quota counts raw tokens.
+    return PriceTable(version="test-prices", baseline=refs[0], models=models)
 
 
 class Sleeps:

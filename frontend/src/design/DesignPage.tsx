@@ -37,7 +37,8 @@ import {
 } from '../ui'
 import { motionProps, presets, type PresetName } from '../ui/motion'
 import { contrast } from './contrast'
-import { FAILED_EVENTS, HELD_EVENTS, REFUSED_EVENTS, RUNNING_START, SAVE_EVENTS, withSeq } from './fixtures'
+import { FAILED_EVENTS, HELD_EVENTS, PICKER, REFUSED_EVENTS, RUNNING_START, SAVE_EVENTS, withSeq } from './fixtures'
+import { ModelPicker } from '../components/ModelPicker'
 
 type Swatch = { name: string; bg: string; use: string; text?: boolean }
 
@@ -410,6 +411,7 @@ function ComponentsSection() {
   const [count, setCount] = useState(3482)
   const [text, setText] = useState('')
   const [delta, setDelta] = useState<{ key: number; text: string } | null>(null)
+  const [model, setModel] = useState(PICKER.default)
   const anchor = useRef<HTMLButtonElement>(null)
   return (
     <Section id="components" overline="Components" title="Every primitive, every state">
@@ -612,6 +614,14 @@ function ComponentsSection() {
             <DiffRow glyph="⏸" layer="core" title="Prefers aisle seats" note="held · P-CORE-1" />
             <DiffRow glyph="∅" layer="quick" title="a secret (not shown)" note="not written · P-SECRET-1" />
           </ul>
+        </Demo>
+        <Demo
+          title="Select (the model picker)"
+          note="A pill that opens a grouped listbox. ↑ ↓ move, ↵ picks, Esc closes. Here: a fake stand-in (Haiku) and a provider with no key (OpenAI, disabled)."
+        >
+          <div className="flex min-h-12 justify-end">
+            <ModelPicker picker={PICKER} value={model} onChange={setModel} />
+          </div>
         </Demo>
         <Demo title="TextArea, CardButton, brand" note="The composer's input grows to 8 lines, then scrolls.">
           <div className="flex items-end gap-2.5 rounded-lg border border-line-control bg-surface px-4 py-2.5">
