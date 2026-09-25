@@ -52,3 +52,6 @@ class InMemoryIdentity:
 
     async def workspaces_for(self, user_id: uuid.UUID):  # type: ignore[no-untyped-def]
         return [w for w in self.workspaces.values() if w.owner_user_id == user_id]
+
+    async def all_workspaces(self):  # type: ignore[no-untyped-def]
+        return list(self.workspaces.values())

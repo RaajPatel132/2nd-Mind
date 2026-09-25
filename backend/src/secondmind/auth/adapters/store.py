@@ -70,6 +70,13 @@ class SqlIdentityStore:
             ).scalars()
             return [_workspace(r) for r in rows]
 
+    async def all_workspaces(self) -> list[Workspace]:
+        async with self._db.identity() as session:
+            rows = (
+                await session.execute(select(WorkspaceRow).order_by(WorkspaceRow.created_at))
+            ).scalars()
+            return [_workspace(r) for r in rows]
+
 
 def _user(row: UserRow) -> User:
     return User(id=row.id, email=row.email, created_at=row.created_at)

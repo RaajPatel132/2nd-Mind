@@ -48,6 +48,10 @@ class IdentityStore(Protocol):
 
     async def workspaces_for(self, user_id: uuid.UUID) -> list[Workspace]: ...
 
+    async def all_workspaces(self) -> list[Workspace]:
+        """Every workspace, oldest first (background jobs that sweep all of them)."""
+        ...
+
 
 async def resolve_scope(
     identity: IdentityStore, *, user_id: uuid.UUID, workspace_id: uuid.UUID
