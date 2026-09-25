@@ -53,6 +53,8 @@ class OpFacts:
     core_write: bool = False
     creates_trigger: bool = False
     edits_existing: bool = False
+    # Only moves an item in or out of the quick layer: housekeeping, not a change to a memory.
+    layer_only: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,8 +121,13 @@ def p_mod_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
 
 
 def p_infer_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
-    """Inferred memories (patterns, or low confidence from a system turn) wait for the user."""
-    if ctx.confirmed or op.op in (WriteOp.DELETE, WriteOp.UNLINK, WriteOp.UNRELATE):
+    """Inferred memories (patterns, or low confidence from a system turn) wait for the user.
+    Quick-layer housekeeping infers nothing, so it isn't held."""
+    if (
+        ctx.confirmed
+        or op.layer_only
+        or op.op in (WriteOp.DELETE, WriteOp.UNLINK, WriteOp.UNRELATE)
+    ):
         return None
     inferred = op.kind is Kind.PATTERN or (op.confidence < 1 and ctx.turn_kind == "system")
     if inferred and op.target == "item":
@@ -130,8 +137,9 @@ def p_infer_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
 
 def p_bulk_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
     """Deletes, and edits to more than the threshold of items in one turn, need confirmation
-    (FR-4.5). An undo's reversals count as edits: only a large undo is held."""
-    if ctx.confirmed or not op.edits_existing:
+    (FR-4.5). An undo's reversals count as edits: only a large undo is held. Quick-layer
+    housekeeping doesn't count."""
+    if ctx.confirmed or op.layer_only or not op.edits_existing:
         return None
     if op.op is WriteOp.DELETE and op.origin not in ("undo", "system"):
         return _held("P-BULK-1", "deleting needs your confirmation")

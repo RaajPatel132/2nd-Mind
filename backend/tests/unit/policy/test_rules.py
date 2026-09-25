@@ -185,6 +185,20 @@ CASES: list[tuple[str, OpFacts, PolicyContext, PolicyDecision, str]] = [
         "P-INFER-1",
     ),
     (
+        "infer: quick-layer housekeeping on a low-confidence item allowed",
+        OpFacts(
+            op=WriteOp.UPDATE,
+            kind=Kind.PATTERN,
+            origin="system",
+            confidence=0.6,
+            edits_existing=True,
+            layer_only=True,
+        ),
+        PolicyContext(turn_kind="system"),
+        A,
+        "P-DEFAULT",
+    ),
+    (
         "infer: a hypothetical inferred fact is blocked, not held",
         replace(CREATE_FACT, confidence=0.6, origin="system", modality=Modality.HYPOTHETICAL),
         PolicyContext(turn_kind="system"),
@@ -205,6 +219,13 @@ CASES: list[tuple[str, OpFacts, PolicyContext, PolicyDecision, str]] = [
         PolicyContext(edited_items=6, bulk_threshold=5),
         H,
         "P-BULK-1",
+    ),
+    (
+        "bulk: quick-layer housekeeping over the threshold allowed",
+        OpFacts(op=WriteOp.UPDATE, kind=Kind.PLAN, edits_existing=True, layer_only=True),
+        PolicyContext(turn_kind="system", edited_items=9, bulk_threshold=5),
+        A,
+        "P-DEFAULT",
     ),
     (
         "bulk: a direct delete held",

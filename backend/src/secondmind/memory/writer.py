@@ -85,6 +85,13 @@ Emit = Callable[[TurnEvent], Awaitable[None]]
 CORE_BUDGET_RULE = "CORE-BUDGET"
 _ITEM_EDIT_TYPES = (UpdateItem, SetItemState, DeleteItem, RestoreItem)
 
+# Fields that only place an item in the quick layer. Changing just these is housekeeping.
+QUICK_FIELDS = frozenset({"in_quick", "quick_reason", "quick_until"})
+
+
+def _layer_only(op: Op) -> bool:
+    return isinstance(op, UpdateItem) and bool(op.changes) and set(op.changes) <= QUICK_FIELDS
+
 
 @dataclass(frozen=True, slots=True)
 class WriterTurn:
@@ -333,7 +340,7 @@ class MemoryWriter:
     def _edited_items(self, created: set[uuid.UUID]) -> set[uuid.UUID]:
         edited: set[uuid.UUID] = set()
         for op in self._ops:
-            if isinstance(op, _ITEM_EDIT_TYPES):
+            if isinstance(op, _ITEM_EDIT_TYPES) and not _layer_only(op):
                 edited.add(op.item_id)
             elif isinstance(op, SupersedeItem):
                 edited.add(op.old_id)
@@ -479,9 +486,7 @@ class MemoryWriter:
                 return OpFacts(**base)
             changes = self._item_changes(op, before)
             after_core = bool(changes.get("in_core", before.in_core))
-            content_changed = any(
-                k not in ("in_quick", "quick_reason", "quick_until") for k in changes
-            )
+            content_changed = any(k not in QUICK_FIELDS for k in changes)
             core_write = after_core and (not before.in_core or content_changed)
             if isinstance(op, DeleteItem):
                 core_write = False
@@ -494,6 +499,7 @@ class MemoryWriter:
                 confidence=before.confidence,
                 core_write=core_write,
                 edits_existing=item_id not in created,
+                layer_only=_layer_only(op),
             )
         if target_type is TargetType.TRIGGER:
             return OpFacts(**base, target="trigger", edits_existing=True)
