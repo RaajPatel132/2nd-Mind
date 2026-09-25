@@ -9,6 +9,7 @@ Usage is plausible (~4 characters per token).
 
 import asyncio
 import hashlib
+import itertools
 import math
 import re
 import struct
@@ -275,14 +276,46 @@ def _message_text(message: ChatMessage) -> str:
     return message.content + "".join(c.model_dump_json() for c in message.tool_calls)
 
 
+_WORD_RE = re.compile(r"[a-z0-9]+")
+# Words too common to say anything about what a sentence is about.
+_STOPWORDS = frozenset(
+    {
+        "a", "an", "and", "are", "as", "at", "be", "but", "by", "did", "do", "does", "for",
+        "from", "had", "has", "have", "i", "in", "is", "it", "its", "me", "my", "of", "on",
+        "or", "our", "so", "that", "the", "their", "them", "then", "there", "they", "this",
+        "to", "was", "we", "were", "what", "when", "where", "which", "who", "will", "with",
+        "you", "your",
+    }
+)  # fmt: skip
+
+
+def _features(text: str) -> list[str]:
+    """Lower-cased word tokens (lightly singularised) and their bigrams, minus stopwords."""
+    words = [_singular(w) for w in _WORD_RE.findall(text.lower()) if w not in _STOPWORDS]
+    return words + [f"{a} {b}" for a, b in itertools.pairwise(words)]
+
+
+def _singular(word: str) -> str:
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
 def _embedding(text: str, dim: int) -> list[float]:
-    """Deterministic unit vector derived from the text's hash."""
-    values: list[float] = []
-    counter = 0
-    while len(values) < dim:
-        digest = hashlib.sha256(f"{counter}:{text}".encode()).digest()
-        values.extend(v / 2**31 for v in struct.unpack(">8i", digest))
-        counter += 1
-    vector = values[:dim]
+    """A feature-hashed bag of words (S3.1): each token and bigram adds ±1 at a hashed index,
+    so sentences that share words end up close together. Deterministic; a text with no
+    words falls back to a unit vector derived from its hash."""
+    vector = [0.0] * dim
+    for feature in _features(text):
+        h = int.from_bytes(hashlib.blake2b(feature.encode(), digest_size=8).digest(), "big")
+        vector[h % dim] += 1.0 if (h >> 40) & 1 else -1.0
+    if not any(vector):
+        values: list[float] = []
+        counter = 0
+        while len(values) < dim:
+            digest = hashlib.sha256(f"{counter}:{text}".encode()).digest()
+            values.extend(v / 2**31 for v in struct.unpack(">8i", digest))
+            counter += 1
+        vector = values[:dim]
     norm = math.sqrt(sum(v * v for v in vector)) or 1.0
     return [v / norm for v in vector]
