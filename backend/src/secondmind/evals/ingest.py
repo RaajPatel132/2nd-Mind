@@ -40,8 +40,7 @@ from secondmind.core import (
     WorkspaceScope,
     new_id,
 )
-from secondmind.ingestion import IngestSettings
-from secondmind.ingestion.offline import offline_responders, replay_key
+from secondmind.ingestion import IngestSettings, offline_responders, replay_key
 from secondmind.memory import (
     EntityRecord,
     ItemRecord,

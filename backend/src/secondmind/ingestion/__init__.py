@@ -3,6 +3,7 @@
 from secondmind.ingestion.ack import AckFacts, acknowledge, refusal, summarise_commit
 from secondmind.ingestion.entities import CLOSE_LABELS, EntityPlan, resolve_entities
 from secondmind.ingestion.normalise import BUILTIN, Term, match_key, normalise, slugify, terms_for
+from secondmind.ingestion.offline import load_replay, offline_responders, replay_key
 from secondmind.ingestion.pipeline import (
     EnrichVars,
     ExtractionInvalidError,
@@ -96,10 +97,13 @@ __all__ = [
     "UnresolvableTimeError",
     "acknowledge",
     "cosine",
+    "load_replay",
     "match_key",
     "normalise",
+    "offline_responders",
     "refusal",
     "reminder_time",
+    "replay_key",
     "resolve",
     "resolve_entities",
     "resolve_lead",

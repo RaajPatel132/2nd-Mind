@@ -67,6 +67,7 @@ from secondmind.ingestion.time import (
     validate_rrule,
 )
 from secondmind.memory import (
+    RELATIVE_WORDS,
     CommitResult,
     CreateItem,
     EntityLink,
@@ -88,7 +89,6 @@ from secondmind.memory import (
     quick_layer,
     rrule_words,
 )
-from secondmind.memory.keys import RELATIVE_WORDS
 from secondmind.observability import get_logger
 from secondmind.providers import ChatMessage, ProviderUnavailableError
 

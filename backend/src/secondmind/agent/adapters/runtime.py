@@ -9,8 +9,7 @@ from secondmind.agent import EntitiesRenamed, TurnRunner
 from secondmind.agent.adapters.store import SqlTurnStore
 from secondmind.config import AppConfig, Settings
 from secondmind.core import ConfigError, WorkspaceScope
-from secondmind.ingestion import IngestSettings
-from secondmind.ingestion.offline import load_replay, offline_responders
+from secondmind.ingestion import IngestSettings, load_replay, offline_responders
 from secondmind.memory import Memory, MemorySettings
 from secondmind.memory.adapters import Database, embedding_dimensions, sql_memory
 from secondmind.observability import Tracer, get_logger

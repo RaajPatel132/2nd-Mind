@@ -174,4 +174,7 @@ name = "Modules talk through public interfaces (secondmind.<m> or secondmind.<m>
 type = "public_interface"
 root = "secondmind"
 public_subpackages = ["adapters"]
-adapter_importers = ["secondmind.api", "secondmind.jobs.adapters", "secondmind.*.adapters"]
+# evals is a composition root: it wires the real pipeline to in-memory stores and fake models.
+adapter_importers = [
+    "secondmind.api", "secondmind.jobs.adapters", "secondmind.evals", "secondmind.*.adapters",
+]
