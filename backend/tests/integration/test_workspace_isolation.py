@@ -71,7 +71,10 @@ TABLES = [
     TableSpec("item_versions", "version = version"),
     TableSpec("write_log", "rationale = 'tampered'"),
     TableSpec("held_writes", "status = status"),
+    TableSpec("conversation_keys", "text = 'tampered'"),
 ]
+# Append-only: the app role may not update or delete it at all (checked separately).
+APPEND_ONLY = [TableSpec("item_access", "cited = cited")]
 
 
 def _model_call() -> ModelCallEvent:
@@ -161,14 +164,14 @@ async def test_repository_cannot_write_to_another_workspaces_turn(
 # ------------------------------------------------------------------ through raw SQL (app role)
 
 
-@pytest.mark.parametrize("table", TABLES, ids=lambda t: t.name)
+@pytest.mark.parametrize("table", TABLES + APPEND_ONLY, ids=lambda t: t.name)
 async def test_raw_sql_read_is_scoped(app_db: Database, seeded: Seeded, table: TableSpec) -> None:
     ws_a = seeded.scope_a.workspace_id
     assert await _count(app_db, table, ws_a, seeded.scope_a) >= 1
     assert await _count(app_db, table, ws_a, seeded.scope_b) == 0
 
 
-@pytest.mark.parametrize("table", TABLES, ids=lambda t: t.name)
+@pytest.mark.parametrize("table", TABLES + APPEND_ONLY, ids=lambda t: t.name)
 async def test_missing_workspace_setting_means_zero_rows(
     app_db: Database, seeded: Seeded, table: TableSpec
 ) -> None:
@@ -321,3 +324,34 @@ async def test_raw_text_search_from_another_workspace_finds_nothing(
     assert found == {seeded.scope_b.workspace_id}
     async with app_db.identity() as session:
         assert list((await session.execute(sql)).scalars()) == []
+
+
+async def test_item_access_is_append_only_for_the_app(app_db: Database, seeded: Seeded) -> None:
+    """Retrieval bookkeeping is never rewritten: no UPDATE or DELETE, even in its own workspace."""
+    for statement in ("UPDATE item_access SET cited = true", "DELETE FROM item_access"):
+        with pytest.raises(DBAPIError, match="permission denied"):
+            async with app_db.workspace(seeded.scope_a) as session:
+                await session.execute(text(statement))
+
+
+async def test_raw_conversation_search_from_another_workspace_finds_nothing(
+    app_db: Database, seeded: Seeded
+) -> None:
+    """S3.2: the vector and full-text scans over what was said are RLS-scoped too."""
+    probe = "[" + ",".join(f"{v:.7g}" for v in vector("Nisha likes tulips")) + "]"
+    by_vector = text(
+        "SELECT workspace_id FROM conversation_keys WHERE embedding IS NOT NULL "
+        "ORDER BY embedding <=> CAST(:q AS vector) LIMIT 50"
+    )
+    by_words = text(
+        "SELECT DISTINCT workspace_id FROM conversation_keys "
+        "WHERE tsv @@ plainto_tsquery('english', 'tulips')"
+    )
+    async with app_db.workspace(seeded.scope_b) as session:
+        near = {r[0] for r in (await session.execute(by_vector, {"q": probe})).all()}
+        words = set((await session.execute(by_words)).scalars())
+    assert near == {seeded.scope_b.workspace_id}
+    assert words == {seeded.scope_b.workspace_id}
+    async with app_db.identity() as session:
+        assert (await session.execute(by_vector, {"q": probe})).all() == []
+        assert list((await session.execute(by_words)).scalars()) == []

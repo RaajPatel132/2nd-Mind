@@ -1,1 +1,53 @@
 """Retrieval agent: query planning, hybrid search, fusion, rerank and citations (S3)."""
+
+from secondmind.retrieval.conversation import (
+    ConversationIndexer,
+    ConversationStore,
+    SaidRow,
+    SaidTurn,
+    split_said,
+)
+from secondmind.retrieval.tools import (
+    Access,
+    AggregateResult,
+    ConversationHit,
+    EntityResult,
+    Filters,
+    Group,
+    HistoryResult,
+    HistoryRow,
+    Hit,
+    LookupResult,
+    Occurrence,
+    PathHop,
+    Query,
+    RecallStore,
+    SetOp,
+    TimelineResult,
+    WindowFilter,
+)
+
+__all__ = [
+    "Access",
+    "AggregateResult",
+    "ConversationHit",
+    "ConversationIndexer",
+    "ConversationStore",
+    "EntityResult",
+    "Filters",
+    "Group",
+    "HistoryResult",
+    "HistoryRow",
+    "Hit",
+    "LookupResult",
+    "Occurrence",
+    "PathHop",
+    "Query",
+    "RecallStore",
+    "SaidRow",
+    "SaidTurn",
+    "SetOp",
+    "TimelineResult",
+    "WindowFilter",
+    "split_said",
+]

@@ -31,6 +31,8 @@ from secondmind.memory import (
     WriterTurn,
 )
 from secondmind.memory.adapters import EMBED_DIMENSIONS, Database, sql_memory
+from secondmind.retrieval import ConversationIndexer, SaidTurn
+from secondmind.retrieval.adapters import SqlConversationStore
 from tests.unit.memory.helpers import create, item, person, sensitive
 
 EMBED_MODEL = f"fake:fake-embed@{EMBED_DIMENSIONS}"
@@ -144,6 +146,23 @@ async def seed_memory(db: Database, scope: WorkspaceScope) -> SeededMemory:
     assert len(held) == 1, result.diff.entries
     keys = memory.keys(scope, timezone="UTC", embed=FakeEmbedder(), model=EMBED_MODEL)
     await keys.rebuild([tulips.item_id, task.item_id, therapy.item_id])
+    # What was said (conversation_keys) and what recall retrieved (item_access).
+    indexer = ConversationIndexer(
+        SqlConversationStore(db, scope), embed=FakeEmbedder(), model=EMBED_MODEL
+    )
+    await indexer.index(
+        SaidTurn(
+            id=turn.turn_id,
+            input="Nisha likes tulips",
+            output="Noted: Nisha likes tulips.\n\n- Buy tulips for Nisha",
+            started_at=turn.now,
+            completed=True,
+            chat=True,
+        )
+    )
+    await memory.record_access(
+        scope, turn_id=turn.turn_id, at=turn.now, retrieved=[tulips.item_id], cited=[]
+    )
     return SeededMemory(
         turn=turn,
         person_id=nisha.entity_id,

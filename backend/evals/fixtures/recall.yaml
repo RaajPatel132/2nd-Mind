@@ -1,0 +1,649 @@
+# The recall fixture (S3.1): one synthetic workspace every recall test and demo runs on.
+# now = Tue 2026-10-06 10:00 Asia/Kolkata. All people, places and titles are invented; nothing
+# here is about payments. Times are local (the workspace timezone) unless they end in Z.
+#
+# The loader writes every entity, item, link and relation through MemoryWriter as ONE system
+# turn (no extract step, so it's deterministic), then renders keys exactly as ingestion would.
+# Past turns become stored turns and are indexed into conversation_keys.
+#
+# Item fields (quote "on" in triggers: YAML reads a bare on as true): kind, subtype, format,
+# state (after links are applied), title, text, subject,
+# predicate, value, attributes, entities [{entity, role}], category, tags, occurred {start, end,
+# precision}, rrule, due {at, precision}, valid_from, mentioned, sensitivity, in_core, triggers.
+
+now: "2026-10-06T10:00"
+timezone: Asia/Kolkata
+
+entities:
+  - {key: nisha, kind: person, name: Nisha, labels: [sister], is_key: true}
+  - {key: kabir, kind: person, name: Kabir, labels: [partner], is_key: true}
+  - {key: rohan, kind: person, name: Rohan}
+  - {key: meenu, kind: person, name: Meenakshi Iyer, aliases: [Meenu], labels: [colleague]}
+  - {key: pune, kind: place, name: Pune}
+  - {key: bengaluru, kind: place, name: Bengaluru}
+  - {key: goa, kind: place, name: Goa}
+  - {key: vetal_hill, kind: place, name: Vetal Hill}
+  - {key: blue_lotus, kind: place, name: Blue Lotus Kitchen, attributes: {type: restaurant}}
+  - {key: tin_spoon, kind: place, name: The Tin Spoon, attributes: {type: restaurant}}
+  - {key: saffron_street, kind: place, name: Saffron Street, attributes: {type: restaurant}}
+  - {key: ichiban, kind: place, name: Ichiban Ramen Bar, attributes: {type: restaurant}}
+  - {key: clay_studio, kind: place, name: Clay and Kiln Studio}
+  - {key: iron_temple, kind: org, name: Iron Temple Gym}
+  - {key: fitzone, kind: org, name: FitZone}
+  - {key: severance, kind: work, name: Severance, attributes: {type: TV series}}
+  - {key: dark, kind: work, name: Dark, attributes: {type: TV series}}
+  - {key: mindhunter, kind: work, name: Mindhunter, attributes: {type: TV series}}
+  - {key: the_crown, kind: work, name: The Crown, attributes: {type: TV series}}
+  - {key: quiet_hours, kind: work, name: The Quiet Hours, attributes: {type: novel}}
+  - {key: rust, kind: topic, name: Rust}
+  - {key: guitar, kind: topic, name: Fingerstyle guitar}
+  - {key: trading, kind: topic, name: Trading}
+  - {key: sleep, kind: topic, name: Sleep}
+  - {key: japan, kind: topic, name: Japan trip}
+  - {key: half_marathon, kind: project, name: Pune half marathon}
+  - {key: mk_bag, kind: thing, name: MK bag}
+
+relations:
+  - {src: rohan, relation: spouse_of, dst: nisha, evidence: rohan_husband}
+  - {src: kabir, relation: partner_of, dst: self}
+  - {src: nisha, relation: sibling_of, dst: self}
+
+items:
+  # ---------------------------------------------------------------- self
+  - key: live_bengaluru
+    kind: fact
+    title: Lives in Bengaluru
+    text: I live in Bengaluru.
+    subject: self
+    predicate: lives_in
+    value: Bengaluru
+    entities: [{entity: bengaluru, role: at}]
+    valid_from: {at: "2023-06-01", precision: month}
+    mentioned: "2026-06-10T09:00"
+    category: home
+  - key: live_pune
+    kind: fact
+    title: Lives in Pune
+    text: I live in Pune.
+    subject: self
+    predicate: lives_in
+    value: Pune
+    entities: [{entity: pune, role: at}]
+    valid_from: {at: "2026-09-12", precision: day}
+    mentioned: "2026-09-12T18:00"
+    category: home
+    in_core: true
+  - key: likes_thrillers
+    kind: preference
+    title: Likes thrillers
+    text: I like thrillers.
+    subject: self
+    predicate: genre_taste
+    value: thrillers
+    mentioned: "2026-03-02T21:00"
+    category: entertainment
+  - key: done_thrillers
+    kind: preference
+    title: Done with thrillers
+    text: I'm done with thrillers; I want lighter shows now.
+    subject: self
+    predicate: genre_taste
+    value: lighter shows
+    valid_from: {at: "2026-09-20", precision: day}
+    mentioned: "2026-09-20T22:00"
+    category: entertainment
+    in_core: true
+  - key: vegetarian
+    kind: preference
+    title: Vegetarian
+    text: I'm vegetarian.
+    subject: self
+    predicate: diet
+    value: vegetarian
+    mentioned: "2026-05-04T13:00"
+    category: food
+    in_core: true
+
+  # ---------------------------------------------------------------- people
+  - key: rohan_husband
+    kind: fact
+    title: Rohan is Nisha's husband
+    text: Rohan is Nisha's husband.
+    subject: rohan
+    entities: [{entity: rohan, role: about}, {entity: nisha, role: about}]
+    mentioned: "2026-07-12T20:00"
+    category: people/relationships
+  - key: rohan_jazz
+    kind: preference
+    title: Rohan loves live jazz
+    text: Rohan loves live jazz.
+    subject: rohan
+    entities: [{entity: rohan, role: about}]
+    mentioned: "2026-07-12T20:05"
+    category: people
+  - key: rohan_birds
+    kind: preference
+    title: Rohan is into birdwatching
+    text: Rohan loves birdwatching, especially at dawn.
+    subject: rohan
+    entities: [{entity: rohan, role: about}]
+    mentioned: "2026-08-02T11:00"
+    category: people
+  - key: nisha_interview
+    kind: task
+    title: Ask Nisha about her interview
+    text: Ask Nisha about her interview.
+    entities: [{entity: nisha, role: for}]
+    mentioned: "2026-10-01T21:00"
+    category: people
+    triggers:
+      - {"on": person, entity: nisha}
+  - key: kabir_birthday
+    kind: plan
+    title: Kabir's birthday
+    text: Kabir's birthday is on 14 March.
+    entities: [{entity: kabir, role: for}]
+    occurred: {start: "2027-03-14", precision: day}
+    rrule: FREQ=YEARLY;BYMONTH=3;BYMONTHDAY=14
+    mentioned: "2026-06-20T10:00"
+    category: people
+  - key: meenu_standup
+    kind: note
+    title: Meenu runs the Thursday standup
+    text: Meenu (Meenakshi Iyer) runs the Thursday standup at work.
+    entities: [{entity: meenu, role: about}]
+    mentioned: "2026-09-03T12:00"
+    category: work
+
+  # ---------------------------------------------------------------- runs (6 logged in September)
+  - key: run_sep_02
+    kind: episode
+    subtype: measurement
+    title: Morning run, 5 km
+    text: I ran 5 km in 31 minutes at Vetal Hill.
+    attributes: {activity: run}
+    value: {number: 5, unit: km}
+    entities: [{entity: vetal_hill, role: at}]
+    occurred: {start: "2026-09-02T06:30", precision: datetime}
+    mentioned: "2026-09-02T08:00"
+    category: health/fitness
+  - key: run_sep_06
+    kind: episode
+    subtype: measurement
+    title: Long run, 8 km
+    text: I ran 8 km in 52 minutes at Vetal Hill.
+    attributes: {activity: run}
+    value: {number: 8, unit: km}
+    entities: [{entity: vetal_hill, role: at}]
+    occurred: {start: "2026-09-06T06:30", precision: datetime}
+    mentioned: "2026-09-06T09:00"
+    category: health/fitness
+  - key: run_sep_09
+    kind: episode
+    subtype: measurement
+    title: Easy run, 5 km
+    text: I ran 5 km in 30 minutes.
+    attributes: {activity: run}
+    value: {number: 5, unit: km}
+    occurred: {start: "2026-09-09T06:45", precision: datetime}
+    mentioned: "2026-09-09T08:00"
+    category: health/fitness
+  - key: run_sep_13
+    kind: episode
+    subtype: measurement
+    title: Long run, 10 km
+    text: I ran 10 km in 64 minutes at Vetal Hill.
+    attributes: {activity: run}
+    value: {number: 10, unit: km}
+    entities: [{entity: vetal_hill, role: at}]
+    occurred: {start: "2026-09-13T06:15", precision: datetime}
+    mentioned: "2026-09-13T09:30"
+    category: health/fitness
+  - key: run_sep_20
+    kind: episode
+    subtype: measurement
+    title: Long run, 12 km
+    text: I ran 12 km in 78 minutes.
+    attributes: {activity: run}
+    value: {number: 12, unit: km}
+    occurred: {start: "2026-09-20T06:00", precision: datetime}
+    mentioned: "2026-09-20T09:00"
+    category: health/fitness
+  - key: run_sep_27
+    kind: episode
+    subtype: measurement
+    title: Beach run in Goa, 6 km
+    text: I ran 6 km on the beach in Goa.
+    attributes: {activity: run}
+    value: {number: 6, unit: km}
+    entities: [{entity: goa, role: at}]
+    occurred: {start: "2026-09-27T07:00", precision: datetime}
+    mentioned: "2026-09-27T10:00"
+    category: health/fitness
+  # Two more September runs, filed wrongly (the count cross-check finds them).
+  - key: run_misfiled_note
+    kind: note
+    title: Riverside run
+    text: Went for a 6 km run along the river this morning; my knees felt fine.
+    mentioned: "2026-09-16T08:30"
+    category: notes
+  - key: run_misfiled_subtype
+    kind: episode
+    subtype: experience
+    title: Evening run with Kabir
+    text: Evening run with Kabir, 4 km around the lake.
+    attributes: {activity: run}
+    entities: [{entity: kabir, role: with}]
+    occurred: {start: "2026-09-23T18:30", precision: datetime}
+    mentioned: "2026-09-23T20:00"
+    category: health/fitness
+  - key: run_oct_04
+    kind: episode
+    subtype: measurement
+    title: Long run, 7 km
+    text: I ran 7 km in 44 minutes at Vetal Hill.
+    attributes: {activity: run}
+    value: {number: 7, unit: km}
+    entities: [{entity: vetal_hill, role: at}]
+    occurred: {start: "2026-10-04T06:30", precision: datetime}
+    mentioned: "2026-10-04T09:00"
+    category: health/fitness
+
+  # ---------------------------------------------------------------- Goa, and the weekend before it
+  - key: goa_trip
+    kind: plan
+    state: happened
+    title: Goa trip with Kabir
+    text: Goa trip with Kabir.
+    entities: [{entity: goa, role: at}, {entity: kabir, role: with}]
+    occurred: {start: "2026-09-25", end: "2026-09-29", precision: day}
+    mentioned: "2026-08-18T21:00"
+    category: travel
+  - key: pottery_class
+    kind: episode
+    subtype: experience
+    title: Pottery class
+    text: Did a pottery class at Clay and Kiln Studio; made a lopsided mug.
+    entities: [{entity: clay_studio, role: at}]
+    occurred: {start: "2026-09-19T15:00", precision: datetime}
+    mentioned: "2026-09-19T19:00"
+    category: hobbies
+  - key: brunch_nisha
+    kind: episode
+    subtype: experience
+    title: Brunch with Nisha at The Tin Spoon
+    text: Brunch with Nisha at The Tin Spoon; the shakshuka was great.
+    entities: [{entity: nisha, role: with}, {entity: tin_spoon, role: at}]
+    occurred: {start: "2026-09-20T11:30", precision: datetime}
+    mentioned: "2026-09-20T15:00"
+    category: food/restaurants
+
+  # ---------------------------------------------------------------- watch list
+  - key: watch_severance
+    kind: intention
+    subtype: watch
+    title: Severance
+    text: I want to watch Severance season 2.
+    entities: [{entity: severance, role: about}, {entity: nisha, role: by}]
+    mentioned: "2026-09-10T21:00"
+    category: entertainment/series
+  - key: watched_severance
+    kind: episode
+    subtype: experience
+    title: Watched Severance season 2
+    text: Watched Severance season 2 and loved it.
+    entities: [{entity: severance, role: about}]
+    occurred: {start: "2026-09-18T21:00", precision: datetime}
+    mentioned: "2026-09-19T09:00"
+    sentiment: 2
+    category: entertainment/series
+  - key: watch_dark
+    kind: intention
+    subtype: watch
+    title: Dark
+    text: I want to watch Dark with Kabir.
+    entities: [{entity: dark, role: about}, {entity: kabir, role: with}]
+    mentioned: "2026-09-22T22:00"
+    category: entertainment/series
+  - key: watch_mindhunter
+    kind: intention
+    subtype: watch
+    title: Mindhunter
+    text: I want to watch Mindhunter.
+    entities: [{entity: mindhunter, role: about}]
+    mentioned: "2026-08-30T21:30"
+    category: entertainment/series
+  - key: watch_crown
+    kind: intention
+    subtype: watch
+    state: dropped
+    title: The Crown
+    text: I wanted to watch The Crown, but dropped it.
+    entities: [{entity: the_crown, role: about}]
+    mentioned: "2026-07-01T20:00"
+    category: entertainment/series
+
+  # ---------------------------------------------------------------- learning and goals
+  - key: learn_rust
+    kind: intention
+    subtype: learn
+    title: Learn Rust
+    text: I want to learn Rust.
+    entities: [{entity: rust, role: about}]
+    mentioned: "2026-08-15T22:00"
+    category: learning
+    in_core: true
+  - key: learn_guitar
+    kind: intention
+    subtype: learn
+    title: Learn fingerstyle guitar
+    text: I want to learn fingerstyle guitar.
+    entities: [{entity: guitar, role: about}]
+    mentioned: "2026-09-05T20:00"
+    category: learning
+  - key: rust_book
+    kind: resource
+    format: link
+    title: The Rust book, ownership chapters
+    text: The Rust Programming Language book, chapters 4 to 6 on ownership and borrowing.
+    summary: The free online Rust book; the ownership chapters are the ones to start with.
+    entities: [{entity: rust, role: about}]
+    mentioned: "2026-09-14T21:00"
+    category: learning
+  - key: half_marathon_goal
+    kind: intention
+    subtype: train
+    state: active
+    title: Run the Pune half marathon
+    text: Train for and run the Pune half marathon.
+    entities: [{entity: half_marathon, role: part_of}]
+    due: {at: "2027-02-14", precision: day}
+    mentioned: "2026-08-01T08:00"
+    category: health/fitness
+    in_core: true
+
+  # ---------------------------------------------------------------- plans and tasks
+  - key: gym_routine
+    kind: plan
+    title: Gym at Iron Temple
+    text: Gym at Iron Temple Gym every Monday, Wednesday and Friday at 7 am.
+    entities: [{entity: iron_temple, role: at}]
+    occurred: {start: "2026-08-03T07:00", precision: datetime}
+    rrule: FREQ=WEEKLY;BYDAY=MO,WE,FR;BYHOUR=7;BYMINUTE=0
+    valid_from: {at: "2026-08-03", precision: day}
+    mentioned: "2026-08-01T09:00"
+    category: health/fitness
+  - key: saturday_workshop
+    kind: plan
+    title: Pottery workshop with Kabir
+    text: Pottery wheel workshop with Kabir at Clay and Kiln Studio.
+    entities: [{entity: kabir, role: with}, {entity: clay_studio, role: at}]
+    occurred: {start: "2026-10-10T11:00", precision: datetime}
+    mentioned: "2026-10-02T19:00"
+    category: hobbies
+  - key: dentist_old
+    kind: plan
+    title: Dentist appointment
+    text: Dentist appointment.
+    occurred: {start: "2026-10-02T17:00", precision: datetime}
+    mentioned: "2026-09-21T10:00"
+    category: health
+  - key: dentist_new
+    kind: plan
+    state: happened
+    title: Dentist appointment
+    text: Dentist appointment.
+    occurred: {start: "2026-10-03T17:00", precision: datetime}
+    mentioned: "2026-09-30T10:00"
+    category: health
+  - key: dinner_tonight
+    kind: plan
+    title: Dinner at Saffron Street with Kabir
+    text: Dinner at Saffron Street with Kabir.
+    entities: [{entity: saffron_street, role: at}, {entity: kabir, role: with}]
+    occurred: {start: "2026-10-06T20:00", precision: datetime}
+    mentioned: "2026-10-04T12:00"
+    category: food/restaurants
+    triggers:
+      - {"on": time, fires_at: "2026-10-06T18:00", lead_minutes: 120}
+  - key: renew_passport
+    kind: task
+    title: Renew passport
+    text: Renew my passport.
+    due: {at: "2026-10-20", precision: day}
+    mentioned: "2026-09-15T09:00"
+    category: admin
+    triggers:
+      - {"on": time, fires_at: "2026-10-19T09:00", lead_minutes: 1440}
+  - key: fix_tap
+    kind: task
+    title: Get the kitchen tap fixed
+    text: Get the kitchen tap fixed.
+    mentioned: "2026-09-28T08:00"
+    category: home
+  - key: backup_photos
+    kind: task
+    title: Back up the phone photos
+    text: Back up the photos on my phone.
+    mentioned: "2026-09-29T22:00"
+    category: admin
+  - key: book_hotel
+    kind: task
+    state: done
+    title: Book the Goa hotel
+    text: Book the hotel for the Goa trip.
+    mentioned: "2026-08-18T21:05"
+    category: travel
+
+  # ---------------------------------------------------------------- restaurants to try
+  - key: try_blue_lotus
+    kind: intention
+    subtype: try
+    title: Try Blue Lotus Kitchen
+    text: I want to try Blue Lotus Kitchen.
+    entities: [{entity: blue_lotus, role: about}]
+    mentioned: "2026-09-08T13:00"
+    category: food/restaurants
+  - key: try_tin_spoon
+    kind: intention
+    subtype: try
+    title: Try The Tin Spoon
+    text: I want to try The Tin Spoon.
+    entities: [{entity: tin_spoon, role: about}]
+    mentioned: "2026-09-01T13:00"
+    category: food/restaurants
+  - key: try_saffron
+    kind: intention
+    subtype: try
+    title: Try Saffron Street
+    text: I want to try Saffron Street.
+    entities: [{entity: saffron_street, role: about}]
+    mentioned: "2026-09-11T13:00"
+    category: food/restaurants
+
+  # ---------------------------------------------------------------- things and ideas
+  - key: mk_bag
+    kind: fact
+    title: MK bag serial number
+    text: The MK bag's serial number is 123ABC.
+    subject: mk_bag
+    predicate: serial_number
+    value: 123ABC
+    attributes: {serial: 123ABC}
+    entities: [{entity: mk_bag, role: about}, {entity: kabir, role: owner}]
+    mentioned: "2026-09-17T19:00"
+    category: shopping/gifts
+  - key: kabir_likes_mk
+    kind: preference
+    title: Kabir likes MK bags
+    text: Kabir likes MK bags.
+    subject: kabir
+    entities: [{entity: kabir, role: about}, {entity: mk_bag, role: about}]
+    mentioned: "2026-09-17T19:00"
+    category: shopping/gifts
+  - key: trading_idea
+    kind: note
+    subtype: idea
+    title: Momentum trading idea
+    text: "Trading idea: a momentum strategy on index funds, rebalanced monthly."
+    entities: [{entity: trading, role: about}]
+    mentioned: "2026-09-24T23:00"
+    category: ideas/trading
+  - key: trading_article
+    kind: resource
+    format: article
+    title: Why momentum strategies fail after costs
+    text: "Article: why most momentum trading strategies fail once costs are counted."
+    entities: [{entity: trading, role: about}]
+    mentioned: "2026-09-25T08:00"
+    category: ideas/trading
+
+  # ---------------------------------------------------------------- a reason
+  - key: gym_cancel
+    kind: episode
+    subtype: completion
+    title: Cancelled the FitZone membership
+    text: Cancelled my FitZone gym membership.
+    entities: [{entity: fitzone, role: about}]
+    occurred: {start: "2026-07-28", precision: day}
+    mentioned: "2026-07-28T19:00"
+    category: health/fitness
+  - key: gym_reason
+    kind: note
+    title: FitZone moved too far away
+    text: FitZone moved to the far side of the city, forty minutes from home each way.
+    entities: [{entity: fitzone, role: about}]
+    mentioned: "2026-07-28T19:00"
+    category: health/fitness
+
+  # ---------------------------------------------------------------- filed where the question won't look
+  - key: sleep_article
+    kind: note
+    title: Sleep article
+    text: "Read an article on sleep: keep screens out of the bedroom and no caffeine after 2 pm."
+    entities: [{entity: sleep, role: about}]
+    mentioned: "2026-09-26T22:30"
+    category: health
+  - key: quiet_hours_read
+    kind: episode
+    subtype: completion
+    title: Finished The Quiet Hours
+    text: Finished reading The Quiet Hours, the novel Nisha lent me.
+    entities: [{entity: quiet_hours, role: about}, {entity: nisha, role: by}]
+    occurred: {start: "2026-09-21", precision: day}
+    mentioned: "2026-09-21T22:00"
+    category: misc
+  - key: running_shoes
+    kind: episode
+    subtype: purchase
+    title: New running shoes
+    text: Bought new running shoes.
+    occurred: {start: "2026-08-28", precision: day}
+    mentioned: "2026-09-30T20:00"
+    category: shopping
+
+  # ---------------------------------------------------------------- sensitive
+  - key: therapist
+    kind: fact
+    sensitivity: sensitive
+    title: Sees a therapist on Thursdays
+    text: I see a therapist on Thursday evenings for anxiety.
+    subject: self
+    predicate: therapy
+    mentioned: "2026-08-20T21:00"
+    category: health
+
+  # ---------------------------------------------------------------- triggers
+  - key: ramen_japan
+    kind: intention
+    subtype: visit
+    title: Ichiban Ramen Bar for the Japan trip
+    text: Remember Ichiban Ramen Bar in Osaka for the Japan trip.
+    entities: [{entity: ichiban, role: about}, {entity: japan, role: part_of}]
+    mentioned: "2026-09-18T12:00"
+    category: travel
+    triggers:
+      - {"on": topic, cue: planning the Japan trip}
+
+  # ---------------------------------------------------------------- a pattern (fixture-only)
+  # Nothing writes patterns until S9; this one exists so situational expansion can be tested.
+  - key: pattern_film
+    kind: pattern
+    state: confirmed
+    title: A film after a weekend study session
+    text: Unwinds with a film after a weekend study session.
+    attributes: {fixture_only: "true"}
+    mentioned: "2026-09-30T09:00"
+    in_core: true
+
+links:
+  - {type: supersedes, src: live_pune, dst: live_bengaluru, valid_to: "2026-09-12"}
+  - {type: supersedes, src: done_thrillers, dst: likes_thrillers, valid_to: "2026-09-20"}
+  - {type: supersedes, src: dentist_new, dst: dentist_old, valid_to: "2026-09-30T10:00"}
+  - {type: fulfils, src: watched_severance, dst: watch_severance}
+  - {type: because, src: gym_cancel, dst: gym_reason}
+  - {type: part_of, src: run_sep_27, dst: goa_trip}
+
+turns:
+  - key: berlin
+    at: "2026-09-24T21:10"
+    user: If I get the Berlin offer I'll move.
+    assistant: >-
+      Good luck with the offer. I haven't saved a move to Berlin, because it depends on the
+      offer; tell me if it happens and I'll note it.
+  - key: books
+    at: "2026-09-29T19:00"
+    user: Can you suggest three books for a slow weekend? Nothing too heavy.
+    assistant: |-
+      Here are three light reads for a slow weekend:
+
+      1. Tea by the Window by Arun Mehra: gentle short stories set in a hill town.
+      2. The Map of Small Things by Clara Voss: a warm travel memoir about noticing little details.
+      3. Seven Easy Mornings by Tomas Reed: short essays on building calm routines.
+  - key: thanks
+    at: "2026-10-01T09:00"
+    user: Thanks for the dentist reminder!
+    assistant: You're welcome. Good luck at the dentist.
+
+# A second workspace with overlapping names, for the isolation tests.
+other:
+  entities:
+    - {key: nisha, kind: person, name: Nisha, labels: [friend]}
+    - {key: rohan, kind: person, name: Rohan}
+  relations:
+    - {src: rohan, relation: spouse_of, dst: nisha}
+  items:
+    - key: other_nisha_tulips
+      kind: preference
+      title: Nisha likes tulips
+      text: Nisha likes tulips.
+      subject: nisha
+      entities: [{entity: nisha, role: about}]
+      mentioned: "2026-09-10T10:00"
+    - key: other_rohan_chess
+      kind: preference
+      title: Rohan plays chess
+      text: Rohan loves playing chess.
+      subject: rohan
+      entities: [{entity: rohan, role: about}]
+      mentioned: "2026-09-11T10:00"
+    - key: other_live
+      kind: fact
+      title: Lives in Chennai
+      text: I live in Chennai.
+      subject: self
+      predicate: lives_in
+      mentioned: "2026-09-12T10:00"
+    - key: other_run
+      kind: episode
+      subtype: measurement
+      title: Morning run, 3 km
+      text: I ran 3 km.
+      attributes: {activity: run}
+      occurred: {start: "2026-09-15T06:00", precision: datetime}
+      mentioned: "2026-09-15T08:00"
+  turns:
+    - key: other_books
+      at: "2026-09-29T18:00"
+      user: Recommend me some books.
+      assistant: Try The Long Harbour by Ines Carro, a slow sea novel.

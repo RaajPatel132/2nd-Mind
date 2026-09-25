@@ -10,7 +10,8 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from dateutil.rrule import rrulestr
 
@@ -43,10 +44,59 @@ def next_occurrence(item: ItemContent, now: datetime) -> tuple[datetime, datetim
     return start, end
 
 
-def _length(item: ItemContent) -> timedelta:
-    if item.occurred_end and item.occurred_start and not item.rrule:
-        return item.occurred_end - item.occurred_start
-    match item.time_precision:
+def occurrences(
+    item: ItemContent,
+    start: datetime | None,
+    end: datetime | None,
+    timezone: str,
+    *,
+    limit: int = 100,
+) -> list[tuple[datetime, datetime]]:
+    """The routine's occurrences overlapping ``[start, end)``, as UTC ``(start, end)`` pairs."""
+    if not item.rrule or item.occurred_start is None:
+        return []
+    return expand_rrule(
+        item.rrule,
+        item.occurred_start,
+        _length(item),
+        start=start,
+        end=end,
+        timezone=timezone,
+        limit=limit,
+    )
+
+
+def expand_rrule(
+    rrule: str,
+    first: datetime,
+    length: timedelta,
+    *,
+    start: datetime | None,
+    end: datetime | None,
+    timezone: str,
+    limit: int = 100,
+) -> list[tuple[datetime, datetime]]:
+    """Occurrences of an RFC 5545 rule overlapping ``[start, end)``. The rule is expanded in the
+    workspace's local time (``BYHOUR=7`` is 7 am there, across DST changes) from ``first``, the
+    first occurrence. An unbounded window is capped at ``limit``."""
+    tz = ZoneInfo(timezone)
+    local_first = first.astimezone(tz).replace(tzinfo=None)
+    rule = rrulestr(rrule, dtstart=local_first)
+    lo = (start - length) if start is not None else first
+    cursor = rule.after(lo.astimezone(tz).replace(tzinfo=None), inc=True)
+    out: list[tuple[datetime, datetime]] = []
+    while cursor is not None and len(out) < limit:
+        begins = cursor.replace(tzinfo=tz).astimezone(UTC)
+        if end is not None and begins >= end:
+            break
+        if start is None or begins + length > start:
+            out.append((begins, begins + length))
+        cursor = rule.after(cursor, inc=False)
+    return out
+
+
+def occurrence_length(precision: TimePrecision | None) -> timedelta:
+    match precision:
         case TimePrecision.DATETIME:
             return timedelta(hours=1)
         case TimePrecision.MONTH:
@@ -55,6 +105,12 @@ def _length(item: ItemContent) -> timedelta:
             return timedelta(days=366)
         case _:
             return timedelta(days=1)
+
+
+def _length(item: ItemContent) -> timedelta:
+    if item.occurred_end and item.occurred_start and not item.rrule:
+        return item.occurred_end - item.occurred_start
+    return occurrence_length(item.time_precision)
 
 
 def quick_layer(

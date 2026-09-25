@@ -36,7 +36,15 @@ from secondmind.memory.ops import (
     load_op,
     op_label,
 )
-from secondmind.memory.quick import QuickDecision, next_occurrence, quick_layer
+from secondmind.memory.quick import (
+    FREQUENT_REASON,
+    QuickDecision,
+    expand_rrule,
+    next_occurrence,
+    occurrence_length,
+    occurrences,
+    quick_layer,
+)
 from secondmind.memory.records import (
     ENTITY_FIELDS,
     ITEM_FIELDS,
@@ -86,6 +94,7 @@ __all__ = [
     "APP_GROUP_ROLE",
     "CORE_BUDGET_RULE",
     "ENTITY_FIELDS",
+    "FREQUENT_REASON",
     "ITEM_FIELDS",
     "RELATIVE_WORDS",
     "RLS_PREDICATE",
@@ -146,6 +155,7 @@ __all__ = [
     "content_hash",
     "dump_op",
     "estimate_tokens",
+    "expand_rrule",
     "format_day",
     "format_short",
     "format_when",
@@ -154,6 +164,8 @@ __all__ = [
     "load_op",
     "local",
     "next_occurrence",
+    "occurrence_length",
+    "occurrences",
     "op_label",
     "part_of_day",
     "past_tense",

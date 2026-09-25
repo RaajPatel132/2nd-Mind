@@ -61,9 +61,24 @@ class Database:
         return self._engine
 
     @asynccontextmanager
-    async def workspace(self, scope: WorkspaceScope) -> AsyncIterator[AsyncSession]:
-        """A transaction bound to one workspace; commits on success, rolls back on error."""
+    async def workspace(
+        self,
+        scope: WorkspaceScope,
+        *,
+        read_only: bool = False,
+        timeout_ms: int | None = None,
+    ) -> AsyncIterator[AsyncSession]:
+        """A transaction bound to one workspace; commits on success, rolls back on error.
+        ``read_only`` makes Postgres refuse any write in it (recall's tools); ``timeout_ms``
+        cancels a statement that runs longer."""
         async with self._sessions() as session, session.begin():
+            if read_only:
+                await session.execute(text("SET TRANSACTION READ ONLY"))
+            if timeout_ms is not None:
+                await session.execute(
+                    text("SELECT set_config('statement_timeout', :ms, true)"),
+                    {"ms": str(int(timeout_ms))},
+                )
             await session.execute(
                 text("SELECT set_config(:name, :value, true)"),
                 {"name": WORKSPACE_SETTING, "value": str(scope.workspace_id)},
