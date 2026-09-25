@@ -105,6 +105,7 @@ test('the avatar popover shows the dev identity, and sign out ends the session',
 })
 
 test('scrolling up stops the follow and shows "Jump to latest", which brings you back', async ({ page }, testInfo) => {
+  test.setTimeout(180_000) // three saves on a shared local VM
   await freshUser(page, testInfo)
   for (const m of ['I live in Bengaluru', "I'm vegetarian", 'I moved to Pune']) await send(page, m)
   const atBottom = () => page.evaluate(() => document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 48)
