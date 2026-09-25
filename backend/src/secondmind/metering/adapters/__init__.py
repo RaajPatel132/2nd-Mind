@@ -1,11 +1,13 @@
 """SQL usage ledger."""
 
 import uuid
+from collections.abc import Sequence
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from secondmind.core import new_id
+from secondmind.core import WorkspaceScope, new_id
+from secondmind.memory.adapters import Database
 from secondmind.metering import LedgerEntry
 from secondmind.metering.adapters.tables import UsageLedgerRow
 
@@ -44,4 +46,36 @@ async def ledger_tokens_for_turn(session: AsyncSession, turn_id: uuid.UUID) -> i
     return int((await session.execute(stmt)).scalar_one())
 
 
-__all__ = ["UsageLedgerRow", "insert_ledger_entry", "ledger_tokens_for_turn"]
+_TOKENS = func.coalesce(
+    func.sum(
+        UsageLedgerRow.input_tokens
+        + UsageLedgerRow.cached_input_tokens
+        + UsageLedgerRow.output_tokens
+    ),
+    0,
+)
+
+
+class SqlLedgerReader:
+    """Sums a user's ledger one workspace at a time: the ledger is under workspace RLS, so each
+    sum runs in that workspace's scope and counts only rows charged to this user."""
+
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    async def tokens_used(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> int:
+        total = 0
+        for workspace_id in workspace_ids:
+            scope = WorkspaceScope(workspace_id=workspace_id, user_id=user_id)
+            async with self._db.workspace(scope) as session:
+                stmt = select(_TOKENS).where(UsageLedgerRow.owner_user_id == user_id)
+                total += int((await session.execute(stmt)).scalar_one())
+        return total
+
+
+__all__ = [
+    "SqlLedgerReader",
+    "UsageLedgerRow",
+    "insert_ledger_entry",
+    "ledger_tokens_for_turn",
+]

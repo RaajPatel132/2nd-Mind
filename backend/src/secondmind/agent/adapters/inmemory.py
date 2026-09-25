@@ -133,3 +133,14 @@ class InMemoryTurns:
 
     def store(self, scope: WorkspaceScope) -> InMemoryTurnStore:
         return InMemoryTurnStore(self, scope)
+
+    async def tokens_used(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> int:
+        """A ``LedgerReader``: the ledger charged in these workspaces (the tests' users own
+        their workspaces)."""
+        del user_id
+        wanted = set(workspace_ids)
+        return sum(
+            e.input_tokens + e.cached_input_tokens + e.output_tokens
+            for e in self.ledger
+            if e.workspace_id in wanted
+        )
