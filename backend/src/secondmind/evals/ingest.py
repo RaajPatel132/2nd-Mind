@@ -9,6 +9,7 @@ setup still replays, so every case starts from the same state) and a per-field s
 printed, with p50/p95 latency and cost.
 """
 
+import os
 import statistics
 import time
 import uuid
@@ -52,6 +53,7 @@ from secondmind.memory import (
 from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer
 from secondmind.providers import FakeProvider, FakeScript, ModelRouter, ResiliencePolicy
+from secondmind.providers.adapters import build_adapter
 
 CASES_DIR = DEFAULT_RESOURCES_DIR / "evals" / "cases" / "ingest"
 FIELDS = ("kind", "state", "modality", "date", "entity", "category", "layer", "reconcile")
@@ -144,6 +146,22 @@ def fake_router(spec: TurnSpec, resources: Path = DEFAULT_RESOURCES_DIR) -> Mode
         prices=_prices(resources),
         adapters={"fake": fake},
         policy=ResiliencePolicy(max_retries=0),
+    )
+
+
+def live_router(
+    environ: Mapping[str, str] | None = None, resources: Path = DEFAULT_RESOURCES_DIR
+) -> ModelRouter:
+    """Every step on its configured real provider (``MODEL_<STEP>`` overrides apply). Raises
+    ``ConfigError`` naming the missing key when a provider has no credentials."""
+    env = os.environ if environ is None else environ
+    routing = resolve_routing(read_routing_file(resources / "config" / "models.yaml"), env, "live")
+    used = sorted({ref.provider for ref in routing.refs()})
+    return ModelRouter(
+        routing=routing,
+        prices=_prices(resources),
+        adapters={name: build_adapter(routing.providers[name], env) for name in used},
+        policy=ResiliencePolicy(max_retries=2),
     )
 
 

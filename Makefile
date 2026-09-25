@@ -80,6 +80,14 @@ test-int: ## Backend integration tests (testcontainers Postgres + Redis; needs D
 test-live: ## Provider contract tests against real APIs (needs keys)
 	$(BACKEND_RUN) pytest -m live
 
+.PHONY: eval-ingest
+eval-ingest: ## Ingestion golden cases on replayed model outputs, with the score table
+	$(BACKEND_RUN) python -m secondmind.evals ingest
+
+.PHONY: eval-ingest-live
+eval-ingest-live: ## Ingestion golden cases on the configured real providers (needs keys; costs money)
+	$(BACKEND_RUN) python -m secondmind.evals ingest --live
+
 .PHONY: web-check
 web-check: ## Frontend lint, typecheck and build
 	$(WEB_RUN) lint
