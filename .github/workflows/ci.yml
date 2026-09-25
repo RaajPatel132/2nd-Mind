@@ -96,6 +96,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
+      - name: design system (tokens, contrast, bundle budget)
+        run: npm run check:design
       - name: dependency audit
         run: npm audit --audit-level=high
 

@@ -89,10 +89,11 @@ eval-ingest-live: ## Ingestion golden cases on the configured real providers (ne
 	$(BACKEND_RUN) python -m secondmind.evals ingest --live
 
 .PHONY: web-check
-web-check: ## Frontend lint, typecheck and build
+web-check: ## Frontend lint, typecheck, build and the design-system check (tokens, contrast, budget)
 	$(WEB_RUN) lint
 	$(WEB_RUN) typecheck
 	$(WEB_RUN) build
+	$(WEB_RUN) check:design
 
 .PHONY: secrets
 secrets: ## gitleaks + hygiene hooks over the whole repo
