@@ -1,8 +1,11 @@
-"""The real composition root against real Postgres and Redis: readiness, and one streamed
-turn persisted through RLS-scoped stores with its usage-ledger row."""
+"""The real composition root against real Postgres and Redis: readiness, one streamed turn
+persisted through RLS-scoped stores with its usage-ledger rows, and save → supersede → undo
+through /v1 (S2.12) on the offline fake brain."""
 
 import json
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from typing import Any
 
 import httpx
 import pytest
@@ -17,15 +20,15 @@ from tests.integration.conftest import PgUrls
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture
-async def client(pg_urls: PgUrls, redis_url: str) -> AsyncIterator[httpx.AsyncClient]:
+@asynccontextmanager
+async def _client(pg_urls: PgUrls, redis_url: str, email: str) -> AsyncIterator[httpx.AsyncClient]:
     env = BASE_ENV | {
         "DATABASE_URL": pg_urls.app,
         "REDIS_URL": redis_url,
         "MODEL_PROVIDER_MODE": "fake",
         "FAKE_PROVIDER_TOKEN_DELAY_MS": "0",
         "DEV_AUTH": "true",
-        "DEV_USER_EMAIL": "stack-test@example.test",
+        "DEV_USER_EMAIL": email,
     }
     services = await build_services(load_app_config(env))
     app = create_app(services=services)
@@ -36,6 +39,27 @@ async def client(pg_urls: PgUrls, redis_url: str) -> AsyncIterator[httpx.AsyncCl
             yield c
     finally:
         await services.aclose()
+
+
+@pytest.fixture
+async def client(pg_urls: PgUrls, redis_url: str) -> AsyncIterator[httpx.AsyncClient]:
+    async with _client(pg_urls, redis_url, "stack-test@example.test") as c:
+        yield c
+
+
+async def _turn(client: httpx.AsyncClient, ws: str, message: str) -> str:
+    response = await client.post(f"/v1/workspaces/{ws}/turns", json={"message": message})
+    blocks = [b for b in response.text.strip().split("\n\n") if b.startswith("event:")]
+    last = dict(line.split(": ", 1) for line in blocks[-1].splitlines())
+    assert last["event"] == "turn.completed", response.text
+    return str(json.loads(last["data"])["turn_id"])
+
+
+async def _diff(client: httpx.AsyncClient, turn_id: str) -> dict[str, Any]:
+    events = (await client.get(f"/v1/turns/{turn_id}/events")).json()["events"]
+    diffs = [e["event"] for e in events if e["event"]["type"] == "memory_diff"]
+    assert len(diffs) == 1, [e["event"]["type"] for e in events]
+    return dict(diffs[0])
 
 
 async def test_readiness_checks_real_dependencies(client: httpx.AsyncClient) -> None:
@@ -49,26 +73,50 @@ async def test_turn_is_persisted_with_events_and_ledger(
     client: httpx.AsyncClient, owner_db: Database
 ) -> None:
     ws = (await client.post("/v1/auth/dev-login")).json()["workspaces"][0]["id"]
-    response = await client.post(f"/v1/workspaces/{ws}/turns", json={"message": "hello db"})
-    blocks = [b for b in response.text.strip().split("\n\n") if b.startswith("event:")]
-    last = dict(line.split(": ", 1) for line in blocks[-1].splitlines())
-    assert last["event"] == "turn.completed"
-    turn_id = json.loads(last["data"])["turn_id"]
+    turn_id = await _turn(client, ws, "hello db")
 
     events = (await client.get(f"/v1/turns/{turn_id}/events")).json()["events"]
-    assert [e["event"]["type"] for e in events] == ["intent", "model_call"]
+    assert [e["event"]["type"] for e in events] == ["model_call", "intent", "model_call"]
 
     async with owner_db.identity() as session:
         ledger = (
             await session.execute(
                 text(
-                    "SELECT l.provider, l.input_tokens + l.output_tokens, w.owner_user_id = "
-                    "l.owner_user_id FROM usage_ledger l JOIN workspaces w "
-                    "ON w.id = l.workspace_id WHERE l.turn_id = :t"
+                    "SELECT l.step, l.provider, l.input_tokens + l.output_tokens, "
+                    "w.owner_user_id = l.owner_user_id FROM usage_ledger l JOIN workspaces w "
+                    "ON w.id = l.workspace_id WHERE l.turn_id = :t ORDER BY l.step"
                 ),
                 {"t": turn_id},
             )
-        ).one()
-    assert ledger[0] == "fake"
-    assert ledger[1] > 0
-    assert ledger[2] is True
+        ).all()
+    assert [row[0] for row in ledger] == ["answer", "intent"]
+    for _, provider, tokens, charged_to_owner in ledger:
+        assert provider == "fake"
+        assert tokens > 0
+        assert charged_to_owner is True
+
+
+async def test_save_then_supersede_then_undo_through_the_api(
+    pg_urls: PgUrls, redis_url: str
+) -> None:
+    async with _client(pg_urls, redis_url, "supersede-test@example.test") as client:
+        ws = (await client.post("/v1/auth/dev-login")).json()["workspaces"][0]["id"]
+
+        saved = await _turn(client, ws, "I live in Bengaluru")
+        added = [e for e in (await _diff(client, saved))["entries"] if e["op"] == "added"]
+        bengaluru = next(e["item_id"] for e in added if e["item_id"] and "Bengaluru" in e["title"])
+
+        moved = await _turn(client, ws, "I moved to Pune")
+        entries = (await _diff(client, moved))["entries"]
+        assert "superseded" in [e["op"] for e in entries]
+        old = (await client.get(f"/v1/items/{bengaluru}")).json()["item"]
+        assert old["state"] == "superseded"
+        assert old["valid_to"] is not None
+
+        undo = await client.post(f"/v1/turns/{moved}/undo")
+        assert undo.status_code == 200, undo.text
+        body = undo.json()
+        assert (body["kind"], body["parent_turn_id"]) == ("undo", moved)
+        assert (await _diff(client, body["id"]))["undo_of"] == moved
+        old = (await client.get(f"/v1/items/{bengaluru}")).json()["item"]
+        assert (old["state"], old["valid_to"]) == ("current", None)

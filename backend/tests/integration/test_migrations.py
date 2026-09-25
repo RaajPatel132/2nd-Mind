@@ -1,4 +1,5 @@
-"""S1.6: migrations apply cleanly and match the ORM models; the app role cannot bypass RLS."""
+"""S1.6 / S2.1: migrations apply cleanly and match the ORM models; the app role cannot bypass
+RLS; every workspace gets its self entity."""
 
 import asyncio
 from pathlib import Path
@@ -7,9 +8,12 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from secondmind.memory.adapters import Database
-from tests.integration.conftest import PgUrls
+from secondmind.core import new_id
+from secondmind.memory.adapters import SCHEMA_HEAD, Database
+from tests.integration.conftest import PgUrls, run_migrations
 
 pytestmark = pytest.mark.integration
 
@@ -17,7 +21,7 @@ BACKEND = Path(__file__).resolve().parents[2]
 
 
 async def test_schema_is_at_head(app_db: Database) -> None:
-    assert await app_db.schema_revision() == "0001"
+    assert await app_db.schema_revision() == SCHEMA_HEAD == "0002"
 
 
 async def test_models_match_migrations(pg_urls: PgUrls) -> None:
@@ -55,7 +59,84 @@ async def test_every_workspace_owned_table_has_rls_and_a_policy(owner_db: Databa
             )
         ).all()
     tables = {r[0]: (r[1], r[2]) for r in rows}
-    assert set(tables) == {"turns", "turn_events", "usage_ledger"}
+    assert set(tables) == {
+        "turns",
+        "turn_events",
+        "usage_ledger",
+        "entities",
+        "categories",
+        "vocab_terms",
+        "memory_items",
+        "memory_entities",
+        "memory_links",
+        "entity_relations",
+        "memory_keys",
+        "triggers",
+        "item_versions",
+        "write_log",
+        "held_writes",
+    }
     for name, (rls_on, policies) in tables.items():
         assert rls_on, f"{name} has workspace_id but RLS is off"
         assert policies >= 1, f"{name} has no RLS policy"
+
+
+async def test_every_new_workspace_gets_exactly_one_self_entity(owner_db: Database) -> None:
+    async with owner_db.identity() as session:
+        missing = (
+            await session.execute(
+                text(
+                    "SELECT count(*) FROM workspaces w WHERE (SELECT count(*) FROM entities e "
+                    "WHERE e.workspace_id = w.id AND e.kind = 'self') <> 1"
+                )
+            )
+        ).scalar_one()
+    assert missing == 0
+
+
+async def test_0002_backfills_self_entities_and_downgrades_cleanly(pg_urls: PgUrls) -> None:
+    """A workspace created before 0002 gets its self entity from the backfill; 0002 goes down
+    and up again. Runs in a scratch database so the shared one is untouched."""
+    owner = make_url(pg_urls.owner)
+    admin = create_async_engine(owner, isolation_level="AUTOCOMMIT")
+    scratch_name = f"scratch_{new_id().hex[:12]}"
+    async with admin.connect() as conn:
+        await conn.execute(text(f'CREATE DATABASE "{scratch_name}"'))
+    scratch = owner.set(database=scratch_name).render_as_string(hide_password=False)
+    engine = create_async_engine(scratch)
+    try:
+        await asyncio.to_thread(run_migrations, scratch, "0001")
+        user_id, ws_id = new_id(), new_id()
+        async with engine.begin() as conn:
+            await conn.execute(text("INSERT INTO users (id) VALUES (:u)"), {"u": user_id})
+            await conn.execute(
+                text(
+                    "INSERT INTO workspaces (id, owner_user_id, kind, timezone) "
+                    "VALUES (:w, :u, 'private', 'UTC')"
+                ),
+                {"w": ws_id, "u": user_id},
+            )
+
+        await asyncio.to_thread(run_migrations, scratch, "head")
+        async with engine.connect() as conn:
+            selves = (
+                (
+                    await conn.execute(
+                        text("SELECT name FROM entities WHERE workspace_id = :w AND kind = 'self'"),
+                        {"w": ws_id},
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        assert selves == ["me"]
+
+        cfg = Config(str(BACKEND / "alembic.ini"))
+        cfg.attributes["url"] = scratch
+        await asyncio.to_thread(command.downgrade, cfg, "0001")
+        await asyncio.to_thread(run_migrations, scratch, "head")
+    finally:
+        await engine.dispose()
+        async with admin.connect() as conn:
+            await conn.execute(text(f'DROP DATABASE IF EXISTS "{scratch_name}" WITH (FORCE)'))
+        await admin.dispose()
