@@ -4,6 +4,7 @@ tables), plus an in-memory store with the same contract for tests and evals."""
 from secondmind.core import WorkspaceScope
 from secondmind.memory.adapters.bootstrap import ensure_app_role
 from secondmind.memory.adapters.db import NAMING, SCHEMA_HEAD, Base, Database, RoleCheck
+from secondmind.memory.adapters.dev_reset import reset_workspace
 from secondmind.memory.adapters.inmemory import InjectedFaultError, InMemoryMemory
 from secondmind.memory.adapters.store import SqlMemoryStore, embedding_dimensions
 from secondmind.memory.adapters.tables import (
@@ -58,5 +59,6 @@ __all__ = [
     "Vector",
     "embedding_dimensions",
     "ensure_app_role",
+    "reset_workspace",
     "sql_memory",
 ]
