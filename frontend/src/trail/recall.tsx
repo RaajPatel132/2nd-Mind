@@ -282,8 +282,9 @@ export function Candidates({ list }: { list: RetrievalCandidate[] }) {
           <li
             key={`${c.item_id ?? c.turn_id ?? c.title}-${String(i)}`}
             data-testid="candidate"
-            data-selected={c.selected}
-            data-soft-only={c.soft_only}
+            data-selected={String(c.selected)}
+            data-soft-only={String(c.soft_only)}
+            data-demoted={String(c.demoted)}
             className="rounded-sm bg-surface-2 p-3"
           >
             <p
@@ -295,8 +296,10 @@ export function Candidates({ list }: { list: RetrievalCandidate[] }) {
               {truncate(c.title, 60)}
             </p>
             <p className="m-0 mt-1 font-machine text-mono-sm text-fg-3">
-              {c.kind ?? "turn"} · {c.state ?? "—"} · rrf {score(c.fused_score)}{" "}
-              · rerank {score(c.rerank_score)} · {status(c)}
+              {c.kind ?? "turn"} · {c.state ?? "—"} · {c.layer} · lex{" "}
+              {score(c.lexical_score)} · dense {score(c.dense_score)} · rrf{" "}
+              {score(c.fused_score)} · rerank {score(c.rerank_score)} ·{" "}
+              {status(c)}
             </p>
             <div className="mt-1.5">
               <FoundBy c={c} />
