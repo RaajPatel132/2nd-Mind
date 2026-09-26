@@ -96,6 +96,10 @@ eval-recall: ## Recall golden cases on replayed plans and rerank scores (Postgre
 eval-recall-live: ## Recall golden cases on the configured real providers, with the baseline table (needs keys; costs money)
 	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and live" -s -q
 
+.PHONY: bench-vectors
+bench-vectors: ## Vector storage bench under RLS (throwaway pgvector container; real embeddings with OPENAI_API_KEY)
+	$(BACKEND_RUN) python tools/bench_vectors.py
+
 .PHONY: seed-dev
 seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
 	$(COMPOSE) exec api python -m secondmind.evals seed-dev --web-url $(WEB_URL)
