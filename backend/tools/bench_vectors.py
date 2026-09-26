@@ -18,6 +18,7 @@ report says which. Everything runs in a throwaway pgvector container.
 
 import argparse
 import asyncio
+import io
 import math
 import os
 import random
@@ -125,10 +126,10 @@ async def load(conn: asyncpg.Connection, vectors: Vectors) -> dict[str, uuid.UUI
     for ws, rows in plan:
         for n in chunks(rows, 1000):
             vs = await vectors.batch(n)
-            await conn.copy_records_to_table(
-                "keys",
-                records=[(ws, literal(v)) for v in vs],
-                columns=["workspace_id", "embedding"],
+            # CSV text: asyncpg's binary COPY has no encoder for pgvector's types.
+            csv = "".join(f'{ws},"{literal(v)}"\n' for v in vs).encode()
+            await conn.copy_to_table(
+                "keys", source=io.BytesIO(csv), columns=["workspace_id", "embedding"], format="csv"
             )
             done += n
             if vectors.real and vectors.cost > BUDGET_USD:
@@ -144,7 +145,9 @@ async def load(conn: asyncpg.Connection, vectors: Vectors) -> dict[str, uuid.UUI
 
 async def run_queries(
     conn: asyncpg.Connection, ws: uuid.UUID, queries: Sequence[str], column: str, cast: str
-) -> tuple[list[float], list[list[int]]]:
+) -> tuple[list[float], list[list[int]], str]:
+    """Latencies, top-10 ids per query, and the plan Postgres chose (``hnsw`` or ``exact``: under
+    RLS the planner may keep the workspace btree and sort instead of using the vector index)."""
     times: list[float] = []
     results: list[list[int]] = []
     async with conn.transaction():
@@ -153,6 +156,8 @@ async def run_queries(
         await conn.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
         await conn.execute("SET LOCAL hnsw.ef_search = 40")
         sql = f"SELECT id FROM keys ORDER BY {column} <=> $1::{cast} LIMIT 10"
+        explained = await conn.fetchval(f"EXPLAIN (FORMAT JSON) {sql}", queries[0])
+        plan = "hnsw" if f"idx_{column}" in str(explained) else "exact"
         stmt = await conn.prepare(sql)
         for q in queries[:3]:  # warm-up
             await stmt.fetch(q)
@@ -161,7 +166,7 @@ async def run_queries(
             rows = await stmt.fetch(q)
             times.append((time.perf_counter() - t0) * 1000)
             results.append([r["id"] for r in rows])
-    return times, results
+    return times, results, plan
 
 
 def pct(values: Sequence[float], q: float) -> float:
@@ -173,19 +178,24 @@ async def main(real: bool) -> int:
     vectors = Vectors(real=real)
     mode = "real OpenAI text-embedding-3-small embeddings" if real else "clustered random vectors"
     sys.stderr.write(f"bench-vectors: {mode}\n")
-    with PostgresContainer("pgvector/pgvector:pg16", driver=None) as pg:
+    # Parallel HNSW builds use shared memory up to maintenance_work_mem; Docker's default
+    # /dev/shm is 64 MB.
+    container = PostgresContainer("pgvector/pgvector:pg16", driver=None).with_kwargs(shm_size="2g")
+    with container as pg:
         url = pg.get_connection_url().replace("postgresql+psycopg2://", "postgresql://")
         conn = await asyncpg.connect(url)
         await conn.execute("SET maintenance_work_mem = '1GB'")
         spaces = await load(conn, vectors)
         queries_v = [literal(v) for v in await vectors.batch(QUERIES)]
         halves = [literal([float(x) for x in q.strip("[]").split(",")][:768]) for q in queries_v]
-        rows: list[tuple[str, int, float, float, float, float, float]] = []
+        rows: list[tuple[str, int, str, float, float, float, float, float]] = []
         exact: dict[int, list[list[int]]] = {}
         for n in TARGETS:
-            t, r = await run_queries(conn, spaces[f"target_{n}"], queries_v, "embedding", "vector")
+            t, r, plan = await run_queries(
+                conn, spaces[f"target_{n}"], queries_v, "embedding", "vector"
+            )
             exact[n] = r
-            rows.append(("exact", n, pct(t, 0.5), pct(t, 0.95), 1.0, 0.0, 0.0))
+            rows.append(("exact", n, plan, pct(t, 0.5), pct(t, 0.95), 1.0, 0.0, 0.0))
         variants = [
             ("hnsw vector(1536)", "embedding", "vector", "vector_cosine_ops", queries_v),
             ("hnsw halfvec(1536)", "half", "halfvec", "halfvec_cosine_ops", queries_v),
@@ -197,23 +207,23 @@ async def main(real: bool) -> int:
             build = time.perf_counter() - t0
             size = await conn.fetchval(f"SELECT pg_relation_size('idx_{column}')") / 1024**2
             for n in TARGETS:
-                t, r = await run_queries(conn, spaces[f"target_{n}"], qs, column, cast)
+                t, r, plan = await run_queries(conn, spaces[f"target_{n}"], qs, column, cast)
                 recall = statistics.mean(
                     len(set(a) & set(b)) / max(1, len(b)) for a, b in zip(r, exact[n], strict=True)
                 )
-                rows.append((name, n, pct(t, 0.5), pct(t, 0.95), recall, build, size))
+                rows.append((name, n, plan, pct(t, 0.5), pct(t, 0.95), recall, build, size))
             await conn.execute(f"DROP INDEX idx_{column}")
         table_mb = await conn.fetchval("SELECT pg_total_relation_size('keys')") / 1024**2
         total = await conn.fetchval("SELECT count(*) FROM keys")
         await conn.close()
     print(f"\nbench-vectors · {mode} · {total:,} keys in {len(TARGETS) + OTHERS} workspaces")
     print(f"(table with all columns {table_mb:,.0f} MB; embeddings cost ${vectors.cost:.4f})\n")
-    print("| variant | items | p50 ms | p95 ms | recall@10 | build s | index MB |")
-    print("|---|---:|---:|---:|---:|---:|---:|")
-    for name, n, p50, p95, recall, build, size in rows:
+    print("| variant | items | plan | p50 ms | p95 ms | recall@10 | build s | index MB |")
+    print("|---|---:|---|---:|---:|---:|---:|---:|")
+    for name, n, plan, p50, p95, recall, build, size in rows:
         b = f"{build:.1f}" if build else "—"
         s = f"{size:,.0f}" if size else "—"
-        print(f"| {name} | {n:,} | {p50:.2f} | {p95:.2f} | {recall:.3f} | {b} | {s} |")
+        print(f"| {name} | {n:,} | {plan} | {p50:.2f} | {p95:.2f} | {recall:.3f} | {b} | {s} |")
     return 0
 
 
