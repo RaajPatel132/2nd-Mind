@@ -87,6 +87,15 @@ class Reminder(_Out):
     lead: str | None
 
 
+class MomentTrigger(_Out):
+    """A reminder for a moment rather than a time (FR-6.9): a person comes up, or a topic or
+    situation does."""
+
+    on: Literal["person", "topic", "situation"]
+    entity: str | None
+    cue: str | None
+
+
 class ProposedMemory(_Out):
     ref: str
     kind: KindLabel
@@ -105,6 +114,7 @@ class ProposedMemory(_Out):
     entities: list[EntityRef]
     times: list[TimeExpression]
     reminder: Reminder | None
+    trigger: MomentTrigger | None
     modality: ModalityLabel
     sentiment: int | None
     rating: Rating | None

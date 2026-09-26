@@ -1,0 +1,31 @@
+# S3.10. All data in these cases is synthetic.
+id: 27-person-trigger
+title: "A reminder for when a person comes up: a task for Nisha with an on-person trigger"
+now: "2026-10-01T21:00"
+timezone: Asia/Kolkata
+input: Next time I talk to Nisha, ask about her interview.
+model:
+  intent: {intent: save, confidence: 0.95, reason: "A reminder tied to a person."}
+  extract:
+    entities:
+      - {id: e1, mention: Nisha, name: Nisha, kind: person}
+    memories:
+      - ref: m1
+        kind: task
+        title: Ask Nisha about her interview
+        text: Ask Nisha about her interview.
+        category: people
+        entities: [{entity: e1, role: for}]
+        trigger: {"on": person, entity: e1, cue: null}
+        importance: 3
+        layer: quick
+        layer_rationale: Waiting for the next time Nisha comes up.
+        rationale: A task to do when the user next talks to Nisha.
+expect:
+  memories:
+    - match: interview
+      kind: task
+      state: open
+      entities: ["Nisha:for"]
+      reconcile: new
+  triggers: [{match: interview, "on": person, spec: {name: Nisha}}]

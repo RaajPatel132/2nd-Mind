@@ -19,7 +19,7 @@ PRICE = ModelPrice(input=Decimal(1), cached_input=Decimal("0.1"), output=Decimal
 # The prompt each step renders (as in config/models.yaml).
 PROMPTS_BY_STEP: dict[Step, str] = {
     Step.INTENT: "intent@1",
-    Step.EXTRACT: "extract@1",
+    Step.EXTRACT: "extract@2",
     Step.ENRICH: "enrich@1",
     Step.RECONCILE: "reconcile@1",
     Step.RESOLVE: "resolve@1",

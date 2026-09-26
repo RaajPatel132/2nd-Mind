@@ -431,3 +431,40 @@ async def test_fusion_rewards_agreement_and_demotes_history() -> None:
     assert [(c.item_id, c.demoted) for c in demoted] == [(jazz, False), (pune, True)]
     kept = fuse(channels, items, shape=Shape.HISTORY, rrf_k=60, history_demotion=0.5)
     assert [c.item_id for c in kept] == [pune, jazz]
+
+
+SITUATIONAL = "I'm free this weekend, what should I learn?"
+PATTERN = "Unwinds with a film after a weekend study session"
+
+
+def situational_plan() -> FakeOutcome:
+    return plan(
+        {
+            "question": SITUATIONAL,
+            "shape": "situational",
+            "filters": {"kinds": ["intention"]},
+            "times": [{"expression": "this weekend", "clock": "occurred", "direction": "future"}],
+        },
+        {
+            "question": "Which shows do I want to watch?",
+            "shape": "list",
+            "filters": {"kinds": ["intention"], "subtypes": ["watch"]},
+            "expanded_from": PATTERN,
+        },
+    )
+
+
+async def test_situational_adds_what_is_booked_and_the_pattern_only_from_core() -> None:
+    w = await world()
+    ran = await run_recall(
+        w, SITUATIONAL, fake(("plan", situational_plan())), core=f"## Core memory\n- {PATTERN}"
+    )
+    subs = ran.events.of("retrieval")[0].sub_queries
+    expansions = [(s.shape.value, s.expansion.source) for s in subs if s.expansion]
+    assert ("list", "planner") in expansions  # the pattern's watch intentions
+    assert any(source == "code" for _, source in expansions)  # what's booked that weekend
+
+    ran = await run_recall(w, SITUATIONAL, fake(("plan", situational_plan())))
+    event = ran.events.of("retrieval")[0]
+    assert not any(s.expansion and s.expansion.source == "planner" for s in event.sub_queries)
+    assert "not from core" in event.plan_note

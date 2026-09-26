@@ -94,6 +94,7 @@ from secondmind.memory import (
     TriggerContent,
     UpdateItem,
     WriterTurn,
+    content_hash,
     format_when,
     has_relative_time,
     quick_layer,
@@ -496,6 +497,7 @@ class IngestionPipeline:
             **fields,
         )
         triggers = self._triggers(ctx, m, content, resolved, notes)
+        triggers += self._moment_trigger(m, entities, notes)
         quick = quick_layer(
             content,
             now=ctx.now.instant,
@@ -563,6 +565,34 @@ class IngestionPipeline:
             NewTrigger(
                 trigger_id=new_id(),
                 trigger=TriggerContent(on=TriggerOn.TIME, spec=spec, fires_at=fires),
+            )
+        ]
+
+    @staticmethod
+    def _moment_trigger(
+        m: ProposedMemory, entities: dict[str, EntityPlan], notes: _Notes
+    ) -> list[NewTrigger]:
+        """``on: person`` (the entity is matched every turn) or ``on: topic``/``situation``
+        (the cue is embedded as a key and compared with each message) (S3.10)."""
+        t = m.trigger
+        if t is None:
+            return []
+        if t.on == "person":
+            plan = entities.get(t.entity or "")
+            if plan is None or plan.kind is not EntityKind.PERSON:
+                notes.unresolved.append("a reminder for a person I couldn't tell")
+                return []
+            spec: dict[str, Any] = {"entity_id": str(plan.entity_id), "name": plan.name}
+        else:
+            cue = " ".join((t.cue or "").split())
+            if not cue:
+                notes.unresolved.append(f"a reminder for a {t.on} with nothing to recognise it by")
+                return []
+            spec = {"cue": cue, "cue_hash": content_hash(cue)}
+        return [
+            NewTrigger(
+                trigger_id=new_id(),
+                trigger=TriggerContent(on=TriggerOn(t.on), spec=spec, fires_at=None),
             )
         ]
 
@@ -686,6 +716,9 @@ class IngestionPipeline:
                 extra = await self._enrich(ctx, created)
             except ProviderUnavailableError:
                 log.warning("ingest.enrich_unavailable")
+        for item_id, plan in created.items():
+            cues = [str(t.trigger.spec["cue"]) for t in plan.triggers if t.trigger.spec.get("cue")]
+            extra.setdefault(item_id, []).extend((KeyKind.CUE, c) for c in cues)
         if not commit.touched_items:
             return
         indexer = ctx.memory.keys(

@@ -1,0 +1,34 @@
+# S3.10. All data in these cases is synthetic.
+id: 28-topic-trigger
+title: "A reminder for when a topic comes up: the cue is kept as text, hash and key"
+now: "2026-09-18T12:00"
+timezone: Asia/Kolkata
+input: When I'm planning the Japan trip, remind me of Ichiban Ramen Bar in Osaka.
+model:
+  intent: {intent: save, confidence: 0.95, reason: "A reminder tied to a topic."}
+  extract:
+    entities:
+      - {id: e1, mention: Ichiban Ramen Bar, name: Ichiban Ramen Bar, kind: place}
+      - {id: e2, mention: the Japan trip, name: Japan trip, kind: topic}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: visit
+        title: Ichiban Ramen Bar for the Japan trip
+        text: Remember Ichiban Ramen Bar in Osaka for the Japan trip.
+        category: travel
+        entities: [{entity: e1, role: about}, {entity: e2, role: part_of}]
+        trigger: {"on": topic, entity: null, cue: planning the Japan trip}
+        importance: 3
+        layer: archive
+        layer_rationale: Only useful when the trip comes up.
+        rationale: A place to remember when planning the trip.
+expect:
+  memories:
+    - match: ramen
+      kind: intention
+      subtype: visit
+      entities: ["Ichiban Ramen Bar:about"]
+      reconcile: new
+  triggers: [{match: ramen, "on": topic, spec: {cue: planning the Japan trip}}]
+  keys_contain: ["planning the Japan trip"]

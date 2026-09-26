@@ -363,6 +363,16 @@ def _check_trigger(run: CaseRun, want: Mapping[str, Any], result: Score) -> None
     match = str(want["match"]).lower()
     tz = ZoneInfo(run.case.timezone)
     owners = {i.id for i in run.items if match in i.title.lower() or match in i.text.lower()}
+    if "on" in want:  # a moment trigger: a person, topic or situation, no time
+        found = [
+            t
+            for t in run.triggers
+            if t.item_id in owners
+            and t.on.value == want["on"]
+            and all(str(t.spec.get(k)) == str(v) for k, v in (want.get("spec") or {}).items())
+        ]
+        result.check("date", bool(found), f"trigger {match!r} on {want['on']}: {run.triggers}")
+        return
     fires = [
         t.fires_at.astimezone(tz).strftime("%Y-%m-%dT%H:%M")
         for t in run.triggers
