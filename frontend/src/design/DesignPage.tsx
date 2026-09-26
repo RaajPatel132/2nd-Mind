@@ -14,6 +14,7 @@ import {
   BrandMark,
   Button,
   CardButton,
+  CitationChip,
   Chip,
   CountUp,
   DiffRow,
@@ -30,6 +31,7 @@ import {
   Skeleton,
   Tag,
   TextArea,
+  TextField,
   Tooltip,
   Wordmark,
   cx,
@@ -645,6 +647,14 @@ function ComponentsSection() {
             <BrandMark />
             <Wordmark />
           </div>
+        </Demo>
+        <Demo title="Citations and text fields" note="An answer's [n] opens what it cites; a text field is labelled, with a hint.">
+          <p className="m-0 measure text-answer text-fg">
+            You live in Pune
+            <CitationChip marker={1} kind="item" title="Lives in Pune" onClick={() => undefined} />, since 12 September.
+            <CitationChip marker={2} kind="turn" title="You said on Tue 29 Sep" onClick={() => undefined} />
+          </p>
+          <TextField label="Date" hint="Say it like you would: Friday, 3 October" placeholder="Friday" defaultValue="" />
         </Demo>
       </div>
     </Section>

@@ -4,7 +4,7 @@
  */
 import { formatDay, formatInZone, formatMs, plural, shortId, truncate, weekdayIn } from '../lib/format'
 import type { ReactNode } from 'react'
-import { DiffList, FactLine, KV, MTable, ModelLines } from './parts'
+import { DiffList, FactLine, FixDate, KV, MTable, ModelLines } from './parts'
 import { diffCounts } from './model'
 import type { StepContext } from './types'
 
@@ -101,6 +101,7 @@ export function DatesPlain({ ctx }: P) {
         <Plain key={`${t.expression}-${String(i)}`}>
           I read “{t.expression}” as {formatDay(t.value)}, because it's {weekdayIn(t.now, t.timezone)} today in {t.timezone}.
           {t.assumed && ` That was an assumption${t.alternative ? `; the other reading was ${t.alternative}` : ''}.`}
+          {t.item_id && <FixDate itemId={t.item_id} />}
         </Plain>
       ))}
     </>
@@ -279,9 +280,9 @@ export function GuardPlain({ ctx }: P) {
 }
 
 export function GuardTech({ ctx }: P) {
-  const tools = ctx.facts.tools
-  if (tools.length === 0) return <Muted>No changes to check.</Muted>
-  return <ToolCalls ctx={ctx} />
+  const writes = ctx.facts.tools.filter((t) => t.access !== 'read')
+  if (writes.length === 0) return <Muted>No changes to check.</Muted>
+  return <ToolCalls ctx={{ ...ctx, facts: { ...ctx.facts, tools: writes } }} />
 }
 
 /** Each writer op in order, with its arguments, result and policy decision (FR-9 panel 4). */
@@ -293,6 +294,11 @@ export function ToolCalls({ ctx }: P) {
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-machine text-mono">
             <span className="text-fg-3 tnum">{i + 1}</span>
             <span className="text-fg">{call.tool}</span>
+            {call.access === 'read' && (
+              <span className="text-fg-3" data-testid="tool-call-read" title="A read: no write policy applies">
+                read{call.latency_ms != null ? ` · ${formatMs(call.latency_ms)}` : ''}
+              </span>
+            )}
             {call.policy && (
               <span
                 className={

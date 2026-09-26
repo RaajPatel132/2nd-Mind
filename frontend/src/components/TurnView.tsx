@@ -8,7 +8,8 @@ import { diffCounts, factsOf, stepViews, touched, type Facts, type StepView } fr
 import { usePacedSteps } from '../trail/pacing'
 import { Trail } from '../trail/Trail'
 import { stepContext, stepLabel } from '../trail/view'
-import { Button, IconButton, Tag, Tooltip, cx, useToast } from '../ui'
+import { Button, CitationChip, IconButton, Tag, Tooltip, cx, useToast } from '../ui'
+import { useItemActions } from './itemContext'
 import { motionProps } from '../ui/motion'
 
 type Props = {
@@ -71,7 +72,7 @@ export function TurnView({ turn, timezone, folded, onFold, onInspect, onUndo, bu
       {turn.status === 'failed' ? (
         <Failure turn={turn} />
       ) : (
-        answerVisible && <Answer turn={turn} event={event} />
+        answerVisible && <Answer turn={turn} event={event} facts={facts} onInspect={onInspect} />
       )}
       {turn.status === 'running' && (
         <p className="m-0 mt-3 text-label font-normal text-fg-3">Still being answered. Refresh in a moment to see the reply.</p>
@@ -83,9 +84,39 @@ export function TurnView({ turn, timezone, folded, onFold, onInspect, onUndo, bu
   )
 }
 
-function Answer({ turn, event }: { turn: ChatTurn; event: boolean }) {
+function Answer({ turn, event, facts, onInspect }: { turn: ChatTurn; event: boolean; facts: Facts; onInspect: (turnId: string) => void }) {
   const streaming = turn.status === 'streaming'
+  const items = useItemActions()
   if (turn.chunks.length === 0 && !streaming) return null
+  const cites = facts.citations?.citations ?? []
+  if (!streaming && cites.length > 0) {
+    const byMarker = new Map(cites.map((c) => [c.marker, c]))
+    const parts = turn.chunks.join('').split(/(\[\d+\])/)
+    return (
+      <div className={cx('measure mt-4 whitespace-pre-wrap break-words text-pretty', event ? 'text-label font-normal text-fg-2' : 'text-answer text-fg')} data-testid="assistant-message">
+        {parts.map((part, i) => {
+          const m = /^\[(\d+)\]$/.exec(part)
+          const cite = m ? byMarker.get(Number(m[1])) : undefined
+          if (!cite) return <span key={i}>{part}</span>
+          return (
+            <CitationChip
+              key={i}
+              marker={cite.marker}
+              kind={cite.kind}
+              title={cite.title}
+              onClick={() => {
+                if (cite.kind === 'item' && cite.item_id) items?.open(cite.item_id)
+                else if (cite.turn_id) {
+                  document.querySelector(`[data-turn-id="${cite.turn_id}"]`)?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+                  onInspect(cite.turn_id)
+                }
+              }}
+            />
+          )
+        })}
+      </div>
+    )
+  }
   return (
     <div
       className={cx('measure mt-4 whitespace-pre-wrap break-words text-pretty', event ? 'text-label font-normal text-fg-2' : 'text-answer text-fg')}

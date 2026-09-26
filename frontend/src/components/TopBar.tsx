@@ -19,13 +19,14 @@ type Props = {
   delta: { key: number; text: string } | null
   /** Leaves room for the docked inspector on wide screens. */
   docked: boolean
+  view: 'chat' | 'upcoming'
 }
 
 /**
  * Brand, wordmark and workspace on the left; the model picker and the avatar with its quota
  * ring on the right. Transparent at rest; surface, blur and a hairline once content scrolls under.
  */
-export function TopBar({ me, providerMode, picker, model, onModel, usage, last, delta, docked }: Props) {
+export function TopBar({ me, providerMode, picker, model, onModel, usage, last, delta, docked, view }: Props) {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => {
@@ -60,6 +61,19 @@ export function TopBar({ me, providerMode, picker, model, onModel, usage, last, 
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-3">
+          <nav aria-label="Pages" className="flex items-center gap-1">
+            <a
+              href={view === 'upcoming' ? '#/' : '#/upcoming'}
+              aria-current={view === 'upcoming' ? 'page' : undefined}
+              className={cx(
+                'rounded-full px-3 py-1 text-label no-underline transition-colors dur-1',
+                view === 'upcoming' ? 'bg-surface-2 text-fg' : 'text-fg-2 hover:text-fg',
+              )}
+              data-testid="nav-upcoming"
+            >
+              {view === 'upcoming' ? 'Chat' : 'Upcoming'}
+            </a>
+          </nav>
           {picker && model ? (
             <ModelPicker picker={picker} value={model} onChange={onModel} />
           ) : providerMode !== 'live' && (

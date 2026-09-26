@@ -9,6 +9,7 @@ import type { AgentStep, ModelCallEvent, Usage } from '../api/client'
 import type { ChatTurn } from '../hooks/useConversation'
 import { formatClock, formatMs, formatSeconds, formatTokens, formatUsd, shortId } from '../lib/format'
 import { DiffTech, ToolCalls } from '../trail/details'
+import { RetrievalPanel } from '../trail/recall'
 import { factsOf, stepViews, type Facts, type StepView } from '../trail/model'
 import { STEPS } from '../trail/steps'
 import { stepContext, stepLabel } from '../trail/view'
@@ -63,7 +64,9 @@ function Body({ turn, onClose, timezone, quotaNow }: { turn: ChatTurn; onClose: 
         <Panel n={2} title="Memory diff" testId="panel-diff" reason="No memory changes this turn." applies={Boolean(facts.diff?.entries.length)}>
           {facts.diff && <DiffTech ctx={ctxFor('save', views, facts, turn, timezone)} />}
         </Panel>
-        <Panel n={3} title="Retrieval" testId="panel-retrieval" reason="Nothing was retrieved this turn." applies={false} />
+        <Panel n={3} title="Retrieval" testId="panel-retrieval" reason={retrievalReason(facts)} applies={Boolean(facts.retrieval)}>
+          {facts.retrieval && <RetrievalPanel ctx={ctxFor('rank', views, facts, turn, timezone)} />}
+        </Panel>
         <Panel n={4} title="Tool calls" testId="panel-tools" reason="No tool calls this turn." applies={facts.tools.length > 0}>
           <ToolCalls ctx={ctxFor('guard', views, facts, turn, timezone)} />
         </Panel>
@@ -85,9 +88,14 @@ function decisionReason(turn: ChatTurn, facts: Facts): string {
   if (turn.kind === 'confirm') return 'A confirmation applies a change you approved; nothing new was decided.'
   if (turn.kind === 'edit') return 'An edit you made directly; no model decided anything.'
   if (turn.kind === 'system') return 'Housekeeping by the system; no model decided anything.'
-  if (facts.intent?.intent === 'recall') return "Recall isn't wired up yet, so nothing was looked up or saved."
-  if (facts.intent?.intent === 'correct') return "Correcting by chat isn't wired up yet, so nothing was changed."
+  if (facts.intent?.intent === 'recall') return 'A question: nothing was saved, so there was nothing to classify.'
+  if (facts.intent?.intent === 'correct') return 'A correction: what changed is in the memory diff.'
   return 'Chit-chat: nothing was classified, dated or linked this turn.'
+}
+
+function retrievalReason(facts: Facts): string {
+  if (facts.intent?.intent === 'save') return 'A pure save: nothing was looked up.'
+  return 'Nothing was retrieved this turn.'
 }
 
 function DecisionPanel({ turn, views, facts, timezone }: { turn: ChatTurn; views: StepView[]; facts: Facts; timezone: string }) {
@@ -166,7 +174,7 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
         <span data-testid="turn-cost">{formatUsd(u.cost_usd)}</span>
         <span data-testid="turn-charged">−{formatTokens(u.charged_tokens)} quota</span>
       </div>
-      <Waterfall views={views} start={start} end={end} />
+      <Waterfall views={views} spans={spansOf(facts)} start={start} end={end} />
       <ModelTable calls={facts.calls} />
       <p className="m-0 text-label font-normal text-fg-2" data-testid="quota-after">
         {quota ? (
@@ -207,13 +215,30 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
   )
 }
 
-/** Monochrome bars on one time axis, drawn to scale; the answer is the one bar in fg. */
-function Waterfall({ views, start, end }: { views: StepView[]; start: number; end: number }) {
-  const rows = views.filter((v) => v.latencyMs != null)
+type Span = { key: string; name: string; startedAt: string; latencyMs: number; answer: boolean; nested: boolean }
+
+/** Non-model spans (the recall tools, fusion and selection) and model calls, so parallel tools show as overlapping bars. */
+function spansOf(facts: Facts): Span[] {
+  const tools = facts.tools
+    .filter((t) => t.access === 'read' && t.started_at && t.latency_ms != null)
+    .map((t, i) => ({ key: `tool-${String(i)}`, name: t.tool.replace(/^recall\./, ''), startedAt: t.started_at ?? '', latencyMs: t.latency_ms ?? 0, answer: false, nested: true }))
+  const timings = (facts.retrieval?.timings ?? []).map((t, i) => ({ key: `timing-${String(i)}`, name: t.name, startedAt: t.started_at, latencyMs: t.latency_ms, answer: false, nested: true }))
+  const calls = facts.calls
+    .filter((c) => c.step !== 'answer')
+    .map((c, i) => ({ key: `call-${String(i)}`, name: `${c.step} call`, startedAt: c.started_at, latencyMs: c.latency_ms, answer: false, nested: true }))
+  return [...tools, ...timings, ...calls]
+}
+
+/** Monochrome bars on one time axis, drawn to scale; the answer is the one bar in fg. Nested spans (tools, model calls) sit indented among the steps. */
+function Waterfall({ views, spans, start, end }: { views: StepView[]; spans: Span[]; start: number; end: number }) {
+  const steps: Span[] = views
+    .filter((v) => v.latencyMs != null)
+    .map((v) => ({ key: v.key, name: v.step, startedAt: v.startedAt, latencyMs: v.latencyMs ?? 0, answer: v.step === 'answer', nested: false }))
+  const rows = [...steps, ...spans].sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt) || Number(a.nested) - Number(b.nested))
   if (rows.length === 0) return null
   const total = Math.max(
     end - start,
-    ...rows.map((v) => Date.parse(v.startedAt) - start + (v.latencyMs ?? 0)),
+    ...rows.map((v) => Date.parse(v.startedAt) - start + v.latencyMs),
     1,
   )
   const tick = [100, 250, 500, 1000, 2000, 5000, 10000].find((s) => total / s <= 5) ?? 20000
@@ -223,13 +248,13 @@ function Waterfall({ views, start, end }: { views: StepView[]; start: number; en
     <div className="grid gap-1.5" role="img" aria-label={`Time per step, to scale, over ${formatSeconds(total)}`} data-testid="waterfall">
       {rows.map((v) => {
         const left = Math.max(0, Date.parse(v.startedAt) - start)
-        const width = v.latencyMs ?? 0
+        const width = v.latencyMs
         return (
-          <div key={v.key} className="wf-grid" data-testid="waterfall-row">
-            <span className="truncate font-machine text-mono-sm text-fg-3">{v.step}</span>
+          <div key={v.key} className="wf-grid" data-testid={v.nested ? 'waterfall-span' : 'waterfall-row'}>
+            <span className={cx('truncate font-machine text-mono-sm text-fg-3', v.nested && 'pl-3')}>{v.name}</span>
             <span className="wf-track relative h-3">
               <span
-                className={cx('absolute inset-y-0.5 min-w-0.5 rounded-xs', v.step === 'answer' ? 'bg-fg' : 'bg-fg-3')}
+                className={cx('absolute inset-y-0.5 min-w-0.5 rounded-xs', v.answer ? 'bg-fg' : v.nested ? 'bg-line-strong' : 'bg-fg-3')}
                 style={{ left: `${String((left / total) * 100)}%`, width: `${String((width / total) * 100)}%` }}
               />
             </span>
@@ -263,7 +288,7 @@ function ModelTable({ calls }: { calls: ModelCallEvent[] }) {
       <table className="min-w-full border-collapse font-machine text-mono-sm text-fg-2">
         <thead>
           <tr>
-            {['step', 'model', 'tokens', 'time', 'cost'].map((h) => (
+            {['step', 'model', 'tokens', 'cached', 'time', 'cost'].map((h) => (
               <th key={h} scope="col" className="whitespace-nowrap border-b border-line pb-1.5 pr-3.5 text-left font-medium text-fg-3">
                 {h}
               </th>
@@ -279,6 +304,9 @@ function ModelTable({ calls }: { calls: ModelCallEvent[] }) {
               </td>
               <td className="whitespace-nowrap py-1.5 pr-3.5 tnum">
                 {formatTokens(c.usage.input_tokens + c.usage.cached_input_tokens)} → {formatTokens(c.usage.output_tokens)}
+              </td>
+              <td className="whitespace-nowrap py-1.5 pr-3.5 tnum" data-testid="call-cached">
+                {c.step === 'embed' ? `${String(c.cache_hits ?? 0)} reused` : formatTokens(c.usage.cached_input_tokens)}
               </td>
               <td className="whitespace-nowrap py-1.5 pr-3.5 tnum" data-testid="call-latency">
                 {formatMs(c.latency_ms)}

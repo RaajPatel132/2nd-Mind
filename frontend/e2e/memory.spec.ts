@@ -41,7 +41,7 @@ test.describe('saving memories', () => {
     await expect(diff.locator('[data-testid="diff-entry"][data-op="added"]')).toHaveCount(5)
     const tools = glassBox.getByTestId('panel-tools')
     await expect(tools.getByTestId('tool-call-policy').first()).toHaveText('allowed · P-DEFAULT')
-    await expect(glassBox.getByText('Nothing was retrieved this turn.').first()).toBeVisible() // collapsed, with its reason
+    await expect(glassBox.getByText('A pure save: nothing was looked up.').first()).toBeVisible() // collapsed, with its reason
   })
 
   test('moving city supersedes the old fact, and undo brings it back', async ({ page }, testInfo) => {

@@ -24,6 +24,8 @@ import {
 import type { AgentStep } from '../api/client'
 import * as D from './details'
 import * as L from './labels'
+import * as R from './recall'
+import * as RL from './recallLabels'
 import type { StepSpec } from './types'
 
 export const STEPS: Record<AgentStep, StepSpec> = {
@@ -115,38 +117,37 @@ export const STEPS: Record<AgentStep, StepSpec> = {
     Plain: D.ConfirmPlain,
     Tech: D.DiffTech,
   },
-  // Reserved: S3 (recall) and S4 (links). Their details land with the steps.
   plan: {
     icon: Route,
     running: "Working out what you're asking",
-    done: () => "Worked out what you're asking",
-    chips: L.none,
-    Plain: D.ReservedPlain,
-    Tech: D.ReservedTech,
+    done: RL.planDone,
+    chips: RL.planChips,
+    Plain: R.PlanPlain,
+    Tech: R.PlanTech,
   },
   search: {
     icon: Search,
     running: 'Searching your memory',
-    done: () => 'Searched your memory',
-    chips: L.none,
-    Plain: D.ReservedPlain,
-    Tech: D.ReservedTech,
+    done: RL.searchDone,
+    chips: RL.searchChips,
+    Plain: R.SearchPlain,
+    Tech: R.SearchTech,
   },
   rank: {
     icon: ListOrdered,
     running: "Picking what's relevant",
-    done: () => "Picked what's relevant",
-    chips: L.none,
-    Plain: D.ReservedPlain,
-    Tech: D.ReservedTech,
+    done: RL.rankDone,
+    chips: RL.rankChips,
+    Plain: R.RankPlain,
+    Tech: R.RankTech,
   },
   triggers: {
     icon: Bell,
     running: 'Checking reminders tied to this',
-    done: () => 'Checked reminders tied to this',
-    chips: L.none,
-    Plain: D.ReservedPlain,
-    Tech: D.ReservedTech,
+    done: RL.triggersDone,
+    chips: RL.triggersChips,
+    Plain: R.TriggersPlain,
+    Tech: R.TriggersTech,
   },
   fetch: {
     icon: Globe,

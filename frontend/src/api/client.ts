@@ -23,6 +23,14 @@ export type ToolCallEvent = Schemas['ToolCallEvent']
 export type PolicyEvent = Schemas['PolicyEvent']
 export type StepEvent = Schemas['StepEvent']
 export type ErrorEvent = Schemas['ErrorEvent']
+export type RetrievalEvent = Schemas['RetrievalEvent']
+export type CitationsEvent = Schemas['CitationsEvent']
+export type Citation = Schemas['Citation']
+export type SubQueryTrace = Schemas['SubQueryTrace']
+export type RetrievalCandidate = Schemas['RetrievalCandidate']
+export type Upcoming = Schemas['UpcomingOut']
+export type UpcomingEntry = Schemas['UpcomingEntryOut']
+export type ItemEdit = Schemas['ItemEditIn']
 export type AgentStep = Schemas['AgentStep']
 export type Usage = Schemas['UsageOut']
 export type DiffEntry = Schemas['DiffEntry']
@@ -121,6 +129,20 @@ export async function rejectHeldWrite(heldId: string): Promise<HeldWrite> {
 
 export async function getItem(itemId: string): Promise<ItemDetail> {
   return unwrap(await api.GET('/v1/items/{item_id}', { params: { path: { item_id: itemId } } }))
+}
+
+/** Edit one memory in place; it runs as its own undoable turn (S3.12). */
+export async function editItem(itemId: string, body: ItemEdit): Promise<Turn> {
+  return unwrap(await api.PATCH('/v1/items/{item_id}', { params: { path: { item_id: itemId } }, body }))
+}
+
+/** What's ahead, grouped by local day, with undated open tasks and the due-soon note (S3.14). */
+export async function getUpcoming(workspaceId: string, days?: number): Promise<Upcoming> {
+  return unwrap(
+    await api.GET('/v1/workspaces/{workspace_id}/upcoming', {
+      params: { path: { workspace_id: workspaceId }, query: days ? { days } : {} },
+    }),
+  )
 }
 
 export async function getEntity(entityId: string): Promise<EntityDetail> {

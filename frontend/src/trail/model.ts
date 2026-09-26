@@ -5,6 +5,8 @@
  */
 import type {
   AgentStep,
+  CitationsEvent,
+  RetrievalEvent,
   DecisionEvent,
   ErrorEvent,
   IntentEvent,
@@ -61,7 +63,10 @@ export function stepViews(events: readonly TrailEvent[], starts: readonly StepSt
 export type Facts = {
   intent?: IntentEvent
   decision?: DecisionEvent
+  /** Every memory diff of the turn, merged (a recall turn can save, then fire a reminder). */
   diff?: MemoryDiffEvent
+  retrieval?: RetrievalEvent
+  citations?: CitationsEvent
   tools: ToolCallEvent[]
   policies: PolicyEvent[]
   calls: ModelCallEvent[]
@@ -79,7 +84,13 @@ export function factsOf(events: readonly TrailEvent[]): Facts {
         facts.decision = event
         break
       case 'memory_diff':
-        facts.diff = event
+        facts.diff = facts.diff ? { ...facts.diff, entries: [...facts.diff.entries, ...event.entries] } : event
+        break
+      case 'retrieval':
+        facts.retrieval = event
+        break
+      case 'citations':
+        facts.citations = event
         break
       case 'tool_call':
         facts.tools.push(event)

@@ -1,6 +1,7 @@
 /** Small building blocks of the technical layer: key/value rows, tables, the model line. */
 import { useContext, useState, type ReactNode } from 'react'
 import { getEntity, getItem, type DiffEntry, type MemoryDiffEvent, type ModelCallEvent } from '../api/client'
+import { useItemActions } from '../components/itemContext'
 import { HeldContext, modelFacts } from './context'
 import { formatValue, shortId, truncate } from '../lib/format'
 import { Button, DiffRow, Overline, cx, type DiffGlyph } from '../ui'
@@ -169,6 +170,7 @@ function Entry({ entry }: { entry: DiffEntry }) {
         </p>
       )}
       {entry.op === 'held' && entry.held_write_id && <HeldControls heldId={entry.held_write_id} />}
+      {entry.item_id && entry.op !== 'removed' && entry.op !== 'held' && entry.op !== 'not_written' && <EditButton itemId={entry.item_id} />}
       <Detail entry={entry} />
     </DiffRow>
   )
@@ -211,6 +213,46 @@ export function HeldControls({ heldId }: { heldId: string }) {
         Reject
       </Button>
     </div>
+  )
+}
+
+/** Opens the memory's editor (S3.12); the edit runs as its own undoable turn. */
+function EditButton({ itemId }: { itemId: string }) {
+  const items = useItemActions()
+  if (!items) return null
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="-ml-3"
+      onClick={() => {
+        items.open(itemId)
+      }}
+      data-testid="diff-edit"
+    >
+      Edit
+    </Button>
+  )
+}
+
+/** The one-tap fix for an assumed date (FR-1.4): the editor opens on the date. */
+export function FixDate({ itemId }: { itemId: string }) {
+  const items = useItemActions()
+  if (!items) return null
+  return (
+    <>
+      {' '}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          items.open(itemId, 'date')
+        }}
+        data-testid="fix-date"
+      >
+        Fix the date
+      </Button>
+    </>
   )
 }
 
