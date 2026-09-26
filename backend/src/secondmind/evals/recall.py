@@ -45,7 +45,13 @@ from secondmind.core import (
     new_id,
 )
 from secondmind.corrections import correction_responders
-from secondmind.evals.fixture import Seeded, load_fixture, local_instant, seed_workspace
+from secondmind.evals.fixture import (
+    FIXTURE_FILE,
+    Seeded,
+    load_fixture,
+    local_instant,
+    seed_workspace,
+)
 from secondmind.ingestion import IngestSettings, offline_responders, replay_key
 from secondmind.memory import Memory
 from secondmind.memory.adapters import EMBED_DIMENSIONS, Database, sql_memory
@@ -183,14 +189,19 @@ def router_embedder(
 
 
 async def seed_into(
-    db: Database, scope: WorkspaceScope, router: ModelRouter, memory: Memory | None = None
+    db: Database,
+    scope: WorkspaceScope,
+    router: ModelRouter,
+    memory: Memory | None = None,
+    *,
+    resources: Path = DEFAULT_RESOURCES_DIR,
 ) -> Seeded | None:
     """Seed the fixture's main workspace into ``scope`` (``make seed-dev``, the E2E seed).
     Nothing happens when it's there already (the Pune fact is found)."""
     found = await SqlRecallStore(db, scope).lookup(Filters(predicate="lives_in"), Access(), limit=1)
     if found.total:
         return None
-    fixture = load_fixture()
+    fixture = load_fixture(resources / FIXTURE_FILE)
     embed, model = router_embedder(router)
     return await seed_workspace(
         fixture,
