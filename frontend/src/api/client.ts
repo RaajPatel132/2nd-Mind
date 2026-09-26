@@ -41,6 +41,7 @@ export type Classification = Schemas['Classification']
 export type HeldWrite = Schemas['HeldWriteOut']
 export type ItemDetail = Schemas['ItemDetailOut']
 export type EntityDetail = Schemas['EntityDetailOut']
+export type Entity = Schemas['EntityRecord']
 export type TurnStreamFrame = Schemas['TurnStreamFrame']
 
 const api = createClient<paths>({ baseUrl: '', credentials: 'same-origin' })
@@ -129,6 +130,14 @@ export async function rejectHeldWrite(heldId: string): Promise<HeldWrite> {
 
 export async function getItem(itemId: string): Promise<ItemDetail> {
   return unwrap(await api.GET('/v1/items/{item_id}', { params: { path: { item_id: itemId } } }))
+}
+
+/** The workspace's people, places and things: what the editor can link a memory to (S3.12). */
+export async function listEntities(workspaceId: string): Promise<Entity[]> {
+  const out = unwrap(
+    await api.GET('/v1/workspaces/{workspace_id}/entities', { params: { path: { workspace_id: workspaceId } } }),
+  )
+  return out.items
 }
 
 /** Edit one memory in place; it runs as its own undoable turn (S3.12). */

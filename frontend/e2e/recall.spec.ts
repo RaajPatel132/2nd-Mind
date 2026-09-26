@@ -97,3 +97,35 @@ test.describe('upcoming snooze', () => {
     await expect.poll(() => dayOf('trigger')).toBe(reminderDay)
   })
 })
+
+test.describe('edit in place', () => {
+  test.describe.configure({ timeout: 180_000 })
+
+  test('the editor picks a day and links someone, as one undoable turn', async ({ page }, testInfo) => {
+    await seeded(page, testInfo)
+    await page.getByTestId('nav-upcoming').click()
+    const dinner = page.getByTestId('upcoming').locator('[data-testid="upcoming-entry"][data-via="occurred"]').filter({ hasText: 'Dinner at Saffron Street' }).first()
+    await dinner.getByRole('button', { name: 'Edit' }).click()
+    const sheet = page.getByTestId('item-detail')
+    await expect(sheet).toContainText('Dinner at Saffron Street')
+    await expect(sheet.getByTestId('edit-link').filter({ hasText: 'Kabir' })).toHaveCount(1)
+
+    await sheet.getByTestId('edit-date-picker').fill('2026-10-09')
+    await expect(sheet.getByTestId('edit-date')).toHaveValue('2026-10-09')
+    await sheet.getByRole('button', { name: /^Link to/ }).click()
+    await page.getByRole('option', { name: /^Nisha/ }).click()
+    await sheet.getByRole('button', { name: /^Role/ }).click()
+    await page.getByRole('option', { name: 'with', exact: true }).click()
+    await sheet.getByTestId('edit-save').click()
+
+    await page.getByTestId('nav-upcoming').click()
+    const edit = lastTurn(page)
+    await expect(edit).toHaveAttribute('data-kind', 'edit', { timeout: 30_000 })
+    await expect(edit).toHaveAttribute('data-status', 'completed')
+    await expect(edit.getByTestId('assistant-message')).toContainText('Edited')
+    await edit.getByTestId('undo-turn').click()
+    const confirm = edit.getByTestId('undo-confirm')
+    if (await confirm.isVisible()) await confirm.click()
+    await expect(page.locator('[data-testid="system-note"][data-kind="undo"]')).toContainText('Undone')
+  })
+})
