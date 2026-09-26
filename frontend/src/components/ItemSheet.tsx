@@ -3,11 +3,13 @@
  * (source ui_edit) through the writer and policy, so it has a glass box and can be undone. A
  * delete is held for confirmation like any other.
  */
-import { X } from "lucide-react";
+import { Undo2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   editItem,
   getItem,
+  listEntities,
+  type Entity,
   type ItemDetail,
   type ItemEdit,
   type Turn,
@@ -15,6 +17,7 @@ import {
 import { formatInZone, formatValue } from "../lib/format";
 import {
   Button,
+  Chip,
   IconButton,
   Overline,
   Select,
@@ -48,6 +51,7 @@ const KINDS = [
 ];
 const LAYERS = ["core", "quick", "archive"] as const;
 const CLOCKS = ["occurred", "due", "valid"] as const;
+const ROLES = ["about", "with", "for", "by", "at", "owner", "part_of"] as const;
 
 export function ItemSheet({
   itemId,
@@ -97,6 +101,10 @@ function Body({
   const [clock, setClock] = useState<(typeof CLOCKS)[number]>("occurred");
   const [layer, setLayer] = useState("");
   const [state, setState] = useState("");
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [detach, setDetach] = useState<string[]>([]);
+  const [linkTo, setLinkTo] = useState("");
+  const [role, setRole] = useState<(typeof ROLES)[number]>("about");
   const dateRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,6 +121,12 @@ function Body({
         );
         setState(d.item.state);
         setClock(d.item.kind === "task" ? "due" : "occurred");
+        listEntities(d.item.workspace_id).then(
+          (list) => {
+            if (live) setEntities(list);
+          },
+          () => undefined, // linking is optional; the rest of the editor still works
+        );
       },
       (err: unknown) => {
         if (live)
@@ -162,8 +176,13 @@ function Body({
     const current = item.in_core ? "core" : item.in_quick ? "quick" : "archive";
     if (layer !== current) body.layer = layer as (typeof LAYERS)[number];
     if (state.trim() && state.trim() !== item.state) body.state = state.trim();
+    if (linkTo) body.attach = { entity_id: linkTo, role };
+    if (detach.length > 0) body.detach = detach;
     return body;
   }
+
+  const nameOf = (id: string) =>
+    entities.find((e) => e.id === id)?.name ?? "someone";
 
   const item = detail?.item;
   const edit = changes();
@@ -230,6 +249,7 @@ function Body({
                 <span className="text-label text-fg-2">Kind</span>
                 <Select
                   label="Kind"
+                  triggerLabel={`Kind: ${kind}`}
                   value={kind}
                   align="left"
                   groups={[
@@ -279,11 +299,21 @@ function Body({
                 hint="Say it like you would; I work out the date."
                 data-testid="edit-date"
               />
+              <TextField
+                type="date"
+                label="Or pick a day"
+                value={/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : ""}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                }}
+                data-testid="edit-date-picker"
+              />
               <div className="flex flex-wrap gap-4">
                 <div className="grid gap-1">
                   <span className="text-label text-fg-2">Date is when it</span>
                   <Select
                     label="Date clock"
+                    triggerLabel={`Date is when it: ${clock}`}
                     value={clock}
                     align="left"
                     groups={[
@@ -303,6 +333,7 @@ function Body({
                   <span className="text-label text-fg-2">Layer</span>
                   <Select
                     label="Layer"
+                    triggerLabel={`Layer: ${layer}`}
                     value={layer}
                     align="left"
                     groups={[
@@ -317,6 +348,92 @@ function Body({
                   </Select>
                 </div>
               </div>
+              <fieldset className="m-0 grid gap-2 border-0 p-0">
+                <legend className="p-0 text-label text-fg-2">Linked to</legend>
+                {detail.entities.length === 0 && (
+                  <p className="m-0 text-label font-normal text-fg-3">
+                    No one yet.
+                  </p>
+                )}
+                <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+                  {detail.entities.map((link) => {
+                    const off = detach.includes(link.id);
+                    return (
+                      <li
+                        key={link.id}
+                        className="flex items-center gap-1"
+                        data-testid="edit-link"
+                      >
+                        <Chip className={off ? "line-through" : undefined}>
+                          {nameOf(link.entity_id)} · {link.role}
+                        </Chip>
+                        <IconButton
+                          icon={off ? Undo2 : X}
+                          label={`${off ? "Keep" : "Remove"} the link to ${nameOf(link.entity_id)}`}
+                          size="sm"
+                          onClick={() => {
+                            setDetach((d) =>
+                              off
+                                ? d.filter((x) => x !== link.id)
+                                : [...d, link.id],
+                            );
+                          }}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+                {entities.length > 0 && (
+                  <div className="flex flex-wrap gap-4">
+                    <div className="grid gap-1">
+                      <span className="text-label text-fg-2">Link to</span>
+                      <Select
+                        label="Link to"
+                        triggerLabel={`Link to: ${linkTo ? nameOf(linkTo) : "no one new"}`}
+                        value={linkTo}
+                        align="left"
+                        groups={[
+                          {
+                            label: "People, places and things",
+                            options: [
+                              { value: "", label: "no one new" },
+                              ...entities
+                                .filter((e) => e.kind !== "self")
+                                .map((e) => ({
+                                  value: e.id,
+                                  label: `${e.name} (${e.kind})`,
+                                })),
+                            ],
+                          },
+                        ]}
+                        onChange={setLinkTo}
+                      >
+                        {linkTo ? nameOf(linkTo) : "no one new"}
+                      </Select>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-label text-fg-2">As</span>
+                      <Select
+                        label="Role"
+                        triggerLabel={`Role: ${role}`}
+                        value={role}
+                        align="left"
+                        groups={[
+                          {
+                            label: "Role",
+                            options: ROLES.map((r) => ({ value: r, label: r })),
+                          },
+                        ]}
+                        onChange={(v) => {
+                          setRole(v as (typeof ROLES)[number]);
+                        }}
+                      >
+                        {role}
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </fieldset>
               <TextField
                 label="State"
                 value={state}
