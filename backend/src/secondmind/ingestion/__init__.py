@@ -61,6 +61,10 @@ from secondmind.ingestion.time import (
     validate_rrule,
 )
 
+# The same function under a name that isn't also a submodule (import-linter reads
+# ``from secondmind.ingestion import normalise`` as the module).
+normalise_term = normalise
+
 __all__ = [
     "BUILTIN",
     "CLOSE_LABELS",
@@ -115,6 +119,7 @@ __all__ = [
     "match_key",
     "mentions_in",
     "normalise",
+    "normalise_term",
     "offline_responders",
     "refusal",
     "reminder_time",

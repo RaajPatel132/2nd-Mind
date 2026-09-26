@@ -48,7 +48,7 @@ from secondmind.ingestion import (
     Window,
     match_entities,
     match_key,
-    normalise,
+    normalise_term,
     resolve_window,
     slugify,
     terms_for,
@@ -422,7 +422,7 @@ class _Resolver:
         )
 
     async def _relation(self, proposed: str) -> str:
-        slug, _ = await normalise(proposed, self._terms["relation"], vocab="relation")
+        slug, _ = await normalise_term(proposed, self._terms["relation"], vocab="relation")
         return slug
 
     async def _follow(self, entity: EntityRecord, relation: str) -> list[EntityRecord]:
@@ -453,7 +453,7 @@ class _Resolver:
         kinds = tuple(dict.fromkeys(Kind(k) for k in f.kinds))
         subtypes: list[str] = []
         for proposed in f.subtypes:
-            slug, how = await normalise(proposed, self._terms["subtype"], vocab="subtype")
+            slug, how = await normalise_term(proposed, self._terms["subtype"], vocab="subtype")
             if how.reused:
                 subtypes.append(slug)
             else:
@@ -467,14 +467,18 @@ class _Resolver:
         )
         category = None
         if f.category:
-            slug, how = await normalise(f.category, self._categories, vocab="category", path=True)
+            slug, how = await normalise_term(
+                f.category, self._categories, vocab="category", path=True
+            )
             if how.reused or any(c.slug.startswith(slug + "/") for c in self._categories):
                 category = slug
             else:
                 sub.dropped.append(f"category {f.category!r} (not in the vocab)")
         predicate = None
         if f.predicate:
-            slug, how = await normalise(f.predicate, self._terms["predicate"], vocab="predicate")
+            slug, how = await normalise_term(
+                f.predicate, self._terms["predicate"], vocab="predicate"
+            )
             if how.reused:
                 predicate = slug
             else:
