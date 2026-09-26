@@ -468,3 +468,62 @@ async def test_situational_adds_what_is_booked_and_the_pattern_only_from_core() 
     event = ran.events.of("retrieval")[0]
     assert not any(s.expansion and s.expansion.source == "planner" for s in event.sub_queries)
     assert "not from core" in event.plan_note
+
+
+SOFT_TEXT = [
+    (
+        "How many runs did I log last month?",
+        {
+            "shape": "count",
+            "filters": {
+                "kinds": ["episode"],
+                "subtypes": ["measurement"],
+                "attribute": {"key": "activity", "value": "run"},
+            },
+            "aggregate": {"op": "count"},
+            "times": [{"expression": "last month", "clock": "occurred"}],
+        },
+        "How many runs did I log last month? Logged run September 2026",
+    ),
+    (
+        "What did my sister recommend?",
+        {"shape": "entity", "entities": [{"mention": "my sister", "name": "my sister"}]},
+        "What did my sister recommend? Nisha (sister)",
+    ),
+    (
+        "What's on my watch list?",
+        {"shape": "list", "filters": {"kinds": ["intention"], "subtypes": ["watch"]}},
+        "What's on my watch list? Wish list, to watch",
+    ),
+]
+
+
+@pytest.mark.parametrize(("question", "sub", "expected"), SOFT_TEXT, ids=["month", "label", "kind"])
+async def test_the_soft_query_is_written_in_the_words_keys_use(
+    question: str, sub: dict[str, Any], expected: str
+) -> None:
+    w = await world()
+    ran = await run_recall(w, question, fake(("plan", plan({"question": question, **sub}))))
+    assert ran.events.of("retrieval")[0].sub_queries[0].soft_query == expected
+
+
+async def test_a_failed_rerank_falls_back_to_the_fused_order_and_says_so() -> None:
+    w = await world()
+    store = RecordingStore(
+        results={"lookup": LookupResult([Hit(w.ids["pune"], 1)], 1), "search": _found()}
+    )
+    ran = await run_recall(
+        w,
+        "Where do I live?",
+        fake(
+            ("plan", plan({"question": "Where do I live?", "shape": "exact", "filters": LIVES})),
+            ("rerank", FakeOutcome(error=ProviderErrorKind.SERVER)),
+            ("answer", FakeOutcome(text="You live in Pune [1].")),
+        ),
+        store,
+    )
+    event = ran.events.of("retrieval")[0]
+    assert event.rerank == "failed"
+    assert event.rerank_note
+    assert ran.reply == "You live in Pune [1]."
+    assert ran.outcome.cited == [w.ids["pune"]]

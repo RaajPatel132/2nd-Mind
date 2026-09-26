@@ -1,5 +1,5 @@
-"""S3.10: person triggers fire on a mention (name or label), topic triggers on a close enough
-message; firing is a write that undo reverses."""
+"""S3.10: person triggers fire on a mention (name or label), topic and situation triggers on a
+close enough message; firing is a write that undo reverses."""
 
 import uuid
 from collections.abc import Sequence
@@ -96,6 +96,17 @@ async def test_a_topic_trigger_fires_above_the_threshold_and_not_below() -> None
     assert await check(w, "I'm planning the Japan trip, any ideas?", threshold=0.99) == []
     assert await check(w, "What should I cook tonight?") == []
     assert await state(w, task) is TriggerState.PENDING
+
+
+async def test_a_situation_trigger_is_matched_the_same_way_as_a_topic() -> None:
+    cue = "packing for a long flight"
+    spec = {"cue": cue, "cue_hash": content_hash(cue)}
+    w = await world()
+    task = await add_trigger(w, "Take the neck pillow", TriggerOn.SITUATION, spec)
+    assert await check(w, "What should I cook tonight?") == []
+    assert await state(w, task) is TriggerState.PENDING
+    assert await check(w, "I'm packing for a long flight tomorrow") != []
+    assert await state(w, task) is TriggerState.FIRED
 
 
 async def test_undo_puts_a_fired_trigger_back_to_pending() -> None:
