@@ -316,6 +316,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Upcoming
+         * @description Plans (with routine occurrences), reminders, tasks due and dated intentions in the next
+         *     ``days`` (default ``UPCOMING_DAYS``), grouped by local day, plus undated open tasks
+         *     (S3.14). Built on the recall timeline tool.
+         */
+        get: operations["get_upcoming"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2146,6 +2168,85 @@ export interface components {
             /** @constant */
             event: "turn.failed";
         };
+        /** UndatedTaskOut */
+        UndatedTaskOut: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** State */
+            state: string;
+            /** Title */
+            title: string;
+        };
+        /** UpcomingDayOut */
+        UpcomingDayOut: {
+            /**
+             * Day
+             * @description The local date, YYYY-MM-DD, in the workspace timezone.
+             */
+            day: string;
+            /** Entries */
+            entries: components["schemas"]["UpcomingEntryOut"][];
+        };
+        /** UpcomingEntryOut */
+        UpcomingEntryOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Kind */
+            kind: string;
+            /** Routine */
+            routine: boolean;
+            /** State */
+            state: string;
+            /** Title */
+            title: string;
+            /** Until */
+            until: string | null;
+            /**
+             * Via
+             * @description occurred, routine, due or trigger (a reminder)
+             */
+            via: string;
+        };
+        /** UpcomingOut */
+        UpcomingOut: {
+            /** Days */
+            days: components["schemas"]["UpcomingDayOut"][];
+            /**
+             * Due Soon
+             * @description Entries in the next 24 hours.
+             */
+            due_soon: number;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Note
+             * @description The due-soon note for the chat, built in code.
+             */
+            note: string | null;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** Timezone */
+            timezone: string;
+            /** Undated */
+            undated: components["schemas"]["UndatedTaskOut"][];
+        };
         /**
          * Usage
          * @description Usage of one model call.
@@ -3019,6 +3120,57 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["TurnStreamFrame"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_upcoming: {
+        parameters: {
+            query?: {
+                days?: number | null;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpcomingOut"];
                 };
             };
             /** @description Not signed in */

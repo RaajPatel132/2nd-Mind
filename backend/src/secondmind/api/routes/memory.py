@@ -17,6 +17,10 @@ from secondmind.api.schemas import (
     ItemDetailOut,
     ItemEditIn,
     TurnOut,
+    UndatedTaskOut,
+    UpcomingDayOut,
+    UpcomingEntryOut,
+    UpcomingOut,
 )
 from secondmind.api.services import Services
 from secondmind.auth import Workspace, resolve_scope
@@ -90,6 +94,55 @@ async def reject_held_write(
     _, scope, _ = await _find(services, user_id, lambda r: r.held_write(held_id), "held write")
     held = await services.runner.memory.reject_held(scope, held_id, at=services.clock())
     return HeldWriteOut.of(held)
+
+
+@router.get(
+    "/workspaces/{workspace_id}/upcoming", response_model=UpcomingOut, responses=ERROR_RESPONSES
+)
+async def get_upcoming(
+    workspace_id: uuid.UUID,
+    services: ServicesDep,
+    user_id: UserIdDep,
+    days: Annotated[int | None, Query(ge=1, le=365)] = None,
+) -> UpcomingOut:
+    """Plans (with routine occurrences), reminders, tasks due and dated intentions in the next
+    ``days`` (default ``UPCOMING_DAYS``), grouped by local day, plus undated open tasks
+    (S3.14). Built on the recall timeline tool."""
+    scope, workspace = await resolve_scope(
+        services.identity, user_id=user_id, workspace_id=workspace_id
+    )
+    found = await services.runner.upcoming(
+        scope,
+        timezone=workspace.timezone,
+        days=days or services.config.settings.upcoming_days,
+    )
+    return UpcomingOut(
+        timezone=found.timezone,
+        start=found.start,
+        end=found.end,
+        days=[
+            UpcomingDayOut(
+                day=d.day.isoformat(),
+                entries=[
+                    UpcomingEntryOut(
+                        item_id=e.item_id,
+                        title=e.title,
+                        kind=e.kind.value,
+                        state=e.state,
+                        at=e.at,
+                        until=e.until,
+                        via=e.via,
+                        routine=e.routine,
+                    )
+                    for e in d.entries
+                ],
+            )
+            for d in found.days
+        ],
+        undated=[UndatedTaskOut(item_id=t.id, title=t.title, state=t.state) for t in found.undated],
+        due_soon=len(found.due_soon),
+        note=found.note(),
+    )
 
 
 @router.get("/items/{item_id}", response_model=ItemDetailOut, responses=ERROR_RESPONSES)

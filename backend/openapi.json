@@ -4218,6 +4218,171 @@
         ],
         "title": "TurnStreamFrame"
       },
+      "UndatedTaskOut": {
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "title",
+          "state"
+        ],
+        "title": "UndatedTaskOut",
+        "type": "object"
+      },
+      "UpcomingDayOut": {
+        "properties": {
+          "day": {
+            "description": "The local date, YYYY-MM-DD, in the workspace timezone.",
+            "title": "Day",
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "day",
+          "entries"
+        ],
+        "title": "UpcomingDayOut",
+        "type": "object"
+      },
+      "UpcomingEntryOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "routine": {
+            "title": "Routine",
+            "type": "boolean"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          },
+          "via": {
+            "description": "occurred, routine, due or trigger (a reminder)",
+            "title": "Via",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "title",
+          "kind",
+          "state",
+          "at",
+          "until",
+          "via",
+          "routine"
+        ],
+        "title": "UpcomingEntryOut",
+        "type": "object"
+      },
+      "UpcomingOut": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingDayOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "due_soon": {
+            "description": "Entries in the next 24 hours.",
+            "title": "Due Soon",
+            "type": "integer"
+          },
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The due-soon note for the chat, built in code.",
+            "title": "Note"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "undated": {
+            "items": {
+              "$ref": "#/components/schemas/UndatedTaskOut"
+            },
+            "title": "Undated",
+            "type": "array"
+          }
+        },
+        "required": [
+          "timezone",
+          "start",
+          "end",
+          "days",
+          "undated",
+          "due_soon",
+          "note"
+        ],
+        "title": "UpcomingOut",
+        "type": "object"
+      },
       "Usage": {
         "additionalProperties": false,
         "description": "Usage of one model call.\n\n``input_tokens`` counts *uncached* input only; cached reads are in ``cached_input_tokens``.\nAdapters normalise to this split so cost is always\n``input * p_in + cached * p_cached + output * p_out`` from the price table.",
@@ -5447,6 +5612,88 @@
         "summary": "Create Turn",
         "tags": [
           "turns"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/upcoming": {
+      "get": {
+        "description": "Plans (with routine occurrences), reminders, tasks due and dated intentions in the next\n``days`` (default ``UPCOMING_DAYS``), grouped by local day, plus undated open tasks\n(S3.14). Built on the recall timeline tool.",
+        "operationId": "get_upcoming",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 365,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpcomingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Get Upcoming",
+        "tags": [
+          "memory"
         ]
       }
     }

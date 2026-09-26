@@ -152,6 +152,38 @@ class HeldWritesOut(_Out):
     items: list[HeldWriteOut]
 
 
+class UpcomingEntryOut(_Out):
+    item_id: uuid.UUID
+    title: str
+    kind: str
+    state: str
+    at: datetime
+    until: datetime | None
+    via: str = Field(description="occurred, routine, due or trigger (a reminder)")
+    routine: bool
+
+
+class UpcomingDayOut(_Out):
+    day: str = Field(description="The local date, YYYY-MM-DD, in the workspace timezone.")
+    entries: list[UpcomingEntryOut]
+
+
+class UndatedTaskOut(_Out):
+    item_id: uuid.UUID
+    title: str
+    state: str
+
+
+class UpcomingOut(_Out):
+    timezone: str
+    start: datetime
+    end: datetime
+    days: list[UpcomingDayOut]
+    undated: list[UndatedTaskOut]
+    due_soon: int = Field(description="Entries in the next 24 hours.")
+    note: str | None = Field(description="The due-soon note for the chat, built in code.")
+
+
 class ItemEditIn(BaseModel):
     """A glass-box edit of one memory (S3.12). Only the fields given change."""
 

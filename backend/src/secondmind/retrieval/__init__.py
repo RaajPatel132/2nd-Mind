@@ -67,6 +67,7 @@ from secondmind.retrieval.tools import (
     WindowFilter,
 )
 from secondmind.retrieval.triggers import Fired, TriggerCheck, note_for
+from secondmind.retrieval.upcoming import Upcoming, UpcomingDay, UpcomingEntry, upcoming
 
 __all__ = [
     "INVERSE",
@@ -113,6 +114,9 @@ __all__ = [
     "SubQuery",
     "TimelineResult",
     "TriggerCheck",
+    "Upcoming",
+    "UpcomingDay",
+    "UpcomingEntry",
     "WindowFilter",
     "build_pack",
     "chit_chat_context",
@@ -129,6 +133,7 @@ __all__ = [
     "relative",
     "soft_query_text",
     "split_said",
+    "upcoming",
     "validate_plan",
     "window_words",
 ]

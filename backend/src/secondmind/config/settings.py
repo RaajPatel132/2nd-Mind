@@ -105,7 +105,7 @@ class Settings(BaseSettings):
     tool_timeout_ms: Annotated[int, Field(ge=50, le=60_000)] = 3_000
     count_check_min_score: Annotated[float, Field(ge=0, le=1)] = 0.6
     trigger_similarity_threshold: Annotated[float, Field(gt=0, le=1)] = 0.6
-    upcoming_days: Annotated[int, Field(ge=1, le=365)] = 7
+    upcoming_days: Annotated[int, Field(ge=1, le=365)] = 30
     quick_frequent_min: Annotated[int, Field(ge=1, le=100)] = 3
 
     # --- reserved for S4: quotas, spend caps and the kill switch
