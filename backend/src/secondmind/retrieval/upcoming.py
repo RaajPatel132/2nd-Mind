@@ -61,7 +61,7 @@ class Upcoming:
         return f"Coming up in the next 24 hours: {shown}."
 
 
-async def upcoming(
+async def list_upcoming(
     store: RecallStore,
     reader: MemoryReader,
     *,

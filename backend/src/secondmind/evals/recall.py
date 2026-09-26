@@ -53,6 +53,8 @@ from secondmind.observability import NullTracer
 from secondmind.providers import FakeProvider, FakeScript, ModelRouter, ResiliencePolicy
 from secondmind.retrieval import (
     NO_EVIDENCE,
+    Access,
+    Filters,
     RecallSettings,
     recall_responders,
     recall_text_responders,
@@ -178,6 +180,29 @@ def router_embedder(
         return (await router.embed(list(texts), dimensions=dimensions)).vectors
 
     return embed, f"{route.primary.provider}:{route.primary.model}@{dimensions}"
+
+
+async def seed_into(
+    db: Database, scope: WorkspaceScope, router: ModelRouter, memory: Memory | None = None
+) -> Seeded | None:
+    """Seed the fixture's main workspace into ``scope`` (``make seed-dev``, the E2E seed).
+    Nothing happens when it's there already (the Pune fact is found)."""
+    found = await SqlRecallStore(db, scope).lookup(Filters(predicate="lives_in"), Access(), limit=1)
+    if found.total:
+        return None
+    fixture = load_fixture()
+    embed, model = router_embedder(router)
+    return await seed_workspace(
+        fixture,
+        memory=memory or Memory(sql_memory(db)),
+        turns=SqlTurnStore(db, scope),
+        scope=scope,
+        timezone=fixture.timezone,
+        now=fixture.instant,
+        embed=embed,
+        embedding_model=model,
+        conversation=SqlConversationStore(db, scope),
+    )
 
 
 async def seed_main(db: Database, identity: IdentityStore, router: ModelRouter) -> Seeded:
@@ -482,6 +507,7 @@ __all__ = [
     "report",
     "router_embedder",
     "run_case",
+    "seed_into",
     "seed_main",
     "unknown_keys",
 ]

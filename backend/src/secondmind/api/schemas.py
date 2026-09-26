@@ -184,6 +184,11 @@ class UpcomingOut(_Out):
     note: str | None = Field(description="The due-soon note for the chat, built in code.")
 
 
+class DevSeedOut(_Out):
+    seeded: bool
+    items: int
+
+
 class ItemEditIn(BaseModel):
     """A glass-box edit of one memory (S3.12). Only the fields given change."""
 

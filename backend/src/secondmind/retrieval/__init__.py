@@ -67,7 +67,7 @@ from secondmind.retrieval.tools import (
     WindowFilter,
 )
 from secondmind.retrieval.triggers import Fired, TriggerCheck, note_for
-from secondmind.retrieval.upcoming import Upcoming, UpcomingDay, UpcomingEntry, upcoming
+from secondmind.retrieval.upcoming import Upcoming, UpcomingDay, UpcomingEntry, list_upcoming
 
 __all__ = [
     "INVERSE",
@@ -124,6 +124,7 @@ __all__ = [
     "count_label",
     "fallback_plan",
     "fuse",
+    "list_upcoming",
     "load_recall_replay",
     "note_for",
     "offline_answer",
@@ -133,7 +134,6 @@ __all__ = [
     "relative",
     "soft_query_text",
     "split_said",
-    "upcoming",
     "validate_plan",
     "window_words",
 ]

@@ -93,7 +93,7 @@ from secondmind.retrieval import (
     SaidTurn,
     TriggerCheck,
     Upcoming,
-    upcoming,
+    list_upcoming,
 )
 
 log = get_logger(__name__)
@@ -594,7 +594,7 @@ class TurnRunner:
 
     async def upcoming(self, scope: WorkspaceScope, *, timezone: str, days: int) -> Upcoming:
         """What's ahead in the next ``days`` (S3.14): a read, not a turn."""
-        return await upcoming(
+        return await list_upcoming(
             self._recall_stores(scope),
             self._memory.reader(scope),
             now=self._clock(),

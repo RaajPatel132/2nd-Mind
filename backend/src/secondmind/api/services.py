@@ -15,6 +15,7 @@ from secondmind.auth import IdentityStore, SessionSigner
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.config import AppConfig, Settings
 from secondmind.core import Clock, WorkspaceScope, utc_now
+from secondmind.evals import seed_into
 from secondmind.jobs.adapters import QueueClient
 from secondmind.memory.adapters import SCHEMA_HEAD
 from secondmind.metering import QuotaLimits, Quotas
@@ -46,6 +47,8 @@ class Services:
     checks: Mapping[str, Check]
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     clock: Clock = utc_now
+    # Dev only (DEV_AUTH): seed the recall fixture into a workspace; the number of memories.
+    seed_recall: Callable[[WorkspaceScope], Awaitable[int]] | None = None
 
     async def run_checks(self) -> dict[str, CheckResult]:
         async def guarded(check: Check) -> CheckResult:
@@ -129,6 +132,10 @@ async def build_services(config: AppConfig) -> Services:
             return CheckResult(ok=False, detail=problem)
         return CheckResult(ok=True, detail=f"schema {revision}; role {role.role} under RLS")
 
+    async def seed_recall(scope: WorkspaceScope) -> int:
+        seeded = await seed_into(db, scope, runtime.router, runtime.memory)
+        return len(seeded.items) if seeded else 0
+
     async def redis_check() -> CheckResult:
         return CheckResult(ok=await queue.ping(), detail="ping")
 
@@ -145,4 +152,5 @@ async def build_services(config: AppConfig) -> Services:
             "providers": provider_check(config),
         },
         closers=[runtime.aclose, queue.aclose],
+        seed_recall=seed_recall if settings.dev_auth else None,
     )
