@@ -11,6 +11,7 @@ from secondmind.agent import Turn, TurnKind, TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.core import (
+    EntityRole,
     IntentEvent,
     ItemStatus,
     Kind,
@@ -247,3 +248,35 @@ async def test_undo_reverts_writes_but_not_what_was_said(
     await runner.undo(seeded.scope, turn_id=turn.id, timezone="Asia/Kolkata")
     said = SqlConversationStore(app_db, seeded.scope)
     assert await said.indexed_turns([turn.id]) == {turn.id}
+
+
+async def test_an_edit_links_and_unlinks_entities_and_keys_follow(
+    app_db: Database, identity: SqlIdentityStore, router: Any
+) -> None:
+    seeded, runner = await world(app_db, identity, router)
+    scope, item_id = seeded.scope, seeded.items["saturday_workshop"]
+    reader = runner.memory.reader(scope)
+    nisha, kabir = seeded.entities["nisha"], seeded.entities["kabir"]
+    empty = CorrectionChanges.model_validate(dict.fromkeys(CorrectionChanges.model_fields))
+    (kabir_row,) = [r for r in await reader.item_entities([item_id]) if r.entity_id == kabir]
+
+    turn = await runner.edit_item(
+        scope,
+        item_id=item_id,
+        changes=empty,
+        attach=(nisha, EntityRole.WITH),
+        detach=[kabir_row.id],
+        timezone="Asia/Kolkata",
+    )
+    assert turn.kind is TurnKind.EDIT
+    assert turn.status.value == "completed", turn.output
+    linked = {(r.entity_id, r.role) for r in await reader.item_entities([item_id])}
+    assert (nisha, EntityRole.WITH) in linked
+    assert all(e != kabir for e, _ in linked)
+    keys = " ".join(k.text for k in await reader.keys([item_id]))
+    assert "Nisha" in keys, keys
+
+    await runner.undo(scope, turn_id=turn.id, timezone="Asia/Kolkata")
+    linked = {(r.entity_id, r.role) for r in await reader.item_entities([item_id])}
+    assert (kabir, EntityRole.WITH) in linked
+    assert (nisha, EntityRole.WITH) not in linked
