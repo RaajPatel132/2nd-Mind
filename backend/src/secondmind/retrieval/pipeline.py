@@ -296,6 +296,9 @@ class RecallPipeline:
         for tool in sub.tools:
             if tool == "lookup" and not _unfiltered(filters, sub):
                 f = filters.without(current_only=True) if sub.shape is Shape.LATEST else filters
+                if sub.shape is Shape.SITUATIONAL:
+                    # Goals and intentions have no date: the window is the timeline's.
+                    f = f.without(window=None)
                 calls["lookup"] = (
                     partial(
                         store.lookup,

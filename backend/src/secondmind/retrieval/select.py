@@ -117,7 +117,10 @@ def select(
 
     if sub.shape in LIST_LIKE or (sub.expansion and sub.expansion.source == "code"):
         base = [c for c in candidates if c.filtered]
-        extras = [c for c in candidates if c.soft_only and extra_ok(c)]
+        # A set is an exact operation: something similar that failed it isn't an extra.
+        extras = [
+            c for c in candidates if c.soft_only and extra_ok(c) and sub.shape is not Shape.SET
+        ]
         kept = base[: settings.list_max_items]
         more = max(0, len(base) - len(kept))
         chosen = kept + extras[: settings.answer_top_k]
