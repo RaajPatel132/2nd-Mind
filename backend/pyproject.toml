@@ -69,6 +69,8 @@ ignore = [
 "migrations/**" = ["N999", "S608"]  # DDL built from module constants
 # Recall SQL is assembled from constant clauses; every value is a bound parameter.
 "src/secondmind/retrieval/adapters/sql.py" = ["S608"]
+# A CLI bench: prints its table, seeds random data, and builds SQL from fixed column names.
+"tools/bench_vectors.py" = ["T201", "S311", "S608"]
 
 [tool.ruff.lint.pylint]
 max-branches = 15
