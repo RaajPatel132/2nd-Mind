@@ -2822,6 +2822,16 @@
             "title": "Rerank Note",
             "type": "string"
           },
+          "save_offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SaveOffer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "soft_channel": {
             "default": true,
             "title": "Soft Channel",
@@ -2911,6 +2921,39 @@
           "timeout_s"
         ],
         "title": "RouteOut",
+        "type": "object"
+      },
+      "SaveOffer": {
+        "additionalProperties": false,
+        "description": "What I said that the answer rested on, offered for saving: a \"yes\" next turn saves it\nthrough ingestion (S3.9). Until then it's conversation, not memory.",
+        "properties": {
+          "offer": {
+            "title": "Offer",
+            "type": "string"
+          },
+          "said": {
+            "default": [],
+            "description": "The cited snippets, as stored (redacted).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Said",
+            "type": "array"
+          },
+          "turn_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Turn Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offer"
+        ],
+        "title": "SaveOffer",
         "type": "object"
       },
       "Sensitivity": {

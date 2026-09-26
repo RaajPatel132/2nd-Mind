@@ -3,7 +3,7 @@
 Every event carries ``type`` (the discriminator) and ``v`` (its schema version). Add a field
 with a default to evolve an event; bump ``v`` for anything that changes meaning. ``retrieval``
 and ``citations`` arrived with recall (S3.13); ``retrieval`` was reshaped before it was ever
-emitted, so it is still ``v=1``.
+emitted, so it is still ``v=1`` (``save_offer`` came later, with a default).
 
 A ``step`` event records one agent step that ran (ADR-0029): the Trail in the UI is drawn from
 these, and each step's other events are written with it.
@@ -417,6 +417,17 @@ class CountCheck(BaseModel):
     fix: dict[str, str] = Field(default={}, description="The reclassification a 'yes' applies.")
 
 
+class SaveOffer(BaseModel):
+    """What I said that the answer rested on, offered for saving: a "yes" next turn saves it
+    through ingestion (S3.9). Until then it's conversation, not memory."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    turn_ids: list[uuid.UUID] = []
+    said: list[str] = Field(default=[], description="The cited snippets, as stored (redacted).")
+    offer: str
+
+
 class Expansion(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -472,6 +483,7 @@ class RetrievalEvent(_Event):
     rerank_note: str = ""
     timings: list[TimingSpan] = []
     explanation: str = ""
+    save_offer: SaveOffer | None = None
 
 
 class Citation(BaseModel):

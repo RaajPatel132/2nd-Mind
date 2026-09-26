@@ -19,13 +19,16 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
-from secondmind.core import Citation, EntityRole, Kind, Shape, TimePrecision
+from secondmind.core import Citation, EntityRole, Kind, SaveOffer, Shape, TimePrecision
 from secondmind.ingestion import TurnNow
 from secondmind.memory import EntityRecord, ItemRecord, format_day, format_when, local
 from secondmind.retrieval.plan import SubQuery
 from secondmind.retrieval.tools import Occurrence
 
 NO_EVIDENCE = "I don't have anything saved about {topic}."
+# Added after a reply that rested on something I said: conversation isn't memory until the
+# person says so (S3.9). A "yes" next turn saves it.
+SAVE_OFFER = "Want me to save what I suggested? Just say yes."
 
 
 class AnswerVars(BaseModel):
@@ -371,6 +374,23 @@ def chit_chat_context() -> str:
 def conversation_offer(parts: Sequence[Part]) -> bool:
     """Did the answer rest on something I said (so saving it can be offered)?"""
     return any(e.kind == "turn" and e.role == "assistant" for p in parts for e in p.evidence)
+
+
+def save_offer(cited: Sequence[Evidence]) -> SaveOffer | None:
+    """The offer to save what I said, from the cited evidence; None when none of it was mine."""
+    mine = [e for e in cited if e.kind == "turn" and e.role == "assistant" and e.said]
+    if not mine:
+        return None
+    return SaveOffer(
+        turn_ids=list(dict.fromkeys(e.turn_id for e in mine if e.turn_id is not None)),
+        said=list(dict.fromkeys(e.said for e in mine)),
+        offer=SAVE_OFFER,
+    )
+
+
+def save_message(offer: SaveOffer) -> str:
+    """What a "yes" to the offer saves, in the person's voice, for ingestion to file."""
+    return "Save what you suggested:\n" + "\n".join(offer.said)
 
 
 def is_list_shape(shape: Shape) -> bool:

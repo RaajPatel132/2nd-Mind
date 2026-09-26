@@ -1590,6 +1590,7 @@ export interface components {
              * @default
              */
             rerank_note: string;
+            save_offer?: components["schemas"]["SaveOffer"] | null;
             /**
              * Soft Channel
              * @default true
@@ -1630,6 +1631,26 @@ export interface components {
             step: string;
             /** Timeout S */
             timeout_s: number;
+        };
+        /**
+         * SaveOffer
+         * @description What I said that the answer rested on, offered for saving: a "yes" next turn saves it
+         *     through ingestion (S3.9). Until then it's conversation, not memory.
+         */
+        SaveOffer: {
+            /** Offer */
+            offer: string;
+            /**
+             * Said
+             * @description The cited snippets, as stored (redacted).
+             * @default []
+             */
+            said: string[];
+            /**
+             * Turn Ids
+             * @default []
+             */
+            turn_ids: string[];
         };
         /**
          * Sensitivity

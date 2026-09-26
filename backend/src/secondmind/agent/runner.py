@@ -45,6 +45,7 @@ from secondmind.core import (
     ModelCallEvent,
     NullTrail,
     RetrievalEvent,
+    SaveOffer,
     TargetType,
     TurnEvent,
     UsageTotals,
@@ -94,6 +95,7 @@ from secondmind.retrieval import (
     TriggerCheck,
     Upcoming,
     list_upcoming,
+    save_message,
 )
 
 log = get_logger(__name__)
@@ -336,8 +338,9 @@ class TurnRunner:
         rows = await self._memory.reader(run.scope).write_log(run.previous.id)
         return list(dict.fromkeys(r.target_id for r in rows if r.target_type is TargetType.ITEM))
 
-    async def _offer(self, run: _TurnRun) -> Offer | None:
-        """The count cross-check's offer in the previous reply, if it made one (S3.6)."""
+    async def _offer(self, run: _TurnRun) -> Offer | SaveOffer | None:
+        """The offer the previous reply made, if any: the count cross-check's re-file (S3.6), or
+        saving what I said (S3.9)."""
         if run.previous is None or run.previous.status is not TurnStatus.COMPLETED:
             return None
         for stored in await run.store.events(run.previous.id):
@@ -346,6 +349,8 @@ class TurnRunner:
                     check = sq.count_check
                     if check is not None and check.offer and check.extra_ids:
                         return Offer(tuple(check.extra_ids), dict(check.fix), check.label)
+                if stored.event.save_offer is not None and stored.event.save_offer.said:
+                    return stored.event.save_offer
         return None
 
     async def _history(self, store: TurnStore) -> list[ChatMessage]:
@@ -413,12 +418,16 @@ class TurnRunner:
             now = TurnNow(turn.started_at, run.timezone)
             outcomes: list[IngestOutcome] = []
 
+            offer = await self._offer(run) if _AFFIRMATIVE.match(turn.input) else None
+            # A "yes" to saving what I said saves those words, not the "yes".
+            to_save = save_message(offer) if isinstance(offer, SaveOffer) else turn.input
+
             async def ingest() -> IngestOutcome:
                 outcome = await self._pipeline.run(
                     IngestContext(
                         scope=run.scope,
                         turn_id=turn.id,
-                        message=turn.input,
+                        message=to_save,
                         now=now,
                         emit=emit,
                         steps=steps,
@@ -469,8 +478,6 @@ class TurnRunner:
                 )
                 return " ".join(f.note for f in fired) or None
 
-            offer = await self._offer(run) if _AFFIRMATIVE.match(turn.input) else None
-
             async def correct() -> CorrectOutcome:
                 return await self._corrector.run(
                     CorrectContext(
@@ -484,7 +491,7 @@ class TurnRunner:
                         trail=trail,
                         write=write,
                         previous_items=await self._previous_items(run),
-                        offer=offer,
+                        offer=offer if isinstance(offer, Offer) else None,
                         embed=self._embedder(steps),
                     )
                 )
@@ -503,7 +510,8 @@ class TurnRunner:
                 recall=recall,
                 triggers=triggers,
                 correct=correct,
-                accepts_offer=offer is not None,
+                accepts_offer=isinstance(offer, Offer),
+                accepts_save=isinstance(offer, SaveOffer),
                 secret_found=bool(run.secret_kinds),
                 core_prefix=core.text,
                 trail=trail,

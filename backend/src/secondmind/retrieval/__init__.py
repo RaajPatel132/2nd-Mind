@@ -2,6 +2,7 @@
 
 from secondmind.retrieval.answer import (
     NO_EVIDENCE,
+    SAVE_OFFER,
     AnswerVars,
     CitationFilter,
     Evidence,
@@ -9,6 +10,7 @@ from secondmind.retrieval.answer import (
     build_pack,
     chit_chat_context,
     relative,
+    save_message,
 )
 from secondmind.retrieval.conversation import (
     ConversationIndexer,
@@ -72,6 +74,7 @@ from secondmind.retrieval.upcoming import Upcoming, UpcomingDay, UpcomingEntry, 
 __all__ = [
     "INVERSE",
     "NO_EVIDENCE",
+    "SAVE_OFFER",
     "SHAPE_TOOLS",
     "SYMMETRIC",
     "Access",
@@ -132,6 +135,7 @@ __all__ = [
     "recall_responders",
     "recall_text_responders",
     "relative",
+    "save_message",
     "soft_query_text",
     "split_said",
     "validate_plan",
