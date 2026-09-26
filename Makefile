@@ -97,8 +97,8 @@ eval-recall-live: ## Recall golden cases on the configured real providers, with 
 	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and live" -s -q
 
 .PHONY: seed-dev
-seed-dev: ## Seed the synthetic recall fixture into the dev user's workspace (compose stack)
-	$(COMPOSE) exec api python -m secondmind.evals seed-dev
+seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
+	$(COMPOSE) exec api python -m secondmind.evals seed-dev --web-url $(WEB_URL)
 
 .PHONY: backfill-conversation
 backfill-conversation: ## Index past chat turns for "what did you tell me" questions (runs in the worker)
