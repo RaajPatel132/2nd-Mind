@@ -74,8 +74,10 @@ class TurnContext:
     recall: Callable[[bool], Awaitable[RecallOutcome]] | None = None
     triggers: Callable[[list[float] | None], Awaitable[str | None]] | None = None
     correct: Callable[[], Awaitable[CorrectOutcome]] | None = None
-    # A "yes" to the offer the previous reply made: routed to correct by rule, no model call.
+    # A "yes" to the offer the previous reply made, routed by rule with no model call: the count
+    # check's re-file goes to correct, saving what I said goes to ingest.
     accepts_offer: bool = False
+    accepts_save: bool = False
     secret_found: bool = False
     core_prefix: str | None = None
     trail: Trail = field(default_factory=NullTrail)
@@ -96,6 +98,13 @@ async def intent_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
                 intent=Intent.CORRECT,
                 confidence=1.0,
                 reason="A yes to the offer in the previous reply, so it applies that fix.",
+                source="rule",
+            )
+        elif ctx.accepts_save and not ctx.secret_found:
+            event = IntentEvent(
+                intent=Intent.SAVE,
+                confidence=1.0,
+                reason="A yes to the offer in the previous reply, so it saves what I suggested.",
                 source="rule",
             )
         elif ctx.secret_found:

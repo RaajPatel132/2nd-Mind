@@ -35,6 +35,7 @@ from secondmind.core import (
     RelaxStep,
     RetrievalCandidate,
     RetrievalEvent,
+    SaveOffer,
     Shape,
     SubQueryTrace,
     TimeClock,
@@ -50,6 +51,7 @@ from secondmind.memory import CoreView, EntityRecord, ItemRecord, Memory, format
 from secondmind.observability import get_logger
 from secondmind.providers import ChatMessage, ProviderUnavailableError
 from secondmind.retrieval.answer import (
+    SAVE_OFFER,
     AnswerVars,
     CitationFilter,
     Evidence,
@@ -57,6 +59,8 @@ from secondmind.retrieval.answer import (
     abstention,
     build_pack,
     citations,
+    conversation_offer,
+    save_offer,
 )
 from secondmind.retrieval.fusion import SOFT, Candidate, fuse
 from secondmind.retrieval.plan import PlanContext, Planner, ResolvedPlan, SubQuery
@@ -148,6 +152,7 @@ class RecallOutcome:
     retrieved: list[uuid.UUID] = field(default_factory=list)
     cited: list[uuid.UUID] = field(default_factory=list)
     count_offer: CountCheck | None = None
+    save_offer: SaveOffer | None = None
     said_offer: list[uuid.UUID] = field(default_factory=list)
     answered_by_model: bool = False
 
@@ -234,7 +239,10 @@ class RecallPipeline:
         async with ctx.trail.run(AgentStep.ANSWER):
             outcome = await self._answer(ctx, runs, hydrated)
         event = event.model_copy(
-            update={"sub_queries": [_trace(r, hydrated, outcome) for r in runs]}
+            update={
+                "sub_queries": [_trace(r, hydrated, outcome) for r in runs],
+                "save_offer": outcome.save_offer,
+            }
         )
         await ctx.trail.emit(event)
         await ctx.trail.emit(outcome.citations)
@@ -637,11 +645,20 @@ class RecallPipeline:
                 pieces.append(text)
                 ctx.write(text)
 
+        offer = next((r.count_check for r in runs if r.count_check is not None), None)
+        # One offer per reply, so a "yes" is never ambiguous: the count check's comes first.
+        offers_save = offer is None and conversation_offer(parts)
         answerable = [p for p in parts if not p.empty]
         if not answerable:
             say(abstention(parts))
         else:
-            pack = build_pack(parts, now=ctx.now, entities=h.entities, roles=h.roles)
+            pack = build_pack(
+                parts,
+                now=ctx.now,
+                entities=h.entities,
+                roles=h.roles,
+                notes_after=[SAVE_OFFER] if offers_save else (),
+            )
             flt = CitationFilter(evidence)
             variables = AnswerVars(
                 now=ctx.now.local.strftime("%A %Y-%m-%d %H:%M"),
@@ -657,12 +674,14 @@ class RecallPipeline:
             empty = abstention([p for p in parts if p.empty and len(parts) > 1])
             if empty:
                 say(f"\n\n{empty}")
-        offer = next((r.count_check for r in runs if r.count_check is not None), None)
         if offer is not None:
             say(f"\n\n{offer.note} {offer.offer}")
         cited = [evidence[n] for n in used if n in evidence]
         if not by_model:
             cited = []
+        said = save_offer(cited) if offers_save else None
+        if said is not None:
+            say(f"\n\n{said.offer}")
         items_cited = [e.item.id for e in cited if e.item is not None]
         counted = [i for r in runs if r.aggregate for i in r.aggregate.item_ids]
         items_cited = list(dict.fromkeys(items_cited + counted))
@@ -678,6 +697,7 @@ class RecallPipeline:
             retrieved=retrieved,
             cited=items_cited,
             count_offer=offer,
+            save_offer=said,
             said_offer=[
                 e.turn_id for e in cited if e.kind == "turn" and e.role == "assistant" and e.turn_id
             ],
