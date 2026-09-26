@@ -133,7 +133,9 @@ async def build_services(config: AppConfig) -> Services:
         return CheckResult(ok=True, detail=f"schema {revision}; role {role.role} under RLS")
 
     async def seed_recall(scope: WorkspaceScope) -> int:
-        seeded = await seed_into(db, scope, runtime.router, runtime.memory)
+        seeded = await seed_into(
+            db, scope, runtime.router, runtime.memory, resources=settings.resources_dir
+        )
         return len(seeded.items) if seeded else 0
 
     async def redis_check() -> CheckResult:

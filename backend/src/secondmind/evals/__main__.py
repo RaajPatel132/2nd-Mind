@@ -51,7 +51,13 @@ async def _seed_dev(email: str | None) -> int:
             timezone=config.settings.default_timezone,
         )
         scope = WorkspaceScope(workspace_id=ws.id, user_id=user.id)
-        seeded = await seed_into(runtime.db, scope, runtime.router, runtime.memory)
+        seeded = await seed_into(
+            runtime.db,
+            scope,
+            runtime.router,
+            runtime.memory,
+            resources=config.settings.resources_dir,
+        )
     finally:
         await runtime.aclose()
     sys.stdout.write(

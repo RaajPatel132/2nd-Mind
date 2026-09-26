@@ -57,7 +57,9 @@ from secondmind.memory import (
 )
 from secondmind.retrieval import ConversationIndexer, ConversationStore, SaidTurn
 
-FIXTURE_PATH = DEFAULT_RESOURCES_DIR / "evals" / "fixtures" / "recall.yaml"
+# Relative to the resources directory (RESOURCES_DIR): an installed package is not next to it.
+FIXTURE_FILE = Path("evals") / "fixtures" / "recall.yaml"
+FIXTURE_PATH = DEFAULT_RESOURCES_DIR / FIXTURE_FILE
 SYSTEM_TEXT = "Load the recall fixture"
 
 
