@@ -19,6 +19,7 @@ own events and diff, so they are auditable and can themselves be undone.
 import asyncio
 import contextlib
 import json
+import re
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
@@ -42,12 +43,22 @@ from secondmind.core import (
     Clock,
     ErrorEvent,
     ModelCallEvent,
+    NullTrail,
+    RetrievalEvent,
+    TargetType,
     TurnEvent,
     UsageTotals,
     ValidationFailedError,
     WorkspaceScope,
     new_id,
     utc_now,
+)
+from secondmind.corrections import (
+    CorrectContext,
+    CorrectionChanges,
+    Corrector,
+    CorrectOutcome,
+    Offer,
 )
 from secondmind.ingestion import (
     ExtractionInvalidError,
@@ -91,6 +102,12 @@ INTERNAL_ERROR_MESSAGE = "Something went wrong on our side, and this turn was no
 # re-rendering in the background, as a system turn).
 EntitiesRenamed = Callable[[WorkspaceScope, set[uuid.UUID]], Awaitable[None]]
 # Called when a chat turn completed (its conversation is indexed in the background, S3.9).
+# A short yes to an offer ("yes", "yes please", "sure, do it").
+_AFFIRMATIVE = re.compile(
+    r"^\s*(yes|yeah|yep|yup|sure|ok|okay|please do|do it|go ahead)\b[\s\w,!.]{0,20}$",
+    re.IGNORECASE,
+)
+
 TurnCompletedHook = Callable[[WorkspaceScope, Turn], Awaitable[None]]
 RecallStores = Callable[[WorkspaceScope], RecallStore]
 ConversationStores = Callable[[WorkspaceScope], ConversationStore]
@@ -176,6 +193,8 @@ class _TurnRun:
     router: ModelRouter
     default_lead_minutes: int = 1440
     secret_kinds: list[str] = field(default_factory=list)
+    # The turn before this one (corrections target what it saved; "yes" accepts its offer).
+    previous: Turn | None = None
     tally: _Tally = field(default_factory=_Tally)
     trace: TurnTrace | None = None
     trail: TurnTrail | None = None
@@ -232,6 +251,7 @@ class TurnRunner:
         self._recall_stores = recall_stores
         self._recall = RecallPipeline(recall)
         self._triggers = TriggerCheck(threshold=trigger_threshold)
+        self._corrector = Corrector()
         self._conversation_stores = conversation_stores
         self._on_completed = on_turn_completed
         self._graph = build_turn_graph()
@@ -263,6 +283,7 @@ class TurnRunner:
         scan = scan_secrets(message)
         store = self._stores(scope)
         history = await self._history(store)
+        previous = next(iter(await store.recent(limit=1)), None)
         started = self._clock()
         turn = await store.create(
             turn_id=new_id(), text=scan.redacted, config_hash=self._config_hash, started_at=started
@@ -279,6 +300,7 @@ class TurnRunner:
             router=router,
             default_lead_minutes=default_lead_minutes,
             secret_kinds=scan.kinds,
+            previous=previous,
         )
         run.trail = TurnTrail(store, turn.id, queue.put, clock=self._clock)
         task = asyncio.create_task(self._run(run), name=f"turn-{turn.id}")
@@ -304,6 +326,25 @@ class TurnRunner:
             task.cancel()
         if pending:
             await asyncio.wait(pending, timeout=5)
+
+    async def _previous_items(self, run: _TurnRun) -> list[uuid.UUID]:
+        """What the previous turn wrote: a correction's default target (S3.12)."""
+        if run.previous is None or run.previous.kind is not TurnKind.USER:
+            return []
+        rows = await self._memory.reader(run.scope).write_log(run.previous.id)
+        return list(dict.fromkeys(r.target_id for r in rows if r.target_type is TargetType.ITEM))
+
+    async def _offer(self, run: _TurnRun) -> Offer | None:
+        """The count cross-check's offer in the previous reply, if it made one (S3.6)."""
+        if run.previous is None or run.previous.status is not TurnStatus.COMPLETED:
+            return None
+        for stored in await run.store.events(run.previous.id):
+            if isinstance(stored.event, RetrievalEvent):
+                for sq in stored.event.sub_queries:
+                    check = sq.count_check
+                    if check is not None and check.offer and check.extra_ids:
+                        return Offer(tuple(check.extra_ids), dict(check.fix), check.label)
+        return None
 
     async def _history(self, store: TurnStore) -> list[ChatMessage]:
         turns = await store.recent(limit=self._history_turns)
@@ -426,6 +467,26 @@ class TurnRunner:
                 )
                 return " ".join(f.note for f in fired) or None
 
+            offer = await self._offer(run) if _AFFIRMATIVE.match(turn.input) else None
+
+            async def correct() -> CorrectOutcome:
+                return await self._corrector.run(
+                    CorrectContext(
+                        scope=run.scope,
+                        turn_id=turn.id,
+                        message=turn.input,
+                        now=now,
+                        steps=steps,
+                        memory=self._memory,
+                        store=self._recall_stores(run.scope),
+                        trail=trail,
+                        write=write,
+                        previous_items=await self._previous_items(run),
+                        offer=offer,
+                        embed=self._embedder(steps),
+                    )
+                )
+
             context = TurnContext(
                 router=run.router,
                 prompts=self._prompts,
@@ -439,6 +500,8 @@ class TurnRunner:
                 ingest=ingest,
                 recall=recall,
                 triggers=triggers,
+                correct=correct,
+                accepts_offer=offer is not None,
                 secret_found=bool(run.secret_kinds),
                 core_prefix=core.text,
                 trail=trail,
@@ -525,6 +588,52 @@ class TurnRunner:
             timezone=timezone,
             action=action,
             parent_turn_id=held.turn_id,
+        )
+
+    async def edit_item(
+        self,
+        scope: WorkspaceScope,
+        *,
+        item_id: uuid.UUID,
+        changes: CorrectionChanges,
+        delete: bool = False,
+        timezone: str,
+    ) -> Turn:
+        """A glass-box edit of one memory as its own turn (origin ``ui_edit``), through the
+        writer and policy, with its own diff; undo reverses it (S3.12)."""
+        item = await self._memory.reader(scope).item(item_id)
+        if item is None:
+            raise ValidationFailedError("that memory doesn't exist")
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            outcome = await self._corrector.edit(
+                CorrectContext(
+                    scope=scope,
+                    turn_id=writer_turn.turn_id,
+                    message="",
+                    now=TurnNow(writer_turn.now, timezone),
+                    steps=steps,
+                    memory=self._memory,
+                    store=self._recall_stores(scope),
+                    trail=NullTrail(emit),
+                    write=lambda _: None,
+                    origin="ui_edit",
+                    embed=self._embedder(steps),
+                ),
+                item_id,
+                changes,
+                delete=delete,
+            )
+            return outcome.reply
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.EDIT,
+            text=f"{'Delete' if delete else 'Edit'}: {item.title}",
+            timezone=timezone,
+            action=action,
         )
 
     async def expire_quick(self, scope: WorkspaceScope, *, timezone: str) -> Turn | None:

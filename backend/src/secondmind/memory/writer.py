@@ -544,7 +544,12 @@ class MemoryWriter:
                 return await self._create_item(tx, op, log)
             case UpdateItem() | SetItemState() | DeleteItem() | RestoreItem():
                 before = await self._live_item(tx, op.item_id, allow_deleted=True)
-                after = self._changed_item(before, self._item_changes(op, before))
+                changes = self._item_changes(op, before)
+                if "category_slug" in changes:  # re-filed: the category may be new
+                    changes["category_id"] = await self._slug_category(
+                        tx, str(changes.pop("category_slug"))
+                    )
+                after = self._changed_item(before, changes)
                 await tx.replace_item(after)
                 log.add((TargetType.ITEM, after.id), before, after, after.layer)
                 return log.done(_describe_item_change(before, after))
@@ -790,12 +795,15 @@ class MemoryWriter:
     async def _category(self, tx: MemoryTx, op: CreateItem) -> uuid.UUID | None:
         if not op.category_slug:
             return op.item.category_id
+        return await self._slug_category(tx, op.category_slug, op.category_name)
+
+    async def _slug_category(self, tx: MemoryTx, slug: str, name: str | None = None) -> uuid.UUID:
         stored = await tx.upsert_category(
             CategoryRecord(
                 id=new_id(),
                 workspace_id=self._turn.workspace_id,
-                slug=op.category_slug,
-                display_name=op.category_name or op.category_slug.rsplit("/", 1)[-1],
+                slug=slug,
+                display_name=name or slug.rsplit("/", 1)[-1],
             )
         )
         return stored.id

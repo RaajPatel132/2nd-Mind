@@ -150,7 +150,13 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit Item
+         * @description Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and
+         *     policy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by
+         *     the resolver ("Friday", "3 October"); a delete is held for confirmation.
+         */
+        patch: operations["edit_item"];
         trace?: never;
     };
     "/v1/me": {
@@ -899,6 +905,38 @@ export interface components {
             links: components["schemas"]["LinkRecord"][];
             /** Triggers */
             triggers: components["schemas"]["TriggerRecord"][];
+        };
+        /**
+         * ItemEditIn
+         * @description A glass-box edit of one memory (S3.12). Only the fields given change.
+         */
+        ItemEditIn: {
+            /** Category */
+            category?: string | null;
+            /** Date Clock */
+            date_clock?: ("occurred" | "due" | "valid") | null;
+            /**
+             * Date Expression
+             * @description Free text read by the resolver: 'Friday'.
+             */
+            date_expression?: string | null;
+            /**
+             * Delete
+             * @default false
+             */
+            delete: boolean;
+            /** Format */
+            format?: string | null;
+            /** Kind */
+            kind?: string | null;
+            /** Layer */
+            layer?: ("core" | "quick" | "archive") | null;
+            /** State */
+            state?: string | null;
+            /** Subtype */
+            subtype?: string | null;
+            /** Tags */
+            tags?: string[] | null;
         };
         /** ItemEntityRecord */
         ItemEntityRecord: {
@@ -2510,6 +2548,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ItemDetailOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    edit_item: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnOut"];
                 };
             };
             /** @description Not signed in */

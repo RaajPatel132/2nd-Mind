@@ -102,6 +102,11 @@ def select(
     counted: Sequence[uuid.UUID] = (),
 ) -> Selection:
     """Decide what reaches the answer; marks ``selected`` and ``reason`` on every candidate."""
+    if sub.missing_entity:
+        # "Nisha's husband" when she has none: nothing found by meaning answers for them.
+        for c in candidates:
+            c.selected, c.reason = False, "the person or thing asked about isn't known"
+        return Selection(selected=[])
     if sub.shape is Shape.COUNT:
         chosen = [c for c in candidates if c.item_id in set(counted)]
         chosen.sort(key=lambda c: list(counted).index(c.item_id))

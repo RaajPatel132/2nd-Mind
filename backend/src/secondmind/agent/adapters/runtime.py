@@ -9,6 +9,7 @@ from secondmind.agent import EntitiesRenamed, TurnCompletedHook, TurnRunner
 from secondmind.agent.adapters.store import SqlTurnStore
 from secondmind.config import AppConfig, Settings
 from secondmind.core import ConfigError, WorkspaceScope
+from secondmind.corrections import correction_responders
 from secondmind.ingestion import IngestSettings, load_replay, offline_responders
 from secondmind.memory import Memory, MemorySettings
 from secondmind.memory.adapters import Database, embedding_dimensions, sql_memory
@@ -89,7 +90,8 @@ def fake_script(settings: Settings) -> FakeScript:
     recall = load_recall_replay(settings.resources_dir / RECALL_REPLAY_DIR)
     return FakeScript(
         responders=offline_responders(load_replay(settings.resources_dir / REPLAY_DIR))
-        | recall_responders(recall),
+        | recall_responders(recall)
+        | correction_responders(recall),
         text_responders=recall_text_responders(),
     )
 

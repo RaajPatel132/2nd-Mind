@@ -1,5 +1,5 @@
 """Memory actions from the glass box: undo a turn (S2.12), confirm or reject a held write
-(S2.3), and plain detail views of an item or entity (S2.11)."""
+(S2.3), edit a memory in place (S3.12), and plain detail views of an item or entity (S2.11)."""
 
 import uuid
 from collections.abc import Awaitable, Callable
@@ -15,6 +15,7 @@ from secondmind.api.schemas import (
     HeldWriteOut,
     HeldWritesOut,
     ItemDetailOut,
+    ItemEditIn,
     TurnOut,
 )
 from secondmind.api.services import Services
@@ -101,6 +102,24 @@ async def get_item(item_id: uuid.UUID, services: ServicesDep, user_id: UserIdDep
         links=await reader.links([item_id]),
         triggers=await reader.triggers([item_id]),
     )
+
+
+@router.patch("/items/{item_id}", response_model=TurnOut, responses=ERROR_RESPONSES)
+async def edit_item(
+    item_id: uuid.UUID, body: ItemEditIn, services: ServicesDep, user_id: UserIdDep
+) -> TurnOut:
+    """Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and
+    policy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by
+    the resolver ("Friday", "3 October"); a delete is held for confirmation."""
+    _, scope, workspace = await _find(services, user_id, lambda r: r.item(item_id), "item")
+    turn = await services.runner.edit_item(
+        scope,
+        item_id=item_id,
+        changes=body.changes(),
+        delete=body.delete,
+        timezone=workspace.timezone,
+    )
+    return turn_out(services, turn)
 
 
 @router.get("/entities/{entity_id}", response_model=EntityDetailOut, responses=ERROR_RESPONSES)

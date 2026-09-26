@@ -44,6 +44,7 @@ from secondmind.core import (
     WorkspaceScope,
     new_id,
 )
+from secondmind.corrections import correction_responders
 from secondmind.evals.fixture import Seeded, load_fixture, local_instant, seed_workspace
 from secondmind.ingestion import IngestSettings, offline_responders, replay_key
 from secondmind.memory import Memory
@@ -138,10 +139,19 @@ def fake_router(
     cases: Sequence[RecallCase], resources: Path = DEFAULT_RESOURCES_DIR
 ) -> ModelRouter:
     """Every step on the offline fake, replaying what the cases recorded."""
+    return replay_router(case_replay(cases), resources)
+
+
+def replay_router(
+    replay: Mapping[str, Mapping[str, Any]], resources: Path = DEFAULT_RESOURCES_DIR
+) -> ModelRouter:
+    """Every step on the offline fake, replaying ``replay`` (message -> recorded outputs)."""
     routing = resolve_routing(read_routing_file(resources / "config" / "models.yaml"), {}, "fake")
-    replay = case_replay(cases)
+    replay = {replay_key(k): dict(v) for k, v in replay.items()}
     script = FakeScript(
-        responders=offline_responders(replay) | recall_responders(replay),
+        responders=offline_responders(replay)
+        | recall_responders(replay)
+        | correction_responders(replay),
         text_responders=recall_text_responders(),
     )
     return ModelRouter(
@@ -192,6 +202,36 @@ async def seed_main(db: Database, identity: IdentityStore, router: ModelRouter) 
 
 
 # ------------------------------------------------------------------ running
+
+
+def eval_runner(
+    db: Database,
+    router: ModelRouter,
+    *,
+    now: datetime,
+    settings: RecallSettings | None = None,
+    resources: Path = DEFAULT_RESOURCES_DIR,
+) -> TurnRunner:
+    """A turn runner on Postgres with the clock frozen at ``now``."""
+
+    def frozen(at: datetime = now) -> datetime:
+        return at
+
+    return TurnRunner(
+        router=router,
+        prompts=PromptRegistry.load(resources / "prompts"),
+        stores=lambda s: SqlTurnStore(db, s),
+        tracer=NullTracer(),
+        config_hash="eval",
+        max_message_chars=8000,
+        memory=Memory(sql_memory(db)),
+        ingest=IngestSettings(),
+        embed_dimensions=EMBED_DIMENSIONS,
+        clock=frozen,
+        recall_stores=lambda s: SqlRecallStore(db, s, timeout_ms=10_000),
+        recall=settings or RecallSettings(),
+        conversation_stores=lambda s: SqlConversationStore(db, s),
+    )
 
 
 @dataclass(slots=True)
@@ -258,25 +298,7 @@ async def run_case(
 ) -> RecallRun:
     scope = seeded.scope
     memory = Memory(sql_memory(db))
-
-    def frozen(at: datetime = case.now) -> datetime:
-        return at
-
-    runner = TurnRunner(
-        router=router,
-        prompts=PromptRegistry.load(resources / "prompts"),
-        stores=lambda s: SqlTurnStore(db, s),
-        tracer=NullTracer(),
-        config_hash="eval",
-        max_message_chars=8000,
-        memory=memory,
-        ingest=IngestSettings(),
-        embed_dimensions=EMBED_DIMENSIONS,
-        clock=frozen,
-        recall_stores=lambda s: SqlRecallStore(db, s, timeout_ms=10_000),
-        recall=settings or RecallSettings(),
-        conversation_stores=lambda s: SqlConversationStore(db, s),
-    )
+    runner = eval_runner(db, router, now=case.now, settings=settings, resources=resources)
     try:
         for text in case.setup:
             handle = await runner.start(scope, text=text, timezone=case.timezone)
@@ -451,10 +473,12 @@ __all__ = [
     "RecallCase",
     "RecallRun",
     "case_ids",
+    "eval_runner",
     "explain",
     "failures",
     "fake_router",
     "load_cases",
+    "replay_router",
     "report",
     "router_embedder",
     "run_case",

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind, TurnStatus
 from secondmind.auth import User, Workspace, WorkspaceKind
 from secondmind.core import AgentStep, Layer, TurnEvent, UsageTotals
+from secondmind.corrections import CorrectionChanges
 from secondmind.memory import (
     EntityRecord,
     HeldWriteRecord,
@@ -149,6 +150,28 @@ class HeldWriteOut(_Out):
 
 class HeldWritesOut(_Out):
     items: list[HeldWriteOut]
+
+
+class ItemEditIn(BaseModel):
+    """A glass-box edit of one memory (S3.12). Only the fields given change."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: str | None = None
+    subtype: str | None = None
+    category: str | None = Field(default=None, max_length=200)
+    tags: list[str] | None = Field(default=None, max_length=20)
+    format: str | None = None
+    layer: Literal["core", "quick", "archive"] | None = None
+    state: str | None = None
+    date_expression: str | None = Field(
+        default=None, max_length=100, description="Free text read by the resolver: 'Friday'."
+    )
+    date_clock: Literal["occurred", "due", "valid"] | None = None
+    delete: bool = False
+
+    def changes(self) -> CorrectionChanges:
+        return CorrectionChanges.model_validate(self.model_dump(exclude={"delete"}))
 
 
 class ItemDetailOut(_Out):

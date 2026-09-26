@@ -125,7 +125,7 @@ name = "core is a leaf: shared types only, no other secondmind module and no I/O
 type = "forbidden"
 source_modules = ["secondmind.core"]
 forbidden_modules = [
-    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval",
+    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections",
     "secondmind.memory", "secondmind.providers", "secondmind.policy", "secondmind.metering",
     "secondmind.auth", "secondmind.jobs", "secondmind.observability", "secondmind.evals",
     "secondmind.config",
@@ -137,7 +137,7 @@ forbidden_modules = [
 name = "Only api imports the web framework"
 type = "forbidden"
 source_modules = [
-    "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.memory",
+    "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
     "secondmind.core",
@@ -148,7 +148,7 @@ forbidden_modules = ["fastapi", "starlette", "uvicorn"]
 name = "Infrastructure SDKs live only in */adapters/ (or api)"
 type = "forbidden"
 source_modules = [
-    "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.memory",
+    "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
 ]
@@ -175,7 +175,7 @@ unmatched_ignore_imports_alerting = "none"
 name = "Only memory touches the store port: everything else writes through MemoryWriter"
 type = "forbidden"
 source_modules = [
-    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval",
+    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
     "secondmind.core",

@@ -19,8 +19,9 @@ from secondmind.core import (
     WriteOp,
 )
 
-# Op origins that are the user's own action (their message, an undo, a confirmation).
-USER_ORIGINS = frozenset({"user_message", "undo", "confirm"})
+# Op origins that are the user's own action (their message, an undo, a confirmation, an edit
+# in the glass box).
+USER_ORIGINS = frozenset({"user_message", "undo", "confirm", "ui_edit"})
 
 # Ops that change an item or entity that already exists.
 EDIT_OPS = frozenset(

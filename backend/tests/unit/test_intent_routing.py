@@ -14,13 +14,13 @@ import pytest
 import yaml
 
 from secondmind.agent import (
-    CORRECT_STUB,
     IntentPromptVars,
     TurnCompleted,
     TurnRunner,
 )
 from secondmind.config import DEFAULT_RESOURCES_DIR, PromptRegistry, Step
 from secondmind.core import ConfigError, WorkspaceScope
+from secondmind.corrections import correction_responders
 from secondmind.evals.ingest import live_router
 from secondmind.ingestion import IntentOutput, offline_responders
 from secondmind.memory import Memory
@@ -39,7 +39,7 @@ async def _turn(intent: str, message: str) -> tuple[str, list[str]]:
     fake = FakeProvider(
         "primary",
         script=FakeScript(
-            responders=offline_responders() | recall_responders(),
+            responders=offline_responders() | recall_responders() | correction_responders(),
             text_responders=recall_text_responders(),
         ),
     )
@@ -89,9 +89,9 @@ async def test_save_and_recall_saves_then_recalls() -> None:
     assert events.index("memory_diff") < events.index("retrieval")
 
 
-async def test_correct_gets_its_stub_and_writes_nothing() -> None:
+async def test_correct_runs_the_corrector_and_writes_nothing_it_cannot_work_out() -> None:
     reply, events = await _turn("correct", "No, Nisha is my cousin")
-    assert reply == CORRECT_STUB
+    assert "offline fake can't work out corrections" in reply
     assert "memory_diff" not in events
 
 

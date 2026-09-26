@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from secondmind.config import PromptRegistry, Step
 from secondmind.core import AgentStep, Intent, IntentEvent, NullTrail, Trail, TurnEvent
+from secondmind.corrections import CorrectOutcome
 from secondmind.ingestion import IngestOutcome, IntentOutput, ModelSteps
 from secondmind.observability import GenerationSpan, TurnTrace
 from secondmind.providers import (
@@ -31,12 +32,6 @@ from secondmind.providers import (
     TextDelta,
 )
 from secondmind.retrieval import AnswerVars, RecallOutcome, chit_chat_context
-
-CORRECT_STUB = (
-    "Correcting saved memories by chat isn't wired up yet. For now, open that turn's glass box "
-    "and undo it, then tell me the right version."
-)
-
 
 AnswerPromptVars = AnswerVars
 
@@ -78,6 +73,9 @@ class TurnContext:
     ingest: Callable[[], Awaitable[IngestOutcome]]
     recall: Callable[[bool], Awaitable[RecallOutcome]] | None = None
     triggers: Callable[[list[float] | None], Awaitable[str | None]] | None = None
+    correct: Callable[[], Awaitable[CorrectOutcome]] | None = None
+    # A "yes" to the offer the previous reply made: routed to correct by rule, no model call.
+    accepts_offer: bool = False
     secret_found: bool = False
     core_prefix: str | None = None
     trail: Trail = field(default_factory=NullTrail)
@@ -93,7 +91,14 @@ async def intent_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
     """Decide what the message is for (FR-1.2). A secret skips the model entirely."""
     ctx = runtime.context
     async with ctx.trail.run(AgentStep.UNDERSTAND):
-        if ctx.secret_found:
+        if ctx.accepts_offer and not ctx.secret_found:
+            event = IntentEvent(
+                intent=Intent.CORRECT,
+                confidence=1.0,
+                reason="A yes to the offer in the previous reply, so it applies that fix.",
+                source="rule",
+            )
+        elif ctx.secret_found:
             event = IntentEvent(
                 intent=Intent.SAVE,
                 confidence=1.0,
@@ -124,7 +129,7 @@ def route_intent(state: TurnState) -> str:
     if intent == Intent.RECALL:
         return "recall"
     if intent == Intent.CORRECT:
-        return "correct_stub"
+        return "correct"
     return "answer"
 
 
@@ -167,10 +172,13 @@ async def triggers_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict
     return {"answer": (state.get("answer") or "") + text}
 
 
-async def correct_stub_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
-    async with runtime.context.trail.run(AgentStep.ANSWER):
-        _stream(runtime, CORRECT_STUB)
-    return {"answer": CORRECT_STUB}
+async def correct_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    """A correction by chat (S3.12): reclassify, correct a wrong value, forget, or re-file."""
+    ctx = runtime.context
+    if ctx.correct is None:
+        raise RuntimeError("corrections are not configured")
+    outcome = await ctx.correct()
+    return {"answer": outcome.reply}
 
 
 async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
@@ -216,7 +224,7 @@ def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, 
     graph.add_node("intent", intent_node)
     graph.add_node("ingest", ingest_node)
     graph.add_node("recall", recall_node)
-    graph.add_node("correct_stub", correct_stub_node)
+    graph.add_node("correct", correct_node)
     graph.add_node("answer", answer_node)
     graph.add_node("triggers", triggers_node)
     graph.add_edge(START, "intent")
@@ -226,7 +234,7 @@ def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, 
         {
             "ingest": "ingest",
             "recall": "recall",
-            "correct_stub": "correct_stub",
+            "correct": "correct",
             "answer": "answer",
         },
     )
@@ -234,7 +242,7 @@ def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, 
         "ingest", after_ingest, {"recall": "recall", "triggers": "triggers"}
     )
     graph.add_edge("recall", "triggers")
-    graph.add_edge("correct_stub", "triggers")
+    graph.add_edge("correct", "triggers")
     graph.add_edge("answer", "triggers")
     graph.add_edge("triggers", END)
     return graph.compile()

@@ -9,6 +9,7 @@ MODULES = [
     "agent",
     "ingestion",
     "retrieval",
+    "corrections",
     "memory",
     "providers",
     "policy",

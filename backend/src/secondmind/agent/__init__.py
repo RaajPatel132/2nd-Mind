@@ -1,7 +1,6 @@
 """Turn orchestration: the LangGraph turn graph, turn runner and turn/event storage ports."""
 
 from secondmind.agent.graph import (
-    CORRECT_STUB,
     AnswerPromptVars,
     IntentPromptVars,
     TurnContext,
@@ -35,7 +34,6 @@ from secondmind.agent.turns import (
 )
 
 __all__ = [
-    "CORRECT_STUB",
     "INTERNAL_ERROR_MESSAGE",
     "AnswerPromptVars",
     "EntitiesRenamed",
