@@ -88,6 +88,10 @@ eval-ingest: ## Ingestion golden cases on replayed model outputs, with the score
 eval-ingest-live: ## Ingestion golden cases on the configured real providers (needs keys; costs money)
 	$(BACKEND_RUN) python -m secondmind.evals ingest --live
 
+.PHONY: backfill-conversation
+backfill-conversation: ## Index past chat turns for "what did you tell me" questions (runs in the worker)
+	$(COMPOSE) exec worker python -m secondmind.jobs.adapters.enqueue backfill_conversation
+
 .PHONY: web-check
 web-check: ## Frontend lint, typecheck, build and the design-system check (tokens, contrast, budget)
 	$(WEB_RUN) lint

@@ -93,6 +93,21 @@ class Settings(BaseSettings):
     verbal_keys_enabled: bool = True
     soft_channel_enabled: bool = True
 
+    # --- recall: channels, fusion, rerank, selection, triggers (S3)
+    soft_channel_k: Annotated[int, Field(ge=1, le=200)] = 20
+    rrf_k: Annotated[int, Field(ge=1, le=1_000)] = 60
+    history_demotion: Annotated[float, Field(ge=0, le=1)] = 0.5
+    rerank_enabled: bool = True
+    rerank_top_n: Annotated[int, Field(ge=1, le=100)] = 20
+    rerank_min_score: Annotated[float, Field(ge=0, le=1)] = 0.5
+    answer_top_k: Annotated[int, Field(ge=1, le=50)] = 8
+    list_max_items: Annotated[int, Field(ge=1, le=200)] = 20
+    tool_timeout_ms: Annotated[int, Field(ge=50, le=60_000)] = 3_000
+    count_check_min_score: Annotated[float, Field(ge=0, le=1)] = 0.6
+    trigger_similarity_threshold: Annotated[float, Field(gt=0, le=1)] = 0.6
+    upcoming_days: Annotated[int, Field(ge=1, le=365)] = 7
+    quick_frequent_min: Annotated[int, Field(ge=1, le=100)] = 3
+
     # --- reserved for S4: quotas, spend caps and the kill switch
     quota_tokens_guest: Annotated[int, Field(ge=0)] = 50_000
     quota_tokens_standard: Annotated[int, Field(ge=0)] = 1_000_000

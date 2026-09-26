@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from secondmind.agent import EntitiesRenamed, TurnRunner
+from secondmind.agent import EntitiesRenamed, TurnCompletedHook, TurnRunner
 from secondmind.agent.adapters.store import SqlTurnStore
 from secondmind.config import AppConfig, Settings
 from secondmind.core import ConfigError, WorkspaceScope
@@ -16,7 +16,13 @@ from secondmind.observability import Tracer, get_logger
 from secondmind.observability.adapters import build_tracer
 from secondmind.providers import FakeScript, ModelRouter
 from secondmind.providers.adapters import build_router
-from secondmind.retrieval import load_recall_replay, recall_responders, recall_text_responders
+from secondmind.retrieval import (
+    RecallSettings,
+    load_recall_replay,
+    recall_responders,
+    recall_text_responders,
+)
+from secondmind.retrieval.adapters import SqlConversationStore, SqlRecallStore
 
 log = get_logger(__name__)
 
@@ -47,6 +53,23 @@ def memory_settings(settings: Settings) -> MemorySettings:
         quick_horizon_days=settings.quick_horizon_days,
         quick_recent_days=settings.quick_recent_days,
         verbal_keys_enabled=settings.verbal_keys_enabled,
+        quick_frequent_min=settings.quick_frequent_min,
+    )
+
+
+def recall_settings(settings: Settings) -> RecallSettings:
+    return RecallSettings(
+        soft_channel_enabled=settings.soft_channel_enabled,
+        soft_channel_k=settings.soft_channel_k,
+        rrf_k=settings.rrf_k,
+        history_demotion=settings.history_demotion,
+        rerank_enabled=settings.rerank_enabled,
+        rerank_top_n=settings.rerank_top_n,
+        rerank_min_score=settings.rerank_min_score,
+        answer_top_k=settings.answer_top_k,
+        list_max_items=settings.list_max_items,
+        tool_timeout_ms=settings.tool_timeout_ms,
+        count_check_min_score=settings.count_check_min_score,
     )
 
 
@@ -75,6 +98,7 @@ def build_runtime(
     config: AppConfig,
     *,
     on_entities_renamed: EntitiesRenamed | None = None,
+    on_turn_completed: TurnCompletedHook | None = None,
     script: FakeScript | None = None,
 ) -> Runtime:
     settings = config.settings
@@ -85,6 +109,13 @@ def build_runtime(
 
     def stores(scope: WorkspaceScope) -> SqlTurnStore:
         return SqlTurnStore(db, scope)
+
+    def recall_stores(scope: WorkspaceScope) -> SqlRecallStore:
+        # Tools time out on their own; the statement timeout stops runaway SQL behind them.
+        return SqlRecallStore(db, scope, timeout_ms=settings.tool_timeout_ms, rrf_k=settings.rrf_k)
+
+    def conversation_stores(scope: WorkspaceScope) -> SqlConversationStore:
+        return SqlConversationStore(db, scope)
 
     runner = TurnRunner(
         router=router,
@@ -97,6 +128,11 @@ def build_runtime(
         ingest=ingest_settings(settings),
         embed_dimensions=settings.embed_dimensions,
         on_entities_renamed=on_entities_renamed,
+        recall_stores=recall_stores,
+        recall=recall_settings(settings),
+        trigger_threshold=settings.trigger_similarity_threshold,
+        conversation_stores=conversation_stores,
+        on_turn_completed=on_turn_completed,
     )
     return Runtime(config=config, db=db, router=router, tracer=tracer, memory=memory, runner=runner)
 

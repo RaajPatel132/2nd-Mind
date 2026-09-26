@@ -67,3 +67,24 @@ async def expire_quick(ctx: dict[str, Any]) -> dict[str, int]:
         turns += turn is not None
     log.info("job.expire_quick_done", workspaces=len(workspaces), turns=turns, failed=failed)
     return {"workspaces": len(workspaces), "turns": turns, "failed": failed}
+
+
+async def index_conversation(
+    ctx: dict[str, Any], workspace_id: str, user_id: str, turn_id: str
+) -> dict[str, int]:
+    """Index what was said in one completed chat turn (S3.9), after the reply has gone."""
+    scope = WorkspaceScope(workspace_id=uuid.UUID(workspace_id), user_id=uuid.UUID(user_id))
+    rows = await _deps(ctx).runner.index_conversation(scope, uuid.UUID(turn_id))
+    return {"rows": rows}
+
+
+async def backfill_conversation(ctx: dict[str, Any]) -> dict[str, int]:
+    """Index every past chat turn not indexed yet, in every workspace (the one-off job)."""
+    deps = _deps(ctx)
+    workspaces = await deps.identity.all_workspaces()
+    rows = 0
+    for workspace in workspaces:
+        scope = WorkspaceScope(workspace_id=workspace.id, user_id=workspace.owner_user_id)
+        rows += await deps.runner.backfill_conversation(scope)
+    log.info("job.backfill_conversation_done", workspaces=len(workspaces), rows=rows)
+    return {"workspaces": len(workspaces), "rows": rows}

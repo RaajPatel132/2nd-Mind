@@ -5,7 +5,7 @@ import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 
-from secondmind.agent import TurnRunner
+from secondmind.agent import Turn, TurnRunner
 from secondmind.agent.adapters import (
     build_runtime,
     check_embedding_dimensions,
@@ -103,7 +103,16 @@ async def build_services(config: AppConfig) -> Services:
             sorted(str(e) for e in entity_ids),
         )
 
-    runtime = build_runtime(config, on_entities_renamed=rerender)
+    async def index_turn(scope: WorkspaceScope, turn: Turn) -> None:
+        # Indexing what was said embeds text: it runs in the worker, off the turn's path.
+        try:
+            await queue.enqueue(
+                "index_conversation", str(scope.workspace_id), str(scope.user_id), str(turn.id)
+            )
+        except Exception:
+            log.warning("conversation.index_enqueue_failed", turn_id=str(turn.id))
+
+    runtime = build_runtime(config, on_entities_renamed=rerender, on_turn_completed=index_turn)
     db = runtime.db
     await require_embedding_dimensions(db, settings.embed_dimensions)
 
