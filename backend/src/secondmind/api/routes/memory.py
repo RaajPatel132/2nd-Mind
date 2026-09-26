@@ -1,5 +1,6 @@
 """Memory actions from the glass box: undo a turn (S2.12), confirm or reject a held write
-(S2.3), edit a memory in place (S3.12), and plain detail views of an item or entity (S2.11)."""
+(S2.3), edit a memory in place (S3.12), snooze a reminder from Upcoming (S3.14), and plain
+detail views of an item or entity (S2.11)."""
 
 import uuid
 from collections.abc import Awaitable, Callable
@@ -16,6 +17,7 @@ from secondmind.api.schemas import (
     HeldWritesOut,
     ItemDetailOut,
     ItemEditIn,
+    SnoozeIn,
     TurnOut,
     UndatedTaskOut,
     UpcomingDayOut,
@@ -133,6 +135,7 @@ async def get_upcoming(
                         until=e.until,
                         via=e.via,
                         routine=e.routine,
+                        trigger_id=e.trigger_id,
                     )
                     for e in d.entries
                 ],
@@ -170,6 +173,24 @@ async def edit_item(
         item_id=item_id,
         changes=body.changes(),
         delete=body.delete,
+        timezone=workspace.timezone,
+    )
+    return turn_out(services, turn)
+
+
+@router.post("/triggers/{trigger_id}/snooze", response_model=TurnOut, responses=ERROR_RESPONSES)
+async def snooze_reminder(
+    trigger_id: uuid.UUID, body: SnoozeIn, services: ServicesDep, user_id: UserIdDep
+) -> TurnOut:
+    """Move a pending reminder to a new time, as its own turn (source ``ui_edit``) with its own
+    glass box; the memory's own date stays, and undo puts the reminder back (S3.14)."""
+    _, scope, workspace = await _find(
+        services, user_id, lambda r: r.trigger(trigger_id), "reminder"
+    )
+    turn = await services.runner.snooze_reminder(
+        scope,
+        trigger_id=trigger_id,
+        date_expression=body.date_expression,
         timezone=workspace.timezone,
     )
     return turn_out(services, turn)

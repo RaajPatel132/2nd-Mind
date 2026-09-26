@@ -68,3 +68,32 @@ test.describe('recall', () => {
     await expect(lastTurn(page)).toHaveAttribute('data-kind', 'edit')
   })
 })
+
+test.describe('upcoming snooze', () => {
+  test.describe.configure({ timeout: 180_000 })
+
+  test('Snooze moves a reminder, not the plan, and undo puts it back', async ({ page }, testInfo) => {
+    await seeded(page, testInfo)
+    await page.getByTestId('nav-upcoming').click()
+    const upcoming = page.getByTestId('upcoming')
+    const row = (via: string) =>
+      upcoming.locator(`[data-testid="upcoming-entry"][data-via="${via}"]`).filter({ hasText: 'Dinner at Saffron Street' }).first()
+    const dayOf = (via: string) => row(via).locator('xpath=ancestor::section[1]').getAttribute('aria-label')
+    await expect(row('trigger')).toBeVisible()
+    const [reminderDay, dinnerDay] = [await dayOf('trigger'), await dayOf('occurred')]
+
+    await row('trigger').getByRole('button', { name: /Snooze/ }).click()
+    await page.getByRole('option', { name: '1 day' }).click()
+    await expect.poll(() => dayOf('trigger')).not.toBe(reminderDay)
+    expect(await dayOf('occurred')).toBe(dinnerDay)
+
+    await page.getByTestId('nav-upcoming').click()
+    const edit = lastTurn(page)
+    await expect(edit).toHaveAttribute('data-kind', 'edit', { timeout: 30_000 })
+    await expect(edit.getByTestId('assistant-message')).toContainText('Snoozed')
+    await edit.getByTestId('undo-turn').click()
+    await expect(page.locator('[data-testid="system-note"][data-kind="undo"]')).toContainText('Undone')
+    await page.getByTestId('nav-upcoming').click()
+    await expect.poll(() => dayOf('trigger')).toBe(reminderDay)
+  })
+})

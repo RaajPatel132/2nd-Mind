@@ -2,8 +2,9 @@
 
 import pytest
 
+from secondmind.agent import TurnKind
 from secondmind.auth.adapters import SqlIdentityStore
-from secondmind.evals.fixture import load_fixture
+from secondmind.evals.fixture import load_fixture, local_instant
 from secondmind.evals.recall import eval_runner, fake_router, load_cases, seed_main
 from secondmind.memory.adapters import Database
 
@@ -33,4 +34,43 @@ async def test_upcoming_groups_plans_routines_reminders_and_tasks_by_local_day(
     assert "renew_passport" not in {key[t.id] for t in found.undated}
     assert found.note() is not None
     assert "Dinner at Saffron Street" in (found.note() or "")
+    await runner.aclose()
+
+
+async def test_snoozing_a_reminder_moves_the_reminder_not_the_plan_and_undo_restores_it(
+    app_db: Database, identity: SqlIdentityStore
+) -> None:
+    router = fake_router(load_cases())
+    seeded = await seed_main(app_db, identity, router)
+    fixture = load_fixture()
+    runner = eval_runner(app_db, router, now=fixture.instant)
+    scope, dinner = seeded.scope, seeded.items["dinner_tonight"]
+    found = await runner.upcoming(scope, timezone=fixture.timezone, days=30)
+    (reminder,) = [
+        e for d in found.days for e in d.entries if e.via == "trigger" and e.item_id == dinner
+    ]
+    assert reminder.trigger_id is not None
+    reader = runner.memory.reader(scope)
+    plan_before = await reader.item(dinner)
+    assert plan_before is not None
+
+    turn = await runner.snooze_reminder(
+        scope,
+        trigger_id=reminder.trigger_id,
+        date_expression="2026-10-06 19:30",
+        timezone=fixture.timezone,
+    )
+    assert turn.kind is TurnKind.EDIT
+    assert turn.status.value == "completed", turn.output
+    moved = await reader.trigger(reminder.trigger_id)
+    assert moved is not None
+    assert moved.fires_at == local_instant("2026-10-06T19:30", fixture.timezone)
+    plan_after = await reader.item(dinner)
+    assert plan_after is not None
+    assert plan_after.occurred_start == plan_before.occurred_start  # the dinner didn't move
+
+    await runner.undo(scope, turn_id=turn.id, timezone=fixture.timezone)
+    back = await reader.trigger(reminder.trigger_id)
+    assert back is not None
+    assert back.fires_at == reminder.at
     await runner.aclose()

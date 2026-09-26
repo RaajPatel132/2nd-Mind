@@ -31,6 +31,7 @@ from secondmind.core import (
     TimeClock,
     TimePrecision,
     Trail,
+    TriggerState,
     WorkspaceScope,
     initial_state,
     new_id,
@@ -59,6 +60,7 @@ from secondmind.memory import (
     RelateEntities,
     UnrelateEntities,
     UpdateItem,
+    UpdateTrigger,
     WriterTurn,
 )
 from secondmind.providers import ChatMessage, ProviderUnavailableError
@@ -168,6 +170,29 @@ class Corrector:
             if notes and not ops:
                 return self._say(ctx, "edit", " ".join(notes))
         return await self._commit(ctx, ops, "edit", [], prefix="Edited")
+
+    async def snooze(
+        self, ctx: CorrectContext, trigger_id: uuid.UUID, date_expression: str
+    ) -> CorrectOutcome:
+        """Move a pending reminder to a new time from Upcoming (S3.14). The memory's own date
+        stays: snoozing a reminder isn't rescheduling what it's about."""
+        reader = ctx.memory.reader(ctx.scope)
+        trigger = await reader.trigger(trigger_id)
+        if trigger is None or trigger.state is not TriggerState.PENDING:
+            return self._say(ctx, "snooze", "That reminder isn't pending any more.")
+        item = await reader.item(trigger.item_id)
+        title = item.title if item is not None else "reminder"
+        try:
+            r = resolve(date_expression, TimeClock.OCCURRED, ctx.now)
+        except UnresolvableTimeError:
+            return self._say(ctx, "snooze", f"I couldn't work out the date '{date_expression}'.")
+        op = UpdateTrigger(
+            trigger_id=trigger.id,
+            changes={"fires_at": r.start},
+            title=f"reminder: {title}",
+            rationale=f"snoozed to {date_expression}",
+        )
+        return await self._commit(ctx, [op], "snooze", [], prefix="Snoozed")
 
     # ------------------------------------------------------------------ target
 

@@ -136,6 +136,16 @@ export async function editItem(itemId: string, body: ItemEdit): Promise<Turn> {
   return unwrap(await api.PATCH('/v1/items/{item_id}', { params: { path: { item_id: itemId } }, body }))
 }
 
+/** Move a pending reminder to a new time; the memory's own date stays (S3.14). */
+export async function snoozeReminder(triggerId: string, dateExpression: string): Promise<Turn> {
+  return unwrap(
+    await api.POST('/v1/triggers/{trigger_id}/snooze', {
+      params: { path: { trigger_id: triggerId } },
+      body: { date_expression: dateExpression },
+    }),
+  )
+}
+
 /** What's ahead, grouped by local day, with undated open tasks and the due-soon note (S3.14). */
 export async function getUpcoming(workspaceId: string, days?: number): Promise<Upcoming> {
   return unwrap(

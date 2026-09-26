@@ -2986,6 +2986,26 @@
         "title": "Shape",
         "type": "string"
       },
+      "SnoozeIn": {
+        "additionalProperties": false,
+        "description": "Snooze a reminder to a new time (S3.14): free text read by the resolver.",
+        "properties": {
+          "date_expression": {
+            "examples": [
+              "2026-10-07 19:00"
+            ],
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Date Expression",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date_expression"
+        ],
+        "title": "SnoozeIn",
+        "type": "object"
+      },
       "Source": {
         "enum": [
           "user_message",
@@ -4353,6 +4373,19 @@
             "title": "Title",
             "type": "string"
           },
+          "trigger_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a reminder (via trigger): what Snooze moves.",
+            "title": "Trigger Id"
+          },
           "until": {
             "anyOf": [
               {
@@ -5282,6 +5315,80 @@
         "summary": "Meta",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/v1/triggers/{trigger_id}/snooze": {
+      "post": {
+        "description": "Move a pending reminder to a new time, as its own turn (source ``ui_edit``) with its own\nglass box; the memory's own date stays, and undo puts the reminder back (S3.14).",
+        "operationId": "snooze_reminder",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trigger_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Trigger Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "Snooze Reminder",
+        "tags": [
+          "memory"
         ]
       }
     },

@@ -31,6 +31,7 @@ class UpcomingEntry:
     until: datetime | None
     via: str
     routine: bool
+    trigger_id: uuid.UUID | None = None  # a reminder's own id: Snooze moves the reminder
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +99,7 @@ async def list_upcoming(
             until=o.end,
             via=o.via,
             routine=o.via == "routine",
+            trigger_id=o.trigger_id,
         )
         by_day.setdefault(o.start.astimezone(zone).date(), []).append(entry)
     out = Upcoming(start=now, end=end, timezone=timezone)
