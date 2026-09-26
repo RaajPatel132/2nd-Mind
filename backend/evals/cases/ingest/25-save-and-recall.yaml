@@ -1,5 +1,5 @@
 id: 25-save-and-recall
-title: "Save and recall: the save happens, the recall part gets the honest stub"
+title: "Save and recall: the save happens first, then recall runs on the question"
 now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Add Dark to my watchlist. What else is on it?
@@ -22,4 +22,6 @@ expect:
     - match: watch dark
       kind: intention
       subtype: watch
-  reply_contains: ["Added Dark to your watch list.", "recall isn't wired up"]
+  # Recall itself (listing Dark) is shown on Postgres by the S3.8 integration test; here the
+  # ingestion goldens run without a recall store, so the question part finds nothing.
+  reply_contains: ["Added Dark to your watch list.", "I don't have anything saved about"]

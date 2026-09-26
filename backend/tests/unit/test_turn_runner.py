@@ -94,7 +94,7 @@ async def test_turn_completes_with_streamed_reply_and_ordered_events() -> None:
     turn = events[-1].turn
     assert tokens == turn.output == "Hi! How can I help?"
     assert turn.status is TurnStatus.COMPLETED
-    assert turn.prompt_versions == ["intent@1", "answer@2"]
+    assert turn.prompt_versions == ["intent@1", "answer@3"]
     assert turn.models["answer"].provider == "primary"
     assert turn.config_hash == "c" * 64
     assert turn.usage.total_tokens > 0
@@ -109,7 +109,7 @@ async def test_turn_completes_with_streamed_reply_and_ordered_events() -> None:
     call = stored[3].event
     assert isinstance(call, ModelCallEvent)
     assert call.step == "answer"
-    assert call.prompt == "answer@2"
+    assert call.prompt == "answer@3"
     assert (
         sum(e.event.usage.total_tokens for e in stored if isinstance(e.event, ModelCallEvent))
         == turn.usage.total_tokens

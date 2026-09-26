@@ -30,6 +30,8 @@ class Step(StrEnum):
     ENRICH = "enrich"
     RECONCILE = "reconcile"
     PLAN = "plan"
+    RERANK = "rerank"
+    CORRECT = "correct"
     ANSWER = "answer"
     JUDGE = "judge"
     EMBED = "embed"

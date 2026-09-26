@@ -112,7 +112,7 @@ async def test_meta_exposes_config_hash_and_routing(client: httpx.AsyncClient) -
         "provider": "fake",
         "model": "fake-chat",
         "fallback": None,
-        "prompt": "answer@2",
+        "prompt": "answer@3",
         "timeout_s": 30.0,
     }
 
@@ -249,11 +249,15 @@ async def test_a_picked_model_serves_every_chat_step_and_charges_its_weight(
     name, completed = frames(response.text)[-1]
     assert name == "turn.completed"
     turn = completed["turn"]
-    assert {m["model"] for m in turn["models"].values()} == {"claude-opus-5"}
+    # A question: recall embeds it, and embeddings keep their own route (ADR-0030).
+    chat = {step: m["model"] for step, m in turn["models"].items() if step != "embed"}
+    assert set(chat.values()) == {"claude-opus-5"}
     events = (await client.get(f"/v1/turns/{turn['id']}/events")).json()["events"]
     calls = [e["event"] for e in events if e["event"]["type"] == "model_call"]
     assert calls
     for call in calls:
+        if call["step"] == "embed":
+            continue
         u = call["usage"]
         raw = u["input_tokens"] + u["cached_input_tokens"] + u["output_tokens"]
         assert u["charged_tokens"] == int(raw * 2.5 + 0.5)

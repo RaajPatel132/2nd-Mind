@@ -95,6 +95,25 @@ steps:
     timeout_s: 30
     max_output_tokens: 2048
     effort: low
+    prompt: plan@1
+  # Listwise scores for the top fused candidates of a recall (S3.7): cheap and fast.
+  rerank:
+    provider: anthropic
+    model: claude-haiku-4-5
+    fallback: openai:gpt-6-luna
+    timeout_s: 20
+    max_output_tokens: 2048
+    effort: low
+    prompt: rerank@1
+  # Turns a correction by chat into a target and a change (S3.12).
+  correct:
+    provider: anthropic
+    model: claude-sonnet-5
+    fallback: openai:gpt-6-sol
+    timeout_s: 30
+    max_output_tokens: 1024
+    effort: low
+    prompt: correct@1
   answer:
     provider: anthropic
     model: claude-opus-5
@@ -102,7 +121,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 4096
     effort: low
-    prompt: answer@2
+    prompt: answer@3
   judge:
     provider: anthropic
     model: claude-opus-5

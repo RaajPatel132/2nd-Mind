@@ -17,6 +17,7 @@ from secondmind.core import (
     EntityKind,
     KeyKind,
     Kind,
+    TriggerOn,
     VocabKind,
     WorkspaceScope,
 )
@@ -302,6 +303,18 @@ class SqlMemoryTx:
             c.state == "pending",
             c.fires_at.is_not(None),
             c.fires_at < now,
+        )
+
+    async def pending_triggers(self, on: Sequence[TriggerOn]) -> list[TriggerRecord]:
+        t = _TRIGGERS.c
+        active = select(_ITEMS.c.id).where(_ITEMS.c.status == "active")
+        return await self._all(
+            TriggerRecord,
+            _TRIGGERS,
+            t.state == "pending",
+            t.on.in_([o.value for o in on]),
+            t.item_id.in_(active),
+            order=t.created_at,
         )
 
     async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:

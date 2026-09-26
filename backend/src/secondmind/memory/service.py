@@ -11,6 +11,7 @@ from secondmind.core import (
     ItemStatus,
     Kind,
     NotFoundError,
+    TriggerOn,
     TriggerState,
     ValidationFailedError,
     VocabKind,
@@ -160,6 +161,10 @@ class MemoryReader:
     async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
         async with self._store.transaction() as tx:
             return await tx.frequent_items(since, min_turns)
+
+    async def pending_triggers(self, on: Sequence[TriggerOn]) -> list[TriggerRecord]:
+        async with self._store.transaction() as tx:
+            return await tx.pending_triggers(on)
 
     async def core(self) -> CoreView:
         """Core memory rendered within the token budget (S2.9)."""

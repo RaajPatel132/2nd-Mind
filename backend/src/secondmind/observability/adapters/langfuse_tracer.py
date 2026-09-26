@@ -7,7 +7,7 @@ blocks or fails a turn; ``available()`` reports reachability for the glass box l
 
 import time
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import httpx
 from langfuse import Langfuse
@@ -100,6 +100,25 @@ class _TurnTrace:
             log.warning("trace.generation_start_failed", exc_info=True)
             obs = _Noop()
         return _Generation(obs, self._include_content)
+
+    def record_span(
+        self,
+        name: str,
+        *,
+        started_at: datetime,
+        latency_ms: int,
+        metadata: dict[str, str],
+    ) -> None:
+        if self._root is None:
+            return
+        try:
+            obs = self._root.start_observation(  # type: ignore[attr-defined]
+                name=name, as_type="tool", metadata={k: v[:200] for k, v in metadata.items()}
+            )
+            ended = started_at + timedelta(milliseconds=latency_ms)
+            obs.end(end_time=int(ended.timestamp() * 1_000_000_000))
+        except Exception:
+            log.warning("trace.span_failed", exc_info=True)
 
     def finish(
         self,

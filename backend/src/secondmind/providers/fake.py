@@ -79,12 +79,15 @@ class FakeRule:
 
 # Answers an unscripted structured call for one step (the offline "brain" in fake mode).
 Responder = Callable[[AdapterRequest], dict[str, Any] | None]
+# Answers an unscripted text call for one step (None: the canned default reply).
+TextResponder = Callable[[AdapterRequest], str | None]
 
 
 @dataclass(slots=True)
 class FakeScript:
     rules: list[FakeRule] = field(default_factory=list)
     responders: dict[str, Responder] = field(default_factory=dict)
+    text_responders: dict[str, TextResponder] = field(default_factory=dict)
 
     def add(
         self,
@@ -112,6 +115,10 @@ class FakeScript:
 
     def respond(self, request: AdapterRequest) -> dict[str, Any] | None:
         responder = self.responders.get(request.step)
+        return None if responder is None else responder(request)
+
+    def respond_text(self, request: AdapterRequest) -> str | None:
+        responder = self.text_responders.get(request.step)
         return None if responder is None else responder(request)
 
 
@@ -155,7 +162,10 @@ class FakeProvider:
 
     async def stream_chat(self, request: AdapterRequest) -> AsyncIterator[AdapterStreamEvent]:
         outcome = await self._begin(request)
-        text = outcome.text if outcome and outcome.text is not None else default_reply(request)
+        text = outcome.text if outcome and outcome.text is not None else None
+        if text is None and outcome is None:
+            text = self.script.respond_text(request)
+        text = text if text is not None else default_reply(request)
         tool_calls = list(outcome.tool_calls) if outcome else []
         if tool_calls and outcome and outcome.text is None:
             text = ""
@@ -177,7 +187,8 @@ class FakeProvider:
     async def chat(self, request: AdapterRequest) -> AdapterReply:
         outcome = await self._begin(request)
         if outcome is None:
-            return self._reply(request, default_reply(request), [])
+            text = self.script.respond_text(request)
+            return self._reply(request, text if text is not None else default_reply(request), [])
         tool_calls = list(outcome.tool_calls)
         text = (
             outcome.text

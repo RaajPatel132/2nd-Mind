@@ -23,7 +23,10 @@ PROMPTS_BY_STEP: dict[Step, str] = {
     Step.ENRICH: "enrich@1",
     Step.RECONCILE: "reconcile@1",
     Step.RESOLVE: "resolve@1",
-    Step.ANSWER: "answer@2",
+    Step.PLAN: "plan@1",
+    Step.RERANK: "rerank@1",
+    Step.CORRECT: "correct@1",
+    Step.ANSWER: "answer@3",
 }
 
 

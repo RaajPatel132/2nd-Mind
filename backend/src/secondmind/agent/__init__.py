@@ -2,7 +2,6 @@
 
 from secondmind.agent.graph import (
     CORRECT_STUB,
-    RECALL_STUB,
     AnswerPromptVars,
     IntentPromptVars,
     TurnContext,
@@ -37,7 +36,6 @@ from secondmind.agent.turns import (
 __all__ = [
     "CORRECT_STUB",
     "INTERNAL_ERROR_MESSAGE",
-    "RECALL_STUB",
     "AnswerPromptVars",
     "EntitiesRenamed",
     "EventRecorded",

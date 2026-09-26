@@ -23,7 +23,14 @@ from secondmind.providers.errors import (
     ProviderUnavailableError,
     StreamInterruptedError,
 )
-from secondmind.providers.fake import FakeOutcome, FakeProvider, FakeRule, FakeScript, Responder
+from secondmind.providers.fake import (
+    FakeOutcome,
+    FakeProvider,
+    FakeRule,
+    FakeScript,
+    Responder,
+    TextResponder,
+)
 from secondmind.providers.resilience import (
     BreakerRegistry,
     BreakerState,
@@ -73,6 +80,7 @@ __all__ = [
     "StreamInterruptedError",
     "StructuredResult",
     "TextDelta",
+    "TextResponder",
     "ToolCall",
     "ToolSpec",
     "backoff_delay",

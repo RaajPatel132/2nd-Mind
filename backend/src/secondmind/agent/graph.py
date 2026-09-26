@@ -1,5 +1,6 @@
-"""The turn graph (LangGraph): ``intent`` routes to ``ingest``, the recall/correct stubs or
-``answer`` (S2.4). The user never picks a mode.
+"""The turn graph (LangGraph): ``intent`` routes to ``ingest`` (save), ``recall``, ``correct``
+or ``answer`` (chit-chat); ``save_and_recall`` saves first and recall then sees the save.
+Every turn ends with the trigger check (S3.10). The user never picks a mode.
 
 The graph stays thin: nodes read their collaborators from the runtime context and call plain
 modules. Reply text leaves through ``TurnContext.write`` and step progress through
@@ -29,22 +30,15 @@ from secondmind.providers import (
     ProviderUnavailableError,
     TextDelta,
 )
+from secondmind.retrieval import AnswerVars, RecallOutcome, chit_chat_context
 
-RECALL_STUB = (
-    "I can't look things up in your memory yet: recall isn't wired up, so I won't guess. "
-    "Saving works, though; tell me anything and I'll keep it."
-)
 CORRECT_STUB = (
     "Correcting saved memories by chat isn't wired up yet. For now, open that turn's glass box "
     "and undo it, then tell me the right version."
 )
 
 
-class AnswerPromptVars(BaseModel):
-    """Typed variables of the ``answer`` prompt."""
-
-    now: str
-    timezone: str
+AnswerPromptVars = AnswerVars
 
 
 class IntentPromptVars(BaseModel):
@@ -57,6 +51,8 @@ class TurnState(TypedDict):
     intent: NotRequired[str]
     answer: NotRequired[str]
     secret_values: NotRequired[list[str]]
+    # The message's embedding, when recall made one (the trigger check reuses it).
+    vector: NotRequired[list[float] | None]
 
 
 RecordModelCall = Callable[[ModelCall, GenerationSpan, object, str], Awaitable[None]]
@@ -80,6 +76,8 @@ class TurnContext:
     record_model_call: RecordModelCall
     steps: ModelSteps
     ingest: Callable[[], Awaitable[IngestOutcome]]
+    recall: Callable[[bool], Awaitable[RecallOutcome]] | None = None
+    triggers: Callable[[list[float] | None], Awaitable[str | None]] | None = None
     secret_found: bool = False
     core_prefix: str | None = None
     trail: Trail = field(default_factory=NullTrail)
@@ -124,7 +122,7 @@ def route_intent(state: TurnState) -> str:
     if intent in (Intent.SAVE, Intent.SAVE_AND_RECALL):
         return "ingest"
     if intent == Intent.RECALL:
-        return "recall_stub"
+        return "recall"
     if intent == Intent.CORRECT:
         return "correct_stub"
     return "answer"
@@ -138,19 +136,35 @@ async def ingest_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
 
 
 def after_ingest(state: TurnState) -> str:
-    return "recall_stub" if state.get("intent") == Intent.SAVE_AND_RECALL else END
+    return "recall" if state.get("intent") == Intent.SAVE_AND_RECALL else "triggers"
 
 
-async def recall_stub_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+async def recall_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    """Recall (S3.4-S3.8). After a save the reply goes on; the save is already committed, so
+    recall sees it ("Add Dark to my watchlist. What else is on it?" lists Dark)."""
+    ctx = runtime.context
+    if ctx.recall is None:
+        raise RuntimeError("recall is not configured")
     before = state.get("answer")
-    if before:  # after a save: the same reply goes on, in the answer step that already ran
-        text = f"\n\n{RECALL_STUB}"
-        _stream(runtime, text)
-    else:
-        text = RECALL_STUB
-        async with runtime.context.trail.run(AgentStep.ANSWER):
-            _stream(runtime, text)
-    return {"answer": (before or "") + text}
+    if before:
+        ctx.write("\n\n")
+    outcome = await ctx.recall(bool(before))
+    answer = f"{before}\n\n{outcome.reply}" if before else outcome.reply
+    return {"answer": answer, "vector": outcome.message_vector}
+
+
+async def triggers_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
+    """Every turn: pending person and topic triggers that match fire, and the reply ends with
+    their note (S3.10)."""
+    ctx = runtime.context
+    if ctx.triggers is None:
+        return {}
+    note = await ctx.triggers(state.get("vector"))
+    if not note:
+        return {}
+    text = f"\n\n{note}"
+    _stream(runtime, text)
+    return {"answer": (state.get("answer") or "") + text}
 
 
 async def correct_stub_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
@@ -166,7 +180,8 @@ async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[s
         raise RuntimeError("the answer step has no prompt configured")
     local_now = ctx.now.isoformat(timespec="minutes")
     system = ctx.prompts.render(
-        route.prompt, AnswerPromptVars(now=local_now, timezone=ctx.timezone)
+        route.prompt,
+        AnswerPromptVars(now=local_now, timezone=ctx.timezone, context=chit_chat_context()),
     ).text
     messages = [*ctx.history, ChatMessage.user(state["message"])]
     async with ctx.trail.run(AgentStep.ANSWER):
@@ -200,22 +215,26 @@ def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, 
     graph = StateGraph(TurnState, context_schema=TurnContext)
     graph.add_node("intent", intent_node)
     graph.add_node("ingest", ingest_node)
-    graph.add_node("recall_stub", recall_stub_node)
+    graph.add_node("recall", recall_node)
     graph.add_node("correct_stub", correct_stub_node)
     graph.add_node("answer", answer_node)
+    graph.add_node("triggers", triggers_node)
     graph.add_edge(START, "intent")
     graph.add_conditional_edges(
         "intent",
         route_intent,
         {
             "ingest": "ingest",
-            "recall_stub": "recall_stub",
+            "recall": "recall",
             "correct_stub": "correct_stub",
             "answer": "answer",
         },
     )
-    graph.add_conditional_edges("ingest", after_ingest, {"recall_stub": "recall_stub", END: END})
-    graph.add_edge("recall_stub", END)
-    graph.add_edge("correct_stub", END)
-    graph.add_edge("answer", END)
+    graph.add_conditional_edges(
+        "ingest", after_ingest, {"recall": "recall", "triggers": "triggers"}
+    )
+    graph.add_edge("recall", "triggers")
+    graph.add_edge("correct_stub", "triggers")
+    graph.add_edge("answer", "triggers")
+    graph.add_edge("triggers", END)
     return graph.compile()

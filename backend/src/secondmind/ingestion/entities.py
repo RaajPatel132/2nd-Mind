@@ -300,3 +300,46 @@ def _unique(values: Sequence[str]) -> list[str]:
         if v and _clean(v) not in {_clean(o) for o in out}:
             out.append(v)
     return out
+
+
+# ------------------------------------------------------------------ recall (S3.4, S3.10)
+
+
+def match_entities(
+    phrase: str, known: Sequence[EntityRecord], me: EntityRecord | None = None
+) -> list[EntityRecord]:
+    """The entities a phrase names, by the same deterministic rules as ingestion: name or
+    alias first, then a person's relationship label ("sister" -> Nisha). Never creates one."""
+    key = _clean(phrase)
+    if not key:
+        return []
+    if key in SELF_WORDS or phrase.strip().lower() in SELF_WORDS:
+        return [me] if me is not None else []
+    pool = [e for e in known if e.status == "active" and e.kind is not EntityKind.SELF]
+    by_name = [e for e in pool if key in _keys(e)]
+    if by_name:
+        return _dedupe(by_name)
+    return _dedupe(
+        [e for e in pool if e.kind is EntityKind.PERSON and key in {_clean(lb) for lb in e.labels}]
+    )
+
+
+def mentions_in(message: str, known: Sequence[EntityRecord]) -> list[tuple[EntityRecord, str]]:
+    """Every known entity a message mentions (the per-turn mention scan, S3.10): a name or an
+    alias as whole words ("Nisha", "Meenu"), or a person's label after "my" ("my sister").
+    Deterministic; no model call."""
+    text = " " + " ".join(re.findall(r"[a-z0-9]+", message.lower())) + " "
+    found: list[tuple[EntityRecord, str]] = []
+    for entity in known:
+        if entity.status != "active" or entity.kind is EntityKind.SELF:
+            continue
+        hit = next(
+            (k for k in sorted(_keys(entity), key=len, reverse=True) if f" {k} " in text), None
+        )
+        if hit is None and entity.kind is EntityKind.PERSON:
+            hit = next(
+                (f"my {_clean(lb)}" for lb in entity.labels if f" my {_clean(lb)} " in text), None
+            )
+        if hit is not None:
+            found.append((entity, hit))
+    return found

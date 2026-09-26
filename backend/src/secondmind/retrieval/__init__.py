@@ -1,5 +1,15 @@
 """Retrieval agent: query planning, hybrid search, fusion, rerank and citations (S3)."""
 
+from secondmind.retrieval.answer import (
+    NO_EVIDENCE,
+    AnswerVars,
+    CitationFilter,
+    Evidence,
+    Part,
+    build_pack,
+    chit_chat_context,
+    relative,
+)
 from secondmind.retrieval.conversation import (
     ConversationIndexer,
     ConversationStore,
@@ -7,10 +17,40 @@ from secondmind.retrieval.conversation import (
     SaidTurn,
     split_said,
 )
+from secondmind.retrieval.fusion import Candidate, fuse
+from secondmind.retrieval.offline import (
+    complete_plan,
+    load_recall_replay,
+    offline_answer,
+    overlap,
+    recall_responders,
+    recall_text_responders,
+)
+from secondmind.retrieval.pipeline import (
+    RecallContext,
+    RecallOutcome,
+    RecallPipeline,
+    RecallSettings,
+)
+from secondmind.retrieval.plan import (
+    SHAPE_TOOLS,
+    PlanContext,
+    Planner,
+    PlanVars,
+    ResolvedPlan,
+    SubQuery,
+    fallback_plan,
+)
+from secondmind.retrieval.schemas import QueryPlanOut, RerankOut, validate_plan
+from secondmind.retrieval.select import RerankVars, count_label
+from secondmind.retrieval.softquery import soft_query_text, window_words
 from secondmind.retrieval.tools import (
+    INVERSE,
+    SYMMETRIC,
     Access,
     AggregateResult,
     ConversationHit,
+    EmptyRecallStore,
     EntityResult,
     Filters,
     Group,
@@ -26,28 +66,69 @@ from secondmind.retrieval.tools import (
     TimelineResult,
     WindowFilter,
 )
+from secondmind.retrieval.triggers import Fired, TriggerCheck, note_for
 
 __all__ = [
+    "INVERSE",
+    "NO_EVIDENCE",
+    "SHAPE_TOOLS",
+    "SYMMETRIC",
     "Access",
     "AggregateResult",
+    "AnswerVars",
+    "Candidate",
+    "CitationFilter",
     "ConversationHit",
     "ConversationIndexer",
     "ConversationStore",
+    "EmptyRecallStore",
     "EntityResult",
+    "Evidence",
     "Filters",
+    "Fired",
     "Group",
     "HistoryResult",
     "HistoryRow",
     "Hit",
     "LookupResult",
     "Occurrence",
+    "Part",
     "PathHop",
+    "PlanContext",
+    "PlanVars",
+    "Planner",
     "Query",
+    "QueryPlanOut",
+    "RecallContext",
+    "RecallOutcome",
+    "RecallPipeline",
+    "RecallSettings",
     "RecallStore",
+    "RerankOut",
+    "RerankVars",
+    "ResolvedPlan",
     "SaidRow",
     "SaidTurn",
     "SetOp",
+    "SubQuery",
     "TimelineResult",
+    "TriggerCheck",
     "WindowFilter",
+    "build_pack",
+    "chit_chat_context",
+    "complete_plan",
+    "count_label",
+    "fallback_plan",
+    "fuse",
+    "load_recall_replay",
+    "note_for",
+    "offline_answer",
+    "overlap",
+    "recall_responders",
+    "recall_text_responders",
+    "relative",
+    "soft_query_text",
     "split_said",
+    "validate_plan",
+    "window_words",
 ]

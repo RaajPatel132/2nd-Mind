@@ -16,6 +16,16 @@ from typing import Literal, Protocol
 
 from secondmind.core import EntityRole, KeyKind, Kind, TimeClock
 
+# Relations that read the same both ways, and pairs that are each other's inverse. "Nisha's
+# husband" is spouse_of Nisha; "Nisha's mother" is parent_of Nisha, or Nisha child_of her.
+SYMMETRIC = frozenset({"spouse_of", "partner_of", "sibling_of", "friend_of", "colleague_of"})
+INVERSE = {
+    "parent_of": "child_of",
+    "child_of": "parent_of",
+    "manager_of": "reports_to",
+    "reports_to": "manager_of",
+}
+
 ToolName = Literal[
     "lookup", "aggregate", "search", "entity", "timeline", "history", "conversation", "soft"
 ]
@@ -284,3 +294,72 @@ class RecallStore(Protocol):
         exclude_turn: uuid.UUID | None,
         limit: int = 10,
     ) -> list[ConversationHit]: ...
+
+
+class EmptyRecallStore:
+    """A store that finds nothing: recall then says so. Used where no store is wired."""
+
+    async def lookup(
+        self, filters: Filters, access: Access, *, set_op: SetOp | None = None, limit: int = 50
+    ) -> LookupResult:
+        return LookupResult(hits=[], total=0)
+
+    async def aggregate(
+        self,
+        filters: Filters,
+        access: Access,
+        *,
+        op: AggregateOp,
+        field: str | None = None,
+        group_by: GroupBy | None = None,
+        timezone: str = "UTC",
+    ) -> AggregateResult:
+        return AggregateResult(op=op, value=0.0 if op == "count" else None, item_ids=[])
+
+    async def search(
+        self, query: Query, filters: Filters, access: Access, *, limit: int
+    ) -> list[Hit]:
+        return []
+
+    async def entity(
+        self,
+        entity_ids: Sequence[uuid.UUID],
+        access: Access,
+        *,
+        path: Sequence[PathHop] = (),
+        limit: int = 50,
+    ) -> EntityResult:
+        return EntityResult(entity_ids=[], paths=[], hits=[])
+
+    async def timeline(
+        self,
+        window: WindowFilter,
+        filters: Filters,
+        access: Access,
+        *,
+        now: datetime,
+        timezone: str,
+        limit: int = 100,
+    ) -> TimelineResult:
+        return TimelineResult(occurrences=[])
+
+    async def history(
+        self,
+        access: Access,
+        *,
+        subject_entity_id: uuid.UUID | None = None,
+        predicate: str | None = None,
+        item_ids: Sequence[uuid.UUID] = (),
+    ) -> HistoryResult:
+        return HistoryResult(rows=[])
+
+    async def conversation(
+        self,
+        query: Query,
+        *,
+        role: Literal["user", "assistant"] | None,
+        window: WindowFilter | None,
+        exclude_turn: uuid.UUID | None,
+        limit: int = 10,
+    ) -> list[ConversationHit]:
+        return []

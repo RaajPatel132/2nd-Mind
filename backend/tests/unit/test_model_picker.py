@@ -119,7 +119,7 @@ def test_a_pick_routes_every_chat_step_and_keeps_embeddings(base_env: dict[str, 
             assert route == routing.route(step)
         else:
             assert route.primary == OPUS
-            assert route.fallback == SOL
+            assert route.fallback == routing.route(step).fallback  # each step keeps its own
     # Picking the fallback's own model drops the fallback rather than retrying itself.
     assert picked.with_pick(SOL).route(Step.ANSWER).fallback is None
 

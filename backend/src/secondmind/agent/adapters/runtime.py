@@ -16,10 +16,12 @@ from secondmind.observability import Tracer, get_logger
 from secondmind.observability.adapters import build_tracer
 from secondmind.providers import FakeScript, ModelRouter
 from secondmind.providers.adapters import build_router
+from secondmind.retrieval import load_recall_replay, recall_responders, recall_text_responders
 
 log = get_logger(__name__)
 
 REPLAY_DIR = Path("evals") / "cases" / "ingest"
+RECALL_REPLAY_DIR = Path("evals") / "cases" / "retrieval"
 
 
 @dataclass
@@ -59,9 +61,13 @@ def ingest_settings(settings: Settings) -> IngestSettings:
 
 
 def fake_script(settings: Settings) -> FakeScript:
-    """Unscripted fake calls replay the golden ingestion cases, else use honest heuristics."""
+    """Unscripted fake calls replay the golden ingestion and recall cases, else use honest
+    heuristics."""
+    recall = load_recall_replay(settings.resources_dir / RECALL_REPLAY_DIR)
     return FakeScript(
         responders=offline_responders(load_replay(settings.resources_dir / REPLAY_DIR))
+        | recall_responders(recall),
+        text_responders=recall_text_responders(),
     )
 
 

@@ -13,7 +13,7 @@ from contextlib import AbstractAsyncContextManager
 from datetime import datetime
 from typing import Any, Protocol
 
-from secondmind.core import EntityKind, KeyKind, Kind, VocabKind, WorkspaceScope
+from secondmind.core import EntityKind, KeyKind, Kind, TriggerOn, VocabKind, WorkspaceScope
 from secondmind.memory.records import (
     CategoryRecord,
     EntityRecord,
@@ -107,6 +107,10 @@ class MemoryTx(Protocol):
     async def expired_quick(self, now: datetime) -> list[ItemRecord]: ...
 
     async def passed_triggers(self, now: datetime) -> list[TriggerRecord]: ...
+
+    async def pending_triggers(self, on: Sequence[TriggerOn]) -> list[TriggerRecord]:
+        """Pending triggers of these kinds whose item is active (the per-turn check, S3.10)."""
+        ...
 
     async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
         """Active items cited in at least ``min_turns`` recall turns since ``since`` (FR-6.7)."""

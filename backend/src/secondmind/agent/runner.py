@@ -62,6 +62,7 @@ from secondmind.ingestion import (
 from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
 from secondmind.observability import (
     GenerationSpan,
+    NullTracer,
     Tracer,
     TurnTrace,
     bind_log_context,
@@ -69,6 +70,18 @@ from secondmind.observability import (
 )
 from secondmind.policy import redact_values, scan_secrets
 from secondmind.providers import ChatMessage, ModelCall, ModelRouter, ProviderUnavailableError
+from secondmind.retrieval import (
+    ConversationIndexer,
+    ConversationStore,
+    EmptyRecallStore,
+    RecallContext,
+    RecallOutcome,
+    RecallPipeline,
+    RecallSettings,
+    RecallStore,
+    SaidTurn,
+    TriggerCheck,
+)
 
 log = get_logger(__name__)
 
@@ -77,6 +90,14 @@ INTERNAL_ERROR_MESSAGE = "Something went wrong on our side, and this turn was no
 # Called after a commit that renamed or relabelled entities (their items' keys need
 # re-rendering in the background, as a system turn).
 EntitiesRenamed = Callable[[WorkspaceScope, set[uuid.UUID]], Awaitable[None]]
+# Called when a chat turn completed (its conversation is indexed in the background, S3.9).
+TurnCompletedHook = Callable[[WorkspaceScope, Turn], Awaitable[None]]
+RecallStores = Callable[[WorkspaceScope], RecallStore]
+ConversationStores = Callable[[WorkspaceScope], ConversationStore]
+
+
+def _no_recall_store(scope: WorkspaceScope) -> RecallStore:
+    return EmptyRecallStore()
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,6 +211,11 @@ class TurnRunner:
         on_entities_renamed: EntitiesRenamed | None = None,
         history_turns: int = 10,
         clock: Clock = utc_now,
+        recall_stores: RecallStores = _no_recall_store,
+        recall: RecallSettings | None = None,
+        trigger_threshold: float = 0.6,
+        conversation_stores: ConversationStores | None = None,
+        on_turn_completed: TurnCompletedHook | None = None,
     ) -> None:
         self._router = router
         self._prompts = prompts
@@ -203,6 +229,11 @@ class TurnRunner:
         self._on_renamed = on_entities_renamed
         self._history_turns = history_turns
         self._clock = clock
+        self._recall_stores = recall_stores
+        self._recall = RecallPipeline(recall)
+        self._triggers = TriggerCheck(threshold=trigger_threshold)
+        self._conversation_stores = conversation_stores
+        self._on_completed = on_turn_completed
         self._graph = build_turn_graph()
         self._tasks: set[asyncio.Task[None]] = set()
 
@@ -358,6 +389,43 @@ class TurnRunner:
                 outcomes.append(outcome)
                 return outcome
 
+            async def recall(saved_first: bool) -> RecallOutcome:
+                view = await self._memory.reader(run.scope).core() if saved_first else core
+                return await self._recall.run(
+                    RecallContext(
+                        scope=run.scope,
+                        turn_id=turn.id,
+                        message=turn.input,
+                        now=now,
+                        steps=steps,
+                        memory=self._memory,
+                        store=self._recall_stores(run.scope),
+                        core=view,
+                        trail=trail,
+                        write=write,
+                        history=run.history,
+                        saved_first=saved_first,
+                        said=self._said(store),
+                    )
+                )
+
+            async def triggers(vector: list[float] | None) -> str | None:
+                fired = await self._triggers.run(
+                    memory=self._memory,
+                    scope=run.scope,
+                    turn=WriterTurn(
+                        turn_id=turn.id,
+                        workspace_id=run.scope.workspace_id,
+                        kind="user",
+                        now=turn.started_at,
+                    ),
+                    message=turn.input,
+                    vector=vector,
+                    embed=None if run.secret_kinds else self._embed_texts(steps),
+                    trail=trail,
+                )
+                return " ".join(f.note for f in fired) or None
+
             context = TurnContext(
                 router=run.router,
                 prompts=self._prompts,
@@ -369,6 +437,8 @@ class TurnRunner:
                 record_model_call=self._recorder(run),
                 steps=steps,
                 ingest=ingest,
+                recall=recall,
+                triggers=triggers,
                 secret_found=bool(run.secret_kinds),
                 core_prefix=core.text,
                 trail=trail,
@@ -581,6 +651,74 @@ class TurnRunner:
         await indexer.rebuild(sorted(commit.touched_items))
 
     @staticmethod
+    def _said(store: TurnStore) -> Callable[[uuid.UUID], Awaitable[tuple[str, str | None] | None]]:
+        async def said(turn_id: uuid.UUID) -> tuple[str, str | None] | None:
+            past = await store.get(turn_id)
+            return None if past is None else (past.input, past.output)
+
+        return said
+
+    @staticmethod
+    def _embed_texts(
+        steps: ModelSteps,
+    ) -> Callable[[Sequence[str]], Awaitable[list[list[float]] | None]]:
+        async def embed(texts: Sequence[str]) -> list[list[float]] | None:
+            try:
+                return await steps.embed(list(texts))
+            except ProviderUnavailableError:
+                return None
+
+        return embed
+
+    # ------------------------------------------------------------------ conversation index
+
+    async def index_conversation(self, scope: WorkspaceScope, turn_id: uuid.UUID) -> int:
+        """Write what was said in a completed chat turn into ``conversation_keys`` (S3.9)."""
+        if self._conversation_stores is None:
+            return 0
+        turn = await self._stores(scope).get(turn_id)
+        if turn is None:
+            return 0
+        return await self._indexer(scope).index(_said_turn(turn))
+
+    async def backfill_conversation(self, scope: WorkspaceScope, *, page: int = 100) -> int:
+        """Index every completed chat turn of a workspace not indexed yet (the one-off job)."""
+        if self._conversation_stores is None:
+            return 0
+        store, total, before = self._stores(scope), 0, None
+        indexer = self._indexer(scope)
+        while True:
+            turns = await store.recent(limit=page, before=before)
+            if not turns:
+                return total
+            total += await indexer.backfill([_said_turn(t) for t in turns])
+            before = turns[-1].id
+
+    def _indexer(self, scope: WorkspaceScope) -> ConversationIndexer:
+        assert self._conversation_stores is not None  # noqa: S101 - checked by the callers
+        route = self._router.route(Step.EMBED)
+        steps = ModelSteps(
+            router=self._router,
+            prompts=self._prompts,
+            # Background indexing belongs to no turn: nothing to trace or put on a ledger.
+            trace=NullTracer().start_turn(
+                turn_id=new_id(),
+                workspace_id=scope.workspace_id,
+                user_id=scope.user_id,
+                turn_input=None,
+                metadata={},
+            ),
+            record=_ignore_call,
+            now=self._clock(),
+            embed_dimensions=self._embed_dimensions,
+        )
+        return ConversationIndexer(
+            self._conversation_stores(scope),
+            embed=self._embedder(steps),
+            model=f"{route.primary.provider}:{route.primary.model}@{self._embed_dimensions}",
+        )
+
+    @staticmethod
     def _embedder(steps: ModelSteps) -> Embedder:
         """Embeddings through the ``embed`` step; keys are stored without vectors if it's down."""
 
@@ -630,6 +768,15 @@ class TurnRunner:
             # can never take it away.
             if run.queue is not None:
                 await run.queue.put(done)
+            if (
+                self._on_completed is not None
+                and final.status is TurnStatus.COMPLETED
+                and final.kind is TurnKind.USER
+            ):
+                try:
+                    await self._on_completed(run.scope, final)
+                except Exception:
+                    log.exception("turn.index_enqueue_failed")
             try:
                 self._send_generations(run)
                 if run.trace is not None:
@@ -679,3 +826,18 @@ class TurnRunner:
         if not self._tracer.enabled:
             return TraceStatus.DISABLED
         return TraceStatus.RECORDED if await self._tracer.available() else TraceStatus.UNAVAILABLE
+
+
+def _said_turn(turn: Turn) -> SaidTurn:
+    return SaidTurn(
+        id=turn.id,
+        input=turn.input,
+        output=turn.output,
+        started_at=turn.started_at,
+        completed=turn.status is TurnStatus.COMPLETED,
+        chat=turn.kind is TurnKind.USER,
+    )
+
+
+async def _ignore_call(call: ModelCall, span: GenerationSpan, prompt: object, output: str) -> None:
+    """Background indexing has no turn to record its embedding calls on."""

@@ -288,6 +288,19 @@ class InMemoryTx:
             and t.fires_at < now
         ]
 
+    async def pending_triggers(self, on: Sequence[TriggerOn]) -> list[TriggerRecord]:
+        return sorted(
+            (
+                t
+                for t in self._t.triggers.values()
+                if t.state is TriggerState.PENDING
+                and t.on in on
+                and t.item_id in self._t.items
+                and self._t.items[t.item_id].status is ItemStatus.ACTIVE
+            ),
+            key=lambda t: t.created_at,
+        )
+
     async def frequent_items(self, since: datetime, min_turns: int) -> list[uuid.UUID]:
         turns: dict[uuid.UUID, set[uuid.UUID]] = {}
         for item_id, turn_id, at, cited in self._t.access:

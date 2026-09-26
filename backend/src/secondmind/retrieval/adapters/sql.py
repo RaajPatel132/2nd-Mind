@@ -23,6 +23,8 @@ from secondmind.core import LIVE_STATES, KeyKind, TimeClock, TimePrecision, Work
 from secondmind.memory import expand_rrule, occurrence_length
 from secondmind.memory.adapters import Database
 from secondmind.retrieval.tools import (
+    INVERSE,
+    SYMMETRIC,
     Access,
     AggregateOp,
     AggregateResult,
@@ -43,15 +45,6 @@ from secondmind.retrieval.tools import (
     WindowFilter,
 )
 
-# Relations that read the same both ways, and pairs that are each other's inverse. "Nisha's
-# husband" is spouse_of Nisha; "Nisha's mother" is parent_of Nisha, or Nisha child_of her.
-SYMMETRIC = frozenset({"spouse_of", "partner_of", "sibling_of", "friend_of", "colleague_of"})
-INVERSE = {
-    "parent_of": "child_of",
-    "child_of": "parent_of",
-    "manager_of": "reports_to",
-    "reports_to": "manager_of",
-}
 _LIVE = sorted(LIVE_STATES)
 _POOL = 200  # keys each half of a hybrid search considers
 _WORD = re.compile(r"[a-z0-9]+")

@@ -15,7 +15,6 @@ import yaml
 
 from secondmind.agent import (
     CORRECT_STUB,
-    RECALL_STUB,
     IntentPromptVars,
     TurnCompleted,
     TurnRunner,
@@ -28,6 +27,7 @@ from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer
 from secondmind.providers import ChatMessage, FakeProvider, FakeScript
+from secondmind.retrieval import recall_responders, recall_text_responders
 from tests.fakes import InMemoryTurns
 from tests.unit.providers.helpers import router as make_router
 
@@ -36,7 +36,13 @@ FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "intent.yaml"
 
 
 async def _turn(intent: str, message: str) -> tuple[str, list[str]]:
-    fake = FakeProvider("primary", script=FakeScript(responders=offline_responders()))
+    fake = FakeProvider(
+        "primary",
+        script=FakeScript(
+            responders=offline_responders() | recall_responders(),
+            text_responders=recall_text_responders(),
+        ),
+    )
 
     def decide(_: Any) -> dict[str, object]:
         return {"intent": intent, "confidence": 0.9, "reason": f"test: {intent}"}
@@ -67,17 +73,20 @@ async def test_save_runs_ingestion_and_writes_memory() -> None:
     assert "memory_diff" in events
 
 
-async def test_recall_gets_the_honest_stub_and_writes_nothing() -> None:
+async def test_recall_runs_the_pipeline_and_writes_nothing() -> None:
     reply, events = await _turn("recall", "Where are the spare keys?")
-    assert reply == RECALL_STUB
+    # No store is wired, so nothing is found: the template says so, with no answer model call.
+    assert reply == "I don't have anything saved about Where are the spare keys?."
+    assert "retrieval" in events
+    assert "citations" in events
     assert "memory_diff" not in events
 
 
-async def test_save_and_recall_saves_then_adds_the_recall_stub() -> None:
+async def test_save_and_recall_saves_then_recalls() -> None:
     reply, events = await _turn("save_and_recall", "Finished Mindhunter. What else is on my list?")
     assert reply.startswith("Saved")
-    assert reply.endswith(RECALL_STUB)
-    assert "memory_diff" in events
+    assert "I don't have anything saved about" in reply
+    assert events.index("memory_diff") < events.index("retrieval")
 
 
 async def test_correct_gets_its_stub_and_writes_nothing() -> None:

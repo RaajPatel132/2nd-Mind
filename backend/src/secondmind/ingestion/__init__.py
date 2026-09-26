@@ -1,7 +1,14 @@
 """Ingestion agent: extract, resolve time and entities, reconcile and enrich saves (S2)."""
 
 from secondmind.ingestion.ack import AckFacts, acknowledge, refusal, summarise_commit
-from secondmind.ingestion.entities import CLOSE_LABELS, EntityPlan, resolve_entities
+from secondmind.ingestion.entities import (
+    CLOSE_LABELS,
+    SELF_WORDS,
+    EntityPlan,
+    match_entities,
+    mentions_in,
+    resolve_entities,
+)
 from secondmind.ingestion.normalise import BUILTIN, Term, match_key, normalise, slugify, terms_for
 from secondmind.ingestion.offline import load_replay, offline_responders, replay_key
 from secondmind.ingestion.pipeline import (
@@ -59,6 +66,7 @@ __all__ = [
     "CLOSE_LABELS",
     "PARTS",
     "REMINDER_HOUR",
+    "SELF_WORDS",
     "AckFacts",
     "Attribute",
     "Decision",
@@ -103,7 +111,9 @@ __all__ = [
     "acknowledge",
     "cosine",
     "load_replay",
+    "match_entities",
     "match_key",
+    "mentions_in",
     "normalise",
     "offline_responders",
     "refusal",

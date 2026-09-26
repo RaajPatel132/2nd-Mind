@@ -3,6 +3,7 @@ model call is a generation on it. Tracing never breaks a turn: adapters swallow 
 failures, and the glass box keeps working from our own ``model_call`` events (FR-9.2)."""
 
 import uuid
+from datetime import datetime
 from typing import Protocol
 
 from secondmind.core import ModelCallEvent
@@ -22,6 +23,17 @@ class GenerationSpan(Protocol):
 
 class TurnTrace(Protocol):
     def start_generation(self, step: str) -> GenerationSpan: ...
+
+    def record_span(
+        self,
+        name: str,
+        *,
+        started_at: datetime,
+        latency_ms: int,
+        metadata: dict[str, str],
+    ) -> None:
+        """A finished non-model span (a retrieval tool call, fusion)."""
+        ...
 
     def finish(
         self,
@@ -82,6 +94,16 @@ class _NullGeneration:
 class _NullTrace:
     def start_generation(self, step: str) -> GenerationSpan:
         return _NullGeneration()
+
+    def record_span(
+        self,
+        name: str,
+        *,
+        started_at: datetime,
+        latency_ms: int,
+        metadata: dict[str, str],
+    ) -> None:
+        return None
 
     def finish(
         self,

@@ -4,7 +4,7 @@ which provider served it."""
 
 import json
 import math
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
@@ -15,7 +15,14 @@ from secondmind.config import PromptRegistry, Step
 from secondmind.core import Usage
 from secondmind.observability import GenerationSpan, TurnTrace
 from secondmind.policy import redact_values
-from secondmind.providers import ChatMessage, ModelCall, ModelRouter, ProviderUnavailableError
+from secondmind.providers import (
+    ChatMessage,
+    ChatResult,
+    ModelCall,
+    ModelRouter,
+    ProviderUnavailableError,
+    TextDelta,
+)
 
 RecordModelCall = Callable[[ModelCall, GenerationSpan, object, str], Awaitable[None]]
 
@@ -83,6 +90,45 @@ class ModelSteps:
             output = redact_values(output, self.secrets)
         await self._record(result.call, span, prompt_input, output)
         return result.value
+
+    async def stream(
+        self, step: Step, variables: BaseModel, messages: Sequence[ChatMessage]
+    ) -> AsyncIterator[str]:
+        """Stream a text reply for ``step`` (its prompt rendered with ``variables``); the call is
+        recorded when it ends."""
+        route = self._router.route(step)
+        if route.prompt is None:
+            raise RuntimeError(f"the {step.value} step has no prompt configured")
+        system = self._prompts.render(route.prompt, variables).text
+        span = self._trace.start_generation(step.value)
+        result: ChatResult | None = None
+        try:
+            async for event in self._router.stream(
+                step,
+                system=system,
+                messages=list(messages),
+                prompt=route.prompt,
+                cache_prefix=self.cache_prefix,
+            ):
+                if isinstance(event, TextDelta):
+                    yield event.text
+                else:
+                    result = event
+        except ProviderUnavailableError as exc:
+            span.fail(exc.detail)
+            raise
+        if result is None:
+            span.fail("stream ended without a result")
+            raise RuntimeError(f"{step.value} stream ended without a result")
+        await self._record(result.call, span, [m.model_dump() for m in messages], result.text)
+
+    def span(
+        self, name: str, *, started_at: datetime, latency_ms: int, metadata: Mapping[str, str]
+    ) -> None:
+        """A non-model span on the turn's trace (a retrieval tool, fusion): NFR-5.1."""
+        self._trace.record_span(
+            name, started_at=started_at, latency_ms=latency_ms, metadata=dict(metadata)
+        )
 
     async def embed(self, texts: Sequence[str], cache_hits: int = 0) -> list[list[float]] | None:
         """Embed ``texts``; ``cache_hits`` (reused by content hash) are shown on the event."""
