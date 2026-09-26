@@ -317,8 +317,10 @@ async def test_history_of_an_item_walks_the_chain_and_its_because_links(
 async def test_conversation_finds_what_i_suggested_in_that_window(
     app_db: Database, recall: RecallWorkspaces
 ) -> None:
+    # Offline embeddings are a bag of words, so the query shares words with one list item (with
+    # "the books you suggested" nothing scores and the order is a tie between random ids).
     hits = await store(app_db, recall).conversation(
-        await query("the books you suggested"),
+        await query("the gentle short stories you suggested"),
         role="assistant",
         window=window("2026-09-28T00:00", "2026-10-05T00:00", TimeClock.MENTIONED),
         exclude_turn=None,
@@ -327,7 +329,9 @@ async def test_conversation_finds_what_i_suggested_in_that_window(
     assert hits[0].turn_id == recall.main.turns["books"]
     assert hits[0].role == "assistant"
     # The best snippet of that reply: one of the three list items (a snippet per list item).
-    assert any(title in hits[0].text for title in ("Tea by the Window", "Map of Small", "Seven"))
+    # The best snippet of that reply is its list item, not the whole reply.
+    assert "Tea by the Window" in hits[0].text
+    assert "Map of Small" not in hits[0].text
 
 
 async def test_conversation_never_returns_the_turn_asking(
