@@ -10,10 +10,11 @@ as a non-owner role, so RLS applies, for:
 * ``halfvec`` HNSW at 1536 dimensions, and at 768 (the first half of the vector; the OpenAI
   ``text-embedding-3`` models are trained so a prefix is still a good embedding).
 
-It reports p50/p95 latency, recall@10 against the exact scan, index build time and size. With
-``OPENAI_API_KEY`` set the vectors are real embeddings of templated synthetic sentences (the
-cost is printed; the run refuses past $0.50); otherwise they're clustered random vectors, and the
-report says which. Everything runs in a throwaway pgvector container.
+It reports p50/p95 latency, recall@10 against the exact scan (by distance, so a tie returned in
+another order counts), index build time and size. With ``OPENAI_API_KEY`` set the vectors are
+real embeddings of templated synthetic sentences (the cost is printed; the run refuses past
+$0.50); otherwise they're clustered random vectors, and the report says which. Everything
+runs in a throwaway pgvector container.
 """
 
 import argparse
@@ -83,7 +84,7 @@ class Vectors:
         if real:
             from openai import AsyncOpenAI  # noqa: PLC0415
 
-            self.client = AsyncOpenAI()
+            self.client = AsyncOpenAI(max_retries=10)  # a long run outlives a network blip
 
     async def batch(self, n: int) -> list[list[float]]:
         if not self.real:
@@ -144,29 +145,49 @@ async def load(conn: asyncpg.Connection, vectors: Vectors) -> dict[str, uuid.UUI
 
 
 async def run_queries(
-    conn: asyncpg.Connection, ws: uuid.UUID, queries: Sequence[str], column: str, cast: str
-) -> tuple[list[float], list[list[int]], str]:
-    """Latencies, top-10 ids per query, and the plan Postgres chose (``hnsw`` or ``exact``: under
-    RLS the planner may keep the workspace btree and sort instead of using the vector index)."""
+    conn: asyncpg.Connection,
+    ws: uuid.UUID,
+    queries: Sequence[str],
+    column: str,
+    cast: str,
+    *,
+    full: Sequence[str],
+) -> tuple[list[float], list[list[float]], str]:
+    """Latencies, the true (full ``vector(1536)``) distances of each query's top 10, and the plan
+    Postgres chose (``hnsw`` or ``exact``: under RLS the planner may keep the workspace btree and
+    sort instead of using the vector index)."""
     times: list[float] = []
-    results: list[list[int]] = []
+    results: list[list[float]] = []
     async with conn.transaction():
         await conn.execute("SET LOCAL ROLE bench_app")
         await conn.execute(f"SELECT set_config('app.workspace_id', '{ws}', true)")
         await conn.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
         await conn.execute("SET LOCAL hnsw.ef_search = 40")
-        sql = f"SELECT id FROM keys ORDER BY {column} <=> $1::{cast} LIMIT 10"
-        explained = await conn.fetchval(f"EXPLAIN (FORMAT JSON) {sql}", queries[0])
+        sql = (
+            f"SELECT embedding <=> $2::vector AS d FROM keys "
+            f"ORDER BY {column} <=> $1::{cast} LIMIT 10"
+        )
+        explained = await conn.fetchval(f"EXPLAIN (FORMAT JSON) {sql}", queries[0], full[0])
         plan = "hnsw" if f"idx_{column}" in str(explained) else "exact"
         stmt = await conn.prepare(sql)
-        for q in queries[:3]:  # warm-up
-            await stmt.fetch(q)
-        for q in queries:
+        for q, f in list(zip(queries, full, strict=True))[:3]:  # warm-up
+            await stmt.fetch(q, f)
+        for q, f in zip(queries, full, strict=True):
             t0 = time.perf_counter()
-            rows = await stmt.fetch(q)
+            rows = await stmt.fetch(q, f)
             times.append((time.perf_counter() - t0) * 1000)
-            results.append([r["id"] for r in rows])
+            results.append([float(r["d"]) for r in rows])
     return times, results, plan
+
+
+def recall_at_10(got: Sequence[Sequence[float]], exact: Sequence[Sequence[float]]) -> float:
+    """Share of results at least as close as the exact 10th neighbour. By distance, not by id:
+    templated sentences repeat, and a tie returned in another order is not a miss."""
+    per_query = []
+    for g, e in zip(got, exact, strict=True):
+        kth = e[-1] if e else 0.0
+        per_query.append(sum(d <= kth + 1e-6 for d in g) / max(1, len(e)))
+    return statistics.mean(per_query)
 
 
 def pct(values: Sequence[float], q: float) -> float:
@@ -189,10 +210,10 @@ async def main(real: bool) -> int:
         queries_v = [literal(v) for v in await vectors.batch(QUERIES)]
         halves = [literal([float(x) for x in q.strip("[]").split(",")][:768]) for q in queries_v]
         rows: list[tuple[str, int, str, float, float, float, float, float]] = []
-        exact: dict[int, list[list[int]]] = {}
+        exact: dict[int, list[list[float]]] = {}
         for n in TARGETS:
             t, r, plan = await run_queries(
-                conn, spaces[f"target_{n}"], queries_v, "embedding", "vector"
+                conn, spaces[f"target_{n}"], queries_v, "embedding", "vector", full=queries_v
             )
             exact[n] = r
             rows.append(("exact", n, plan, pct(t, 0.5), pct(t, 0.95), 1.0, 0.0, 0.0))
@@ -207,10 +228,10 @@ async def main(real: bool) -> int:
             build = time.perf_counter() - t0
             size = await conn.fetchval(f"SELECT pg_relation_size('idx_{column}')") / 1024**2
             for n in TARGETS:
-                t, r, plan = await run_queries(conn, spaces[f"target_{n}"], qs, column, cast)
-                recall = statistics.mean(
-                    len(set(a) & set(b)) / max(1, len(b)) for a, b in zip(r, exact[n], strict=True)
+                t, r, plan = await run_queries(
+                    conn, spaces[f"target_{n}"], qs, column, cast, full=queries_v
                 )
+                recall = recall_at_10(r, exact[n])
                 rows.append((name, n, plan, pct(t, 0.5), pct(t, 0.95), recall, build, size))
             await conn.execute(f"DROP INDEX idx_{column}")
         table_mb = await conn.fetchval("SELECT pg_total_relation_size('keys')") / 1024**2
@@ -232,4 +253,6 @@ if __name__ == "__main__":
     parser.add_argument("--random", action="store_true", help="clustered random vectors only")
     args = parser.parse_args()
     use_real = bool(os.environ.get("OPENAI_API_KEY")) and not args.random
+    # colima and Docker Desktop: inside the VM the daemon socket is at the standard path (Ryuk).
+    os.environ.setdefault("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
     raise SystemExit(asyncio.run(main(use_real)))
