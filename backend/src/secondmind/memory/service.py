@@ -118,6 +118,10 @@ class MemoryReader:
         async with self._store.transaction() as tx:
             return await tx.relations(entity_ids)
 
+    async def trigger(self, trigger_id: uuid.UUID) -> TriggerRecord | None:
+        async with self._store.transaction() as tx:
+            return await tx.get_trigger(trigger_id)
+
     async def triggers(self, item_ids: Sequence[uuid.UUID]) -> list[TriggerRecord]:
         async with self._store.transaction() as tx:
             return await tx.triggers(item_ids)

@@ -238,6 +238,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/triggers/{trigger_id}/snooze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Snooze Reminder
+         * @description Move a pending reminder to a new time, as its own turn (source ``ui_edit``) with its own
+         *     glass box; the memory's own date stays, and undo puts the reminder back (S3.14).
+         */
+        post: operations["snooze_reminder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/turns/{turn_id}": {
         parameters: {
             query?: never;
@@ -1664,6 +1685,17 @@ export interface components {
          */
         Shape: "exact" | "list" | "latest" | "history" | "time_window" | "order" | "count" | "set" | "entity" | "semantic" | "why" | "situational" | "conversation";
         /**
+         * SnoozeIn
+         * @description Snooze a reminder to a new time (S3.14): free text read by the resolver.
+         */
+        SnoozeIn: {
+            /**
+             * Date Expression
+             * @example 2026-10-07 19:00
+             */
+            date_expression: string;
+        };
+        /**
          * Source
          * @enum {string}
          */
@@ -2259,6 +2291,11 @@ export interface components {
             state: string;
             /** Title */
             title: string;
+            /**
+             * Trigger Id
+             * @description For a reminder (via trigger): what Snooze moves.
+             */
+            trigger_id?: string | null;
             /** Until */
             until: string | null;
             /**
@@ -2939,6 +2976,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetaOut"];
+                };
+            };
+        };
+    };
+    snooze_reminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trigger_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnoozeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   editItem,
   getUpcoming,
-  type ItemEdit,
+  snoozeReminder,
   type Turn,
   type Upcoming,
   type UpcomingEntry,
@@ -92,10 +92,10 @@ export function UpcomingPage({ workspaceId, timezone, onTurn }: Props) {
   useEffect(load, [load]);
 
   const act = useCallback(
-    async (key: string, itemId: string, body: ItemEdit, done: string) => {
+    async (key: string, run: () => Promise<Turn>, done: string) => {
       setBusy(key);
       try {
-        onTurn(await editItem(itemId, body));
+        onTurn(await run());
         toast(`${done}. Undo it from its turn in the chat.`);
         load();
       } catch (err) {
@@ -184,8 +184,8 @@ export function UpcomingPage({ workspaceId, timezone, onTurn }: Props) {
                   onClick={() =>
                     void act(
                       `${t.item_id}-done`,
-                      t.item_id,
-                      { delete: false, state: "done" },
+                      () =>
+                        editItem(t.item_id, { delete: false, state: "done" }),
                       `Marked “${t.title}” done`,
                     )
                   }
@@ -204,8 +204,7 @@ export function UpcomingPage({ workspaceId, timezone, onTurn }: Props) {
 
 type Act = (
   key: string,
-  itemId: string,
-  body: ItemEdit,
+  run: () => Promise<Turn>,
   done: string,
 ) => Promise<void>;
 
@@ -223,14 +222,22 @@ function Entry({
   const [picking, setPicking] = useState(false);
   const [date, setDate] = useState("");
   const key = `${entry.item_id}-${entry.at}`;
-  const clock = entry.via === "due" ? "due" : "occurred";
-  const canSnooze = entry.via === "occurred" || entry.via === "due";
+  // Snooze defers a reminder (the memory's own date stays) or a task's due date. A plan is
+  // rescheduled with Edit; its reminder has its own row here to snooze.
+  const reminder = entry.via === "trigger" ? entry.trigger_id : null;
+  const canSnooze = Boolean(reminder) || entry.via === "due";
   const snooze = (expression: string, label: string) =>
     void act(
       key,
-      entry.item_id,
-      { delete: false, date_expression: expression, date_clock: clock },
-      `Moved “${entry.title}” to ${label}`,
+      () =>
+        reminder
+          ? snoozeReminder(reminder, expression)
+          : editItem(entry.item_id, {
+              delete: false,
+              date_expression: expression,
+              date_clock: "due",
+            }),
+      `${reminder ? "Snoozed the reminder for" : "Moved"} “${entry.title}” to ${label}`,
     );
 
   return (
@@ -256,8 +263,11 @@ function Entry({
             onClick={() =>
               void act(
                 key,
-                entry.item_id,
-                { delete: false, state: DONE[entry.kind] },
+                () =>
+                  editItem(entry.item_id, {
+                    delete: false,
+                    state: DONE[entry.kind],
+                  }),
                 `Marked “${entry.title}” ${DONE[entry.kind] ?? "done"}`,
               )
             }

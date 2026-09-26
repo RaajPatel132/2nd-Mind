@@ -656,6 +656,52 @@ class TurnRunner:
             action=action,
         )
 
+    async def snooze_reminder(
+        self,
+        scope: WorkspaceScope,
+        *,
+        trigger_id: uuid.UUID,
+        date_expression: str,
+        timezone: str,
+    ) -> Turn:
+        """Snooze a reminder from Upcoming as its own turn (origin ``ui_edit``): the reminder
+        moves, the memory's date doesn't; undo puts it back (S3.14)."""
+        reader = self._memory.reader(scope)
+        trigger = await reader.trigger(trigger_id)
+        if trigger is None:
+            raise ValidationFailedError("that reminder doesn't exist")
+        item = await reader.item(trigger.item_id)
+
+        async def action(
+            writer_turn: WriterTurn, emit: Callable[[TurnEvent], Awaitable[None]], steps: ModelSteps
+        ) -> str:
+            outcome = await self._corrector.snooze(
+                CorrectContext(
+                    scope=scope,
+                    turn_id=writer_turn.turn_id,
+                    message="",
+                    now=TurnNow(writer_turn.now, timezone),
+                    steps=steps,
+                    memory=self._memory,
+                    store=self._recall_stores(scope),
+                    trail=NullTrail(emit),
+                    write=lambda _: None,
+                    origin="ui_edit",
+                    embed=self._embedder(steps),
+                ),
+                trigger_id,
+                date_expression,
+            )
+            return outcome.reply
+
+        return await self.run_action(
+            scope,
+            kind=TurnKind.EDIT,
+            text=f"Snooze: {item.title if item is not None else 'reminder'}",
+            timezone=timezone,
+            action=action,
+        )
+
     async def expire_quick(self, scope: WorkspaceScope, *, timezone: str) -> Turn | None:
         """Quick-layer housekeeping as a system turn, so it's auditable and undoable (S2.9).
         No turn is recorded when there is nothing to do."""

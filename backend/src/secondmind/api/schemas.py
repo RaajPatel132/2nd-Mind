@@ -161,6 +161,9 @@ class UpcomingEntryOut(_Out):
     until: datetime | None
     via: str = Field(description="occurred, routine, due or trigger (a reminder)")
     routine: bool
+    trigger_id: uuid.UUID | None = Field(
+        default=None, description="For a reminder (via trigger): what Snooze moves."
+    )
 
 
 class UpcomingDayOut(_Out):
@@ -187,6 +190,14 @@ class UpcomingOut(_Out):
 class DevSeedOut(_Out):
     seeded: bool
     items: int
+
+
+class SnoozeIn(BaseModel):
+    """Snooze a reminder to a new time (S3.14): free text read by the resolver."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    date_expression: str = Field(min_length=1, max_length=200, examples=["2026-10-07 19:00"])
 
 
 class ItemEditIn(BaseModel):

@@ -168,6 +168,7 @@ class Occurrence:
     end: datetime | None
     via: Literal["occurred", "due", "valid", "mentioned", "trigger", "routine"]
     upcoming: bool
+    trigger_id: uuid.UUID | None = None  # the reminder, for ``via == "trigger"``
 
 
 @dataclass(frozen=True, slots=True)

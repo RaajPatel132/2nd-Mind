@@ -488,19 +488,19 @@ class SqlRecallStore:
         if clock is TimeClock.OCCURRED:
             branches += [
                 f"""SELECT i.id, 'occurred' AS via, i.occurred_start AS at, i.occurred_end AS
-                    until, NULL AS rrule, i.time_precision AS precision FROM memory_items i
-                    WHERE {where} AND {" AND ".join(occurred)}""",
-                f"""SELECT i.id, 'routine', i.occurred_start, NULL, i.rrule, i.time_precision
-                    FROM memory_items i WHERE {where} AND {" AND ".join(routine)}""",
+                    until, NULL AS rrule, i.time_precision AS precision, NULL::uuid AS trigger_id
+                    FROM memory_items i WHERE {where} AND {" AND ".join(occurred)}""",
+                f"""SELECT i.id, 'routine', i.occurred_start, NULL, i.rrule, i.time_precision,
+                    NULL::uuid FROM memory_items i WHERE {where} AND {" AND ".join(routine)}""",
             ]
         if clock in (TimeClock.OCCURRED, TimeClock.DUE):
             branches.append(
-                f"""SELECT i.id, 'due', i.due_at, NULL, NULL, i.time_precision
+                f"""SELECT i.id, 'due', i.due_at, NULL, NULL, i.time_precision, NULL::uuid
                     FROM memory_items i WHERE {where} AND {w.point("i.due_at", start, end)}"""
             )
         if clock in (TimeClock.OCCURRED, TimeClock.TRIGGER):
             branches.append(
-                f"""SELECT i.id, 'trigger', t.fires_at, NULL, NULL, 'datetime'
+                f"""SELECT i.id, 'trigger', t.fires_at, NULL, NULL, 'datetime', t.id
                     FROM triggers t JOIN memory_items i ON i.id = t.item_id
                     WHERE {where} AND t.state = 'pending' AND t.on = 'time'
                       AND {w.point("t.fires_at", start, end)}"""
@@ -508,12 +508,12 @@ class SqlRecallStore:
         if clock is TimeClock.VALID:
             branches.append(
                 f"""SELECT i.id, 'valid', coalesce(i.valid_from, i.mentioned_at), i.valid_to,
-                    NULL, i.time_precision FROM memory_items i
+                    NULL, i.time_precision, NULL::uuid FROM memory_items i
                     WHERE {where} AND {" AND ".join(valid)}"""
             )
         if clock is TimeClock.MENTIONED:
             branches.append(
-                f"""SELECT i.id, 'mentioned', i.mentioned_at, NULL, NULL, 'datetime'
+                f"""SELECT i.id, 'mentioned', i.mentioned_at, NULL, NULL, 'datetime', NULL::uuid
                     FROM memory_items i
                     WHERE {where} AND {w.point("i.mentioned_at", start, end)}"""
             )
@@ -521,7 +521,7 @@ class SqlRecallStore:
         async with self._tx() as s:
             rows = (await s.execute(text(sql), w.params)).all()
         out: list[Occurrence] = []
-        for item_id, via, at, until, rrule, precision in rows:
+        for item_id, via, at, until, rrule, precision, trigger_id in rows:
             if via == "routine":
                 length = occurrence_length(TimePrecision(precision) if precision else None)
                 for begins, ends in expand_rrule(
@@ -535,7 +535,7 @@ class SqlRecallStore:
                 ):
                     out.append(Occurrence(item_id, begins, ends, "routine", begins >= now))
                 continue
-            out.append(Occurrence(item_id, at, until, via, at >= now))
+            out.append(Occurrence(item_id, at, until, via, at >= now, trigger_id))
         out.sort(key=lambda o: (o.start, str(o.item_id)))
         return TimelineResult(occurrences=out[:limit])
 
