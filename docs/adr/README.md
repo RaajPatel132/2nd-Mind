@@ -28,6 +28,9 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0021](0021-sensitivity-and-secrets.md) | Sensitivity levels; secrets refused, not vaulted | accepted |
 | [0022](0022-time-resolution.md) | Time resolution: python-dateutil plus our own grammar | accepted |
 | [0023](0023-extract-and-enrich.md) | Extract and enrich as two model calls | accepted |
+| [0025](0025-query-planning.md) | Query planning: the model picks the shape, code does the rest | accepted |
+| [0026](0026-hybrid-search.md) | Hybrid search: ts_rank_cd, RRF fusion and a listwise reranker | accepted |
+| [0027](0027-corrections.md) | Corrections: reclassify, correct or supersede | accepted |
 | [0028](0028-ink-design-system.md) | Ink design system; the glass box inline as the Trail | accepted |
 | [0029](0029-agent-steps-on-the-stream.md) | Agent steps on the turn stream (amends 0015) | accepted |
 | [0030](0030-model-picker-and-weighted-quota.md) | A model picker and a quota weighted by model price | accepted |
