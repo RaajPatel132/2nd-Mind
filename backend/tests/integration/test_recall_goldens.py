@@ -24,6 +24,7 @@ from secondmind.evals.recall import (
 )
 from secondmind.memory.adapters import Database
 from secondmind.providers import ModelRouter
+from secondmind.retrieval import RecallSettings
 
 pytestmark = pytest.mark.integration
 
@@ -82,3 +83,22 @@ async def test_recall_goldens_live_baseline(app_db: Database, identity: SqlIdent
     finally:
         await router.aclose()
     sys.stdout.write(f"\nrecall golden cases (live), {len(runs)} cases\n{report(runs)}\n")
+
+
+FILTER_MISSES = [c for c in CASES if c.id.startswith(("49-", "50-"))]
+
+
+@pytest.mark.parametrize("case", FILTER_MISSES, ids=case_ids(FILTER_MISSES))
+async def test_a_filter_miss_is_found_by_the_soft_channel_and_missed_without_it(
+    case: RecallCase, app_db: Database, router: ModelRouter, shared: Seeded
+) -> None:
+    on = await run_case(case, db=app_db, seeded=shared, router=router)
+    assert set(case.gold) <= set(on.soft_only), explain(on)
+    off = await run_case(
+        case,
+        db=app_db,
+        seeded=shared,
+        router=router,
+        settings=RecallSettings(soft_channel_enabled=False),
+    )
+    assert not set(case.gold) & set(off.ranked), explain(off)

@@ -1,0 +1,22 @@
+id: 49-sleep-read
+title: 'Filter miss: the sleep article was saved as a note, found by the soft channel only'
+question: What did I read about sleep?
+shape: semantic
+gold:
+- sleep_article
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: What did I read about sleep?
+      topic: reading about sleep
+      filters:
+        kinds:
+        - resource
+  rerank:
+  - match: article on sleep
+    score: 0.9

@@ -1,0 +1,29 @@
+id: 50-bought-last-month
+title: 'Filter miss: bought in August, mentioned in September'
+question: What did I buy last month?
+shape: time_window
+gold:
+- running_shoes
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What did I buy last month?
+      topic: purchases last month
+      about: purchases
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - purchase
+      times:
+      - expression: last month
+        clock: occurred
+        direction: past
+  rerank:
+  - match: running shoes
+    score: 0.85

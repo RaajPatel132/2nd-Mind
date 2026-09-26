@@ -24,7 +24,7 @@ from secondmind.evals.fixture import Seeded, load_fixture
 from secondmind.evals.recall import case_replay, eval_runner, load_cases, replay_router, seed_main
 from secondmind.memory.adapters import Database
 from secondmind.retrieval import Access
-from secondmind.retrieval.adapters import SqlRecallStore
+from secondmind.retrieval.adapters import SqlConversationStore, SqlRecallStore
 
 pytestmark = pytest.mark.integration
 
@@ -236,3 +236,14 @@ async def test_an_edit_in_place_is_its_own_undoable_turn(
     undone = await runner.memory.reader(seeded.scope).item(item_id)
     assert undone is not None
     assert undone.occurred_start == before.occurred_start
+
+
+async def test_undo_reverts_writes_but_not_what_was_said(
+    app_db: Database, identity: SqlIdentityStore, router: Any
+) -> None:
+    seeded, runner = await world(app_db, identity, router)
+    turn = await say(runner, seeded.scope, "What did I save about trading?")
+    assert await runner.index_conversation(seeded.scope, turn.id) > 0
+    await runner.undo(seeded.scope, turn_id=turn.id, timezone="Asia/Kolkata")
+    said = SqlConversationStore(app_db, seeded.scope)
+    assert await said.indexed_turns([turn.id]) == {turn.id}
