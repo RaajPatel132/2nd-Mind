@@ -73,8 +73,8 @@ test: ## Backend unit tests
 	$(BACKEND_RUN) pytest
 
 .PHONY: test-int
-test-int: ## Backend integration tests (testcontainers Postgres + Redis; needs Docker)
-	$(BACKEND_RUN) pytest -m integration
+test-int: ## Backend integration tests (testcontainers Postgres + Redis; needs Docker; no live calls)
+	$(BACKEND_RUN) pytest -m "integration and not live"
 
 .PHONY: test-live
 test-live: ## Provider contract tests against real APIs (needs keys)
