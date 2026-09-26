@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.2 |
-| **Date** | 2026-09-24 (v0.1: 2026-09-23; changes in §16) |
+| **Status** | Draft v0.3 |
+| **Date** | 2026-09-26 (v0.1: 2026-09-23, v0.2: 2026-09-24; changes in §16) |
 | **Owner** | Raj Patel |
 | **Phase covered** | Phase 1 (web app, hosted model providers); Phase 2 direction (self-hosted small model, §13.1) |
 | **Working name** | "2nd Mind" (final name open, see §15) |
@@ -247,6 +247,8 @@ The write policy is a product feature, not an implementation detail. It is docum
 - **FR-5.2 People.** Person queries work across types ("What does Kabir like?", "Everything about Nisha").
 - **FR-5.3 Category and type.** Queries such as "What shows do I have queued?" filter by category and type, not just words.
 - **FR-5.4 Objects and places.** Objects keep identifying attributes (brand, model, serial) and places keep addresses, both retrievable by attribute.
+- **FR-5.5 Current and earlier values.** A value that changed is answered current value first, then the earlier one when there's history ("Pune (Bengaluru until 12 Sep)"). A value recorded by mistake is never given as history.
+- **FR-5.6 Exact counts and totals.** "How many", "how much", "most" and "average" are computed from stored memories, not estimated, and things that look like what was counted but weren't filed that way are reported next to the number.
 
 ### 7.6 Retrieval agent (P0)
 
@@ -257,6 +259,9 @@ The write policy is a product feature, not an implementation detail. It is docum
 - **FR-6.5** When nothing relevant is found, it says so plainly and does not invent an answer. "No result" is a measured behaviour (§11).
 - **FR-6.6** Handles multi-part questions ("What's coming up this week and did I save anything about trading?") by planning a sub-query per part.
 - **FR-6.7** Records which items were retrieved, for the quick-layer "frequently retrieved" signal.
+- **FR-6.8 Situational questions.** Advice for a situation ("I'm free this weekend, what should I learn?") draws on active goals, open intentions and confirmed patterns in core memory, respects what's already booked, and brings the saved resources for the intentions it suggests.
+- **FR-6.9 Reminders tied to a person, topic or situation.** "Next time I talk to Nisha, ask about her interview" fires when that person comes up in any turn; topic and situation reminders fire when a message is close enough to their cue. Firing is recorded like any change and can be undone.
+- **FR-6.10 Conversation recall.** Questions about what was said in the chat ("The books you suggested last week?") find the turn and cite it as a conversation, never as a saved memory; the answer can offer to save it.
 
 ### 7.7 Upcoming view (P0)
 
@@ -706,3 +711,4 @@ Goal: show, with evidence, when a small self-hosted model can replace a hosted f
 | 2026-09-24 | **Platform surface:** public REST API v1 with keys, scopes, rate limits and usage metering (P0); MCP server (P1). |
 | 2026-09-24 | **Operational bar:** IaC staging + production, eval-gated releases, SLOs and alerts, public `/status`, load test, runbook, tested restore. |
 | 2026-09-24 | **Engineering bar:** modular by domain, ports and adapters, boundaries enforced in CI, ADRs, prompt and config versioning. |
+| 2026-09-26 | v0.3: exact counts and current-then-earlier values (**FR-5.5, FR-5.6**); situational questions, person/topic reminders and conversation recall (**FR-6.8 to FR-6.10**). |
