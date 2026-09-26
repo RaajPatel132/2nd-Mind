@@ -1,0 +1,24 @@
+id: 19-pottery-august
+title: 'Filter miss: nothing in August, the closest match found by widening'
+question: What did I do at the pottery studio in August?
+shape: time_window
+gold:
+- pottery_class
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What did I do at the pottery studio in August?
+      topic: pottery studio in August
+      about: pottery studio
+      entities:
+      - mention: the pottery studio
+        name: Clay and Kiln Studio
+      times:
+      - expression: in August
+        clock: occurred
+        direction: past

@@ -1,0 +1,26 @@
+id: 43-week-and-trading
+title: 'Multi-part: time plus semantic'
+question: What's coming up this week and did I save anything about trading?
+shape:
+- time_window
+- semantic
+gold:
+- dinner_tonight
+- trading_idea
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What's coming up this week?
+      topic: this week's plans
+      times:
+      - expression: this week
+        clock: occurred
+        direction: future
+    - shape: semantic
+      question: Did I save anything about trading?
+      topic: trading

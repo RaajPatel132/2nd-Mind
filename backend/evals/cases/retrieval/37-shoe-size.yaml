@@ -1,0 +1,22 @@
+id: 37-shoe-size
+title: '§8.2 no-answer: never saved, no guess'
+question: What's Kabir's shoe size?
+shape: exact
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: What's Kabir's shoe size?
+      topic: Kabir's shoe size
+      entities:
+      - mention: Kabir
+      filters:
+        predicate: shoe_size
+  rerank:
+  - match: running shoes
+    score: 0.1

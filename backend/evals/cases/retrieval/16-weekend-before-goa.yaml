@@ -1,0 +1,32 @@
+id: 16-weekend-before-goa
+title: 'Temporal reasoning: the weekend before an anchored event'
+question: What did I do the weekend before Goa?
+shape: order
+gold:
+- pottery_class
+- brunch_nisha
+- run_sep_20
+forbidden:
+- run_sep_27
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: order
+      question: What did I do the weekend before Goa?
+      topic: the weekend before Goa
+      times:
+      - expression: the weekend before
+        clock: occurred
+        direction: past
+        anchor: Goa
+  rerank:
+  - match: pottery class
+    score: 0.9
+  - match: Brunch
+    score: 0.9
+  - match: 12 km
+    score: 0.85

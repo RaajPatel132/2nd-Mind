@@ -1,0 +1,17 @@
+id: 35-books-suggested
+title: 'Conversation: what the assistant suggested'
+question: What books did you suggest for a slow weekend?
+shape: conversation
+reply_contains:
+- Tea by the Window
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: conversation
+      question: What books did you suggest for a slow weekend?
+      topic: book suggestions
+      role: assistant

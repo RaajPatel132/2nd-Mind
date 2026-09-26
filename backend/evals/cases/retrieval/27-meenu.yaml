@@ -1,0 +1,21 @@
+id: 27-meenu
+title: An alias finds the person
+question: What do I know about Meenu?
+shape: entity
+gold:
+- meenu_standup
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: entity
+      question: What do I know about Meenu?
+      topic: Meenu
+      entities:
+      - mention: Meenu
+  rerank:
+  - match: standup
+    score: 0.9

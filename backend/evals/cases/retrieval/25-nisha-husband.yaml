@@ -1,0 +1,27 @@
+id: 25-nisha-husband
+title: '2-hop: a relation path to the right person'
+question: What does Nisha's husband like?
+shape: entity
+gold:
+- rohan_jazz
+- rohan_birds
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: entity
+      question: What does Nisha's husband like?
+      topic: what Nisha's husband likes
+      entities:
+      - mention: Nisha's husband
+        name: Nisha
+        path:
+        - spouse_of
+  rerank:
+  - match: jazz
+    score: 0.9
+  - match: birdwatching
+    score: 0.9

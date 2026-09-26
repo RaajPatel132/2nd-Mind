@@ -1,0 +1,26 @@
+id: 14-last-month-running
+title: '§8.2 time + semantic: filters on when it happened, not when saved'
+question: Anything from last month about running?
+shape: time_window
+gold:
+- run_sep_02
+- run_sep_13
+- run_sep_27
+forbidden:
+- run_oct_04
+- running_shoes
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: Anything from last month about running?
+      topic: running last month
+      about: running
+      times:
+      - expression: last month
+        clock: occurred
+        direction: past

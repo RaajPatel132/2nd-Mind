@@ -1,0 +1,35 @@
+id: 34-after-study-film
+title: 'Situational with a core pattern: a film after studying'
+question: I'm done studying this weekend, how should I unwind?
+shape: situational
+gold:
+- watch_dark
+- watch_mindhunter
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: situational
+      question: I'm done studying this weekend, how should I unwind?
+      topic: unwinding after study
+      times:
+      - expression: this weekend
+        clock: occurred
+        direction: future
+      filters:
+        kinds:
+        - intention
+    - shape: list
+      question: Which shows do I want to watch?
+      topic: watch list
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted
+      expanded_from: A film after a weekend study session

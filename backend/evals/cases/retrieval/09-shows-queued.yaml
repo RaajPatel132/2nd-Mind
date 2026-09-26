@@ -1,0 +1,25 @@
+id: 09-shows-queued
+title: '§8.2 category: shows queued'
+question: What shows do I have queued?
+shape: list
+gold:
+- watch_dark
+- watch_mindhunter
+forbidden:
+- watch_crown
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: list
+      question: What shows do I have queued?
+      topic: queued shows
+      filters:
+        kinds:
+        - intention
+        states:
+        - wanted
+        category: entertainment

@@ -1,0 +1,27 @@
+id: 04-show-taste-now
+title: 'Evolved preference: what I''m into now, not the old taste'
+question: What kind of shows am I into these days?
+shape: latest
+gold:
+- done_thrillers
+forbidden:
+- likes_thrillers
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: latest
+      question: What kind of shows am I into these days?
+      topic: show taste
+      filters:
+        predicate: genre_taste
+        current_only: true
+  rerank:
+  - match: thrillers
+    score: 0.2
+    state: superseded
+  - match: lighter shows
+    score: 0.9

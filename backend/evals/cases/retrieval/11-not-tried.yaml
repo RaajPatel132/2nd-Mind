@@ -1,0 +1,27 @@
+id: 11-not-tried
+title: 'Set: want-to-try places with no visit'
+question: Which restaurants haven't I tried yet?
+shape: set
+gold:
+- try_blue_lotus
+- try_saffron
+forbidden:
+- try_tin_spoon
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: set
+      question: Which restaurants haven't I tried yet?
+      topic: restaurants not tried
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - try
+      set:
+        op: without
+        other_kind: episode

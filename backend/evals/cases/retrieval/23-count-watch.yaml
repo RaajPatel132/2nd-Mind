@@ -1,0 +1,27 @@
+id: 23-count-watch
+title: Count of wanted shows
+question: How many shows do I want to watch?
+shape: count
+gold:
+- watch_dark
+- watch_mindhunter
+aggregate: 2
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: count
+      question: How many shows do I want to watch?
+      topic: shows to watch
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted
+      aggregate:
+        op: count

@@ -1,0 +1,22 @@
+id: 20-passport-due
+title: 'Due clock: what''s due this month'
+question: What's due this month?
+shape: time_window
+gold:
+- renew_passport
+forbidden:
+- half_marathon_goal
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What's due this month?
+      topic: due this month
+      times:
+      - expression: this month
+        clock: due
+        direction: future

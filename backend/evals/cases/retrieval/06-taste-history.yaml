@@ -1,0 +1,22 @@
+id: 06-taste-history
+title: History of a preference
+question: How has my taste in shows changed?
+shape: history
+gold:
+- likes_thrillers
+- done_thrillers
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: history
+      question: How has my taste in shows changed?
+      topic: show taste over time
+      filters:
+        predicate: genre_taste
+  rerank:
+  - match: thrillers
+    score: 0.9

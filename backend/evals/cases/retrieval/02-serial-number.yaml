@@ -1,0 +1,23 @@
+id: 02-serial-number
+title: '§8.2 attribute: the bag''s serial number'
+question: What's the serial number of the bag?
+shape: exact
+gold:
+- mk_bag
+reply_contains:
+- 123ABC
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: What's the serial number of the bag?
+      topic: the bag's serial number
+      entities:
+      - mention: the bag
+        name: MK bag
+      filters:
+        predicate: serial_number

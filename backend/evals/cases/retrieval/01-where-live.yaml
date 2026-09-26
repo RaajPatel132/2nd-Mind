@@ -1,0 +1,23 @@
+id: 01-where-live
+title: 'Knowledge update: the current home wins, the old one is left out'
+question: Where do I live?
+shape: latest
+gold:
+- live_pune
+forbidden:
+- live_bengaluru
+reply_contains:
+- Pune
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: latest
+      question: Where do I live?
+      topic: where I live
+      filters:
+        predicate: lives_in
+        current_only: true

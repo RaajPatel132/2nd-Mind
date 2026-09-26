@@ -1,0 +1,30 @@
+id: 08-watch-list
+title: 'List: wanted shows only (not watched, not dropped)'
+question: What's on my watch list?
+shape: list
+gold:
+- watch_dark
+- watch_mindhunter
+forbidden:
+- watch_crown
+- watch_severance
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: list
+      question: What's on my watch list?
+      topic: watch list
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted
+  rerank:
+  - match: Severance
+    score: 0.2

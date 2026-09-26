@@ -1,0 +1,19 @@
+id: 30-sleep-tips
+title: 'Semantic: a paraphrase finds the note'
+question: Any tips I saved for sleeping better?
+shape: semantic
+gold:
+- sleep_article
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: Any tips I saved for sleeping better?
+      topic: sleep tips
+  rerank:
+  - match: article on sleep
+    score: 0.9

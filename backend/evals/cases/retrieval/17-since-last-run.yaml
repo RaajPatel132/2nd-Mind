@@ -1,0 +1,29 @@
+id: 17-since-last-run
+title: 'Order: how long since my last run (duration computed in code)'
+question: How long since my last run?
+shape: order
+gold:
+- run_oct_04
+reply_contains:
+- 2 days ago
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: order
+      question: How long since my last run?
+      topic: last run
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - measurement
+        attribute:
+          key: activity
+          value: run
+  rerank:
+  - match: 7 km
+    score: 0.95

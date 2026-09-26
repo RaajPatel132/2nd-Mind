@@ -1,0 +1,20 @@
+id: 47-trigger-quiet
+title: No trigger fires on an unrelated turn
+question: What did I save about the Rust book?
+shape: semantic
+gold:
+- rust_book
+not_fired:
+- nisha_interview
+- ramen_japan
+fresh: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: What did I save about the Rust book?
+      topic: the Rust book

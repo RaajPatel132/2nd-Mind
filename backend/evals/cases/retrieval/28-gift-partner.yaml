@@ -1,0 +1,29 @@
+id: 28-gift-partner
+title: '§8.2 person: a gift for my partner, through the relation'
+question: What could I gift my partner?
+shape: entity
+gold:
+- kabir_likes_mk
+- mk_bag
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: entity
+      question: What could I gift my partner?
+      topic: gift ideas for my partner
+      entities:
+      - mention: my partner
+        name: me
+        path:
+        - partner_of
+  rerank:
+  - match: likes MK bags
+    score: 0.95
+  - match: serial number
+    score: 0.7
+  - match: birthday
+    score: 0.7

@@ -1,0 +1,25 @@
+id: 05-lived-before
+title: 'History: where I lived before Pune'
+question: Where did I live before Pune?
+shape: history
+gold:
+- live_bengaluru
+reply_contains:
+- Bengaluru
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: history
+      question: Where did I live before Pune?
+      topic: previous home
+      filters:
+        predicate: lives_in
+  rerank:
+  - match: Bengaluru
+    score: 0.95
+  - match: live in Pune
+    score: 0.3

@@ -1,0 +1,22 @@
+id: 46-trigger-topic
+title: A topic trigger fires on a close enough message
+question: I'm planning the Japan trip, what should I remember?
+shape: semantic
+gold:
+- ramen_japan
+fired:
+- ramen_japan
+fresh: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: I'm planning the Japan trip, what should I remember?
+      topic: Japan trip
+  rerank:
+  - match: Ichiban
+    score: 0.9

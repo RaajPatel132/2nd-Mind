@@ -1,0 +1,25 @@
+id: 18-next-with-kabir
+title: 'Order: the next plan with Kabir'
+question: What's next with Kabir?
+shape: order
+gold:
+- dinner_tonight
+forbidden:
+- goa_trip
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: order
+      question: What's next with Kabir?
+      topic: next plan with Kabir
+      entities:
+      - mention: Kabir
+  rerank:
+  - match: Saffron Street with Kabir
+    score: 0.95
+  - match: Goa trip
+    score: 0.2

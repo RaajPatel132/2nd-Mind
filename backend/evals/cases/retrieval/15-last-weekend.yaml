@@ -1,0 +1,24 @@
+id: 15-last-weekend
+title: 'Temporal: last weekend'
+question: What did I do last weekend?
+shape: time_window
+gold:
+- run_oct_04
+- dentist_new
+forbidden:
+- dentist_old
+- pottery_class
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What did I do last weekend?
+      topic: last weekend
+      times:
+      - expression: last weekend
+        clock: occurred
+        direction: past

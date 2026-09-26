@@ -1,0 +1,43 @@
+id: 48-save-and-recall
+title: 'Save and recall: the new show is on the list the question reads'
+question: Add Fallout to my watchlist. What else is on it?
+shape: list
+gold:
+- watch_dark
+- watch_mindhunter
+reply_contains:
+- Fallout
+fresh: true
+model:
+  intent:
+    intent: save_and_recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: list
+      question: What else is on my watch list?
+      topic: watch list
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted
+  extract:
+    entities:
+    - id: e1
+      mention: Fallout
+      name: Fallout
+      kind: work
+    memories:
+    - ref: m1
+      kind: intention
+      subtype: watch
+      title: Fallout
+      text: I want to watch Fallout.
+      category: entertainment/series
+      entities:
+      - entity: e1
+        role: about

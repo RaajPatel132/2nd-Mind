@@ -1,0 +1,26 @@
+id: 45-trigger-person
+title: A person trigger fires when she comes up
+question: What did Nisha lend me?
+shape: entity
+gold:
+- quiet_hours_read
+reply_contains:
+- By the way, you wanted to ask Nisha about her interview.
+fired:
+- nisha_interview
+fresh: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: entity
+      question: What did Nisha lend me?
+      topic: what Nisha lent me
+      entities:
+      - mention: Nisha
+  rerank:
+  - match: lent me
+    score: 0.95

@@ -1,0 +1,36 @@
+id: 44-runs-and-sourdough
+title: 'Multi-part: one part found, one says it has nothing'
+question: How many runs did I log in September, and what did I save about sourdough?
+shape:
+- count
+- semantic
+aggregate: 6
+reply_contains:
+- I don't have anything saved about sourdough
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: count
+      question: How many runs did I log in September?
+      topic: runs in September
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - measurement
+        attribute:
+          key: activity
+          value: run
+      aggregate:
+        op: count
+      times:
+      - expression: in September
+        clock: occurred
+        direction: past
+    - shape: semantic
+      question: What did I save about sourdough?
+      topic: sourdough

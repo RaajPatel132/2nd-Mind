@@ -30,7 +30,18 @@ _STOP = frozenset(
         "your", "s",
     }
 )  # fmt: skip
-_EVIDENCE = re.compile(r'^\[(\d+)\] ([^·]+?) · (.+?) · "(.*?)"')
+_EVIDENCE = re.compile(r'^\[(\d+)\] ([^·]+?) · (.+?) · "(.*?)"(.*)$')
+_RELATIVE = re.compile(r"\(([^,()]+), (?:past|upcoming|now)\b")
+# Old rows (a superseded fact, a moved plan) score low unless the question asks about the past,
+# as a reranker reading each candidate's state would.
+_OLD_STATES = frozenset({"superseded", "moved", "cancelled", "dropped"})
+_PAST = re.compile(r"\b(before|used to|previously|history|changed?|anymore|why|was|were)\b")
+# Dates in verbalised keys ("saved on Thursday 17 September") aren't what a memory is about.
+_DATE_WORDS = re.compile(
+    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april"
+    r"|may|june|july|august|september|october|november|december|weekends?|\d+)\b",
+    re.IGNORECASE,
+)
 _SAID = re.compile(r'^\[(\d+)\] (I said|You said) on (.+?), in the chat .*?: "(.*)"$')
 
 
@@ -75,9 +86,17 @@ def recall_responders(
         for c in body.get("candidates", []):
             text = str(c.get("text", ""))
             pinned = next(
-                (p for p in pins if str(p.get("match", "")).lower() in text.lower()), None
+                (
+                    p
+                    for p in pins
+                    if str(p.get("match", "")).lower() in text.lower()
+                    and p.get("state") in (None, c.get("state"))
+                ),
+                None,
             )
             score = float(pinned["score"]) if pinned else overlap(question, text)
+            if not pinned and c.get("state") in _OLD_STATES and not _PAST.search(question.lower()):
+                score *= 0.4
             why = "offline: pinned by the case" if pinned else "offline: shared words"
             scores.append({"id": c.get("id", ""), "score": round(score, 3), "reason": why})
         return {"scores": scores}
@@ -94,7 +113,7 @@ def overlap(question: str, text: str) -> float:
     wanted = _content(question)
     if not wanted:
         return 0.0
-    return len(wanted & _content(text)) / len(wanted)
+    return len(wanted & _content(_DATE_WORDS.sub(" ", text))) / len(wanted)
 
 
 def _content(text: str) -> set[str]:
@@ -130,7 +149,9 @@ def offline_answer(request: AdapterRequest) -> str | None:
             ev = _EVIDENCE.match(line)
             if ev and "· counted" not in line:
                 text = ev.group(4).rstrip(".")
-                sentences.append(f"{text} ({ev.group(3)}) [{ev.group(1)}].")
+                when = _RELATIVE.search(ev.group(5))
+                state = f"{ev.group(3)}, {when.group(1)}" if when else ev.group(3)
+                sentences.append(f"{text} ({state}) [{ev.group(1)}].")
             if len(sentences) >= 4:
                 break
         none = re.search(r"Evidence: none\. Say plainly: (.+)$", block, re.M)

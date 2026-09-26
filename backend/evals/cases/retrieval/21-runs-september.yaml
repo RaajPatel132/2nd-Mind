@@ -1,0 +1,41 @@
+id: 21-runs-september
+title: Counting with the misfiled runs reported, not counted
+question: How many runs did I log in September?
+shape: count
+gold:
+- run_sep_02
+- run_sep_27
+forbidden:
+- run_oct_04
+aggregate: 6
+reply_contains:
+- File them as runs?
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: count
+      question: How many runs did I log in September?
+      topic: runs in September
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - measurement
+        attribute:
+          key: activity
+          value: run
+      aggregate:
+        op: count
+      times:
+      - expression: in September
+        clock: occurred
+        direction: past
+  rerank:
+  - match: along the river
+    score: 0.8
+  - match: around the lake
+    score: 0.8

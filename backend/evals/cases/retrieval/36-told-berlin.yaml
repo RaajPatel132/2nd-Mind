@@ -1,0 +1,17 @@
+id: 36-told-berlin
+title: 'Conversation: what I said, never saved'
+question: What did I tell you about Berlin?
+shape: conversation
+reply_contains:
+- Berlin offer
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: conversation
+      question: What did I tell you about Berlin?
+      topic: Berlin
+      role: user

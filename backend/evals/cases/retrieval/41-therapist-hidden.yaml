@@ -1,0 +1,22 @@
+id: 41-therapist-hidden
+title: Sensitive stays out unless asked about
+question: What do I do on Thursday evenings?
+shape: semantic
+forbidden:
+- therapist
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: What do I do on Thursday evenings?
+      topic: Thursday evenings
+  rerank:
+  - match: standup
+    score: 0.2
+  - match: Evening run
+    score: 0.1

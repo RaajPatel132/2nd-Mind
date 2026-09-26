@@ -1,0 +1,25 @@
+id: 13-this-week
+title: '§8.2 time: what''s coming up this week, routine occurrences included'
+question: What's coming up this week?
+shape: time_window
+gold:
+- dinner_tonight
+- saturday_workshop
+- gym_routine
+forbidden:
+- dentist_new
+- run_oct_04
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: time_window
+      question: What's coming up this week?
+      topic: this week's plans
+      times:
+      - expression: this week
+        clock: occurred
+        direction: future

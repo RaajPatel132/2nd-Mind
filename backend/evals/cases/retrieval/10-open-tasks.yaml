@@ -1,0 +1,25 @@
+id: 10-open-tasks
+title: 'List: open tasks, not the done one'
+question: What are my open tasks?
+shape: list
+gold:
+- fix_tap
+- backup_photos
+- renew_passport
+forbidden:
+- book_hotel
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: list
+      question: What are my open tasks?
+      topic: open tasks
+      filters:
+        kinds:
+        - task
+        states:
+        - open

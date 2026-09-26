@@ -1,0 +1,18 @@
+id: 07-diet
+title: A core preference by exact lookup
+question: Am I vegetarian?
+shape: exact
+gold:
+- vegetarian
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: Am I vegetarian?
+      topic: diet
+      filters:
+        predicate: diet

@@ -1,0 +1,22 @@
+id: 40-rohan-phone
+title: No answer about a known person
+question: What's Rohan's phone number?
+shape: exact
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: What's Rohan's phone number?
+      topic: Rohan's phone number
+      entities:
+      - mention: Rohan
+      filters:
+        predicate: phone_number
+  rerank:
+  - match: Rohan
+    score: 0.1

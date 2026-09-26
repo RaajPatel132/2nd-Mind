@@ -1,0 +1,20 @@
+id: 29-trading
+title: '§8.2 semantic: the trading idea and the related article'
+question: What did I save about trading?
+shape: semantic
+gold:
+- trading_idea
+- trading_article
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: What did I save about trading?
+      topic: trading
+  rerank:
+  - match: strategies fail
+    score: 0.85

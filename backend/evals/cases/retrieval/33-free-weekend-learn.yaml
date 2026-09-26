@@ -1,0 +1,30 @@
+id: 33-free-weekend-learn
+title: 'Situational: goals, open intentions and their resources'
+question: I'm free this weekend, what should I learn?
+shape: situational
+gold:
+- learn_rust
+- learn_guitar
+- rust_book
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: situational
+      question: I'm free this weekend, what should I learn?
+      topic: what to learn this weekend
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - learn
+      times:
+      - expression: this weekend
+        clock: occurred
+        direction: future
+  rerank:
+  - match: Rust book
+    score: 0.8

@@ -1,0 +1,19 @@
+id: 32-why-no-thrillers
+title: 'Why: the preference that replaced the old one'
+question: Why don't I watch thrillers anymore?
+shape: why
+gold:
+- done_thrillers
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: why
+      question: Why don't I watch thrillers anymore?
+      topic: why no more thrillers
+  rerank:
+  - match: lighter shows
+    score: 0.95

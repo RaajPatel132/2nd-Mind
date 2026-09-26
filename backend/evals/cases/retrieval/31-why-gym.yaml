@@ -1,0 +1,21 @@
+id: 31-why-gym
+title: 'Why: the reason linked to the cancellation'
+question: Why did I cancel the gym?
+shape: why
+gold:
+- gym_reason
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: why
+      question: Why did I cancel the gym?
+      topic: why I cancelled the gym
+  rerank:
+  - match: far side of the city
+    score: 0.95
+  - match: Cancelled
+    score: 0.8

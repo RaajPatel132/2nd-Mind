@@ -1,0 +1,35 @@
+id: 42-home-and-watch
+title: 'Multi-part: two answers, each cited'
+question: Where do I live and what's on my watch list?
+shape:
+- latest
+- list
+gold:
+- live_pune
+- watch_dark
+- watch_mindhunter
+forbidden:
+- live_bengaluru
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: latest
+      question: Where do I live?
+      topic: where I live
+      filters:
+        predicate: lives_in
+        current_only: true
+    - shape: list
+      question: What's on my watch list?
+      topic: watch list
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted

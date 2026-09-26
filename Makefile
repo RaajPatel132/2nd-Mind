@@ -88,6 +88,14 @@ eval-ingest: ## Ingestion golden cases on replayed model outputs, with the score
 eval-ingest-live: ## Ingestion golden cases on the configured real providers (needs keys; costs money)
 	$(BACKEND_RUN) python -m secondmind.evals ingest --live
 
+.PHONY: eval-recall
+eval-recall: ## Recall golden cases on replayed plans and rerank scores (Postgres via testcontainers)
+	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and not live" -q
+
+.PHONY: eval-recall-live
+eval-recall-live: ## Recall golden cases on the configured real providers, with the baseline table (needs keys; costs money)
+	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and live" -s -q
+
 .PHONY: backfill-conversation
 backfill-conversation: ## Index past chat turns for "what did you tell me" questions (runs in the worker)
 	$(COMPOSE) exec worker python -m secondmind.jobs.adapters.enqueue backfill_conversation

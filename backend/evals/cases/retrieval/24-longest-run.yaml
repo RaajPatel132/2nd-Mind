@@ -1,0 +1,26 @@
+id: 24-longest-run
+title: Max of logged values
+question: What's the longest run I've logged?
+shape: count
+aggregate: 12
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: count
+      question: What's the longest run I've logged?
+      topic: longest run
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - measurement
+        attribute:
+          key: activity
+          value: run
+      aggregate:
+        op: max
+        field: value

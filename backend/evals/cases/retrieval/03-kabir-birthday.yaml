@@ -1,0 +1,24 @@
+id: 03-kabir-birthday
+title: A recurring date by person
+question: When is Kabir's birthday?
+shape: exact
+gold:
+- kabir_birthday
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: When is Kabir's birthday?
+      topic: Kabir's birthday
+      entities:
+      - mention: Kabir
+      filters:
+        kinds:
+        - plan
+  rerank:
+  - match: birthday
+    score: 0.95

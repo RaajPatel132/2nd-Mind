@@ -1,0 +1,30 @@
+id: 22-distance-september
+title: Sum of logged values
+question: How far did I run in total in September?
+shape: count
+aggregate: 46
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: count
+      question: How far did I run in total in September?
+      topic: distance run in September
+      filters:
+        kinds:
+        - episode
+        subtypes:
+        - measurement
+        attribute:
+          key: activity
+          value: run
+      aggregate:
+        op: sum
+        field: value
+      times:
+      - expression: in September
+        clock: occurred
+        direction: past

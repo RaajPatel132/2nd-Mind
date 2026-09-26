@@ -1,0 +1,26 @@
+id: 12-shared-shows
+title: 'Set: shows Kabir and I both want to watch'
+question: Which shows do Kabir and I both want to watch?
+shape: set
+gold:
+- watch_dark
+forbidden:
+- watch_mindhunter
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: set
+      question: Which shows do Kabir and I both want to watch?
+      topic: shows to watch with Kabir
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+      set:
+        op: shared_with
+        entity: Kabir

@@ -1,0 +1,28 @@
+id: 39-watched-dark
+title: 'Modality abstain: wanting to watch is not having watched'
+question: Have I watched Dark?
+shape: exact
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: Have I watched Dark?
+      topic: watching Dark
+      entities:
+      - mention: Dark
+      filters:
+        kinds:
+        - episode
+  rerank:
+  - match: Dark
+    score: 0.15
+    state: wanted
+  - match: Severance
+    score: 0.1
+  - match: Mindhunter
+    score: 0.1

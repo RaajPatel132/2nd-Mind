@@ -1,0 +1,15 @@
+id: 38-sourdough
+title: No answer by meaning
+question: What did I save about sourdough?
+shape: semantic
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: semantic
+      question: What did I save about sourdough?
+      topic: sourdough
