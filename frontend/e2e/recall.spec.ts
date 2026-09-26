@@ -41,7 +41,7 @@ test.describe('recall', () => {
 
   test('a date is fixed from the glass box as its own undoable turn', async ({ page }, testInfo) => {
     await freshUser(page, testInfo)
-    const turn = await send(page, 'Remind me to renew my passport before it expires on the 3rd of next month.', 'passport')
+    const turn = await send(page, 'Remind me to renew my passport before it expires on the 3rd of next month.', /passport/i)
     const glassBox = await inspect(page, turn)
     await glassBox.getByTestId('panel-diff').getByTestId('diff-edit').first().click()
     await page.keyboard.press('Escape')
