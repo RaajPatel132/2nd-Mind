@@ -12,6 +12,7 @@ from secondmind.api.deps import ServicesDep, UserIdDep, find_turn
 from secondmind.api.errors import ERROR_RESPONSES
 from secondmind.api.routes.turns import turn_out
 from secondmind.api.schemas import (
+    EntitiesOut,
     EntityDetailOut,
     HeldWriteOut,
     HeldWritesOut,
@@ -166,16 +167,31 @@ async def edit_item(
 ) -> TurnOut:
     """Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and
     policy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by
-    the resolver ("Friday", "3 October"); a delete is held for confirmation."""
+    the resolver ("Friday", "3 October"); an entity link is attached or detached; a delete is
+    held for confirmation."""
     _, scope, workspace = await _find(services, user_id, lambda r: r.item(item_id), "item")
     turn = await services.runner.edit_item(
         scope,
         item_id=item_id,
         changes=body.changes(),
+        attach=(body.attach.entity_id, body.attach.role) if body.attach else None,
+        detach=body.detach or [],
         delete=body.delete,
         timezone=workspace.timezone,
     )
     return turn_out(services, turn)
+
+
+@router.get(
+    "/workspaces/{workspace_id}/entities", response_model=EntitiesOut, responses=ERROR_RESPONSES
+)
+async def list_entities(
+    workspace_id: uuid.UUID, services: ServicesDep, user_id: UserIdDep
+) -> EntitiesOut:
+    """The workspace's people, places and things, for the editor's entity link (S3.12)."""
+    scope, _ = await resolve_scope(services.identity, user_id=user_id, workspace_id=workspace_id)
+    entities = await services.runner.memory.reader(scope).entities()
+    return EntitiesOut(items=sorted(entities, key=lambda e: (e.kind != "self", e.name.lower())))
 
 
 @router.post("/triggers/{trigger_id}/snooze", response_model=TurnOut, responses=ERROR_RESPONSES)

@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind, TurnStatus
 from secondmind.auth import User, Workspace, WorkspaceKind
-from secondmind.core import AgentStep, Layer, TurnEvent, UsageTotals
+from secondmind.core import AgentStep, EntityRole, Layer, TurnEvent, UsageTotals
 from secondmind.corrections import CorrectionChanges
 from secondmind.memory import (
     EntityRecord,
@@ -200,6 +200,15 @@ class SnoozeIn(BaseModel):
     date_expression: str = Field(min_length=1, max_length=200, examples=["2026-10-07 19:00"])
 
 
+class EntityLinkIn(BaseModel):
+    """Link a memory to one of the workspace's entities, in a role (S3.12)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    entity_id: uuid.UUID
+    role: EntityRole = EntityRole.ABOUT
+
+
 class ItemEditIn(BaseModel):
     """A glass-box edit of one memory (S3.12). Only the fields given change."""
 
@@ -216,10 +225,22 @@ class ItemEditIn(BaseModel):
         default=None, max_length=100, description="Free text read by the resolver: 'Friday'."
     )
     date_clock: Literal["occurred", "due", "valid"] | None = None
+    attach: EntityLinkIn | None = None
+    detach: list[uuid.UUID] | None = Field(
+        default=None, max_length=20, description="Entity links (their row ids) to remove."
+    )
     delete: bool = False
 
     def changes(self) -> CorrectionChanges:
-        return CorrectionChanges.model_validate(self.model_dump(exclude={"delete"}))
+        return CorrectionChanges.model_validate(
+            self.model_dump(exclude={"delete", "attach", "detach"})
+        )
+
+
+class EntitiesOut(_Out):
+    """The workspace's entities, for choosing what a memory is linked to (S3.12)."""
+
+    items: list[EntityRecord]
 
 
 class ItemDetailOut(_Out):

@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from secondmind.config import Step
 from secondmind.core import (
     AgentStep,
+    EntityRole,
     Kind,
     TimeClock,
     TimePrecision,
@@ -48,10 +49,12 @@ from secondmind.ingestion import (
     summarise_commit,
 )
 from secondmind.memory import (
+    AttachEntity,
     CommitResult,
     CorrectItem,
     CreateItem,
     DeleteItem,
+    DetachEntity,
     EntityLink,
     ItemContent,
     ItemRecord,
@@ -156,10 +159,13 @@ class Corrector:
         item_id: uuid.UUID,
         changes: CorrectionChanges,
         *,
+        attach: tuple[uuid.UUID, EntityRole] | None = None,
+        detach: Sequence[uuid.UUID] = (),
         delete: bool = False,
     ) -> CorrectOutcome:
         """A glass-box edit of one memory: no model call; its own turn (origin ``ui_edit``)."""
-        item = await ctx.memory.reader(ctx.scope).item(item_id)
+        reader = ctx.memory.reader(ctx.scope)
+        item = await reader.item(item_id)
         if item is None:
             return self._say(ctx, "edit", "That memory doesn't exist any more.")
         if delete:
@@ -167,9 +173,46 @@ class Corrector:
         else:
             notes: list[str] = []
             ops = await self._reclassify(ctx, item, changes, notes)
+            ops += await self._relink(ctx, item, attach, detach, notes)
             if notes and not ops:
                 return self._say(ctx, "edit", " ".join(notes))
         return await self._commit(ctx, ops, "edit", [], prefix="Edited")
+
+    async def _relink(
+        self,
+        ctx: CorrectContext,
+        item: ItemRecord,
+        attach: tuple[uuid.UUID, EntityRole] | None,
+        detach: Sequence[uuid.UUID],
+        notes: list[str],
+    ) -> list[Op]:
+        """Attach the item to an entity, or detach links it has (only this item's rows)."""
+        reader = ctx.memory.reader(ctx.scope)
+        rows = await reader.item_entities([item.id])
+        ops: list[Op] = [
+            DetachEntity(row_id=r.id, title=item.title, rationale="unlinked in the editor")
+            for r in rows
+            if r.id in set(detach)
+        ]
+        if attach is not None:
+            entity_id, role = attach
+            entity = await reader.entity(entity_id)
+            if entity is None:
+                notes.append("That person or thing isn't in this workspace.")
+            elif any(r.entity_id == entity_id and r.role is role for r in rows):
+                notes.append(f"It's already linked to {entity.name}.")
+            else:
+                ops.append(
+                    AttachEntity(
+                        row_id=new_id(),
+                        item_id=item.id,
+                        entity_id=entity_id,
+                        role=role,
+                        title=item.title,
+                        rationale=f"linked to {entity.name} ({role.value}) in the editor",
+                    )
+                )
+        return ops
 
     async def snooze(
         self, ctx: CorrectContext, trigger_id: uuid.UUID, date_expression: str

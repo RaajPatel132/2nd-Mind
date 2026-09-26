@@ -175,7 +175,8 @@ export interface paths {
          * Edit Item
          * @description Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and
          *     policy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by
-         *     the resolver ("Friday", "3 October"); a delete is held for confirmation.
+         *     the resolver ("Friday", "3 October"); an entity link is attached or detached; a delete is
+         *     held for confirmation.
          */
         patch: operations["edit_item"];
         trace?: never;
@@ -311,6 +312,26 @@ export interface paths {
          *     Undoing an undo turn is a redo.
          */
         post: operations["undo_turn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Entities
+         * @description The workspace's people, places and things, for the editor's entity link (S3.12).
+         */
+        get: operations["list_entities"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -651,6 +672,14 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * EntitiesOut
+         * @description The workspace's entities, for choosing what a memory is linked to (S3.12).
+         */
+        EntitiesOut: {
+            /** Items */
+            items: components["schemas"]["EntityRecord"][];
+        };
         /** EntityDetailOut */
         EntityDetailOut: {
             entity: components["schemas"]["EntityRecord"];
@@ -662,6 +691,19 @@ export interface components {
          * @enum {string}
          */
         EntityKind: "self" | "person" | "place" | "org" | "thing" | "work" | "topic" | "project" | "list";
+        /**
+         * EntityLinkIn
+         * @description Link a memory to one of the workspace's entities, in a role (S3.12).
+         */
+        EntityLinkIn: {
+            /**
+             * Entity Id
+             * Format: uuid
+             */
+            entity_id: string;
+            /** @default about */
+            role: components["schemas"]["EntityRole"];
+        };
         /** EntityRecord */
         EntityRecord: {
             /**
@@ -982,6 +1024,7 @@ export interface components {
          * @description A glass-box edit of one memory (S3.12). Only the fields given change.
          */
         ItemEditIn: {
+            attach?: components["schemas"]["EntityLinkIn"] | null;
             /** Category */
             category?: string | null;
             /** Date Clock */
@@ -996,6 +1039,11 @@ export interface components {
              * @default false
              */
             delete: boolean;
+            /**
+             * Detach
+             * @description Entity links (their row ids) to remove.
+             */
+            detach?: string[] | null;
             /** Format */
             format?: string | null;
             /** Kind */
@@ -3149,6 +3197,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_entities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitiesOut"];
                 };
             };
             /** @description Not signed in */

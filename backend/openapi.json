@@ -615,6 +615,23 @@
         "title": "DiffEntry",
         "type": "object"
       },
+      "EntitiesOut": {
+        "description": "The workspace's entities, for choosing what a memory is linked to (S3.12).",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRecord"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EntitiesOut",
+        "type": "object"
+      },
       "EntityDetailOut": {
         "properties": {
           "entity": {
@@ -650,6 +667,26 @@
         ],
         "title": "EntityKind",
         "type": "string"
+      },
+      "EntityLinkIn": {
+        "additionalProperties": false,
+        "description": "Link a memory to one of the workspace's entities, in a role (S3.12).",
+        "properties": {
+          "entity_id": {
+            "format": "uuid",
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/EntityRole",
+            "default": "about"
+          }
+        },
+        "required": [
+          "entity_id"
+        ],
+        "title": "EntityLinkIn",
+        "type": "object"
       },
       "EntityRecord": {
         "additionalProperties": false,
@@ -1331,6 +1368,16 @@
         "additionalProperties": false,
         "description": "A glass-box edit of one memory (S3.12). Only the fields given change.",
         "properties": {
+          "attach": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntityLinkIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "category": {
             "anyOf": [
               {
@@ -1376,6 +1423,23 @@
             "default": false,
             "title": "Delete",
             "type": "boolean"
+          },
+          "detach": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Entity links (their row ids) to remove.",
+            "title": "Detach"
           },
           "format": {
             "anyOf": [
@@ -5121,7 +5185,7 @@
         ]
       },
       "patch": {
-        "description": "Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and\npolicy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by\nthe resolver (\"Friday\", \"3 October\"); a delete is held for confirmation.",
+        "description": "Edit one memory in place, as its own turn (source ``ui_edit``) through the writer and\npolicy, with its own glass box; undo reverses it (FR-10.3). A date is free text read by\nthe resolver (\"Friday\", \"3 October\"); an entity link is attached or detached; a delete is\nheld for confirmation.",
         "operationId": "edit_item",
         "parameters": [
           {
@@ -5578,6 +5642,70 @@
           }
         },
         "summary": "Undo Turn",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/entities": {
+      "get": {
+        "description": "The workspace's people, places and things, for the editor's entity link (S3.12).",
+        "operationId": "list_entities",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitiesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "summary": "List Entities",
         "tags": [
           "memory"
         ]

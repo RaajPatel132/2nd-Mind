@@ -891,6 +891,11 @@ class MemoryWriter:
                 for key in ("src_item_id", "dst_item_id"):
                     if key in snapshot:
                         result.touched_items.add(uuid.UUID(str(snapshot[key])))
+            elif row.target_type is TargetType.ITEM_ENTITY:
+                # The item's keys name its entities, so a link change re-renders them.
+                snapshot = row.after or row.before or {}
+                if "item_id" in snapshot:
+                    result.touched_items.add(uuid.UUID(str(snapshot["item_id"])))
 
     async def _write_versions(self, tx: MemoryTx, rows: list[WriteLogRecord]) -> None:
         for row in rows:

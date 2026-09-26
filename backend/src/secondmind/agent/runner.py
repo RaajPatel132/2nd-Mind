@@ -41,6 +41,7 @@ from secondmind.config import ModelRef, PromptRegistry, Step
 from secondmind.core import (
     AgentStep,
     Clock,
+    EntityRole,
     ErrorEvent,
     ModelCallEvent,
     NullTrail,
@@ -616,6 +617,8 @@ class TurnRunner:
         *,
         item_id: uuid.UUID,
         changes: CorrectionChanges,
+        attach: tuple[uuid.UUID, EntityRole] | None = None,
+        detach: Sequence[uuid.UUID] = (),
         delete: bool = False,
         timezone: str,
     ) -> Turn:
@@ -644,6 +647,8 @@ class TurnRunner:
                 ),
                 item_id,
                 changes,
+                attach=attach,
+                detach=detach,
                 delete=delete,
             )
             return outcome.reply
