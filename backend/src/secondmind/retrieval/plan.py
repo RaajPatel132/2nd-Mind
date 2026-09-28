@@ -459,12 +459,18 @@ class _Resolver:
             else:
                 sub.dropped.append(f"subtype {proposed!r} (not in the vocab)")
         allowed = {s for k in (kinds or tuple(Kind)) for s in KIND_STATES[k]}
-        states = [s for s in f.states if s in allowed]
-        sub.dropped.extend(
-            f"state {s!r} (not a state of {kinds or 'any kind'})"
-            for s in f.states
-            if s not in allowed
-        )
+        states: list[str] = []
+        for proposed in f.states:
+            if proposed in allowed:
+                states.append(proposed)
+                continue
+            meant = state_synonyms(proposed, kinds)
+            if meant:
+                states.extend(meant)
+                sub.dropped.append(f"state {proposed!r} read as {', '.join(meant)}")
+            else:
+                sub.dropped.append(f"state {proposed!r} (not a state of {kinds or 'any kind'})")
+        states = list(dict.fromkeys(states))
         category = None
         if f.category:
             slug, how = await normalise_term(
@@ -622,6 +628,43 @@ def time_trace(window: Window, now: TurnNow) -> TimeResolution:
         rule=window.rule,
         anchor=window.anchor,
     )
+
+
+# Everyday words for a state, and the states they mean for each kind (found in R.3: a planner
+# asked for intentions in state "open", which only tasks have).
+_STATE_WORDS: dict[str, dict[Kind, tuple[str, ...]]] = {
+    "open": {
+        Kind.TASK: ("open",),
+        Kind.INTENTION: ("wanted", "active"),
+        Kind.PLAN: ("scheduled",),
+    },
+    "done": {
+        Kind.TASK: ("done",),
+        Kind.INTENTION: ("fulfilled",),
+        Kind.RESOURCE: ("consumed",),
+        Kind.PLAN: ("happened",),
+    },
+    "current": {
+        Kind.FACT: ("current",),
+        Kind.PREFERENCE: ("current",),
+        Kind.NOTE: ("current",),
+        Kind.INTENTION: ("wanted", "active"),
+        Kind.TASK: ("open",),
+    },
+}
+_STATE_ALIASES = {
+    "pending": "open", "todo": "open", "to_do": "open", "to-do": "open", "planned": "open",
+    "wanted": "open", "unwatched": "open", "unread": "open", "queued": "open",
+    "completed": "done", "complete": "done", "finished": "done", "watched": "done",
+    "read": "done", "fulfilled": "done", "consumed": "done", "active": "current",
+}  # fmt: skip
+
+
+def state_synonyms(word: str, kinds: Sequence[Kind]) -> list[str]:
+    """The states ``word`` means for ``kinds`` (every kind when none is given)."""
+    key = word.strip().lower()
+    table = _STATE_WORDS.get(_STATE_ALIASES.get(key, key), {})
+    return [s for k in (kinds or tuple(Kind)) for s in table.get(k, ())]
 
 
 def _vocab_text(vocab: Sequence[object]) -> str:

@@ -177,6 +177,16 @@ _ORDER_LIVE = (
 )
 
 
+# Aggregate fields that name a dimension, and the units a logged value in that dimension has.
+DIMENSION_UNITS: dict[str, frozenset[str]] = {
+    "distance": frozenset({"km", "kilometres", "kilometers", "mi", "miles", "m", "metres"}),
+    "duration": frozenset({"min", "mins", "minutes", "h", "hr", "hours", "s", "seconds"}),
+    "time": frozenset({"min", "mins", "minutes", "h", "hr", "hours"}),
+    "weight": frozenset({"kg", "g", "lb", "lbs"}),
+    "pages": frozenset({"pages", "page"}),
+}
+
+
 class SqlRecallStore:
     """``RecallStore`` over Postgres for one workspace."""
 
@@ -250,7 +260,16 @@ class SqlRecallStore:
             if field in ("value", "value.number"):
                 raw = "i.value ->> 'number'"
             else:
-                raw = f"i.attributes ->> {w.bind(field.removeprefix('attributes.'))}"
+                name = field.removeprefix("attributes.")
+                raw = f"i.attributes ->> {w.bind(name)}"
+                units = DIMENSION_UNITS.get(name.lower())
+                if units:
+                    # A dimension named for the logged number ("distance" of a run logged as
+                    # 5 km): read the value when no attribute has that name (R.3).
+                    raw = (
+                        f"coalesce({raw}, CASE WHEN lower(i.value ->> 'unit') = "
+                        f"ANY({w.bind(sorted(units))}) THEN i.value ->> 'number' END)"
+                    )
             value = f"CASE WHEN ({raw}) ~ '^-?[0-9]+(\\.[0-9]+)?$' THEN ({raw})::numeric END"
         when = "coalesce(i.occurred_start, i.due_at, i.mentioned_at)"
         tz = w.bind(timezone)

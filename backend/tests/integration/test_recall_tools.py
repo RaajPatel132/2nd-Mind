@@ -152,6 +152,16 @@ async def test_aggregate_sums_a_value_and_groups_by_week(
     assert sum(weeks.values()) == 46
 
 
+async def test_a_sum_over_a_named_dimension_reads_the_logged_value(
+    app_db: Database, recall: RecallWorkspaces
+) -> None:
+    """Found live (R.3 B2): a planner asked for the "distance" of runs logged as 5 km."""
+    s = store(app_db, recall)
+    by_name = await s.aggregate(RUNS, OPEN, op="sum", field="distance")
+    assert by_name.value == 46
+    assert (await s.aggregate(RUNS, OPEN, op="sum", field="duration")).value is None
+
+
 # ------------------------------------------------------------------ search and the soft channel
 
 
