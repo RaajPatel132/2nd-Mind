@@ -1,0 +1,15 @@
+# The quality reference (R.4): every chat step on Claude Sonnet 5. Runs once, on the named
+# `reference` subset only, with ALLOW_EXPENSIVE=1.
+description: every chat step on Claude Sonnet 5 (reference subset only)
+steps:
+  intent: anthropic:claude-sonnet-5
+  extract: anthropic:claude-sonnet-5
+  resolve: anthropic:claude-sonnet-5
+  enrich: anthropic:claude-sonnet-5
+  reconcile: anthropic:claude-sonnet-5
+  plan: anthropic:claude-sonnet-5
+  rerank: anthropic:claude-sonnet-5
+  correct: anthropic:claude-sonnet-5
+  answer: anthropic:claude-sonnet-5
+  judge: anthropic:claude-sonnet-5
+fallback: none

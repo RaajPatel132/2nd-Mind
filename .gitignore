@@ -45,3 +45,10 @@ frontend/playwright/.cache/
 # Logs and local artefacts
 *.log
 .tmp/
+
+# Eval runs: live runs are committed; fake and dry runs, the response cache and the spend
+# total are local
+backend/evals/runs/**/*.fake.json
+backend/evals/runs/.cache/
+backend/evals/runs/.spend
+backend/evals/runs/.spend.tmp

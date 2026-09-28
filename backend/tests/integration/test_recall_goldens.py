@@ -1,15 +1,12 @@
 """S3.15: the recall golden cases as ordinary tests (the fake provider replays each case's plan
-and rerank scores), and, marked ``live``, the baseline table on the configured providers
-(``make eval-recall-live``)."""
+and rerank scores). Live runs go through the eval harness (``make eval-recall-live``)."""
 
-import sys
 from collections.abc import AsyncIterator
 
 import pytest
 
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.evals.fixture import Seeded
-from secondmind.evals.ingest import live_router
 from secondmind.evals.recall import (
     RecallCase,
     case_ids,
@@ -17,7 +14,6 @@ from secondmind.evals.recall import (
     failures,
     fake_router,
     load_cases,
-    report,
     run_case,
     seed_main,
     unknown_keys,
@@ -67,22 +63,6 @@ async def test_recall_golden(
     seeded = await seed_main(app_db, identity, router) if case.fresh else shared
     run = await run_case(case, db=app_db, seeded=seeded, router=router)
     assert failures(run) == [], f"{case.id}: {case.title}\nreply: {run.reply}\n{explain(run)}"
-
-
-@pytest.mark.live
-async def test_recall_goldens_live_baseline(app_db: Database, identity: SqlIdentityStore) -> None:
-    """Every case on the configured real providers; prints the table (no gate, S3.15)."""
-    router = live_router()
-    try:
-        shared = await seed_main(app_db, identity, router)
-        runs = []
-        for case in CASES:
-            seeded = await seed_main(app_db, identity, router) if case.fresh else shared
-            runs.append(await run_case(case, db=app_db, seeded=seeded, router=router))
-            sys.stderr.write(f"  {case.id}: {runs[-1].latency_ms} ms\n")
-    finally:
-        await router.aclose()
-    sys.stdout.write(f"\nrecall golden cases (live), {len(runs)} cases\n{report(runs)}\n")
 
 
 FILTER_MISSES = [c for c in CASES if c.id.startswith(("49-", "50-"))]

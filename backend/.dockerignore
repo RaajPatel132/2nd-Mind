@@ -10,3 +10,5 @@ tools
 openapi.json
 .env
 .env.*
+# Eval run files, the harness's response cache and spend total: tooling only, never in the image
+evals/runs

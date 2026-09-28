@@ -1,0 +1,12 @@
+# The spending plan of Sprint 3.9 (R.1): each live run labelled LIVE_BATCH=<name> may spend at
+# most what is left of its batch's allowance, and a batch that ends up over 125% of it halts
+# every later run until the halt is cleared and explained. Totals are in evals/runs/.spend.
+batches:
+  B1: {allowance_usd: 0.10, what: "smoke: live-check, contract tests, 5 intent + 3 ingest + 3 recall on candidate B"}
+  B2: {allowance_usd: 0.35, what: "probe: a stratified ~25% sample on candidates A and B"}
+  B3: {allowance_usd: 0.70, what: "full suites on the lead candidate"}
+  B4: {allowance_usd: 0.60, what: "the Sonnet 5 reference subset (8 ingest + 10 recall)"}
+  B5: {allowance_usd: 0.30, what: "step-ups on their own cases; the fallback path on 10 cases"}
+  B6: {allowance_usd: 0.50, what: "one full run of the chosen routing; the vector bench on real embeddings"}
+  B7: {allowance_usd: 0.50, what: "smoke-live, the walkthrough, the rehearsal stack"}
+  R: {allowance_usd: 0.60, what: "reserve: only for a surprise, each use explained in the report"}

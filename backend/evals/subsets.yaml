@@ -1,0 +1,16 @@
+# Named case subsets for `--cases @<name>` (R.1). Ids or unique id prefixes, per suite.
+subsets:
+  # B1: the cheapest look at every suite on real models.
+  smoke:
+    intent: ["01", "09", "15", "18", "22"]
+    ingest: ["01", "07", "17"]
+    recall: ["01", "21", "37"]
+  # B2: about a quarter of each suite, every recall shape once plus the safety cases.
+  probe:
+    intent: ["01", "03", "06", "09", "12", "15", "17", "18", "21", "22"]
+    ingest: ["01", "05", "07", "08", "13", "17", "21"]
+    recall: ["02", "04", "06", "08", "12", "15", "17", "22", "26", "30", "31", "34", "36", "40", "42"]
+  # B4: the hardest cases, run once on Sonnet 5 as the quality reference (R.4).
+  reference:
+    ingest: ["05", "08", "10", "13", "16", "17", "21", "26"]
+    recall: ["06", "22", "23", "25", "26", "42", "43", "44", "49", "41"]

@@ -1,0 +1,16 @@
+# Candidate B (R.4, the expected winner): GPT-6 Luna for the structured, short-output steps, and
+# Claude Haiku 4.5 for the two that decide quality: extract (it writes memory) and answer (what
+# the person reads). Fallbacks off, so a run measures the models themselves.
+description: Luna for structured steps; Haiku 4.5 for extract and answer
+steps:
+  intent: openai:gpt-6-luna
+  extract: anthropic:claude-haiku-4-5
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: openai:gpt-6-luna
+  correct: openai:gpt-6-luna
+  answer: anthropic:claude-haiku-4-5
+  judge: openai:gpt-6-luna
+fallback: none

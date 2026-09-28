@@ -1,11 +1,14 @@
 """S1.7 contract tests: one suite over every provider behind the normalised interface.
 
-Always runs against the fake. Runs against Anthropic and OpenAI with ``pytest -m live`` when
-their keys are set (skipped in normal CI). Covers streaming, structured output, a tool call
-round trip, and usage + cost being filled in.
+Always runs against the fake. Runs against Anthropic and OpenAI with ``make test-live`` (keys
+from ``.env``; skipped in normal CI), on the economy models by default. Covers streaming,
+structured output, a tool call round trip, and usage + cost being filled in. What the live
+calls cost goes on the live spend total (R.1).
 """
 
 import os
+from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -30,9 +33,11 @@ from tests.unit.providers.helpers import routing
 PRICES = read_price_table(DEFAULT_RESOURCES_DIR / "config" / "prices.yaml")
 
 LIVE_MODELS = {
-    "anthropic": os.environ.get("LIVE_ANTHROPIC_MODEL", "claude-opus-5"),
-    "openai": os.environ.get("LIVE_OPENAI_MODEL", "gpt-6-sol"),
+    "anthropic": os.environ.get("LIVE_ANTHROPIC_MODEL", "claude-haiku-4-5"),
+    "openai": os.environ.get("LIVE_OPENAI_MODEL", "gpt-6-luna"),
 }
+# Cost of every live call this module made, per provider.
+_LIVE_SPEND: dict[str, Decimal] = {}
 LIVE_EMBED_MODEL = os.environ.get("LIVE_OPENAI_EMBED_MODEL", "text-embedding-3-small")
 
 ADD_TOOL = ToolSpec(
@@ -148,6 +153,7 @@ async def test_tool_call_round_trip(provider: str) -> None:
         ChatMessage.tool_result(call.id, str(call.arguments["a"] + call.arguments["b"])),
     ]
     second = await r.chat(Step.ANSWER, system=None, messages=history, tools=[ADD_TOOL])
+    _spent(second.call.usage)
     assert "5" in second.text
     assert not second.tool_calls
 
@@ -167,13 +173,40 @@ async def test_embeddings_return_vectors_and_usage(provider: str) -> None:
         policy=ResiliencePolicy(max_retries=1),
     )
     result = await r.embed(["a gift idea", "a deadline"])
+    _spent(result.call.usage)
     assert len(result.vectors) == 2
     assert len(result.vectors[0]) > 100
     assert result.call.usage.input_tokens > 0
     assert result.call.usage.cost_usd >= 0
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _record_live_spend() -> Iterator[None]:
+    yield
+    if not _LIVE_SPEND:
+        return
+    from secondmind.evals.spend import Budgets, SpendBook  # noqa: PLC0415
+
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    book = SpendBook.load()
+    budgets = Budgets.from_env()
+    book.record(
+        run_id=f"test-live-{stamp}",
+        suite="test-live",
+        spent_by_provider=dict(_LIVE_SPEND),
+        budget=Decimal("0.05"),
+        batch=budgets.batch,
+    )
+    print(f"\n{book.summary(budgets.total)}")  # noqa: T201
+
+
+def _spent(usage) -> None:  # type: ignore[no-untyped-def]
+    if usage.provider != "fake":
+        _LIVE_SPEND[usage.provider] = _LIVE_SPEND.get(usage.provider, Decimal(0)) + usage.cost_usd
+
+
 def _assert_usage(usage, ref: ModelRef) -> None:  # type: ignore[no-untyped-def]
+    _spent(usage)
     assert usage.provider == ref.provider
     assert usage.model == ref.model
     assert usage.input_tokens > 0

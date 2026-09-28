@@ -1,32 +1,25 @@
 """S2.4: the turn graph branches on the intent. The user never picks a mode.
 
-With the fake provider every intent is checked end to end. ``pytest -m live -s`` runs the
-labelled set in ``tests/fixtures/intent.yaml`` against the configured intent model and prints
-the accuracy: a baseline for the sprint report, not a gate.
+With the fake provider every intent is checked end to end. Accuracy on the labelled messages is
+an eval suite (``make eval-intent`` / ``eval-intent-live``), not a test.
 """
 
-import sys
 import uuid
 from pathlib import Path
 from typing import Any
 
-import pytest
-import yaml
-
 from secondmind.agent import (
-    IntentPromptVars,
     TurnCompleted,
     TurnRunner,
 )
-from secondmind.config import DEFAULT_RESOURCES_DIR, PromptRegistry, Step
-from secondmind.core import ConfigError, WorkspaceScope
+from secondmind.config import DEFAULT_RESOURCES_DIR, PromptRegistry
+from secondmind.core import WorkspaceScope
 from secondmind.corrections import correction_responders
-from secondmind.evals.ingest import live_router
-from secondmind.ingestion import IntentOutput, offline_responders
+from secondmind.ingestion import offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
 from secondmind.observability import NullTracer
-from secondmind.providers import ChatMessage, FakeProvider, FakeScript
+from secondmind.providers import FakeProvider, FakeScript
 from secondmind.retrieval import recall_responders, recall_text_responders
 from tests.fakes import InMemoryTurns
 from tests.unit.providers.helpers import router as make_router
@@ -99,38 +92,3 @@ async def test_chit_chat_is_answered_by_the_answer_step() -> None:
     reply, events = await _turn("chit_chat", "hello!")
     assert "fake provider" in reply
     assert events == ["model_call", "intent", "step", "model_call", "step"]
-
-
-@pytest.mark.live
-async def test_intent_accuracy_baseline(capsys: pytest.CaptureFixture[str]) -> None:
-    try:
-        router = live_router()
-    except ConfigError as exc:
-        pytest.skip(exc.message)
-    route = router.route(Step.INTENT)
-    assert route.prompt is not None
-    system = PROMPTS.render(
-        route.prompt, IntentPromptVars(now="2026-09-23T10:00", timezone="Asia/Kolkata")
-    ).text
-    cases = yaml.safe_load(FIXTURE.read_text(encoding="utf-8"))
-    misses: list[str] = []
-    try:
-        for case in cases:
-            result = await router.structured(
-                Step.INTENT,
-                IntentOutput,
-                system=system,
-                messages=[ChatMessage.user(case["message"])],
-                prompt=route.prompt,
-            )
-            if result.value.intent != case["intent"]:
-                misses.append(f"{case['message']!r}: {result.value.intent} ≠ {case['intent']}")
-    finally:
-        await router.aclose()
-    right = len(cases) - len(misses)
-    with capsys.disabled():
-        sys.stdout.write(
-            f"\nintent accuracy ({route.primary}): {right}/{len(cases)} "
-            f"= {100 * right / len(cases):.0f}%\n"
-        )
-        sys.stdout.writelines(f"  miss {m}\n" for m in misses)

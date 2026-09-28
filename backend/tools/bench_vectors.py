@@ -28,9 +28,13 @@ import sys
 import time
 import uuid
 from collections.abc import Iterator, Sequence
+from datetime import UTC, datetime
+from decimal import Decimal
 
 import asyncpg
 from testcontainers.postgres import PostgresContainer
+
+from secondmind.evals.spend import Budgets, SpendBook
 
 DIM = 1536
 KEYS_PER_ITEM = 4
@@ -195,8 +199,8 @@ def pct(values: Sequence[float], q: float) -> float:
     return ordered[min(len(ordered) - 1, round(q * (len(ordered) - 1)))]
 
 
-async def main(real: bool) -> int:
-    vectors = Vectors(real=real)
+async def main(vectors: "Vectors") -> int:
+    real = vectors.real
     mode = "real OpenAI text-embedding-3-small embeddings" if real else "clustered random vectors"
     sys.stderr.write(f"bench-vectors: {mode}\n")
     # Parallel HNSW builds use shared memory up to maintenance_work_mem; Docker's default
@@ -255,4 +259,25 @@ if __name__ == "__main__":
     use_real = bool(os.environ.get("OPENAI_API_KEY")) and not args.random
     # colima and Docker Desktop: inside the VM the daemon socket is at the standard path (Ryuk).
     os.environ.setdefault("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
-    raise SystemExit(asyncio.run(main(use_real)))
+    budgets = Budgets.from_env()
+    book = SpendBook.load()
+    if use_real:
+        # Real embeddings go on the live spend total, within the sprint budget (R.1).
+        book.effective_budget(
+            Budgets(run=Decimal(str(BUDGET_USD)), total=budgets.total, batch=budgets.batch)
+        )
+    bench_vectors = Vectors(real=use_real)
+    try:
+        code = asyncio.run(main(bench_vectors))
+    finally:
+        if use_real:
+            stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+            book.record(
+                run_id=f"bench-vectors-{stamp}",
+                suite="bench-vectors",
+                spent_by_provider={"openai": Decimal(str(round(bench_vectors.cost, 6)))},
+                budget=Decimal(str(BUDGET_USD)),
+                batch=budgets.batch,
+            )
+            print(book.summary(budgets.total))
+    raise SystemExit(code)

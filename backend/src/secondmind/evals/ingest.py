@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
-from secondmind.agent import StoredEvent, Turn, TurnRunner
+from secondmind.agent import StoredEvent, TokenDelta, Turn, TurnRunner
 from secondmind.agent.adapters import InMemoryTurns
 from secondmind.config import (
     DEFAULT_RESOURCES_DIR,
@@ -41,6 +41,8 @@ from secondmind.core import (
     WorkspaceScope,
     new_id,
 )
+from secondmind.evals.harness import Pass
+from secondmind.evals.runs import CaseRecord
 from secondmind.ingestion import IngestSettings, offline_responders, replay_key
 from secondmind.memory import (
     EntityRecord,
@@ -123,6 +125,7 @@ class CaseRun:
     stored_text: str
     latency_ms: int
     cost_usd: Decimal
+    ttft_ms: int | None = None
     relations: list[str] = field(default_factory=list)
     categories: dict[uuid.UUID, str] = field(default_factory=dict)
     keys: list[str] = field(default_factory=list)
@@ -136,11 +139,15 @@ class CaseRun:
         return next((e.event for e in self.events if isinstance(e.event, MemoryDiffEvent)), None)
 
 
+def replay_script(spec: TurnSpec) -> FakeScript:
+    """The offline brain, replaying the outputs recorded for this turn."""
+    return FakeScript(responders=offline_responders({replay_key(spec.input): dict(spec.model)}))
+
+
 def fake_router(spec: TurnSpec, resources: Path = DEFAULT_RESOURCES_DIR) -> ModelRouter:
     """Every step on the offline fake, replaying the outputs recorded for this turn."""
     routing = resolve_routing(read_routing_file(resources / "config" / "models.yaml"), {}, "fake")
-    replay = {replay_key(spec.input): dict(spec.model)}
-    fake = FakeProvider("fake", script=FakeScript(responders=offline_responders(replay)))
+    fake = FakeProvider("fake", script=replay_script(spec))
     return ModelRouter(
         routing=routing,
         prices=_prices(resources),
@@ -175,6 +182,8 @@ async def run_case(
     live: ModelRouter | None = None,
     resources: Path = DEFAULT_RESOURCES_DIR,
 ) -> CaseRun:
+    """Run a case: its setup turns replay on the fake, and its final turn runs on ``live`` when
+    given (a real or metered router), else on the fake too."""
     prompts = PromptRegistry.load(resources / "prompts")
     memory_db = InMemoryMemory()
     memory = Memory(memory_db.store, MemorySettings())
@@ -182,6 +191,7 @@ async def run_case(
     turns = InMemoryTurns()
     final: Turn | None = None
     elapsed = 0
+    first_token: int | None = None
     for index, spec in enumerate([*case.setup, case.turn]):
         is_final = index == len(case.setup)
         router = live if (is_final and live is not None) else fake_router(spec, resources)
@@ -204,8 +214,10 @@ async def run_case(
         )
         started = time.perf_counter()
         handle = await runner.start(scope, text=spec.input, timezone=case.timezone)
-        async for _ in handle.events():
-            pass
+        first_token = None
+        async for event in handle.events():
+            if isinstance(event, TokenDelta) and first_token is None:
+                first_token = round((time.perf_counter() - started) * 1000)
         elapsed = round((time.perf_counter() - started) * 1000)
         final = await turns.store(scope).get(handle.turn.id)
     if final is None:
@@ -233,6 +245,7 @@ async def run_case(
         stored_text=stored,
         latency_ms=elapsed,
         cost_usd=final.usage.cost_usd,
+        ttft_ms=first_token,
         relations=[
             f"{names.get(r.src_entity_id)} {r.relation} {names.get(r.dst_entity_id)}"
             for r in tables.relations.values()
@@ -479,3 +492,52 @@ def report(runs: Sequence[tuple[CaseRun, Score]]) -> str:
     )
     lines.extend(f"  {run.case.id}: {failure}" for run, s in runs for failure in s.failures)
     return "\n".join(lines)
+
+
+# ------------------------------------------------------------------ the harness (R.1, R.2)
+
+
+def case_tags(case: IngestCase) -> list[str]:
+    """Tags for ``--cases``: what a case exercises, read from what it expects."""
+    expect = case.expect
+    tags: set[str] = set()
+    rules = [*expect.get("not_written", []), *expect.get("held", [])]
+    tags |= {
+        {"P-SECRET-1": "secret", "P-MOD-1": "hypothetical", "P-SENS-1": "sensitive"}.get(r, r)
+        for r in rules
+    }
+    for memory in expect.get("memories", []):
+        if "reconcile" in memory:
+            tags.add(str(memory["reconcile"]))
+        if memory.get("dates"):
+            tags.add("dates")
+    if expect.get("triggers"):
+        tags.add("trigger")
+    if expect.get("new_entities") or expect.get("relations") or expect.get("updated_entities"):
+        tags.add("entities")
+    if case.setup:
+        tags.add("setup")
+    if len(expect.get("memories", [])) > 1:
+        tags.add("multi")
+    return sorted(tags)
+
+
+async def run_ingest_case(case: IngestCase, run: Pass) -> CaseRecord:
+    """One golden case in the harness: the final turn on the pass's router (live, or the fake
+    replaying the case's recorded outputs), metered."""
+    mark = run.log.mark()
+    router = run.router() if run.live else run.router(replay_script(case.turn))
+    result = await run_case(case, live=router, resources=run.harness.resources)
+    s = score(result)
+    return run.record(
+        mark=mark,
+        case_id=case.id,
+        title=case.title,
+        tags=case_tags(case),
+        passed=not s.failures,
+        failures=s.failures,
+        scores={"passed": s.passed, "total": s.total},
+        latency_ms=result.latency_ms,
+        ttft_ms=result.ttft_ms,
+        detail={"reply": (result.turn.output or "")[:400], "status": result.turn.status.value},
+    )

@@ -1,5 +1,5 @@
-# Labelled messages for the intent step (S2.4). Synthetic. Run live with `pytest -m live -s`:
-# the accuracy printed is a baseline for the sprint report, not a target.
+# Labelled messages for the intent step (S2.4). Synthetic. `make eval-intent` scores them on
+# the fake provider; `make eval-intent-live` on the configured (or a candidate) routing.
 - {message: "I'm vegetarian", intent: save}
 - {message: "Kabir's birthday is 14 March", intent: save}
 - {message: "Spare keys are in the kitchen cabinet", intent: save}

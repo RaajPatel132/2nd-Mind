@@ -1,0 +1,15 @@
+# Candidate A (R.4): every chat step on GPT-6 Luna. Embeddings keep their route. Fallbacks off,
+# so a run measures the model itself.
+description: every chat step on GPT-6 Luna
+steps:
+  intent: openai:gpt-6-luna
+  extract: openai:gpt-6-luna
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: openai:gpt-6-luna
+  correct: openai:gpt-6-luna
+  answer: openai:gpt-6-luna
+  judge: openai:gpt-6-luna
+fallback: none

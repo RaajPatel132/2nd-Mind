@@ -25,7 +25,7 @@ from typing import Any
 
 import yaml
 
-from secondmind.agent import StoredEvent, Turn, TurnRunner
+from secondmind.agent import StoredEvent, TokenDelta, Turn, TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
 from secondmind.auth import IdentityStore
 from secondmind.config import (
@@ -52,6 +52,8 @@ from secondmind.evals.fixture import (
     local_instant,
     seed_workspace,
 )
+from secondmind.evals.harness import Pass
+from secondmind.evals.runs import CaseRecord
 from secondmind.ingestion import IngestSettings, offline_responders, replay_key
 from secondmind.memory import Memory
 from secondmind.memory.adapters import EMBED_DIMENSIONS, Database, sql_memory
@@ -150,18 +152,23 @@ def fake_router(
     return replay_router(case_replay(cases), resources)
 
 
-def replay_router(
-    replay: Mapping[str, Mapping[str, Any]], resources: Path = DEFAULT_RESOURCES_DIR
-) -> ModelRouter:
-    """Every step on the offline fake, replaying ``replay`` (message -> recorded outputs)."""
-    routing = resolve_routing(read_routing_file(resources / "config" / "models.yaml"), {}, "fake")
+def replay_script(replay: Mapping[str, Mapping[str, Any]]) -> FakeScript:
+    """The offline brain replaying ``replay`` (message -> recorded outputs)."""
     replay = {replay_key(k): dict(v) for k, v in replay.items()}
-    script = FakeScript(
+    return FakeScript(
         responders=offline_responders(replay)
         | recall_responders(replay)
         | correction_responders(replay),
         text_responders=recall_text_responders(),
     )
+
+
+def replay_router(
+    replay: Mapping[str, Mapping[str, Any]], resources: Path = DEFAULT_RESOURCES_DIR
+) -> ModelRouter:
+    """Every step on the offline fake, replaying ``replay`` (message -> recorded outputs)."""
+    routing = resolve_routing(read_routing_file(resources / "config" / "models.yaml"), {}, "fake")
+    script = replay_script(replay)
     return ModelRouter(
         routing=routing,
         prices=read_price_table(resources / "config" / "prices.yaml"),
@@ -285,6 +292,7 @@ class RecallRun:
     latency_ms: int
     cost_usd: Decimal
     seeded_items: dict[str, uuid.UUID] = field(default_factory=dict)
+    first_token_ms: int | None = None
 
     @property
     def shapes(self) -> list[str]:
@@ -331,7 +339,10 @@ async def run_case(
     router: ModelRouter,
     settings: RecallSettings | None = None,
     resources: Path = DEFAULT_RESOURCES_DIR,
+    on_question: Callable[[], None] | None = None,
 ) -> RecallRun:
+    """Run the case's setup turns, then its question (timed; ``on_question`` is called just
+    before it starts)."""
     scope = seeded.scope
     memory = Memory(sql_memory(db))
     runner = eval_runner(db, router, now=case.now, settings=settings, resources=resources)
@@ -340,10 +351,14 @@ async def run_case(
             handle = await runner.start(scope, text=text, timezone=case.timezone)
             async for _ in handle.events():
                 pass
+        if on_question is not None:
+            on_question()
         started = time.perf_counter()
+        first_token: int | None = None
         handle = await runner.start(scope, text=case.question, timezone=case.timezone)
-        async for _ in handle.events():
-            pass
+        async for event in handle.events():
+            if isinstance(event, TokenDelta) and first_token is None:
+                first_token = round((time.perf_counter() - started) * 1000)
         elapsed = round((time.perf_counter() - started) * 1000)
     finally:
         await runner.aclose()
@@ -384,6 +399,7 @@ async def run_case(
         latency_ms=elapsed,
         cost_usd=turn.usage.cost_usd,
         seeded_items=seeded.items,
+        first_token_ms=first_token,
     )
 
 
@@ -491,6 +507,83 @@ def report(runs: Sequence[RecallRun]) -> str:
 
 def case_ids(cases: Sequence[RecallCase]) -> list[str]:
     return [c.id for c in cases]
+
+
+# ------------------------------------------------------------------ the harness (R.1, R.2)
+
+
+def case_tags(case: RecallCase) -> list[str]:
+    tags = set(case.shape)
+    if case.must_abstain:
+        tags.add("abstain")
+    if len(case.shape) > 1:
+        tags.add("multi")
+    if case.fresh:
+        tags.add("fresh")
+    if case.fired or case.not_fired:
+        tags.add("trigger")
+    if case.aggregate is not None:
+        tags.add("aggregate")
+    return sorted(tags)
+
+
+def case_scores(run: RecallRun) -> dict[str, Any]:
+    case = run.case
+    rr = next((1 / (n + 1) for n, k in enumerate(run.ranked_all) if k in case.gold), 0.0)
+    return {
+        "shape": case.shape[0] if case.shape else "?",
+        "has_gold": bool(case.gold),
+        "hit5": any(g in run.ranked_all[:5] for g in case.gold),
+        "rr": rr,
+        "must_abstain": case.must_abstain,
+        "abstained": run.abstained,
+        "relaxed": run.relaxed,
+        "selected": len(run.ranked),
+        "soft_only": len(run.soft_only),
+    }
+
+
+async def recall_setup(run: Pass, *, db: Database, identity: IdentityStore) -> None:
+    """Seed the shared workspace for a pass, on the pass's router."""
+    router = run.router() if run.live else run.router(replay_script(case_replay(load_cases())))
+    run.state["router"] = router
+    run.state["shared"] = await seed_main(db, identity, router)
+
+
+async def run_recall_case(
+    case: RecallCase, run: Pass, *, db: Database, identity: IdentityStore
+) -> CaseRecord:
+    mark = run.log.mark()
+    router: ModelRouter = run.state["router"]
+    seeded = await seed_main(db, identity, router) if case.fresh else run.state["shared"]
+    timed: list[int] = []
+    result = await run_case(
+        case,
+        db=db,
+        seeded=seeded,
+        router=router,
+        resources=run.harness.resources,
+        on_question=lambda: timed.append(run.log.mark()),
+    )
+    return run.record(
+        mark=mark,
+        case_id=case.id,
+        title=case.title,
+        tags=case_tags(case),
+        passed=not failures(result),
+        failures=failures(result),
+        scores=case_scores(result),
+        latency_ms=result.latency_ms,
+        ttft_ms=result.first_token_ms,
+        timed_from=timed[0] if timed else None,
+        detail={
+            "planned": result.shapes,
+            "selected": result.ranked,
+            "ranked": result.ranked_all[:10],
+            "aggregate": result.aggregate,
+            "reply": result.reply[:400],
+        },
+    )
 
 
 def unknown_keys(cases: Sequence[RecallCase]) -> dict[str, list[str]]:
