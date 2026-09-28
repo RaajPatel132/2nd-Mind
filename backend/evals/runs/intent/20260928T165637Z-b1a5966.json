@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "run_id": "20260928T165637Z-b1a5966",
+  "suite": "intent",
+  "mode": "live",
+  "routing": "economy-b",
+  "started_at": "2026-09-28T16:56:37.120486Z",
+  "finished_at": "2026-09-28T16:56:46.219068Z",
+  "git_sha": "b1a5966e588c",
+  "git_dirty": true,
+  "config_hash": "234cbd5656b8e09adb1daee30ecd1427c767d09779ae688db777757fd2ce7399",
+  "price_version": "2026-09-25",
+  "prompt_versions": {
+    "intent": "intent@1",
+    "extract": "extract@2",
+    "resolve": "resolve@1",
+    "enrich": "enrich@1",
+    "reconcile": "reconcile@1",
+    "plan": "plan@1",
+    "rerank": "rerank@1",
+    "correct": "correct@1",
+    "answer": "answer@3",
+    "judge": null,
+    "embed": null
+  },
+  "models": {
+    "intent": "openai:gpt-6-luna",
+    "extract": "anthropic:claude-haiku-4-5",
+    "resolve": "openai:gpt-6-luna",
+    "enrich": "openai:gpt-6-luna",
+    "reconcile": "openai:gpt-6-luna",
+    "plan": "openai:gpt-6-luna",
+    "rerank": "openai:gpt-6-luna",
+    "correct": "openai:gpt-6-luna",
+    "answer": "anthropic:claude-haiku-4-5",
+    "judge": "openai:gpt-6-luna",
+    "embed": "openai:text-embedding-3-small"
+  },
+  "fallbacks": {
+    "intent": null,
+    "extract": null,
+    "resolve": null,
+    "enrich": null,
+    "reconcile": null,
+    "plan": null,
+    "rerank": null,
+    "correct": null,
+    "answer": null,
+    "judge": null,
+    "embed": null
+  },
+  "fixture": {
+    "now": "2026-09-23T10:00",
+    "timezone": "Asia/Kolkata"
+  },
+  "selection": {
+    "cases": [
+      "@smoke"
+    ]
+  },
+  "batch": "B1",
+  "budget_usd": 0.02,
+  "estimate_usd": 0.0008725,
+  "status": "complete",
+  "note": null,
+  "setup_calls": [],
+  "cases": [
+    {
+      "id": "01-i-m-vegetarian",
+      "title": "I'm vegetarian",
+      "tags": [
+        "save"
+      ],
+      "passed": true,
+      "failures": [],
+      "scores": {
+        "expected": "save",
+        "got": "save"
+      },
+      "latency_ms": 2045,
+      "ttft_ms": null,
+      "calls": [
+        {
+          "step": "intent",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "cost_usd": 0.0000542,
+          "latency_ms": 2044,
+          "ttft_ms": null,
+          "input_tokens": 372,
+          "cached_input_tokens": 0,
+          "output_tokens": 34,
+          "cache_hit": false,
+          "estimated": false,
+          "billed": true,
+          "failed": null,
+          "timed": true
+        }
+      ],
+      "cost_usd": 0.0000542,
+      "spent_usd": 0.0000542,
+      "cache_hits": 0,
+      "detail": {}
+    },
+    {
+      "id": "09-what-s-kabir-s",
+      "title": "What's Kabir's birthday?",
+      "tags": [
+        "recall"
+      ],
+      "passed": true,
+      "failures": [],
+      "scores": {
+        "expected": "recall",
+        "got": "recall"
+      },
+      "latency_ms": 1484,
+      "ttft_ms": null,
+      "calls": [
+        {
+          "step": "intent",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "cost_usd": 0.0000566,
+          "latency_ms": 1482,
+          "ttft_ms": null,
+          "input_tokens": 376,
+          "cached_input_tokens": 0,
+          "output_tokens": 38,
+          "cache_hit": false,
+          "estimated": false,
+          "billed": true,
+          "failed": null,
+          "timed": true
+        }
+      ],
+      "cost_usd": 0.0000566,
+      "spent_usd": 0.0000566,
+      "cache_hits": 0,
+      "detail": {}
+    },
+    {
+      "id": "15-dinner-with-rohan-on",
+      "title": "Dinner with Rohan on Saturday; what does he like to eat again?",
+      "tags": [
+        "save_and_recall"
+      ],
+      "passed": true,
+      "failures": [],
+      "scores": {
+        "expected": "save_and_recall",
+        "got": "save_and_recall"
+      },
+      "latency_ms": 1597,
+      "ttft_ms": null,
+      "calls": [
+        {
+          "step": "intent",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "cost_usd": 0.0000695,
+          "latency_ms": 1595,
+          "ttft_ms": null,
+          "input_tokens": 385,
+          "cached_input_tokens": 0,
+          "output_tokens": 62,
+          "cache_hit": false,
+          "estimated": false,
+          "billed": true,
+          "failed": null,
+          "timed": true
+        }
+      ],
+      "cost_usd": 0.0000695,
+      "spent_usd": 0.0000695,
+      "cache_hits": 0,
+      "detail": {}
+    },
+    {
+      "id": "18-actually-the-dentist-is",
+      "title": "Actually the dentist is on Saturday, not Friday",
+      "tags": [
+        "correct"
+      ],
+      "passed": true,
+      "failures": [],
+      "scores": {
+        "expected": "correct",
+        "got": "correct"
+      },
+      "latency_ms": 2489,
+      "ttft_ms": null,
+      "calls": [
+        {
+          "step": "intent",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "cost_usd": 0.0000689,
+          "latency_ms": 2487,
+          "ttft_ms": null,
+          "input_tokens": 379,
+          "cached_input_tokens": 0,
+          "output_tokens": 62,
+          "cache_hit": false,
+          "estimated": false,
+          "billed": true,
+          "failed": null,
+          "timed": true
+        }
+      ],
+      "cost_usd": 0.0000689,
+      "spent_usd": 0.0000689,
+      "cache_hits": 0,
+      "detail": {}
+    },
+    {
+      "id": "22-hello",
+      "title": "hello!",
+      "tags": [
+        "chit_chat"
+      ],
+      "passed": true,
+      "failures": [],
+      "scores": {
+        "expected": "chit_chat",
+        "got": "chit_chat"
+      },
+      "latency_ms": 1440,
+      "ttft_ms": null,
+      "calls": [
+        {
+          "step": "intent",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "cost_usd": 0.0000502,
+          "latency_ms": 1437,
+          "ttft_ms": null,
+          "input_tokens": 372,
+          "cached_input_tokens": 0,
+          "output_tokens": 26,
+          "cache_hit": false,
+          "estimated": false,
+          "billed": true,
+          "failed": null,
+          "timed": true
+        }
+      ],
+      "cost_usd": 0.0000502,
+      "spent_usd": 0.0000502,
+      "cache_hits": 0,
+      "detail": {}
+    }
+  ]
+}
