@@ -115,33 +115,48 @@ def select(
             c.selected = c in chosen
             c.reason = "counted, so cited" if c.selected else "not counted"
         return Selection(selected=chosen)
-
-    def extra_ok(c: Candidate) -> bool:
-        if reranked and c.rerank_score is not None:
-            return c.rerank_score >= settings.rerank_min_score
-        return bool(c.lexical)
-
     if sub.shape in LIST_LIKE or (sub.expansion and sub.expansion.source == "code"):
-        base = [c for c in candidates if c.filtered]
-        # A set is an exact operation: something similar that failed it isn't an extra.
-        extras = [
-            c for c in candidates if c.soft_only and extra_ok(c) and sub.shape is not Shape.SET
-        ]
-        kept = base[: settings.list_max_items]
-        more = max(0, len(base) - len(kept))
-        chosen = kept + extras[: settings.answer_top_k]
-        for c in candidates:
-            c.selected = c in chosen
-            if c in kept:
-                c.reason = "found by " + ", ".join(sorted(c.found_by))
-            elif c in chosen:
-                c.reason = _score_reason(c, reranked, "soft-only extra")
-            elif c in base:
-                c.reason = f"over the list limit of {settings.list_max_items}"
-            else:
-                c.reason = _score_reason(c, reranked, "below the bar")
-        return Selection(selected=chosen, more=more)
+        return _select_list(sub, candidates, reranked=reranked, settings=settings)
+    return _select_ranked(candidates, reranked=reranked, settings=settings)
 
+
+def _passes(c: Candidate, reranked: bool, settings: SelectSettings) -> bool:
+    if reranked and c.rerank_score is not None:
+        return c.rerank_score >= settings.rerank_min_score
+    return bool(c.lexical)
+
+
+def _select_list(
+    sub: SubQuery, candidates: Sequence[Candidate], *, reranked: bool, settings: SelectSettings
+) -> Selection:
+    base = _current_first([c for c in candidates if c.filtered])
+    # A set is an exact operation: something similar that failed it isn't an extra.
+    extras = [
+        c
+        for c in candidates
+        if c.soft_only and _passes(c, reranked, settings) and sub.shape is not Shape.SET
+    ]
+    kept = base[: settings.list_max_items]
+    more = max(0, len(base) - len(kept))
+    chosen = kept + extras[: settings.answer_top_k]
+    for c in candidates:
+        c.selected = c in chosen
+        if c in kept:
+            c.reason = "found by " + ", ".join(sorted(c.found_by))
+        elif c in chosen:
+            c.reason = _score_reason(c, reranked, "soft-only extra")
+        elif c in base:
+            c.reason = f"over the list limit of {settings.list_max_items}"
+        elif c.demoted and c.filtered:
+            c.reason = EARLIER
+        else:
+            c.reason = _score_reason(c, reranked, "below the bar")
+    return Selection(selected=chosen, more=more)
+
+
+def _select_ranked(
+    candidates: Sequence[Candidate], *, reranked: bool, settings: SelectSettings
+) -> Selection:
     pool = list(candidates)
     if reranked:
         pool.sort(key=lambda c: -(c.rerank_score if c.rerank_score is not None else -1.0))
@@ -152,10 +167,25 @@ def select(
         ][: settings.answer_top_k]
     else:
         chosen = [c for c in pool if c.filtered or c.lexical][: settings.answer_top_k]
+    chosen = _current_first(chosen)
     for c in candidates:
         c.selected = c in chosen
-        c.reason = _score_reason(c, reranked, "selected" if c.selected else "not selected")
+        if not c.selected and c.demoted and reranked and _passes(c, reranked, settings):
+            c.reason = EARLIER
+        else:
+            c.reason = _score_reason(c, reranked, "selected" if c.selected else "not selected")
     return Selection(selected=chosen)
+
+
+EARLIER = "an earlier value: a current one is cited"
+
+
+def _current_first(chosen: list[Candidate]) -> list[Candidate]:
+    """Rows that no longer hold (superseded, moved, cancelled, dropped: ``demoted``, outside
+    history and why questions) are cited only when nothing current answers. They stay in the
+    trace (found in R.3: a live reranker scored "I live in Bengaluru" as highly as Pune)."""
+    current = [c for c in chosen if not c.demoted]
+    return current if current else chosen
 
 
 def _score_reason(c: Candidate, reranked: bool, lead: str) -> str:
