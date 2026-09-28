@@ -14,7 +14,7 @@ from secondmind.agent import (
 )
 from secondmind.config import DEFAULT_RESOURCES_DIR, PromptRegistry
 from secondmind.core import WorkspaceScope
-from secondmind.corrections import correction_responders
+from secondmind.corrections import complete_correction, correction_responders
 from secondmind.ingestion import offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
@@ -28,7 +28,9 @@ PROMPTS = PromptRegistry.load(DEFAULT_RESOURCES_DIR / "prompts")
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "intent.yaml"
 
 
-async def _turn(intent: str, message: str) -> tuple[str, list[str]]:
+async def _turn(
+    intent: str, message: str, correction: dict[str, Any] | None = None
+) -> tuple[str, list[str]]:
     fake = FakeProvider(
         "primary",
         script=FakeScript(
@@ -41,6 +43,8 @@ async def _turn(intent: str, message: str) -> tuple[str, list[str]]:
         return {"intent": intent, "confidence": 0.9, "reason": f"test: {intent}"}
 
     fake.script.responders["intent"] = decide
+    if correction is not None:
+        fake.script.responders["correct"] = lambda _: complete_correction(correction)
     turns = InMemoryTurns()
     scope = WorkspaceScope(workspace_id=uuid.uuid4(), user_id=uuid.uuid4())
     runner = TurnRunner(
@@ -92,3 +96,15 @@ async def test_chit_chat_is_answered_by_the_answer_step() -> None:
     reply, events = await _turn("chit_chat", "hello!")
     assert "fake provider" in reply
     assert events == ["model_call", "intent", "step", "model_call", "step"]
+
+
+async def test_new_information_taken_for_a_correction_is_saved() -> None:
+    """Found live (R.3 B2): "I moved to Pune" routed to the corrector, which said it wasn't a
+    correction, and the message was lost. Now the turn goes on to save it."""
+    reply, events = await _turn(
+        "correct",
+        "Spare keys are in the kitchen cabinet now",
+        {"type": "not_a_correction", "reason": "New information about where the keys are."},
+    )
+    assert reply.startswith("Saved")
+    assert "memory_diff" in events

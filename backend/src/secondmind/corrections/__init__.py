@@ -8,6 +8,7 @@ from secondmind.corrections.schemas import (
     RelationFix,
 )
 from secondmind.corrections.service import (
+    NOT_A_CORRECTION,
     CorrectContext,
     Corrector,
     CorrectOutcome,
@@ -16,6 +17,7 @@ from secondmind.corrections.service import (
 )
 
 __all__ = [
+    "NOT_A_CORRECTION",
     "CorrectContext",
     "CorrectOutcome",
     "CorrectVars",

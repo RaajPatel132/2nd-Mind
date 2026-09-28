@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from secondmind.config import PromptRegistry, Step
 from secondmind.core import AgentStep, Intent, IntentEvent, NullTrail, Trail, TurnEvent
-from secondmind.corrections import CorrectOutcome
+from secondmind.corrections import NOT_A_CORRECTION, CorrectOutcome
 from secondmind.ingestion import IngestOutcome, IntentOutput, ModelSteps
 from secondmind.observability import GenerationSpan, TurnTrace
 from secondmind.providers import (
@@ -48,6 +48,8 @@ class TurnState(TypedDict):
     secret_values: NotRequired[list[str]]
     # The message's embedding, when recall made one (the trigger check reuses it).
     vector: NotRequired[list[float] | None]
+    # The corrector found new information, not a fix: the turn saves it instead.
+    not_a_correction: NotRequired[bool]
 
 
 RecordModelCall = Callable[[ModelCall, GenerationSpan, object, str], Awaitable[None]]
@@ -187,7 +189,14 @@ async def correct_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[
     if ctx.correct is None:
         raise RuntimeError("corrections are not configured")
     outcome = await ctx.correct()
+    if outcome.kind == NOT_A_CORRECTION:
+        return {"not_a_correction": True}
     return {"answer": outcome.reply}
+
+
+def after_correct(state: TurnState) -> str:
+    """New information the intent step took for a correction goes on to be saved."""
+    return "ingest" if state.get("not_a_correction") else "triggers"
 
 
 async def answer_node(state: TurnState, runtime: Runtime[TurnContext]) -> dict[str, Any]:
@@ -251,7 +260,9 @@ def build_turn_graph() -> CompiledStateGraph[TurnState, TurnContext, TurnState, 
         "ingest", after_ingest, {"recall": "recall", "triggers": "triggers"}
     )
     graph.add_edge("recall", "triggers")
-    graph.add_edge("correct", "triggers")
+    graph.add_conditional_edges(
+        "correct", after_correct, {"ingest": "ingest", "triggers": "triggers"}
+    )
     graph.add_edge("answer", "triggers")
     graph.add_edge("triggers", END)
     return graph.compile()

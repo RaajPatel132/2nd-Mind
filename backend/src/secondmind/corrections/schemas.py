@@ -35,7 +35,8 @@ class RelationFix(_Out):
 
 
 class CorrectionOut(_Out):
-    type: Literal["reclassify", "wrong_value", "forget", "bulk", "none"]
+    # not_a_correction (correct@2): the message states something new, so the turn saves it.
+    type: Literal["reclassify", "wrong_value", "forget", "bulk", "none", "not_a_correction"]
     target: CorrectionTarget
     changes: CorrectionChanges | None
     new_text: str | None

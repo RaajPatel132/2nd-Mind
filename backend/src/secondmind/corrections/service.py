@@ -115,6 +115,9 @@ class CorrectContext:
     embed: EmbedTexts | None = None
 
 
+NOT_A_CORRECTION = "not_a_correction"
+
+
 @dataclass(slots=True)
 class CorrectOutcome:
     reply: str
@@ -137,6 +140,10 @@ class Corrector:
         match out.type:
             case "none":
                 return self._say(ctx, "none", out.reason or "I couldn't tell what to change.")
+            case "not_a_correction":
+                # New information ("I moved to Pune"), not a fix: nothing is said here; the
+                # turn goes on to save it (found in R.3, where the message was lost).
+                return CorrectOutcome(reply="", kind=NOT_A_CORRECTION, notes=[out.reason])
             case "bulk":
                 ops, extra = await self._bulk(ctx, out)
                 return await self._commit(ctx, ops, "bulk", notes + extra, prefix="Re-filed")
