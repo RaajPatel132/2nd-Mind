@@ -19,6 +19,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
@@ -82,7 +83,7 @@ async def rerank(
     out = await steps.structured(
         Step.RERANK,
         RerankOut,
-        RerankVars(now=now.astimezone().isoformat(timespec="minutes"), timezone=timezone),
+        RerankVars(now=local_now(now, timezone), timezone=timezone),
         [ChatMessage.user(json.dumps({"question": question, "candidates": listing}))],
     )
     by_label = {f"c{n}": c for n, c in enumerate(candidates, start=1)}
@@ -239,3 +240,8 @@ def _dates(item: ItemRecord, tz: str) -> str:
         bits.append("until " + format_when(item.valid_to, None, tz))
     bits.append("mentioned " + format_when(item.mentioned_at, None, tz))
     return "; ".join(bits)
+
+
+def local_now(now: datetime, timezone: str) -> str:
+    """``now`` as the workspace's wall clock (never the server's) for a prompt."""
+    return now.astimezone(ZoneInfo(timezone)).isoformat(timespec="minutes")
