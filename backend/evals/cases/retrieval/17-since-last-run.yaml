@@ -4,8 +4,10 @@ question: How long since my last run?
 shape: order
 gold:
 - run_oct_04
+# Golden corrected in R.3 (B2): the check is the number of days, not the phrasing; live
+# answers say "It's been 2 days since your last run", which is right.
 reply_contains:
-- 2 days ago
+- 2 days
 model:
   intent:
     intent: recall

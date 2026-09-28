@@ -59,7 +59,7 @@ steps:
     timeout_s: 20
     max_output_tokens: 1024
     effort: low
-    prompt: intent@1
+    prompt: intent@2
   extract:
     provider: anthropic
     model: claude-haiku-4-5
@@ -67,7 +67,7 @@ steps:
     timeout_s: 45
     max_output_tokens: 8192
     effort: medium
-    prompt: extract@2
+    prompt: extract@3
   resolve:
     provider: openai
     model: gpt-6-luna
@@ -100,7 +100,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 2048
     effort: low
-    prompt: plan@1
+    prompt: plan@2
   # Listwise scores for the top fused candidates of a recall (S3.7).
   rerank:
     provider: openai
@@ -109,7 +109,7 @@ steps:
     timeout_s: 20
     max_output_tokens: 2048
     effort: low
-    prompt: rerank@1
+    prompt: rerank@2
   # Turns a correction by chat into a target and a change (S3.12).
   correct:
     provider: openai
@@ -118,7 +118,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 1024
     effort: low
-    prompt: correct@1
+    prompt: correct@2
   answer:
     provider: anthropic
     model: claude-haiku-4-5

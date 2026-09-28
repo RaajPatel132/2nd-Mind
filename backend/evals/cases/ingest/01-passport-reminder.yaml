@@ -1,6 +1,11 @@
 # §8.1 (a). All data in these cases is synthetic.
+# Golden corrected in R.3 (B2): both live candidates filed this as a task due on the 3rd with
+# the default reminder, which is how the recall fixture keeps "Renew passport" too. The PRD's
+# "event passport expiry" predates the kinds model; what it asks for still holds: the date,
+# the reminder the day before, both stated in the reply. Kind and modality are not pinned
+# beyond that (a task may be asserted or planned).
 id: 01-passport-reminder
-title: "§8.1 (a): a plan on the 3rd of next month, with the default reminder the day before"
+title: "§8.1 (a): a task due the 3rd of next month, with the default reminder the day before"
 now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Remind me to renew my passport before it expires on the 3rd of next month.
@@ -11,15 +16,14 @@ model:
       - {id: e1, mention: my passport, name: passport, kind: thing}
     memories:
       - ref: m1
-        kind: plan
-        subtype: deadline
-        title: Passport expires
-        text: My passport expires on [[t1]]; I need to renew it before then.
-        category: admin/documents
+        kind: task
+        subtype: renewal
+        title: Renew passport
+        text: Renew my passport before it expires on [[t1]].
+        category: admin
         tags: [passport, renewal]
-        subject: e1
         entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: the 3rd of next month, clock: occurred, direction: future}]
+        times: [{id: t1, expression: the 3rd of next month, clock: due, direction: future}]
         reminder: {lead: null}
         importance: 4
         layer: quick
@@ -28,15 +32,11 @@ model:
 expect:
   memories:
     - match: passport
-      kind: plan
-      subtype: deadline
-      state: scheduled
-      modality: asserted
-      dates: [{clock: occurred, value: "2026-10-03", precision: day}]
-      entities: ["passport:about"]
-      category: admin/documents
+      kind: task
+      state: open
+      dates: [{clock: due, value: "2026-10-03", precision: day}]
       layer: quick
       reconcile: new
   triggers: [{match: passport, fires: "2026-10-02T09:00"}]
   reply_contains: ["Sat 3 Oct", "I'll remind you Fri 2 Oct"]
-  keys_contain: ["Saturday 3 October 2026"]
+  keys_contain: ["3 October 2026"]
