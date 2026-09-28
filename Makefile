@@ -4,7 +4,11 @@ SHELL := /bin/bash
 
 COMPOSE     ?= docker compose
 BACKEND_RUN := cd backend && uv run --frozen
+# Live targets only: .env exported for that one command, and MODEL_PROVIDER_MODE=live.
+LIVE_RUN    := cd backend && ../scripts/live-env.sh uv run --frozen
 WEB_RUN     := cd frontend && npm run --silent
+# Eval selection, e.g. `make eval-recall-live ROUTING=economy-b CASES=@probe`.
+EVAL_ARGS    = $(if $(ROUTING),--routing $(ROUTING)) $(if $(CASES),--cases '$(CASES)') $(ARGS)
 WEB_URL     ?= http://localhost:$${WEB_PORT:-8080}
 
 .PHONY: help
@@ -23,6 +27,11 @@ install: ## Install backend, frontend and repo tooling (git hooks)
 .PHONY: up
 up: ## Build and start the whole stack, wait until healthy, print URLs
 	$(COMPOSE) up -d --build --wait
+	@scripts/print-urls.sh
+
+.PHONY: up-live
+up-live: ## The stack on real providers (keys from .env; a missing key refuses to start)
+	MODEL_PROVIDER_MODE=live $(COMPOSE) up -d --build --wait
 	@scripts/print-urls.sh
 
 .PHONY: down
@@ -77,28 +86,58 @@ test-int: ## Backend integration tests (testcontainers Postgres + Redis; needs D
 	$(BACKEND_RUN) pytest -m "integration and not live"
 
 .PHONY: test-live
-test-live: ## Provider contract tests against real APIs (needs keys)
-	$(BACKEND_RUN) pytest -m live
+test-live: ## Provider contract tests on real APIs, economy models (keys from .env; costs cents)
+	$(LIVE_RUN) env LIVE_ANTHROPIC_MODEL=$${LIVE_ANTHROPIC_MODEL:-claude-haiku-4-5} \
+		LIVE_OPENAI_MODEL=$${LIVE_OPENAI_MODEL:-gpt-6-luna} \
+		pytest -m live tests/unit/providers/test_contract.py -q
+
+.PHONY: live-check
+live-check: ## One tiny request per routed and picker model; masked keys, prices, prompt lock
+	$(LIVE_RUN) python -m secondmind.evals live-check
+
+.PHONY: live-spend
+live-spend: ## What live runs have spent so far, against LIVE_TOTAL_BUDGET_USD
+	$(BACKEND_RUN) python -m secondmind.evals spend
+
+.PHONY: eval-intent
+eval-intent: ## Intent accuracy on the labelled messages, fake provider (run file, gitignored)
+	$(BACKEND_RUN) python -m secondmind.evals intent $(EVAL_ARGS)
+
+.PHONY: eval-intent-live
+eval-intent-live: ## Intent accuracy on real providers (keys from .env; budgeted; costs money)
+	$(LIVE_RUN) python -m secondmind.evals intent --live $(EVAL_ARGS)
 
 .PHONY: eval-ingest
 eval-ingest: ## Ingestion golden cases on replayed model outputs, with the score table
-	$(BACKEND_RUN) python -m secondmind.evals ingest
+	$(BACKEND_RUN) python -m secondmind.evals ingest $(EVAL_ARGS)
 
 .PHONY: eval-ingest-live
-eval-ingest-live: ## Ingestion golden cases on the configured real providers (needs keys; costs money)
-	$(BACKEND_RUN) python -m secondmind.evals ingest --live
+eval-ingest-live: ## Ingestion golden cases on real providers (keys from .env; budgeted; costs money)
+	$(LIVE_RUN) python -m secondmind.evals ingest --live $(EVAL_ARGS)
 
 .PHONY: eval-recall
-eval-recall: ## Recall golden cases on replayed plans and rerank scores (Postgres via testcontainers)
-	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and not live" -q
+eval-recall: ## Recall golden cases on replayed plans and rerank scores (throwaway Postgres)
+	$(BACKEND_RUN) python -m secondmind.evals recall $(EVAL_ARGS)
 
 .PHONY: eval-recall-live
-eval-recall-live: ## Recall golden cases on the configured real providers, with the baseline table (needs keys; costs money)
-	$(BACKEND_RUN) pytest tests/integration/test_recall_goldens.py -m "integration and live" -s -q
+eval-recall-live: ## Recall golden cases on real providers (keys from .env; budgeted; costs money)
+	$(LIVE_RUN) python -m secondmind.evals recall --live $(EVAL_ARGS)
+
+.PHONY: eval-dry
+eval-dry: ## Any suite as a dry run with its estimated live cost: make eval-dry SUITE=recall ...
+	$(BACKEND_RUN) python -m secondmind.evals $(SUITE) --dry-run $(EVAL_ARGS)
+
+.PHONY: eval-report
+eval-report: ## Print a stamped run, or two side by side: make eval-report A=<run> B=<run>
+	$(BACKEND_RUN) python -m secondmind.evals report $(A) $(B)
 
 .PHONY: bench-vectors
-bench-vectors: ## Vector storage bench under RLS (throwaway pgvector container; real embeddings with OPENAI_API_KEY)
-	$(BACKEND_RUN) python tools/bench_vectors.py
+bench-vectors: ## Vector storage bench under RLS (throwaway pgvector; clustered random vectors; free)
+	$(BACKEND_RUN) env -u OPENAI_API_KEY python tools/bench_vectors.py --random
+
+.PHONY: bench-vectors-live
+bench-vectors-live: ## The vector bench on real embeddings (key from .env; ~$0.09; on the spend total)
+	$(LIVE_RUN) python tools/bench_vectors.py
 
 .PHONY: seed-dev
 seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
