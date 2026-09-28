@@ -10,7 +10,7 @@ from collections.abc import AsyncIterator, Sequence
 from typing import Any, NoReturn
 
 import openai
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from secondmind.providers import (
     AdapterEmbedding,
@@ -132,8 +132,20 @@ class OpenAIAdapter:
         params.pop("tools", None)
         try:
             completion = await self._client.chat.completions.parse(**params, response_format=schema)
+        except openai.LengthFinishReasonError as exc:
+            raise ProviderError(
+                ProviderErrorKind.INVALID_OUTPUT,
+                f"the {schema.__name__} was cut off at the output limit",
+                provider=self._name,
+            ) from exc
         except openai.OpenAIError as exc:
             self._raise(exc)
+        except ValidationError as exc:
+            raise ProviderError(
+                ProviderErrorKind.INVALID_OUTPUT,
+                f"no valid {schema.__name__} in the response: {exc.error_count()} error(s)",
+                provider=self._name,
+            ) from exc
         message = completion.choices[0].message
         value = message.parsed
         if not isinstance(value, schema) or completion.usage is None:
@@ -188,9 +200,13 @@ class OpenAIAdapter:
                 }
                 for t in request.tools
             ]
-        # Vendor-specific; compatible servers (vLLM etc.) may not accept it.
-        if request.effort and not self._compatible:
-            params["reasoning_effort"] = request.effort
+        # Vendor-specific; compatible servers (vLLM etc.) may not accept it. Reasoning models
+        # take function tools on Chat Completions only with reasoning off ("none").
+        if not self._compatible:
+            if request.tools:
+                params["reasoning_effort"] = "none"
+            elif request.effort:
+                params["reasoning_effort"] = request.effort
         return params
 
     def _tool_call(self, call_id: str, name: str, arguments: str) -> ToolCall:

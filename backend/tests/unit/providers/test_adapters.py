@@ -5,6 +5,7 @@ from typing import Any
 
 import httpx2
 import pytest
+from pydantic import BaseModel
 
 from secondmind.config import ResolvedProvider
 from secondmind.providers import (
@@ -13,6 +14,7 @@ from secondmind.providers import (
     ProviderError,
     ProviderErrorKind,
     ToolCall,
+    ToolSpec,
 )
 from secondmind.providers.adapters import AnthropicAdapter, OpenAIAdapter, build_adapter
 
@@ -216,3 +218,109 @@ async def test_anthropic_out_of_credit_is_a_credit_error(status: int, body: dict
         await adapter.chat(_request(model="claude-haiku-4-5"))
     assert exc.value.kind is ProviderErrorKind.CREDIT
     assert not exc.value.retryable
+
+
+@pytest.mark.parametrize(
+    ("tools", "effort", "sent"),
+    [((), "low", "low"), ((), None, None), (("add",), "low", "none"), (("add",), None, "none")],
+)
+async def test_openai_turns_reasoning_off_when_a_request_carries_tools(
+    tools: tuple[str, ...], effort: str | None, sent: str | None
+) -> None:
+    """Found live (R.3 B1): reasoning models refuse function tools on Chat Completions unless
+    reasoning_effort is "none", even when no effort is sent."""
+    seen: list[dict[str, Any]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen.append(json.loads(request.content))
+        return httpx2.Response(200, json=COMPLETION)
+
+    adapter = OpenAIAdapter(
+        "openai",
+        api_key="k",
+        http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)),
+    )
+    specs = [
+        ToolSpec(name=t, description="d", parameters={"type": "object", "properties": {}})
+        for t in tools
+    ]
+    await adapter.chat(_request(model="gpt-6-luna", effort=effort, tools=specs))
+    assert seen[0].get("reasoning_effort") == sent
+
+
+class _Inner(BaseModel):
+    name: str
+    note: str | None
+
+
+class _Big(BaseModel):
+    items: list[_Inner]
+    label: str | None
+    tags: list[str]
+
+
+def _anthropic_message(content: list[dict[str, Any]], stop: str = "tool_use") -> dict[str, Any]:
+    return {
+        "id": "msg_1",
+        "type": "message",
+        "role": "assistant",
+        "model": "claude-haiku-4-5",
+        "content": content,
+        "stop_reason": stop,
+        "stop_sequence": None,
+        "usage": {"input_tokens": 30, "output_tokens": 9},
+    }
+
+
+async def test_anthropic_uses_a_tool_call_when_the_schema_grammar_is_too_large() -> None:
+    """Found live (R.3 B1): Haiku 4.5 refuses the extract schema's grammar as too large."""
+    seen: list[dict[str, Any]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        body = json.loads(request.content)
+        seen.append(body)
+        if "output_config" in body and "format" in body["output_config"]:
+            return httpx2.Response(
+                400,
+                json={
+                    "type": "error",
+                    "error": {
+                        "type": "invalid_request_error",
+                        "message": "The compiled grammar is too large, which would cause "
+                        "performance issues. Simplify your tool schemas.",
+                    },
+                },
+            )
+        tool = {"type": "tool_use", "id": "t1", "name": "record_result",
+                "input": {"items": [{"name": "a"}]}}  # fmt: skip
+        return httpx2.Response(200, json=_anthropic_message([tool]))
+
+    adapter = AnthropicAdapter(
+        "anthropic",
+        api_key="k",
+        http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)),
+    )
+    first = await adapter.structured(_request(model="claude-haiku-4-5"), _Big)
+    assert first.value == _Big(items=[_Inner(name="a", note=None)], label=None, tags=[])
+    assert first.usage.output_tokens == 9
+    assert seen[1]["tool_choice"] == {"type": "tool", "name": "record_result"}
+    assert seen[1]["tools"][0]["input_schema"]["properties"]["items"]
+    # The adapter remembers: the next call goes straight to the tool.
+    await adapter.structured(_request(model="claude-haiku-4-5"), _Big)
+    assert len(seen) == 3
+
+
+async def test_anthropic_reports_a_cut_off_structured_reply_as_invalid_output() -> None:
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
+            200, json=_anthropic_message([{"type": "text", "text": '{"na'}], stop="max_tokens")
+        )
+
+    adapter = AnthropicAdapter(
+        "anthropic",
+        api_key="k",
+        http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)),
+    )
+    with pytest.raises(ProviderError) as exc:
+        await adapter.structured(_request(model="claude-haiku-4-5"), _Inner)
+    assert exc.value.kind is ProviderErrorKind.INVALID_OUTPUT

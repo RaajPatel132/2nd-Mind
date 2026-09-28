@@ -1,10 +1,11 @@
 """Anthropic adapter: Messages API streaming, structured output (``messages.parse``) and tools."""
 
 from collections.abc import AsyncIterator, Sequence
-from typing import Any, NoReturn
+from types import UnionType
+from typing import Any, NoReturn, Union, get_args, get_origin
 
 import anthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from secondmind.providers import (
     AdapterEmbedding,
@@ -36,6 +37,8 @@ class AnthropicAdapter:
         http_client: Any | None = None,
     ) -> None:
         self._name = name
+        # Schemas the API refused as too large for constrained decoding.
+        self._too_large: set[str] = set()
         self._client = anthropic.AsyncAnthropic(
             api_key=api_key,
             base_url=base_url,
@@ -71,12 +74,28 @@ class AnthropicAdapter:
     async def structured[T: BaseModel](
         self, request: AdapterRequest, schema: type[T]
     ) -> AdapterStructured[T]:
+        """Structured output through constrained decoding (``output_config.format``). A schema
+        whose grammar the API refuses as too large goes through a tool call instead, from then
+        on for this adapter (found live on the extract schema, R.3)."""
+        if schema.__name__ in self._too_large:
+            return await self._structured_by_tool(request, schema)
         params = self._params(request)
         params.pop("tools", None)
         try:
             message = await self._client.messages.parse(**params, output_format=schema)
+        except anthropic.BadRequestError as exc:
+            if not _grammar_too_large(exc):
+                self._raise(exc)
+            self._too_large.add(schema.__name__)
+            return await self._structured_by_tool(request, schema)
         except anthropic.AnthropicError as exc:
             self._raise(exc)
+        except ValidationError as exc:  # a reply cut short (max_tokens) doesn't parse
+            raise ProviderError(
+                ProviderErrorKind.INVALID_OUTPUT,
+                f"no valid {schema.__name__} in the response: {exc.error_count()} error(s)",
+                provider=self._name,
+            ) from exc
         value = message.parsed_output
         if not isinstance(value, schema):
             raise ProviderError(
@@ -84,6 +103,52 @@ class AnthropicAdapter:
                 f"no valid {schema.__name__} in the response (stop: {message.stop_reason})",
                 provider=self._name,
             )
+        return AdapterStructured(value=value, usage=_usage(message.usage))
+
+    async def _structured_by_tool[T: BaseModel](
+        self, request: AdapterRequest, schema: type[T]
+    ) -> AdapterStructured[T]:
+        """The schema as the input of one tool the model must call; the input is validated
+        here, with any nullable field or list it left out filled in (not constrained)."""
+        params = self._params(request)
+        params.pop("output_config", None)
+        params["tools"] = [
+            {
+                "name": _RECORD_TOOL,
+                "description": f"Record the result ({schema.__name__}). Call it exactly once.",
+                "input_schema": schema.model_json_schema(),
+            }
+        ]
+        if _forced_tool_rejected(request.model):
+            params["tool_choice"] = {"type": "auto"}
+            system = params.get("system")
+            note = f"Answer only by calling the {_RECORD_TOOL} tool once."
+            params["system"] = f"{system}\n\n{note}" if isinstance(system, str) else note
+        else:
+            params["tool_choice"] = {"type": "tool", "name": _RECORD_TOOL}
+            if _thinks_by_default(request.model):
+                params["thinking"] = {"type": "disabled"}  # forced tool use can't think first
+        try:
+            message = await self._client.messages.create(**params)
+        except anthropic.AnthropicError as exc:
+            self._raise(exc)
+        call = next(
+            (b for b in message.content if b.type == "tool_use" and b.name == _RECORD_TOOL), None
+        )
+        if call is None:
+            raise ProviderError(
+                ProviderErrorKind.INVALID_OUTPUT,
+                f"no {_RECORD_TOOL} call in the response (stop: {message.stop_reason})",
+                provider=self._name,
+            )
+        try:
+            value = schema.model_validate(fill_omitted(schema, call.input))
+        except ValidationError as exc:
+            raise ProviderError(
+                ProviderErrorKind.INVALID_OUTPUT,
+                f"the {schema.__name__} the model gave is invalid: {exc.error_count()} error(s)",
+                provider=self._name,
+            ) from exc
         return AdapterStructured(value=value, usage=_usage(message.usage))
 
     async def embed(
@@ -149,6 +214,59 @@ class AnthropicAdapter:
             provider=self._name,
             status_code=getattr(exc, "status_code", None),
         ) from exc
+
+
+_RECORD_TOOL = "record_result"
+
+
+def _grammar_too_large(exc: anthropic.BadRequestError) -> bool:
+    text = str(exc).lower()
+    return "grammar is too large" in text or "schema is too complex" in text
+
+
+def _forced_tool_rejected(model: str) -> bool:
+    # Fable 5.1 and Opus 5.5 refuse tool_choice "tool"/"any" with a 400.
+    return model.startswith(("claude-fable-5-1", "claude-opus-5-5", "claude-mythos"))
+
+
+def _thinks_by_default(model: str) -> bool:
+    return not model.startswith(("claude-haiku", "claude-3"))
+
+
+def fill_omitted(schema: type[BaseModel], data: object) -> object:
+    """``data`` with every field it left out that may be null set to null and every list set
+    to empty, recursively: what an unconstrained model most often skips."""
+    if not isinstance(data, dict):
+        return data
+    out = dict(data)
+    for name, field in schema.model_fields.items():
+        annotation = field.annotation
+        if name not in out:
+            if _allows_none(annotation):
+                out[name] = None
+            elif get_origin(annotation) is list:
+                out[name] = []
+            continue
+        nested = _model_of(annotation)
+        if nested is not None:
+            if get_origin(annotation) is list and isinstance(out[name], list):
+                out[name] = [fill_omitted(nested, v) for v in out[name]]
+            else:
+                out[name] = fill_omitted(nested, out[name])
+    return out
+
+
+def _allows_none(annotation: object) -> bool:
+    return get_origin(annotation) in (Union, UnionType) and type(None) in get_args(annotation)
+
+
+def _model_of(annotation: object) -> type[BaseModel] | None:
+    """The model inside ``Model``, ``Model | None`` or ``list[Model]``, if any."""
+    candidates = [annotation, *get_args(annotation)]
+    for c in candidates:
+        if isinstance(c, type) and issubclass(c, BaseModel):
+            return c
+    return None
 
 
 def _supports_effort(model: str) -> bool:
