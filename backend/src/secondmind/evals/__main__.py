@@ -17,6 +17,8 @@ import asyncio
 import os
 import sys
 from collections.abc import Sequence
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 from secondmind.core import ConfigError
@@ -178,10 +180,26 @@ def _report(refs: Sequence[str]) -> int:
     return 0
 
 
-def _spend(clear_halt: bool) -> int:
+def _spend(clear_halt: bool, record: str | None, note: str | None) -> int:
     book = SpendBook.load()
     if clear_halt:
         book.clear_halt()
+    if record:
+        # Spend outside the harness (the app stack on real keys): read it off the usage ledger.
+        amounts = {
+            provider.strip(): Decimal(amount)
+            for provider, _, amount in (part.partition("=") for part in record.split(","))
+        }
+        budgets = Budgets.from_env()
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        book.record(
+            run_id=f"stack-{stamp}",
+            suite="stack",
+            spent_by_provider=amounts,
+            budget=Decimal(0),
+            batch=budgets.batch,
+            note=note,
+        )
     sys.stdout.write(book.summary(Budgets.from_env().total) + "\n")
     for run in book.runs[-10:]:
         sys.stdout.write(
@@ -260,6 +278,8 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("runs", nargs="*", help="run ids or files (none: latest live per suite)")
     spend = sub.add_parser("spend", help="the live spend so far")
     spend.add_argument("--clear-halt", action="store_true", help="clear a stop-rule halt")
+    spend.add_argument("--record", default=None, help="add spend made outside the harness: p=usd,…")
+    spend.add_argument("--note", default=None, help="why (stored with the entry)")
     sub.add_parser("live-check", help="one tiny request per routed and picker model")
     seed = sub.add_parser("seed-dev", help="seed the recall fixture into the dev workspace")
     seed.add_argument("--email", default=None, help="the user to seed (default DEV_USER_EMAIL)")
@@ -269,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = {
         "seed-dev": lambda: asyncio.run(_seed_dev(args.email, args.web_url)),
         "report": lambda: _report(args.runs),
-        "spend": lambda: _spend(args.clear_halt),
+        "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
     }
     try:
