@@ -73,7 +73,6 @@ from secondmind.ingestion.time import (
     reminder_time,
     resolve,
     resolve_lead,
-    validate_rrule,
 )
 from secondmind.memory import (
     RELATIVE_WORDS,
@@ -99,6 +98,7 @@ from secondmind.memory import (
     has_relative_time,
     quick_layer,
     rrule_words,
+    validate_rrule,
 )
 from secondmind.observability import get_logger
 from secondmind.providers import ChatMessage, ProviderUnavailableError
@@ -501,6 +501,7 @@ class IngestionPipeline:
         quick = quick_layer(
             content,
             now=ctx.now.instant,
+            timezone=ctx.now.timezone,
             triggers=[t.trigger for t in triggers],
             horizon_days=self._settings.quick_horizon_days,
             recent_days=self._settings.quick_recent_days,

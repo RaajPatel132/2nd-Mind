@@ -10,13 +10,11 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
-from zoneinfo import ZoneInfo
-
-from dateutil.rrule import rrulestr
+from datetime import datetime, timedelta
 
 from secondmind.core import Kind, TimePrecision, TriggerOn, TriggerState
 from secondmind.memory.records import ItemContent, TriggerContent
+from secondmind.memory.recurrence import expand_rrule, next_occurrence_of
 
 FREQUENT_REASON = "frequently retrieved"
 
@@ -28,19 +26,20 @@ class QuickDecision:
     until: datetime | None = None
 
 
-def next_occurrence(item: ItemContent, now: datetime) -> tuple[datetime, datetime] | None:
-    """Start and end of the plan's next occurrence at or after ``now`` (RRULE-aware)."""
+def next_occurrence(
+    item: ItemContent, now: datetime, timezone: str
+) -> tuple[datetime, datetime] | None:
+    """Start and end of the plan's occurrence running at ``now`` or next after it. A routine's
+    rule is expanded in the workspace's local time (``timezone``), so 7 am is 7 am there."""
     if item.occurred_start is None:
         return None
-    start = item.occurred_start
     length = _length(item)
     if item.rrule:
-        rule = rrulestr(item.rrule, dtstart=start)
-        upcoming = rule.after(now - length, inc=True)
-        if upcoming is None:
-            return None
-        start = upcoming
-    end = item.occurred_end if not item.rrule and item.occurred_end else start + length
+        return next_occurrence_of(
+            item.rrule, item.occurred_start, length, now=now, timezone=timezone
+        )
+    start = item.occurred_start
+    end = item.occurred_end if item.occurred_end else start + length
     return start, end
 
 
@@ -66,35 +65,6 @@ def occurrences(
     )
 
 
-def expand_rrule(
-    rrule: str,
-    first: datetime,
-    length: timedelta,
-    *,
-    start: datetime | None,
-    end: datetime | None,
-    timezone: str,
-    limit: int = 100,
-) -> list[tuple[datetime, datetime]]:
-    """Occurrences of an RFC 5545 rule overlapping ``[start, end)``. The rule is expanded in the
-    workspace's local time (``BYHOUR=7`` is 7 am there, across DST changes) from ``first``, the
-    first occurrence. An unbounded window is capped at ``limit``."""
-    tz = ZoneInfo(timezone)
-    local_first = first.astimezone(tz).replace(tzinfo=None)
-    rule = rrulestr(rrule, dtstart=local_first)
-    lo = (start - length) if start is not None else first
-    cursor = rule.after(lo.astimezone(tz).replace(tzinfo=None), inc=True)
-    out: list[tuple[datetime, datetime]] = []
-    while cursor is not None and len(out) < limit:
-        begins = cursor.replace(tzinfo=tz).astimezone(UTC)
-        if end is not None and begins >= end:
-            break
-        if start is None or begins + length > start:
-            out.append((begins, begins + length))
-        cursor = rule.after(cursor, inc=False)
-    return out
-
-
 def occurrence_length(precision: TimePrecision | None) -> timedelta:
     match precision:
         case TimePrecision.DATETIME:
@@ -117,6 +87,7 @@ def quick_layer(
     item: ItemContent,
     *,
     now: datetime,
+    timezone: str,
     triggers: Sequence[TriggerContent] = (),
     horizon_days: int,
     recent_days: int,
@@ -125,7 +96,7 @@ def quick_layer(
     reasons: list[str] = []
     untils: list[datetime | None] = []
     if item.kind is Kind.PLAN and item.state == "scheduled":
-        occurrence = next_occurrence(item, now)
+        occurrence = next_occurrence(item, now, timezone)
         if (
             occurrence
             and occurrence[0] <= now + timedelta(days=horizon_days)

@@ -458,6 +458,7 @@ def _content(
     quick = quick_layer(
         content,
         now=now,
+        timezone=timezone,
         triggers=[t.trigger for t in triggers],
         horizon_days=30,
         recent_days=7,

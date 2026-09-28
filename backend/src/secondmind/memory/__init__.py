@@ -39,7 +39,6 @@ from secondmind.memory.ops import (
 from secondmind.memory.quick import (
     FREQUENT_REASON,
     QuickDecision,
-    expand_rrule,
     next_occurrence,
     occurrence_length,
     occurrences,
@@ -62,6 +61,12 @@ from secondmind.memory.records import (
     TriggerRecord,
     VocabRecord,
     WriteLogRecord,
+)
+from secondmind.memory.recurrence import (
+    expand_rrule,
+    first_local_occurrence,
+    next_occurrence_of,
+    validate_rrule,
 )
 from secondmind.memory.render import (
     RenderEntity,
@@ -156,6 +161,7 @@ __all__ = [
     "dump_op",
     "estimate_tokens",
     "expand_rrule",
+    "first_local_occurrence",
     "format_day",
     "format_short",
     "format_when",
@@ -164,6 +170,7 @@ __all__ = [
     "load_op",
     "local",
     "next_occurrence",
+    "next_occurrence_of",
     "occurrence_length",
     "occurrences",
     "op_label",
@@ -174,5 +181,6 @@ __all__ = [
     "render_core",
     "render_verbal",
     "rrule_words",
+    "validate_rrule",
     "with_units",
 ]

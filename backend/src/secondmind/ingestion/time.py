@@ -19,9 +19,9 @@ from typing import Literal
 from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrulestr
 
 from secondmind.core import TimeClock, TimePrecision
+from secondmind.memory import first_local_occurrence
 
 Direction = Literal["future", "past", "auto"]
 
@@ -786,22 +786,13 @@ def _routine(text: str, now: TurnNow) -> Resolved | None:  # noqa: PLR0912, PLR0
 
 def _first_occurrence(rule: str, now: TurnNow) -> datetime:
     """The first occurrence at or after today (local), as a UTC instant."""
-    local_start = datetime.combine(now.today, time(0), tzinfo=ZoneInfo(now.timezone))
-    parsed = rrulestr(rule, dtstart=local_start.replace(tzinfo=None))
-    after = (
-        parsed.after(now.local.replace(tzinfo=None), inc=True)
-        if "BYHOUR" in rule
-        else parsed.after(local_start.replace(tzinfo=None), inc=True)
-    )
-    if after is None:
+    tz = ZoneInfo(now.timezone)
+    local_start = datetime.combine(now.today, time(0))
+    after = now.local.replace(tzinfo=None) if "BYHOUR" in rule else local_start
+    first = first_local_occurrence(rule, local_start, after)
+    if first is None:
         raise UnresolvableTimeError(f"routine {rule} never occurs")
-    return after.replace(tzinfo=ZoneInfo(now.timezone)).astimezone(UTC)
-
-
-def validate_rrule(rule: str, start: datetime) -> str:
-    """Raise ValueError unless ``rule`` is a valid RFC 5545 RRULE (validated on write)."""
-    rrulestr(rule.removeprefix("RRULE:"), dtstart=start)
-    return rule.removeprefix("RRULE:")
+    return first.replace(tzinfo=tz).astimezone(UTC)
 
 
 def _yearly(result: Resolved, now: TurnNow) -> Resolved:

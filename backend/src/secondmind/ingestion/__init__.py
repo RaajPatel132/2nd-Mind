@@ -58,8 +58,8 @@ from secondmind.ingestion.time import (
     resolve,
     resolve_lead,
     resolve_window,
-    validate_rrule,
 )
+from secondmind.memory import validate_rrule
 
 # The same function under a name that isn't also a submodule (import-linter reads
 # ``from secondmind.ingestion import normalise`` as the module).

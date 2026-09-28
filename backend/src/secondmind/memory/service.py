@@ -268,7 +268,9 @@ class Memory:
             writer.note_not_written("nothing to undo", "that turn made no memory changes")
         return await writer.commit()
 
-    async def expiry_ops(self, scope: WorkspaceScope, now: datetime) -> list[Op]:
+    async def expiry_ops(
+        self, scope: WorkspaceScope, now: datetime, timezone: str = "UTC"
+    ) -> list[Op]:
         """Quick-layer housekeeping due at ``now`` (S2.9), for a system turn to apply. A quick
         entry whose time is up leaves the layer, or stays under the next rule that still
         applies; a pending time trigger whose time passed becomes ``expired``; an item cited
@@ -294,6 +296,7 @@ class Memory:
             decision = quick_layer(
                 item,
                 now=now,
+                timezone=timezone,
                 triggers=[t for t in triggers if t.item_id == item.id],
                 horizon_days=self.settings.quick_horizon_days,
                 recent_days=self.settings.quick_recent_days,

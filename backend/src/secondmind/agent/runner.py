@@ -710,7 +710,7 @@ class TurnRunner:
     async def expire_quick(self, scope: WorkspaceScope, *, timezone: str) -> Turn | None:
         """Quick-layer housekeeping as a system turn, so it's auditable and undoable (S2.9).
         No turn is recorded when there is nothing to do."""
-        ops = await self._memory.expiry_ops(scope, self._clock())
+        ops = await self._memory.expiry_ops(scope, self._clock(), timezone)
         if not ops:
             return None
 
@@ -719,7 +719,7 @@ class TurnRunner:
         ) -> str:
             # Ops are re-planned at the turn's own instant; the quick flags don't feed keys.
             writer = self._memory.writer(scope, writer_turn, emit=emit)
-            writer.add(*await self._memory.expiry_ops(scope, writer_turn.now))
+            writer.add(*await self._memory.expiry_ops(scope, writer_turn.now, timezone))
             return summarise_commit(await writer.commit(), prefix="Quick layer tidied")
 
         return await self.run_action(
