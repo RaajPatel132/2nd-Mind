@@ -191,15 +191,29 @@ def _usage(usage: Any) -> RawUsage:
 
 
 def _kind(exc: anthropic.AnthropicError) -> ProviderErrorKind:
+    if _out_of_credit(exc):
+        return ProviderErrorKind.CREDIT
     # Most specific first: APITimeoutError subclasses APIConnectionError.
-    if isinstance(exc, anthropic.APITimeoutError):
-        return ProviderErrorKind.TIMEOUT
-    if isinstance(exc, anthropic.APIConnectionError):
-        return ProviderErrorKind.CONNECTION
-    if isinstance(exc, anthropic.RateLimitError):
-        return ProviderErrorKind.RATE_LIMITED
-    if isinstance(exc, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
-        return ProviderErrorKind.AUTH
+    for cls, kind in _KINDS:
+        if isinstance(exc, cls):
+            return kind
     if isinstance(exc, anthropic.APIStatusError):
         return ProviderErrorKind.SERVER if exc.status_code >= 500 else ProviderErrorKind.BAD_REQUEST
     return ProviderErrorKind.INVALID_OUTPUT
+
+
+_KINDS: tuple[tuple[type[Exception] | tuple[type[Exception], ...], ProviderErrorKind], ...] = (
+    (anthropic.APITimeoutError, ProviderErrorKind.TIMEOUT),
+    (anthropic.APIConnectionError, ProviderErrorKind.CONNECTION),
+    (anthropic.RateLimitError, ProviderErrorKind.RATE_LIMITED),
+    ((anthropic.AuthenticationError, anthropic.PermissionDeniedError), ProviderErrorKind.AUTH),
+)
+
+
+def _out_of_credit(exc: anthropic.AnthropicError) -> bool:
+    """A billing problem: 402 ``billing_error``, or the 400 "credit balance is too low"."""
+    if not isinstance(exc, anthropic.APIStatusError):
+        return False
+    if exc.status_code == 402 or getattr(exc, "type", None) == "billing_error":
+        return True
+    return exc.status_code == 400 and "credit balance" in str(exc).lower()

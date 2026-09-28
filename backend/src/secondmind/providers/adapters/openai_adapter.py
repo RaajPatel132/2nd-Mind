@@ -250,14 +250,27 @@ def _usage(usage: Any) -> RawUsage:
 
 
 def _kind(exc: openai.OpenAIError) -> ProviderErrorKind:
-    if isinstance(exc, openai.APITimeoutError):
-        return ProviderErrorKind.TIMEOUT
-    if isinstance(exc, openai.APIConnectionError):
-        return ProviderErrorKind.CONNECTION
-    if isinstance(exc, openai.RateLimitError):
-        return ProviderErrorKind.RATE_LIMITED
-    if isinstance(exc, (openai.AuthenticationError, openai.PermissionDeniedError)):
-        return ProviderErrorKind.AUTH
+    if _out_of_credit(exc):
+        return ProviderErrorKind.CREDIT
+    # Most specific first: APITimeoutError subclasses APIConnectionError.
+    for cls, kind in _KINDS:
+        if isinstance(exc, cls):
+            return kind
     if isinstance(exc, openai.APIStatusError):
         return ProviderErrorKind.SERVER if exc.status_code >= 500 else ProviderErrorKind.BAD_REQUEST
     return ProviderErrorKind.INVALID_OUTPUT
+
+
+_KINDS: tuple[tuple[type[Exception] | tuple[type[Exception], ...], ProviderErrorKind], ...] = (
+    (openai.APITimeoutError, ProviderErrorKind.TIMEOUT),
+    (openai.APIConnectionError, ProviderErrorKind.CONNECTION),
+    (openai.RateLimitError, ProviderErrorKind.RATE_LIMITED),
+    ((openai.AuthenticationError, openai.PermissionDeniedError), ProviderErrorKind.AUTH),
+)
+
+
+def _out_of_credit(exc: openai.OpenAIError) -> bool:
+    """A billing problem: 402, or the 429 ``insufficient_quota`` (no credit, not a rate limit)."""
+    if not isinstance(exc, openai.APIStatusError):
+        return False
+    return exc.status_code == 402 or getattr(exc, "code", None) == "insufficient_quota"

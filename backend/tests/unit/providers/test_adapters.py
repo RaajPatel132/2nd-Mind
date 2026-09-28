@@ -173,3 +173,46 @@ async def test_anthropic_effort_is_not_sent_to_haiku() -> None:
     assert "output_config" not in seen[0]
     assert exc.value.kind is ProviderErrorKind.SERVER
     assert exc.value.retryable
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [
+        (429, {"error": {"message": "You exceeded your current quota", "code": "insufficient_quota",
+                         "type": "insufficient_quota"}}),
+        (402, {"error": {"message": "Payment required"}}),
+    ],
+)  # fmt: skip
+async def test_openai_out_of_credit_is_a_credit_error_not_a_rate_limit(
+    status: int, body: dict[str, Any]
+) -> None:
+    client = httpx2.AsyncClient(
+        transport=httpx2.MockTransport(lambda r: httpx2.Response(status, json=body))
+    )
+    adapter = OpenAIAdapter("openai", api_key="k", http_client=client)
+    with pytest.raises(ProviderError) as exc:
+        await adapter.chat(_request())
+    assert exc.value.kind is ProviderErrorKind.CREDIT
+    assert not exc.value.retryable
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [
+        (400, {"type": "error", "error": {"type": "invalid_request_error", "message":
+               "Your credit balance is too low to access the Anthropic API."}}),
+        (402, {"type": "error", "error": {"type": "billing_error", "message": "Billing issue"}}),
+    ],
+)  # fmt: skip
+async def test_anthropic_out_of_credit_is_a_credit_error(status: int, body: dict[str, Any]) -> None:
+    adapter = AnthropicAdapter(
+        "anthropic",
+        api_key="k",
+        http_client=httpx2.AsyncClient(
+            transport=httpx2.MockTransport(lambda r: httpx2.Response(status, json=body))
+        ),
+    )
+    with pytest.raises(ProviderError) as exc:
+        await adapter.chat(_request(model="claude-haiku-4-5"))
+    assert exc.value.kind is ProviderErrorKind.CREDIT
+    assert not exc.value.retryable

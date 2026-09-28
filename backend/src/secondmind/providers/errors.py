@@ -15,6 +15,9 @@ class ProviderErrorKind(StrEnum):
     AUTH = "auth"
     INVALID_OUTPUT = "invalid_output"
     UNSUPPORTED = "unsupported"
+    # The account has no credit left (prepaid balance used up, quota exceeded): not retried,
+    # the step falls back to another provider, and the app treats the provider as spent.
+    CREDIT = "credit"
 
 
 RETRYABLE_KINDS = frozenset(
