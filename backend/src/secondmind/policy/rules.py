@@ -111,13 +111,19 @@ def p_sens_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
     return None
 
 
+# The only kind a hypothetical may be kept as: a note says "I might…" without claiming it.
+HYPOTHETICAL_KINDS = frozenset({Kind.NOTE})
+
+
 def p_mod_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
-    """A hypothetical is never stored as a fact or preference, or in core."""
+    """A hypothetical is never stored as if it were true or going to happen (a fact,
+    preference, plan, task or intention), nor in core; it may be kept as a note. Found in R.3:
+    live models file "if I get the offer I'll move" as a plan or an intention, not a fact."""
     if op.modality is not Modality.HYPOTHETICAL:
         return None
-    as_fact = op.op is WriteOp.CREATE and op.kind in (Kind.FACT, Kind.PREFERENCE)
-    if as_fact or op.core_write:
-        return _blocked("P-MOD-1", "hypothetical, so not stored as a fact")
+    as_claim = op.op is WriteOp.CREATE and op.kind not in HYPOTHETICAL_KINDS
+    if as_claim or op.core_write:
+        return _blocked("P-MOD-1", "hypothetical, so not stored as if it were true")
     return None
 
 

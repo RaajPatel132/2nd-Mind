@@ -121,7 +121,7 @@ def _line(  # noqa: PLR0911, PLR0912
         if verdict.rule_id == "P-SECRET-1":
             return refusal()
         if verdict.rule_id == "P-MOD-1":
-            return f"I didn't store '{op.title}' as a fact: it's hypothetical."
+            return f"I didn't save '{op.title}' as if it were settled: it's hypothetical."
         if verdict.rule_id == "CORE-BUDGET":
             return f"{op.title} is saved, but core memory is full, so it isn't always in context."
         if verdict.rule_id == "NOT-APPLICABLE":

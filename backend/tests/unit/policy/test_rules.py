@@ -156,6 +156,27 @@ CASES: list[tuple[str, OpFacts, PolicyContext, PolicyDecision, str]] = [
         "P-MOD-1",
     ),
     (
+        "mod: hypothetical plan blocked",
+        OpFacts(op=WriteOp.CREATE, kind=Kind.PLAN, modality=Modality.HYPOTHETICAL),
+        USER,
+        B,
+        "P-MOD-1",
+    ),
+    (
+        "mod: hypothetical intention blocked",
+        OpFacts(op=WriteOp.CREATE, kind=Kind.INTENTION, modality=Modality.HYPOTHETICAL),
+        USER,
+        B,
+        "P-MOD-1",
+    ),
+    (
+        "mod: a planned intention allowed",
+        OpFacts(op=WriteOp.CREATE, kind=Kind.INTENTION, modality=Modality.PLANNED),
+        USER,
+        A,
+        "P-DEFAULT",
+    ),
+    (
         "mod: hypothetical core write blocked",
         OpFacts(op=WriteOp.UPDATE, kind=Kind.NOTE, modality=Modality.HYPOTHETICAL, core_write=True),
         USER,
