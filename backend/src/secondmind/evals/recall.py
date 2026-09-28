@@ -255,7 +255,9 @@ def eval_runner(
     settings: RecallSettings | None = None,
     resources: Path = DEFAULT_RESOURCES_DIR,
 ) -> TurnRunner:
-    """A turn runner on Postgres with the clock frozen at ``now``."""
+    """A turn runner on Postgres with the clock frozen at ``now``. Cases share a seeded
+    workspace, so it keeps no chat history: each question is asked on its own, whatever ran
+    before it (found in R.3: live answers of earlier cases leaked into later plans)."""
 
     def frozen(at: datetime = now) -> datetime:
         return at
@@ -274,6 +276,7 @@ def eval_runner(
         recall_stores=lambda s: SqlRecallStore(db, s, timeout_ms=10_000),
         recall=settings or RecallSettings(),
         conversation_stores=lambda s: SqlConversationStore(db, s),
+        history_turns=0,
     )
 
 
