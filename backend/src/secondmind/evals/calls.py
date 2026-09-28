@@ -65,7 +65,7 @@ TYPICAL_OUTPUT: dict[str, int] = {
     "ping": 1,
 }
 # Hidden reasoning tokens a reasoning model may add at each effort level (billed as output).
-REASONING_ALLOWANCE: dict[str, int] = {"low": 200, "medium": 800, "high": 2000}
+REASONING_ALLOWANCE: dict[str, int] = {"low": 40, "medium": 300, "high": 1000}
 # Failures that were probably billed (the model ran), as opposed to refused requests.
 _BILLED_FAILURES = frozenset({ProviderErrorKind.INVALID_OUTPUT, ProviderErrorKind.TIMEOUT})
 
