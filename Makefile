@@ -55,9 +55,10 @@ migrate: ## Apply database migrations (against the compose database)
 check: commits lint typecheck imports openapi-check test test-int web-check secrets audit scan-images ## Everything CI runs, except E2E
 
 .PHONY: commits
-commits: ## Commit messages not yet on origin/main follow the standard (commitlint)
+commits: ## Commit messages not yet on origin/main follow the standard; authors too if COMMIT_AUTHORS is set
 	@if git rev-parse --verify --quiet origin/main >/dev/null; then \
 		npx --no -- commitlint --from origin/main --to HEAD; \
+		if [ -n "$${COMMIT_AUTHORS:-}" ]; then scripts/check-commit-authors.sh origin/main HEAD; fi; \
 	else npx --no -- commitlint --last; fi
 
 .PHONY: lint

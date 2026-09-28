@@ -1,4 +1,4 @@
-# Every push and PR: commit messages, backend (lint, types, boundaries, OpenAPI snapshot, unit +
+# Every push and PR: commit messages and authors, backend (lint, types, boundaries, OpenAPI snapshot, unit +
 # integration tests, audit), frontend (lint, types, build, client drift, audit), secrets, image
 # scan, and the E2E smoke against the compose stack. Jobs call the same make targets as local.
 name: ci
@@ -21,7 +21,7 @@ env:
 
 jobs:
   commits:
-    name: commit messages
+    name: commit messages and authors
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -44,6 +44,12 @@ jobs:
             from="HEAD~1"
           fi
           npx --no -- commitlint --from "$from" --to HEAD --verbose
+          echo "from=$from" >> "$GITHUB_OUTPUT"
+        id: range
+      - name: commit authors are on the allowlist (repository variable COMMIT_AUTHORS)
+        env:
+          COMMIT_AUTHORS: ${{ vars.COMMIT_AUTHORS }}
+        run: scripts/check-commit-authors.sh "${{ steps.range.outputs.from }}" HEAD
 
   backend:
     name: backend
