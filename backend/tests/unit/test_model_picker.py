@@ -96,10 +96,9 @@ def test_live_mode_marks_a_keyless_choice_unavailable(base_env: dict[str, str]) 
     routing = resolve_routing(file, BOTH_KEYS, "live")
     assert all(c.available and not c.simulated for c in routing.choices)
     # Drop OpenAI's key without tripping the route checks: resolve the picker alone.
+    on_anthropic = {"provider": "anthropic", "model": "claude-haiku-4-5", "fallback": None}
     only_anthropic = file.model_copy(
-        update={
-            "steps": {s: c.model_copy(update={"fallback": None}) for s, c in file.steps.items()}
-        }
+        update={"steps": {s: c.model_copy(update=on_anthropic) for s, c in file.steps.items()}}
     )
     routing = resolve_routing(
         only_anthropic, {"ANTHROPIC_API_KEY": "k", "MODEL_EMBED": "anthropic:x"}, "live"
@@ -121,7 +120,9 @@ def test_a_pick_routes_every_chat_step_and_keeps_embeddings(base_env: dict[str, 
             assert route.primary == OPUS
             assert route.fallback == routing.route(step).fallback  # each step keeps its own
     # Picking the fallback's own model drops the fallback rather than retrying itself.
-    assert picked.with_pick(SOL).route(Step.ANSWER).fallback is None
+    answer_fallback = routing.route(Step.ANSWER).fallback
+    assert answer_fallback is not None
+    assert picked.with_pick(answer_fallback).route(Step.ANSWER).fallback is None
 
 
 def test_a_simulated_pick_has_no_fallback(base_env: dict[str, str]) -> None:

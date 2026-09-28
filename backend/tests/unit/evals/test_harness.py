@@ -278,8 +278,8 @@ def test_expensive_models_need_the_flag_and_a_named_subset(tmp_path: Path) -> No
         selection=Selection(cases=("@reference",)),
     ).check_expensive()
     _harness(tmp_path, routing="economy-b").check_expensive()
-    # Today's configured routing is Opus-class: it can't run live on a whole suite.
-    assert _harness(tmp_path, routing="configured").expensive_models()
+    # The configured routing is the economy one: nothing on it needs the flag.
+    assert _harness(tmp_path, routing="configured").expensive_models() == []
 
 
 def test_a_candidate_routing_is_a_set_of_model_overrides() -> None:
