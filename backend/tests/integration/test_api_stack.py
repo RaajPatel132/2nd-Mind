@@ -138,43 +138,47 @@ def _completed(response: httpx.Response) -> dict[str, Any]:
 async def test_usage_sums_the_users_ledger_and_no_one_else_sees_it(
     pg_urls: PgUrls, redis_url: str, owner_db: Database
 ) -> None:
-    """UI.7: used = the user's ledger across their workspaces; the limit comes from
-    QUOTA_TOKENS_STANDARD; turn.completed carries the same block; another user sees only
-    their own."""
+    """UI.7 / R.10: used = the user's ledger cost across their workspaces (system usage left out);
+    the limit comes from QUOTA_USD_STANDARD; turn.completed carries the same block; another user
+    sees only their own."""
     async with _client(pg_urls, redis_url, "quota-a@example.test") as c:
         me = (await c.post("/v1/auth/dev-login")).json()
         ws, user_id = me["workspaces"][0]["id"], me["user"]["id"]
         before = (await c.get("/v1/me/usage")).json()
         assert before == {
             "tier": "standard",
-            "limit_tokens": 1_000_000,
+            "limit_usd": 2.5,
+            "used_usd": 0,
+            "remaining_usd": 2.5,
             "used_tokens": 0,
-            "remaining_tokens": 1_000_000,
+            "read_only": False,
+            "read_only_reason": None,
+            "read_only_message": None,
         }
         first = _completed(await c.post(f"/v1/workspaces/{ws}/turns", json={"message": "hi"}))
         second = _completed(await c.post(f"/v1/workspaces/{ws}/turns", json={"message": "yo"}))
         after = (await c.get("/v1/me/usage")).json()
 
         async with owner_db.identity() as session:
-            ledger = (
+            cost, charged = (
                 await session.execute(
-                    # The quota counts charged (weighted) tokens (ADR-0030).
                     text(
-                        "SELECT COALESCE(SUM(charged_tokens), 0) FROM usage_ledger"
-                        " WHERE owner_user_id = :u"
+                        "SELECT COALESCE(SUM(cost_usd), 0), COALESCE(SUM(charged_tokens), 0)"
+                        " FROM usage_ledger WHERE owner_user_id = :u AND NOT system"
                     ),
                     {"u": user_id},
                 )
-            ).scalar_one()
-        assert ledger > 0
-        assert after["used_tokens"] == ledger
-        assert after["remaining_tokens"] == 1_000_000 - ledger
+            ).one()
+        assert cost > 0
+        assert after["used_usd"] == pytest.approx(float(cost))
+        assert after["remaining_usd"] == pytest.approx(2.5 - float(cost))
+        assert after["used_tokens"] == charged
         # The frame's block is the quota as it stood right after that turn.
         assert second["quota"] == after
-        assert first["quota"]["used_tokens"] < second["quota"]["used_tokens"]
+        assert first["quota"]["used_usd"] < second["quota"]["used_usd"]
 
         other = (await c.post("/v1/auth/dev-login", json={"email": "quota-b@example.test"})).json()
         assert other["user"]["id"] != user_id
         theirs = (await c.get("/v1/me/usage")).json()
-        assert theirs["used_tokens"] == 0
-        assert theirs["remaining_tokens"] == 1_000_000
+        assert theirs["used_usd"] == 0
+        assert theirs["remaining_usd"] == 2.5
