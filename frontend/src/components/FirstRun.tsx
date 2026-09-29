@@ -2,11 +2,11 @@ import { motion } from 'motion/react'
 import { BrandMark, CardButton } from '../ui'
 import { motionProps } from '../ui/motion'
 
-/** What works in this build on every provider mode: two saves and one supersede. */
+/** A first conversation that works on every provider mode: a save, a change, and a recall. */
 const SUGGESTIONS = [
   { text: 'I live in Bengaluru', note: 'Saves a fact about you' },
-  { text: "I'm vegetarian", note: 'Saves a preference' },
   { text: 'I moved to Pune', note: 'Replaces where you live, keeps the old one as history' },
+  { text: 'Where do I live?', note: 'Asks what you saved, with where the answer came from' },
 ] as const
 
 /** An empty workspace: the mark, the greeting, three suggestions. Picking one fills the composer. */

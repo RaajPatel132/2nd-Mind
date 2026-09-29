@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowDown } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { ArrowDown, ChevronDown } from 'lucide-react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { ChatTurn } from '../hooks/useConversation'
-import { Button, Skeleton } from '../ui'
+import { formatClock } from '../lib/format'
+import { Button, Disclosure, DisclosureTrigger, Icon, Skeleton, Tag, cx } from '../ui'
 import { motionProps } from '../ui/motion'
 import { FirstRun } from './FirstRun'
 import { TurnView } from './TurnView'
@@ -143,11 +144,11 @@ export function Conversation(props: Props) {
         )}
         {!loading && !loadError && turns.length === 0 && <FirstRun onPick={props.onPick} />}
         <ol ref={column} className="m-0 flex list-none flex-col gap-14 p-0" data-testid="messages" aria-label="Conversation">
-          {turns.map((turn) => {
-            const isLatest = turn.key === latestKey
-            const folded = isLatest ? collapsedLatest : !expanded.has(turn.key)
-            return (
-              <li key={turn.key}>
+          {groupHousekeeping(turns).map((group) => {
+            const view = (turn: ChatTurn) => {
+              const isLatest = turn.key === latestKey
+              const folded = isLatest ? collapsedLatest : !expanded.has(turn.key)
+              return (
                 <TurnView
                   turn={turn}
                   timezone={timezone}
@@ -166,6 +167,14 @@ export function Conversation(props: Props) {
                   onUndo={props.onUndo}
                   busy={busy !== null}
                 />
+              )
+            }
+            const [head] = group
+            if (!head) return null
+            if (group.length === 1) return <li key={head.key}>{view(head)}</li>
+            return (
+              <li key={head.key}>
+                <HousekeepingGroup turns={group}>{group.map((t) => <div key={t.key}>{view(t)}</div>)}</HousekeepingGroup>
               </li>
             )
           })}
@@ -181,5 +190,49 @@ export function Conversation(props: Props) {
         )}
       </AnimatePresence>
     </>
+  )
+}
+
+/** Consecutive housekeeping (system) turns, so a run of them folds into one row. */
+function groupHousekeeping(turns: ChatTurn[]): ChatTurn[][] {
+  const groups: ChatTurn[][] = []
+  for (const turn of turns) {
+    const last = groups.at(-1)
+    if (turn.kind === 'system' && !turn.live && last?.[0]?.kind === 'system' && !last[0].live) last.push(turn)
+    else groups.push([turn])
+  }
+  return groups
+}
+
+/** A run of housekeeping turns as one compact row ("3 housekeeping changes") that expands. */
+function HousekeepingGroup({ turns, children }: { turns: ChatTurn[]; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  const first = turns[0]
+  const last = turns.at(-1)
+  return (
+    <section data-testid="housekeeping-group" aria-label={`${turns.length} housekeeping changes`}>
+      <DisclosureTrigger
+        open={open}
+        controls={id}
+        onClick={() => {
+          setOpen((o) => !o)
+        }}
+        className="flex w-full items-center gap-2 rounded-sm bg-transparent p-0 text-left font-ui text-overline uppercase text-fg-3 hover:text-fg-2"
+        data-testid="housekeeping-toggle"
+      >
+        <Tag>Housekeeping</Tag>
+        <span className="normal-case tracking-normal text-label text-fg-2">{turns.length} housekeeping changes</span>
+        {first && last && (
+          <span className="tnum">
+            {formatClock(first.sentAt)}–{formatClock(last.sentAt)}
+          </span>
+        )}
+        <Icon icon={ChevronDown} className={cx('ml-auto text-fg-3 transition-transform dur-2', open && 'rotate-180')} />
+      </DisclosureTrigger>
+      <Disclosure id={id} open={open}>
+        <div className="mt-6 flex flex-col gap-10">{children}</div>
+      </Disclosure>
+    </section>
   )
 }
