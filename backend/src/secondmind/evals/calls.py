@@ -381,7 +381,16 @@ class MeteredAdapter:
             usage, cost = self._estimator.chat(request, ref, schema)
         else:
             usage, cost = RawUsage(input_tokens=0, output_tokens=0), Decimal(0)
-        self._record(request.step, ref, usage, started, cost=cost, failed=err.kind.value)
+        # The fixtures are synthetic, so the reply that broke the schema is worth keeping.
+        self._record(
+            request.step,
+            ref,
+            usage,
+            started,
+            cost=cost,
+            failed=err.kind.value,
+            output=_loaded(err.raw_output),
+        )
 
     def _cost(
         self,
@@ -549,3 +558,12 @@ def _reply_of(cached: Mapping[str, Any]) -> AdapterReply:
         stop_reason=cached.get("stop_reason"),
         usage=_usage_of(cached.get("usage", {})),
     )
+
+
+def _loaded(raw: str | None) -> Any:
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return raw
