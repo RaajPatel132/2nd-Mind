@@ -14,6 +14,10 @@ USER 101
 COPY --chown=101:101 nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build --chown=101:101 /web/dist /usr/share/nginx/html
 ENV API_UPSTREAM=http://api:8000 \
-    NGINX_RESOLVER=127.0.0.11
+    NGINX_RESOLVER=127.0.0.11 \
+    NGINX_HSTS="" \
+    NGINX_MAX_BODY=1m \
+    NGINX_READ_TIMEOUT=60s \
+    NGINX_DESIGN=on
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]

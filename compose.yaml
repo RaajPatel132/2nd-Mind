@@ -23,7 +23,7 @@ x-app-env: &app-env
   SESSION_SECRET: ${SESSION_SECRET:-change-me-local-dev-secret-0123456789abcdef}
 
 x-backend: &backend
-  image: secondmind-api:local
+  image: secondmind-api:${IMAGE_TAG:-local}
   build:
     context: ./backend
     args:
@@ -209,7 +209,7 @@ services:
       start_period: 15s
 
   web:
-    image: secondmind-web:local
+    image: secondmind-web:${IMAGE_TAG:-local}
     build:
       context: ./frontend
     environment:

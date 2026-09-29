@@ -7,6 +7,7 @@ docs/sprints/
 # Environment and secrets
 .env
 .env.*
+.prodlike.env
 !.env.example
 *.pem
 *.key

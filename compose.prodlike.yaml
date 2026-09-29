@@ -1,0 +1,72 @@
+# The production-shaped rehearsal (R.13): `make up-prodlike`, an overlay on compose.yaml.
+#
+# The stack as staging will run it (ADR-0012): ENV=staging on real providers, Secure cookies
+# (browsers allow them on localhost), a generated session secret and staging access code, the
+# web tier's production headers, the images CI builds (tagged by git SHA), read-only root
+# filesystems with a tmpfs, the non-root user, and the CPU and memory staging gets on Fargate.
+# Migrations run as a one-off job before the api starts, as on ECS.
+#
+# Secrets come from .prodlike.env (gitignored), which `make up-prodlike` writes on first use.
+
+x-prodlike-env: &prodlike-env
+  ENV: staging
+  MODEL_PROVIDER_MODE: live
+  SESSION_COOKIE_SECURE: "true"
+  SESSION_SECRET: ${PRODLIKE_SESSION_SECRET:?run make up-prodlike, which generates it}
+  STAGING_ACCESS_CODE: ${PRODLIKE_ACCESS_CODE:?run make up-prodlike, which generates it}
+  DEV_AUTH: "true"
+  LOG_INCLUDE_CONTENT: "false"
+  TRACE_INCLUDE_CONTENT: "false"
+
+x-prodlike-app: &prodlike-app
+  image: secondmind-api:${IMAGE_TAG:?make up-prodlike sets IMAGE_TAG to the git SHA}
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m
+  user: "10001:10001"
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+
+services:
+  migrate:
+    <<: *prodlike-app
+    environment:
+      <<: *prodlike-env
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 512M }
+
+  api:
+    <<: *prodlike-app
+    environment:
+      <<: *prodlike-env
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 1G }
+    stop_grace_period: 45s
+
+  worker:
+    <<: *prodlike-app
+    environment:
+      <<: *prodlike-env
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 512M }
+    stop_grace_period: 45s
+
+  web:
+    image: secondmind-web:${IMAGE_TAG:?make up-prodlike sets IMAGE_TAG to the git SHA}
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+      - /etc/nginx/conf.d:size=1m,uid=101,gid=101
+      - /var/cache/nginx:size=16m,uid=101,gid=101
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    environment:
+      API_UPSTREAM: http://api:8000
+      # HSTS as it will be behind HTTPS; browsers ignore it on plain-HTTP localhost.
+      NGINX_HSTS: max-age=31536000; includeSubDomains
+      NGINX_DESIGN: "on"

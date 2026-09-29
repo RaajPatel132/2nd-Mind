@@ -1,18 +1,32 @@
-# Rendered by the nginx image's envsubst step (API_UPSTREAM, NGINX_RESOLVER).
+# Rendered by the nginx image's envsubst step. Every variable has a default in the Dockerfile:
+#   API_UPSTREAM, NGINX_RESOLVER   where the API is, and the resolver that finds it
+#   NGINX_HSTS                     Strict-Transport-Security value; empty (no header) unless the
+#                                  site is served over HTTPS (staging, production)
+#   NGINX_MAX_BODY                 largest request body (the API enforces MAX_REQUEST_BYTES too)
+#   NGINX_READ_TIMEOUT             how long a quiet upstream may stay silent; 60s, an ALB's idle
+#                                  timeout, so a stream that stops heartbeating fails here first
+#   NGINX_DESIGN                   "on" serves /design (development, staging); "off" is a 404
 server {
     listen 8080;
     server_name _;
     root /usr/share/nginx/html;
+    server_tokens off;
+    client_max_body_size ${NGINX_MAX_BODY};
 
     # Re-resolve the API's address: a recreated api container gets a new IP, and nginx would
     # otherwise keep proxying to the old one until it restarts.
     resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
     set $api_upstream ${API_UPSTREAM};
 
+    # Same origin only: the SPA's own scripts, styles and bundled fonts, and /v1 on this host.
+    # Inline style attributes are allowed (the motion library animates through them); inline
+    # scripts are not.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options DENY always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
-    add_header Content-Security-Policy "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Strict-Transport-Security "${NGINX_HSTS}" always;
 
     location = /healthz {
         access_log off;
@@ -20,7 +34,8 @@ server {
         return 200 "ok\n";
     }
 
-    # The API. Buffering off so server-sent events stream token by token.
+    # The API. Buffering off so server-sent events stream token by token; the API sends a
+    # heartbeat comment every SSE_HEARTBEAT_S, well inside the read timeout.
     location /v1/ {
         proxy_pass $api_upstream;
         proxy_http_version 1.1;
@@ -30,17 +45,39 @@ server {
         proxy_set_header Connection "";
         proxy_buffering off;
         proxy_cache off;
-        proxy_read_timeout 300s;
+        proxy_read_timeout ${NGINX_READ_TIMEOUT};
+        # The API sets its own security headers on these responses; keep the API's and add
+        # nothing twice.
+        proxy_hide_header X-Frame-Options;
+        proxy_hide_header X-Content-Type-Options;
+        proxy_hide_header Referrer-Policy;
+        proxy_hide_header Content-Security-Policy;
+        proxy_hide_header Strict-Transport-Security;
+        proxy_hide_header Permissions-Policy;
+    }
+
+    # No add_header below this point: a location with its own add_header drops every header
+    # set above, so caching is set with `expires` and each response keeps the security headers.
+    location = /design {
+        if ($design_off) {
+            return 404;
+        }
+        expires -1;
+        try_files /index.html =404;
     }
 
     location /assets/ {
         expires 1y;
-        add_header Cache-Control "public, immutable";
         try_files $uri =404;
     }
 
     location / {
-        add_header Cache-Control "no-cache";
+        expires -1;
         try_files $uri /index.html;
     }
+}
+
+map "${NGINX_DESIGN}" $design_off {
+    "on" 0;
+    default 1;
 }
