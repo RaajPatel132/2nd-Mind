@@ -50,7 +50,8 @@ PRODLIKE     := IMAGE_TAG=$(PRODLIKE_TAG) $(COMPOSE) -p secondmind-prodlike \
 
 .PHONY: up-prodlike
 up-prodlike: .prodlike.env ## The stack as staging runs it: live models, access code, read-only images (stop `make up` first)
-	$(PRODLIKE) up -d --build --wait
+	$(PRODLIKE) build api web  # once: migrate, api and worker share the image, and building it three times at once races
+	$(PRODLIKE) up -d --wait
 	@scripts/print-urls.sh
 	@echo "    Access code  $$(sed -n 's/^PRODLIKE_ACCESS_CODE=//p' .prodlike.env)"
 
@@ -163,6 +164,10 @@ bench-vectors: ## Vector storage bench under RLS (throwaway pgvector; clustered 
 .PHONY: bench-vectors-live
 bench-vectors-live: ## The vector bench on real embeddings (key from .env; ~$0.09; on the spend total)
 	$(LIVE_RUN) python tools/bench_vectors.py
+
+.PHONY: smoke-live
+smoke-live: ## Drive the running stack through the S3 demo and S2 examples on real models (SMOKE_ACCESS_CODE; costs money)
+	$(LIVE_RUN) python tools/smoke_live.py $(ARGS)
 
 .PHONY: seed-dev
 seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
