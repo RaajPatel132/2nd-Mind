@@ -7,7 +7,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from secondmind.core import NotFoundError, WorkspaceScope
+from secondmind.core import NotFoundError, Tier, WorkspaceScope
 
 
 class WorkspaceKind(StrEnum):
@@ -22,6 +22,20 @@ class User(BaseModel):
     id: uuid.UUID
     email: str | None
     created_at: datetime
+    # What the person may spend and pick (ADR-0032); set by the admin CLI, never by the app.
+    tier: Tier = Tier.STANDARD
+
+
+class TierChange(BaseModel):
+    """One audited change of a person's tier: who made it, when, from what to what."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    user_id: uuid.UUID
+    from_tier: Tier
+    to_tier: Tier
+    changed_by: str
+    changed_at: datetime
 
 
 class Workspace(BaseModel):

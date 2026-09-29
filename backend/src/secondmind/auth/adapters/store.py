@@ -6,7 +6,7 @@ from sqlalchemy import select, text
 
 from secondmind.auth import User, Workspace, WorkspaceKind
 from secondmind.auth.adapters.tables import UserRow, WorkspaceRow
-from secondmind.core import new_id
+from secondmind.core import Tier, new_id
 from secondmind.memory.adapters import Database
 
 
@@ -79,7 +79,7 @@ class SqlIdentityStore:
 
 
 def _user(row: UserRow) -> User:
-    return User(id=row.id, email=row.email, created_at=row.created_at)
+    return User(id=row.id, email=row.email, created_at=row.created_at, tier=Tier(row.tier))
 
 
 def _workspace(row: WorkspaceRow) -> Workspace:

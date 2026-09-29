@@ -2,6 +2,7 @@
 
 from secondmind.auth.identity import (
     IdentityStore,
+    TierChange,
     User,
     Workspace,
     WorkspaceKind,
@@ -12,6 +13,7 @@ from secondmind.auth.sessions import SessionSigner
 __all__ = [
     "IdentityStore",
     "SessionSigner",
+    "TierChange",
     "User",
     "Workspace",
     "WorkspaceKind",

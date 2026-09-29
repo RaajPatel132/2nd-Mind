@@ -4,9 +4,11 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Identity,
     Index,
     Integer,
     String,
@@ -25,9 +27,30 @@ class UserRow(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
     email: Mapped[str | None] = mapped_column(Text)
+    # What the person may spend and pick (ADR-0032); changed only by the admin CLI.
+    tier: Mapped[str] = mapped_column(String(16), server_default="standard")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    __table_args__ = (Index("uq_users_email_lower", text("lower(email)"), unique=True),)
+    __table_args__ = (
+        Index("uq_users_email_lower", text("lower(email)"), unique=True),
+        CheckConstraint("tier IN ('guest', 'standard', 'premium')", name="tier"),
+    )
+
+
+class TierChangeRow(Base):
+    """Who changed whose tier, when, from what to what. The app role can read it, never write:
+    only the admin CLI (running as the schema owner) adds rows."""
+
+    __tablename__ = "tier_changes"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    from_tier: Mapped[str] = mapped_column(String(16))
+    to_tier: Mapped[str] = mapped_column(String(16))
+    changed_by: Mapped[str] = mapped_column(Text)
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class WorkspaceRow(Base):
