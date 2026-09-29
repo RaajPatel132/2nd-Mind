@@ -1,0 +1,14 @@
+# Candidate B with the rerank on Claude Haiku 4.5, to compare its speed with GPT-5.4 mini.
+description: economy-b with rerank on Haiku 4.5
+steps:
+  intent: openai:gpt-6-luna
+  extract: anthropic:claude-haiku-4-5
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: anthropic:claude-haiku-4-5
+  correct: openai:gpt-6-luna
+  answer: anthropic:claude-haiku-4-5
+  judge: openai:gpt-6-luna
+fallback: none

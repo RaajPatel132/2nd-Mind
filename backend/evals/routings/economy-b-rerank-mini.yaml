@@ -1,0 +1,15 @@
+# Candidate B with the rerank one rung up (R.4): GPT-5.4 mini instead of Luna, to see whether a
+# dearer judge rescues the 2-hop and filter-miss cases Luna scored low.
+description: economy-b with rerank on GPT-5.4 mini
+steps:
+  intent: openai:gpt-6-luna
+  extract: anthropic:claude-haiku-4-5
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: openai:gpt-5.4-mini
+  correct: openai:gpt-6-luna
+  answer: anthropic:claude-haiku-4-5
+  judge: openai:gpt-6-luna
+fallback: none

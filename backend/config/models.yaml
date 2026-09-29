@@ -28,27 +28,39 @@ providers:
   fake:
     kind: fake
 
-# The model picker: what a person can pick for their turns, grouped by provider in this order.
-# A pick replaces the model of every chat step in that turn; embeddings keep their route. With
-# no credentials for a model's provider, `auto` and `fake` let the fake provider stand in for it
-# (priced as that model); `live` shows it as unavailable. Every model needs a price; its weight
-# against the baseline in prices.yaml is how fast it uses the quota.
+# The model picker (ADR-0031). A turn with no pick runs on the routing below, each step on the
+# model that suits it: "Auto", the default, for everyone. A person can instead pick one model
+# for every chat step of a turn (embeddings keep their route), if their tier allows it. The
+# picker shows each model's price for a typical recall turn against Auto's, from the measured
+# token profile below. With no credentials for a model's provider, `auto` and `fake` let the
+# fake provider stand in for it (priced as that model); `live` shows it as unavailable. Models
+# not listed (Fable, the Opus models, GPT-6 Sol) stay priced, so old turns still cost right.
 picker:
-  default: anthropic:claude-sonnet-5
   models:
-    anthropic:claude-fable-5-1: Claude Fable 5.1
-    anthropic:claude-opus-5-5: Claude Opus 5.5
-    anthropic:claude-opus-5: Claude Opus 5
-    anthropic:claude-sonnet-5: Claude Sonnet 5
-    anthropic:claude-haiku-4-5: Claude Haiku 4.5
-    openai:gpt-6-sol: GPT-6 Sol
-    openai:gpt-5.4-mini: GPT-5.4 mini
     openai:gpt-6-luna: GPT-6 Luna
+    openai:gpt-5.4-mini: GPT-5.4 mini
+    anthropic:claude-haiku-4-5: Claude Haiku 4.5
+    anthropic:claude-sonnet-5: Claude Sonnet 5
+  tiers:
+    guest: []
+    standard: [openai:gpt-6-luna, openai:gpt-5.4-mini, anthropic:claude-haiku-4-5]
+    premium:
+      - openai:gpt-6-luna
+      - openai:gpt-5.4-mini
+      - anthropic:claude-haiku-4-5
+      - anthropic:claude-sonnet-5
+  # Tokens per chat step of a typical recall turn, measured on the recall goldens (R.4).
+  typical_turn:
+    intent: {input: 720, output: 45}
+    plan: {input: 2700, output: 170}
+    rerank: {input: 2200, output: 370}
+    answer: {input: 990, output: 75}
 
-# Economy routing (R.4, ADR-0031): GPT-6 Luna for the structured, short-output steps and Claude
-# Haiku 4.5 for extract (it writes memory) and answer (what the person reads). Fallbacks cross
-# providers at the same price level: Luna falls back to Haiku and Haiku to GPT-5.4 mini, so an
-# outage never makes a turn dearer than the next rung.
+# Economy routing (R.4, ADR-0031), from measurement: GPT-6 Luna for the structured, short-output
+# steps; Claude Haiku 4.5 for extract (it writes memory) and answer (what the person reads);
+# GPT-5.4 mini for the rerank (Luna scored the 2-hop and filter-miss cases too low, and mini is
+# as fast). Fallbacks cross providers at the same price level: Luna falls back to Haiku, Haiku
+# to GPT-5.4 mini, and mini to Haiku, so an outage never makes a turn dearer than the next rung.
 #
 # timeout_s: time allowed to the first token and between streamed chunks (non-streaming:
 # the whole call). effort: reasoning depth where the provider supports it.
@@ -58,15 +70,15 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 20
-    max_output_tokens: 1024
-    effort: low
+    max_output_tokens: 512
+    effort: none
     prompt: intent@3
   extract:
     provider: anthropic
     model: claude-haiku-4-5
     fallback: openai:gpt-5.4-mini
     timeout_s: 45
-    max_output_tokens: 8192
+    max_output_tokens: 4096
     effort: medium
     prompt: extract@6
   resolve:
@@ -74,7 +86,7 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 30
-    max_output_tokens: 2048
+    max_output_tokens: 1024
     effort: low
     prompt: resolve@1
   enrich:
@@ -82,7 +94,7 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 30
-    max_output_tokens: 2048
+    max_output_tokens: 1024
     effort: low
     prompt: enrich@1
   # Only for the fuzzy cases the deterministic rules don't settle (S2.8).
@@ -91,7 +103,7 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 30
-    max_output_tokens: 1024
+    max_output_tokens: 512
     effort: low
     prompt: reconcile@1
   plan:
@@ -99,16 +111,16 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 30
-    max_output_tokens: 2048
+    max_output_tokens: 1536
     effort: low
     prompt: plan@3
   # Listwise scores for the top fused candidates of a recall (S3.7).
   rerank:
     provider: openai
-    model: gpt-6-luna
+    model: gpt-5.4-mini
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 20
-    max_output_tokens: 2048
+    max_output_tokens: 1536
     effort: low
     prompt: rerank@3
   # Turns a correction by chat into a target and a change (S3.12).
@@ -117,7 +129,7 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 30
-    max_output_tokens: 1024
+    max_output_tokens: 512
     effort: low
     prompt: correct@2
   answer:
@@ -125,7 +137,7 @@ steps:
     model: claude-haiku-4-5
     fallback: openai:gpt-5.4-mini
     timeout_s: 30
-    max_output_tokens: 4096
+    max_output_tokens: 1500
     effort: low
     prompt: answer@3
   judge:
@@ -133,7 +145,7 @@ steps:
     model: gpt-6-luna
     fallback: anthropic:claude-haiku-4-5
     timeout_s: 60
-    max_output_tokens: 2048
+    max_output_tokens: 1024
     effort: medium
   embed:
     provider: openai

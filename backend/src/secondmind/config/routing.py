@@ -18,9 +18,9 @@ from pathlib import Path
 from typing import Annotated, Literal, cast, get_args
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from secondmind.core import ConfigError
+from secondmind.core import ConfigError, Tier
 
 
 class Step(StrEnum):
@@ -82,19 +82,26 @@ class ProviderConfig(BaseModel):
     base_url_env: str | None = None
 
 
-class PickerConfig(BaseModel):
-    """Models a person can pick, ``provider:model`` to display name, and the default pick."""
+class TokenProfile(BaseModel):
+    """Tokens one chat step of a typical recall turn uses (measured, ADR-0031)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    default: str
-    models: dict[str, str]
+    input: Annotated[int, Field(ge=0)]
+    output: Annotated[int, Field(ge=0)]
 
-    @field_validator("default")
-    @classmethod
-    def _valid_default(cls, value: str) -> str:
-        ModelRef.parse(value)
-        return value
+
+class PickerConfig(BaseModel):
+    """Who may pick what (ADR-0031). A turn with no pick runs on the routing below, each step
+    on its own model: that is "Auto", and every tier has it. ``models`` are ``provider:model`` to
+    display name; ``tiers`` lists which of them each tier may pick instead; ``typical_turn`` is
+    the token profile a model's price is compared over (a recall turn's chat steps)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    models: dict[str, str]
+    tiers: dict[Tier, list[str]]
+    typical_turn: dict[Step, TokenProfile]
 
     @field_validator("models")
     @classmethod
@@ -102,6 +109,17 @@ class PickerConfig(BaseModel):
         for ref in value:
             ModelRef.parse(ref)
         return value
+
+    @model_validator(mode="after")
+    def _consistent(self) -> "PickerConfig":
+        for tier, refs in self.tiers.items():
+            unknown = [r for r in refs if r not in self.models]
+            if unknown:
+                raise ValueError(f"tier {tier.value}: {', '.join(unknown)} is not a picker model")
+        missing = [t.value for t in Tier if t not in self.tiers]
+        if missing:
+            raise ValueError(f"picker.tiers needs an entry for: {', '.join(missing)}")
+        return self
 
 
 class StepConfig(BaseModel):
@@ -160,6 +178,9 @@ class ResolvedRoute(BaseModel):
     effort: Effort | None
     prompt: str | None
     substituted: list[str] = []
+    # What the file (and any override) asked for, before provider mode swapped in the fake one:
+    # prices, like the picker's, are quoted for this.
+    configured: ModelRef | None = None
 
 
 class ModelChoice(BaseModel):
@@ -172,6 +193,7 @@ class ModelChoice(BaseModel):
     provider_label: str
     served_by: ModelRef
     available: bool
+    tiers: tuple[Tier, ...] = ()
 
     @property
     def simulated(self) -> bool:
@@ -186,7 +208,7 @@ class Routing(BaseModel):
     providers: dict[str, ResolvedProvider]
     routes: dict[Step, ResolvedRoute]
     choices: list[ModelChoice] = []
-    default_choice: ModelRef | None = None
+    typical_turn: dict[Step, TokenProfile] = {}
 
     def route(self, step: Step) -> ResolvedRoute:
         return self.routes[step]
@@ -276,6 +298,7 @@ def resolve_routing(
                     f"(declared: {', '.join(sorted(providers))})"
                 )
 
+        configured = primary
         primary, fallback, substituted = _apply_mode(
             step,
             primary=primary,
@@ -295,6 +318,7 @@ def resolve_routing(
             effort=efforts.get(step, cfg.effort),
             prompt=cfg.prompt,
             substituted=substituted,
+            configured=configured,
         )
 
     if missing_creds:
@@ -302,9 +326,10 @@ def resolve_routing(
             "MODEL_PROVIDER_MODE=live but provider credentials are missing:\n  "
             + "\n  ".join(sorted(set(missing_creds)))
         )
-    choices, default = _resolve_picker(file.picker, providers, mode)
+    choices = _resolve_picker(file.picker, providers, mode)
+    typical = file.picker.typical_turn if file.picker is not None else {}
     return Routing(
-        mode=mode, providers=providers, routes=routes, choices=choices, default_choice=default
+        mode=mode, providers=providers, routes=routes, choices=choices, typical_turn=typical
     )
 
 
@@ -312,9 +337,9 @@ def _resolve_picker(
     picker: PickerConfig | None,
     providers: Mapping[str, ResolvedProvider],
     mode: Literal["auto", "live", "fake"],
-) -> tuple[list[ModelChoice], ModelRef | None]:
+) -> list[ModelChoice]:
     if picker is None:
-        return [], None
+        return []
     choices: list[ModelChoice] = []
     for raw, label in picker.models.items():
         ref = ModelRef.parse(raw)
@@ -340,12 +365,10 @@ def _resolve_picker(
                 provider_label=provider.label or provider.name,
                 served_by=served,
                 available=available,
+                tiers=tuple(t for t in Tier if raw in picker.tiers[t]),
             )
         )
-    default = ModelRef.parse(picker.default)
-    if not any(c.ref == default for c in choices):
-        raise ConfigError(f"picker default {default} is not one of the picker's models")
-    return choices, default
+    return choices
 
 
 def _apply_mode(

@@ -1,0 +1,19 @@
+# Candidate B with reasoning off on the short structured steps (R.4, latency): Luna answers
+# intent, plan and rerank without thinking first. Same models as economy-b; only effort differs.
+description: economy-b with reasoning off on intent, plan and rerank
+steps:
+  intent: openai:gpt-6-luna
+  extract: anthropic:claude-haiku-4-5
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: openai:gpt-6-luna
+  correct: openai:gpt-6-luna
+  answer: anthropic:claude-haiku-4-5
+  judge: openai:gpt-6-luna
+efforts:
+  intent: none
+  plan: none
+  rerank: none
+fallback: none

@@ -1,0 +1,17 @@
+# Candidate C (R.4, the routing that shipped): B with the rerank on GPT-5.4 mini (faster and more
+# careful than Luna on the 2-hop and filter-miss cases) and reasoning off for the intent step.
+description: economy-b, rerank on GPT-5.4 mini, intent without reasoning
+steps:
+  intent: openai:gpt-6-luna
+  extract: anthropic:claude-haiku-4-5
+  resolve: openai:gpt-6-luna
+  enrich: openai:gpt-6-luna
+  reconcile: openai:gpt-6-luna
+  plan: openai:gpt-6-luna
+  rerank: openai:gpt-5.4-mini
+  correct: openai:gpt-6-luna
+  answer: anthropic:claude-haiku-4-5
+  judge: openai:gpt-6-luna
+efforts:
+  intent: none
+fallback: none

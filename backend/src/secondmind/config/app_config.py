@@ -76,8 +76,11 @@ def compute_config_hash(routing: Routing, prices: PriceTable, prompts: PromptReg
                 for name, p in sorted(routing.providers.items())
             },
             "picker": {
-                "default": str(routing.default_choice) if routing.default_choice else None,
                 "choices": [c.model_dump(mode="json") for c in routing.choices],
+                "typical_turn": {
+                    step.value: profile.model_dump()
+                    for step, profile in sorted(routing.typical_turn.items())
+                },
             },
         },
         "prices": prices.model_dump(mode="json"),
