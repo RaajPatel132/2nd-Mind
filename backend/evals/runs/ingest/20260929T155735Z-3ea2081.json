@@ -1,0 +1,262 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T155735Z-3ea2081",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-c",
+ "started_at": "2026-09-29T15:57:35.251052Z",
+ "finished_at": "2026-09-29T15:57:41.558258Z",
+ "git_sha": "3ea2081affef",
+ "git_dirty": true,
+ "config_hash": "6927a8a9e8dab35c22495c1fd7569370f714d27bfd1698ae5649951ef5e70ca6",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-5.4-mini",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "02",
+   "14",
+   "15",
+   "16"
+  ]
+ },
+ "batch": "B6",
+ "budget_usd": 0.05,
+ "estimate_usd": 0.03071404,
+ "status": "complete",
+ "note": "B6: re-score 02, 14, 15 and 16 from the cache after the golden and reconcile fixes",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 6167,
+   "ttft_ms": 6164,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.43e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 663, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared your wife’s preference and a possible birthday gift plan to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.013783, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5953, "cached_input_tokens": 0, "output_tokens": 1566, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "person", "label": "wife", "mention": "my wife", "name": null}, {"id": "e2", "kind": "thing", "label": null, "mention": "bag", "name": null}, {"id": "e3", "kind": "org", "label": null, "mention": "MK", "name": "Michael Kors"}], "memories": [{"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal", "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "about"}, {"entity": "e3", "role": "by"}], "format": null, "importance": 3, "kind": "preference", "layer": "quick", "layer_rationale": "A preference about someone the user is close to, linked to an upcoming gift plan.", "links": [{"to": "m2", "type": "gift_for_event"}], "modality": "asserted", "predicate": null, "rating": null, "rationale": "Your wife's preference for this specific bag (a standing preference). The brand is expanded from 'MK' abbreviation.", "ref": "m1", "reminder": null, "sensitivity": "personal", "sentiment": 1, "state": "current", "subject": "e1", "subtype": "null", "summary": null, "tags": [], "text": "My wife liked this bag from Michael Kors with serial no. 123ABC.", "times": [], "title": "Bag from Michael Kors", "trigger": null, "value": null}, {"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal", "entities": [{"entity": "e2", "role": "about"}, {"entity": "e1", "role": "for"}, {"entity": "e3", "role": "by"}], "format": null, "importance": 3, "kind": "intention", "layer": "quick", "layer_rationale": "An upcoming gift plan for next May, relevant to active intentions.", "links": [{"to": "m3", "type": "gift_for_event"}], "modality": "planned", "predicate": null, "rating": null, "rationale": "An intention to gift the bag to the wife on her birthday. Linked to the birthday event with gift_for_event.", "ref": "m2", "reminder": {"lead": null}, "sensitivity": "personal", "sentiment": 1, "state": "wanted", "subject": "e2", "subtype": "gift", "summary": null, "tags": [], "text": "Gift the bag to my wife on her birthday [[t1]].", "times": [{"clock": "due", "direction": "future", "expression": "next May", "id": "t1", "recurring": false}], "title": "Bag from Michael Kors", "trigger": null, "value": null}, {"attributes": [], "category": "personal", "entities": [{"entity": "e1", "role": "about"}], "format": null, "importance": 4, "kind": "plan", "layer": "core", "layer_rationale": "A recurring birthday (annual) for someone close to the user, core knowledge.", "links": [{"to": "m2", "type": "gift_for_event"}], "modality": "asserted", "predicate": null, "rating": null, "rationale": "A recurring birthday plan for the wife. Automatically gets a reminder for the day before.", "ref": "m3", "reminder": {"lead": null}, "sensitivity": "personal", "sentiment": null, "state": "scheduled", "subject": "e1", "subtype": "birthday", "summary": null, "tags": [], "text": "My wife's birthday is [[t1]].", "times": [{"clock": "occurred", "direction": "future", "expression": "next May", "id": "t1", "recurring": true}], "title": "Wife's birthday", "trigger": null, "value": null}], "not_written": [], "relations": [{"dst": "self", "evidence": "m1", "relation": "spouse_of", "src": "e1"}], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.8e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 10, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001622, "latency_ms": 4059, "ttft_ms": null, "input_tokens": 537, "cached_input_tokens": 0, "output_tokens": 217, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["Which Michael Kors bag did my wife like?", "What’s the serial number of the bag she liked?", "Find the MK bag my wife wants."], "cues": ["when choosing a gift for my wife", "when looking up the Michael Kors bag", "when checking a bag’s serial number"]}, {"ref": "m2", "alt": ["What am I giving my wife for her birthday May 2027?", "What’s my birthday gift plan for my wife?", "Remind me about the MK bag gift."], "cues": ["when planning my wife’s birthday gift", "when preparing for her birthday in May 2027", "when checking what I planned to give her"]}, {"ref": "m3", "alt": ["When is my wife’s birthday?", "What month is my wife’s birthday?", "When should I plan my wife’s birthday celebration?"], "cues": ["when planning a birthday celebration for my wife", "when choosing a birthday gift", "when checking my wife’s birthday month"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.66e-06, "latency_ms": 2032, "ttft_ms": null, "input_tokens": 283, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01403598,
+   "spent_usd": 0.00016786,
+   "cache_hits": 5,
+   "detail": {
+    "reply": "Saved as a preference: Bag from Michael Kors. Saved a gift idea: Bag from Michael Kors, due May 2027. I'll remind you Fri 30 Apr 2027. Saved as a repeating plan: Wife's birthday, every year in May. I'll remind you Fri 30 Apr 2027. Added to core memory: Bag from Michael Kors. Added to core memory: Wife's birthday. I've assumed 'my wife' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "14-person-alias",
+   "title": "Person alias: 'my wife Kabir' names the existing 'wife' instead of adding a person",
+   "tags": [
+    "entities",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 3,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 3,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 9,
+   "ttft_ms": 8,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.27e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 652, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re sharing a useful fact about your wife’s allergy to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.009225, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5945, "cached_input_tokens": 0, "output_tokens": 656, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "person", "label": "wife", "mention": "wife Kabir", "name": "Kabir"}, {"id": "e2", "kind": "thing", "label": null, "mention": "lilies", "name": "lilies"}], "memories": [{"attributes": [], "category": "health", "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "about"}], "format": null, "importance": 4, "kind": "preference", "layer": "core", "layer_rationale": "A health preference about the user's wife that is essential context for gift-giving and daily decisions.", "links": [], "modality": "asserted", "predicate": "allergic_to", "rating": null, "rationale": "This is a standing preference about Kabir's allergies, important for avoiding harm. Stored as a preference (what to avoid for her), sensitivity personal (family health detail), importance high (4) because it affects choices like flowers and gifts. Layer core because the user should always know this when interacting with the wife's preferences or buying gifts.", "ref": "m1", "reminder": null, "sensitivity": "personal", "sentiment": null, "state": "current", "subject": "e1", "subtype": "allergy", "summary": null, "tags": ["allergy", "health"], "text": "My wife Kabir is allergic to lilies.", "times": [], "title": "Kabir is allergic to lilies", "trigger": null, "value": {"number": null, "text": "lilies", "unit": null}}], "not_written": [], "relations": [{"dst": "self", "evidence": "m1", "relation": "spouse_of", "src": "e1"}], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 10, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.68e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 448, "cached_input_tokens": 0, "output_tokens": 104, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["what flowers should I avoid for Kabir", "my wife's flower allergy", "safe bouquets for Kabir"], "cues": ["when choosing flowers for my wife", "when ordering a bouquet for Kabir", "when selecting floral decorations for an event"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.62e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 81, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00940632,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "reply": "Saved as a preference: Kabir is allergic to lilies. Added to core memory: Kabir is allergic to lilies.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "15-same-show-twice",
+   "title": "Same wish twice: saving Dark again is a no-op, not a second intention",
+   "tags": [
+    "no_op",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 5,
+   "ttft_ms": 4,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.46e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 651, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re adding Dark to your watch list, which is a preference or intention worth remembering."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007724, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5939, "cached_input_tokens": 0, "output_tokens": 357, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "work", "label": null, "mention": "Dark", "name": "Dark"}], "memories": [{"attributes": [], "category": "entertainment/series", "entities": [{"entity": "e1", "role": "about"}], "format": null, "importance": 3, "kind": "intention", "layer": "quick", "layer_rationale": "An intention being added to the watch list is tracked in quick layer for easy access when planning entertainment.", "links": [], "modality": "asserted", "predicate": null, "rating": null, "rationale": "Dark is a series the user wants to watch. Recorded as an intention with subtype watch in the entertainment/series category.", "ref": "m1", "reminder": null, "sensitivity": "normal", "sentiment": null, "state": "wanted", "subject": null, "subtype": "watch", "summary": null, "tags": ["watch", "series"], "text": "I want to watch Dark.", "times": [], "title": "Dark", "trigger": null, "value": null}], "not_written": [], "relations": [], "secret_spans": []}, "timed": true}
+   ],
+   "cost_usd": 0.0078086,
+   "spent_usd": 0.0,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "Already saved: Dark.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "16-watched-twice",
+   "title": "Watched twice: two episodes on different days, the wish fulfilled only once",
+   "tags": [
+    "dates",
+    "new",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 8,
+   "ttft_ms": 7,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.45e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 645, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared that you rewatched Severance last night, which is an experience worth remembering."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008496, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5946, "cached_input_tokens": 0, "output_tokens": 510, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "work", "label": null, "mention": "Severance", "name": "Severance"}], "memories": [{"attributes": [{"key": "count", "value": "again"}], "category": "entertainment/series", "entities": [{"entity": "e1", "role": "about"}], "format": null, "importance": 2, "kind": "episode", "layer": "archive", "layer_rationale": "Past episode of entertainment consumption; not upcoming or requiring action.", "links": [], "modality": "asserted", "predicate": null, "rating": null, "rationale": "Episode of watching Severance again, a past experience marked by the rewatch.", "ref": "m1", "reminder": null, "sensitivity": "normal", "sentiment": null, "state": "happened", "subject": "self", "subtype": "watch", "summary": null, "tags": [], "text": "I watched Severance [[t1]].", "times": [{"clock": "occurred", "direction": "past", "expression": "last night", "id": "t1", "recurring": false}], "title": "Watched Severance", "trigger": null, "value": null}], "not_written": [], "relations": [], "secret_spans": []}, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001064, "latency_ms": 0, "ttft_ms": null, "input_tokens": 444, "cached_input_tokens": 0, "output_tokens": 124, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["When did I watch Severance?", "What did I watch Tuesday 22 September 2026?", "Severance viewing date"], "cues": ["when recalling whether I’ve watched Severance", "when looking for a show to discuss", "when remembering what I watched at night on Tuesday 22 September 2026"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.1e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 105, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.008689,
+   "spent_usd": 0.0,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Logged: Watched Severance, Tue 22 Sep, 9 pm.",
+    "status": "completed"
+   }
+  }
+ ]
+}

@@ -1,0 +1,217 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T161440Z-1b15a10",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-c",
+ "started_at": "2026-09-29T16:14:40.704405Z",
+ "finished_at": "2026-09-29T16:14:40.802428Z",
+ "git_sha": "1b15a103af96",
+ "git_dirty": true,
+ "config_hash": "ef9934a503cfc07b79a3772165aa4ae0e3974f39cbcd6543a8a08bdc86fd7cd3",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@7",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-5.4-mini",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "26",
+   "28",
+   "02"
+  ]
+ },
+ "batch": "B6",
+ "budget_usd": 0.05,
+ "estimate_usd": 0.02326358,
+ "status": "complete",
+ "note": "B6: re-score 26 and 28 from the cache after the check and golden fixes (02 as it was)",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "bag: due ('', 'month') None != {'clock': 'due', 'value': '2027-05', 'precision': 'month'}"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 1,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 15,
+   "ttft_ms": 14,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.43e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 663, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared your wife’s preference and a possible birthday gift plan to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.01433, "latency_ms": 3, "ttft_ms": null, "input_tokens": 6045, "cached_input_tokens": 0, "output_tokens": 1657, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "self", "label": null, "mention": "I", "name": null}, {"id": "e2", "kind": "person", "label": "wife", "mention": "my wife", "name": null}, {"id": "e3", "kind": "org", "label": null, "mention": "MK", "name": "Michael Kors"}, {"id": "e4", "kind": "thing", "label": null, "mention": "bag", "name": null}], "memories": [{"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal/preferences", "entities": [{"entity": "e2", "role": "about"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "format": null, "importance": 2, "kind": "preference", "layer": "quick", "layer_rationale": "A preference linked to an upcoming gift plan.", "links": [{"to": "m2", "type": "gift_for_event"}], "modality": "asserted", "predicate": "likes", "rating": null, "rationale": "The wife's preference for a specific bag. Stored as a preference (what she likes), not a fact. The serial number is tracked as an attribute for later purchase reference.", "ref": "m1", "reminder": null, "sensitivity": "personal", "sentiment": 1, "state": "current", "subject": "e2", "subtype": null, "summary": null, "tags": ["bag", "gift-candidate"], "text": "My wife liked this bag from MK with serial 123ABC.", "times": [], "title": "Wife likes MK bag", "trigger": null, "value": {"number": null, "text": "MK bag (serial 123ABC)", "unit": null}}, {"attributes": [], "category": "personal/occasions", "entities": [{"entity": "e2", "role": "about"}], "format": null, "importance": 4, "kind": "plan", "layer": "core", "layer_rationale": "A recurring birthday of a key person (the wife), core standing knowledge.", "links": [{"to": "m3", "type": "gift_for_event"}], "modality": "asserted", "predicate": null, "rating": null, "rationale": "Birthday is an annual recurring plan. Set as a separate memory to allow the reminder to trigger and to link multiple gifts or tasks to this occasion.", "ref": "m2", "reminder": {"lead": null}, "sensitivity": "personal", "sentiment": null, "state": null, "subject": "e2", "subtype": "birthday", "summary": null, "tags": ["birthday", "recurring"], "text": "My wife's birthday is [[t1]].", "times": [{"clock": "occurred", "direction": "future", "expression": "next May", "id": "t1", "recurring": true}], "title": "Wife's birthday", "trigger": null, "value": null}, {"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal/gifts", "entities": [{"entity": "e2", "role": "for"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "format": null, "importance": 3, "kind": "intention", "layer": "quick", "layer_rationale": "An upcoming gift plan for next May.", "links": [{"to": "m2", "type": "gift_for_event"}, {"to": "m1", "type": "derived_from"}], "modality": "planned", "predicate": null, "rating": null, "rationale": "A planned gift tied to the wife's birthday. Linked to both the birthday (the event) and the wife's preference (where the gift idea comes from).", "ref": "m3", "reminder": null, "sensitivity": "personal", "sentiment": 1, "state": null, "subject": "e1", "subtype": "gift", "summary": null, "tags": ["gift", "wife", "birthday-gift"], "text": "I plan to gift the MK bag (serial 123ABC) to my wife on her birthday [[t1]].", "times": [{"clock": "occurred", "direction": "future", "expression": "next May", "id": "t1", "recurring": false}], "title": "MK bag for wife", "trigger": null, "value": null}], "not_written": [], "relations": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 0, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 10, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.8e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 24, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000135, "latency_ms": 0, "ttft_ms": null, "input_tokens": 545, "cached_input_tokens": 0, "output_tokens": 161, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["Which MK handbag did my wife like?", "What was the serial number of the bag she liked?"], "cues": ["when choosing a handbag for my wife", "when looking up the MK bag she liked"], "ref": "m1"}, {"alt": ["When is my wife's birthday?", "What month should I plan her birthday gift for?"], "cues": ["when planning my wife's birthday", "when scheduling a birthday celebration"], "ref": "m2"}, {"alt": ["What gift did I plan for my wife in May 2027?", "Which MK bag am I giving her for her birthday?"], "cues": ["when preparing my wife's May 2027 birthday gift", "when checking the handbag's serial number"], "ref": "m3"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.68e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 234, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01455512,
+   "spent_usd": 0.0,
+   "cache_hits": 9,
+   "detail": {
+    "reply": "Saved as a preference: Wife likes MK bag. Saved as a repeating plan: Wife's birthday, every year in May. I'll remind you Fri 30 Apr 2027. Saved a gift idea: MK bag for wife, May 2027. Added to core memory: Wife likes MK bag. Added to core memory: Wife's birthday. I've assumed 'my wife' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "26-labelled-secret",
+   "title": "Model-labelled secret: refused, and the stored turn has the value redacted",
+   "tags": [
+    "P-SECRET-1|model"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 5,
+   "ttft_ms": 4,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.22e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 652, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 1.0, "intent": "save", "reason": "You shared the combination for your gym locker, which is information to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.006739, "latency_ms": 2, "ttft_ms": null, "input_tokens": 6034, "cached_input_tokens": 0, "output_tokens": 141, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [], "not_written": [{"reason": "secret: locker codes are security credentials that should not be stored in memory", "what": "gym locker combination"}], "relations": [], "secret_spans": ["17-38-02"]}, "timed": true}
+   ],
+   "cost_usd": 0.0068212,
+   "spent_usd": 0.0,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "Not saved: gym locker combination (secret: locker codes are security credentials that should not be stored in memory).",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "28-topic-trigger",
+   "title": "A reminder for when a topic comes up: the cue is kept as text, hash and key",
+   "tags": [
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 8,
+   "ttft_ms": 7,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.71e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 656, "cached_input_tokens": 0, "output_tokens": 43, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You want to remember Ichiban Ramen Bar in Osaka as a recommendation for when you plan your Japan trip."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.009366, "latency_ms": 2, "ttft_ms": null, "input_tokens": 6041, "cached_input_tokens": 0, "output_tokens": 665, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "place", "label": "restaurant", "mention": "Ichiban Ramen Bar", "name": "Ichiban Ramen Bar"}, {"id": "e2", "kind": "place", "label": null, "mention": "Osaka", "name": "Osaka"}, {"id": "e3", "kind": "project", "label": null, "mention": "Japan trip", "name": "Japan trip"}], "memories": [{"attributes": [], "category": "travel", "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}, {"entity": "e3", "role": "part_of"}], "format": null, "importance": 2, "kind": "task", "layer": "quick", "layer_rationale": "A reminder for an upcoming trip planning activity.", "links": [], "modality": "asserted", "predicate": null, "rating": null, "rationale": "This is a task triggered by a moment (when planning the Japan trip) rather than a specific time. The trigger captures the situational cue, and the entities link it to the restaurant, its location, and the trip project it relates to.", "ref": "m1", "reminder": null, "sensitivity": "normal", "sentiment": null, "state": "open", "subject": null, "subtype": "reminder", "summary": null, "tags": ["restaurant", "japan", "osaka"], "text": "When planning the Japan trip, remind me of Ichiban Ramen Bar in Osaka.", "times": [], "title": "Remember Ichiban Ramen Bar", "trigger": {"cue": "planning the Japan trip", "entity": null, "on": "topic"}, "value": null}], "not_written": [], "relations": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.99e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 449, "cached_input_tokens": 0, "output_tokens": 70, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["What ramen place in Osaka should I remember?", "Which restaurant should I visit on my Japan trip?", "What was the ramen bar in Osaka called?"], "cues": ["when planning my Japan trip", "when choosing where to eat in Osaka"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.9e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 95, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00953562,
+   "spent_usd": 0.0,
+   "cache_hits": 6,
+   "detail": {
+    "reply": "Saved as a task: Remember Ichiban Ramen Bar.",
+    "status": "completed"
+   }
+  }
+ ]
+}

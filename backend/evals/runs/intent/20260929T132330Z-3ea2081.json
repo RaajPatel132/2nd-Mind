@@ -1,0 +1,615 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T132330Z-3ea2081",
+ "suite": "intent",
+ "mode": "live",
+ "routing": "economy-c",
+ "started_at": "2026-09-29T13:23:30.939578Z",
+ "finished_at": "2026-09-29T13:24:23.842446Z",
+ "git_sha": "3ea2081affef",
+ "git_dirty": false,
+ "config_hash": "6927a8a9e8dab35c22495c1fd7569370f714d27bfd1698ae5649951ef5e70ca6",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-5.4-mini",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-09-23T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {},
+ "batch": "B6",
+ "budget_usd": 0.03,
+ "estimate_usd": 0.0023355,
+ "status": "complete",
+ "note": "B6: confirm, the chosen routing, full intent suite",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "01-i-m-vegetarian",
+   "title": "I'm vegetarian",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 1997,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.33e-05, "latency_ms": 1995, "ttft_ms": null, "input_tokens": 563, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "You shared a personal dietary preference that may be useful to remember."}, "timed": true}
+   ],
+   "cost_usd": 7.33e-05,
+   "spent_usd": 7.33e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "02-kabir-s-birthday-is",
+   "title": "Kabir's birthday is 14 March",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 5367,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.49e-05, "latency_ms": 5365, "ttft_ms": null, "input_tokens": 569, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "You shared Kabir’s birthday, which is useful personal information to remember."}, "timed": true}
+   ],
+   "cost_usd": 7.49e-05,
+   "spent_usd": 7.49e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "03-spare-keys-are-in",
+   "title": "Spare keys are in the kitchen cabinet",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 1982,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.39e-05, "latency_ms": 1979, "ttft_ms": null, "input_tokens": 569, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "This is a useful detail about where the spare keys are kept."}, "timed": true}
+   ],
+   "cost_usd": 7.39e-05,
+   "spent_usd": 7.39e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "04-nisha-recommended-severance",
+   "title": "Nisha recommended Severance",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 2198,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.46e-05, "latency_ms": 2196, "ttft_ms": null, "input_tokens": 566, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.98, "reason": "You’re sharing a recommendation from Nisha that may be useful to remember."}, "timed": true}
+   ],
+   "cost_usd": 7.46e-05,
+   "spent_usd": 7.46e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "05-ran-5-km-in",
+   "title": "Ran 5 km in 31 min this morning",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 2513,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.56e-05, "latency_ms": 2511, "ttft_ms": null, "input_tokens": 571, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "This shares a personal fitness accomplishment from this morning that may be useful to remember."}, "timed": true}
+   ],
+   "cost_usd": 7.56e-05,
+   "spent_usd": 7.56e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "06-remind-me-to-call",
+   "title": "Remind me to call the plumber on Friday",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 2456,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.3e-05, "latency_ms": 2454, "ttft_ms": null, "input_tokens": 570, "cached_input_tokens": 0, "output_tokens": 32, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "This is a task you want to remember for Friday."}, "timed": true}
+   ],
+   "cost_usd": 7.3e-05,
+   "spent_usd": 7.3e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "07-want-to-learn-rust",
+   "title": "Want to learn Rust properly this year",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 1956,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.23e-05, "latency_ms": 1954, "ttft_ms": null, "input_tokens": 568, "cached_input_tokens": 0, "output_tokens": 31, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "You’re sharing a learning goal for this year."}, "timed": true}
+   ],
+   "cost_usd": 7.23e-05,
+   "spent_usd": 7.23e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "08-i-moved-to-pune",
+   "title": "I moved to Pune last month",
+   "tags": [
+    "save"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save",
+    "got": "save"
+   },
+   "latency_ms": 1805,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.47e-05, "latency_ms": 1803, "ttft_ms": null, "input_tokens": 567, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "You shared a change in where you live that may be useful to remember."}, "timed": true}
+   ],
+   "cost_usd": 7.47e-05,
+   "spent_usd": 7.47e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "09-what-s-kabir-s",
+   "title": "What's Kabir's birthday?",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 1564,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.57e-05, "latency_ms": 1563, "ttft_ms": null, "input_tokens": 567, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking for a personal detail about Kabir that may have been saved."}, "timed": true}
+   ],
+   "cost_usd": 7.57e-05,
+   "spent_usd": 7.57e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "10-where-did-i-put",
+   "title": "Where did I put the spare keys",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 1436,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.33e-05, "latency_ms": 1433, "ttft_ms": null, "input_tokens": 568, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to recall where you put something."}, "timed": true}
+   ],
+   "cost_usd": 7.33e-05,
+   "spent_usd": 7.33e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "11-which-shows-did-nisha",
+   "title": "Which shows did Nisha recommend?",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 1526,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.38e-05, "latency_ms": 1525, "ttft_ms": null, "input_tokens": 568, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to recall which shows Nisha recommended."}, "timed": true}
+   ],
+   "cost_usd": 7.38e-05,
+   "spent_usd": 7.38e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "12-what-did-i-do",
+   "title": "What did I do last weekend?",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 3694,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.58e-05, "latency_ms": 3692, "ttft_ms": null, "input_tokens": 568, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to recall something you may have previously shared about your activities."}, "timed": true}
+   ],
+   "cost_usd": 7.58e-05,
+   "spent_usd": 7.58e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "13-do-i-have-anything",
+   "title": "Do I have anything on Friday?",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 1836,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.33e-05, "latency_ms": 1836, "ttft_ms": null, "input_tokens": 568, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking whether you have something scheduled for Friday."}, "timed": true}
+   ],
+   "cost_usd": 7.33e-05,
+   "spent_usd": 7.33e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "14-remind-me-what-gift",
+   "title": "Remind me what gift ideas I have for Kabir",
+   "tags": [
+    "recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "recall",
+    "got": "recall"
+   },
+   "latency_ms": 1848,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.62e-05, "latency_ms": 1847, "ttft_ms": null, "input_tokens": 572, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.98, "reason": "You’re asking me to retrieve gift ideas you may have saved for Kabir."}, "timed": true}
+   ],
+   "cost_usd": 7.62e-05,
+   "spent_usd": 7.62e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "15-dinner-with-rohan-on",
+   "title": "Dinner with Rohan on Saturday; what does he like to eat again?",
+   "tags": [
+    "save_and_recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save_and_recall",
+    "got": "save_and_recall"
+   },
+   "latency_ms": 2046,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.86e-05, "latency_ms": 2044, "ttft_ms": null, "input_tokens": 576, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save_and_recall", "confidence": 0.99, "reason": "You’re sharing a dinner plan with Rohan and asking me to recall his food preferences."}, "timed": true}
+   ],
+   "cost_usd": 7.86e-05,
+   "spent_usd": 7.86e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "16-just-finished-mindhunter-what",
+   "title": "Just finished Mindhunter. What else was on my watch list?",
+   "tags": [
+    "save_and_recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save_and_recall",
+    "got": "save_and_recall"
+   },
+   "latency_ms": 1612,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.79e-05, "latency_ms": 1610, "ttft_ms": null, "input_tokens": 574, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save_and_recall", "confidence": 0.99, "reason": "You shared that you finished Mindhunter and asked what else is on your watch list."}, "timed": true}
+   ],
+   "cost_usd": 7.79e-05,
+   "spent_usd": 7.79e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "17-bought-the-fountain-pen",
+   "title": "Bought the fountain pen for Kabir. Is anything else still on the gift list?",
+   "tags": [
+    "save_and_recall"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "save_and_recall",
+    "got": "save_and_recall"
+   },
+   "latency_ms": 1631,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.03e-05, "latency_ms": 1629, "ttft_ms": null, "input_tokens": 578, "cached_input_tokens": 0, "output_tokens": 45, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save_and_recall", "confidence": 0.97, "reason": "You’re sharing that you bought Kabir a fountain pen and asking what else remains on the gift list."}, "timed": true}
+   ],
+   "cost_usd": 8.03e-05,
+   "spent_usd": 8.03e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "18-actually-the-dentist-is",
+   "title": "Actually the dentist is on Saturday, not Friday",
+   "tags": [
+    "correct"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "correct",
+    "got": "correct"
+   },
+   "latency_ms": 1869,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.45e-05, "latency_ms": 1868, "ttft_ms": null, "input_tokens": 570, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "correct", "confidence": 0.96, "reason": "You’re correcting the previously saved dentist appointment day from Friday to Saturday."}, "timed": true}
+   ],
+   "cost_usd": 7.45e-05,
+   "spent_usd": 7.45e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "19-no-nisha-is-my",
+   "title": "No, Nisha is my cousin, not my sister",
+   "tags": [
+    "correct"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "correct",
+    "got": "correct"
+   },
+   "latency_ms": 1954,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.52e-05, "latency_ms": 1952, "ttft_ms": null, "input_tokens": 572, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "correct", "confidence": 1.0, "reason": "You’re correcting the saved relationship: Nisha is your cousin, not your sister."}, "timed": true}
+   ],
+   "cost_usd": 7.52e-05,
+   "spent_usd": 7.52e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "20-that-s-wrong-i",
+   "title": "That's wrong, I live in Pune now",
+   "tags": [
+    "correct"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "correct",
+    "got": "correct"
+   },
+   "latency_ms": 1901,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.49e-05, "latency_ms": 1901, "ttft_ms": null, "input_tokens": 569, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "correct", "confidence": 0.98, "reason": "You’re correcting the saved location to say that you live in Pune now."}, "timed": true}
+   ],
+   "cost_usd": 7.49e-05,
+   "spent_usd": 7.49e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "21-forget-what-i-said",
+   "title": "Forget what I said about the trading idea",
+   "tags": [
+    "correct"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "correct",
+    "got": "correct"
+   },
+   "latency_ms": 1491,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.29e-05, "latency_ms": 1489, "ttft_ms": null, "input_tokens": 569, "cached_input_tokens": 0, "output_tokens": 32, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "correct", "confidence": 0.99, "reason": "You’re asking to remove a previously saved trading idea."}, "timed": true}
+   ],
+   "cost_usd": 7.29e-05,
+   "spent_usd": 7.29e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "22-hello",
+   "title": "hello!",
+   "tags": [
+    "chit_chat"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "chit_chat",
+    "got": "chit_chat"
+   },
+   "latency_ms": 2185,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 6.93e-05, "latency_ms": 2183, "ttft_ms": null, "input_tokens": 563, "cached_input_tokens": 0, "output_tokens": 26, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "chit_chat", "confidence": 1.0, "reason": "This is a greeting."}, "timed": true}
+   ],
+   "cost_usd": 6.93e-05,
+   "spent_usd": 6.93e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "23-thanks-that-s-helpful",
+   "title": "thanks, that's helpful",
+   "tags": [
+    "chit_chat"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "chit_chat",
+    "got": "chit_chat"
+   },
+   "latency_ms": 2715,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7e-05, "latency_ms": 2713, "ttft_ms": null, "input_tokens": 565, "cached_input_tokens": 0, "output_tokens": 27, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "chit_chat", "confidence": 1.0, "reason": "You’re thanking the assistant."}, "timed": true}
+   ],
+   "cost_usd": 7e-05,
+   "spent_usd": 7e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "24-how-are-you-today",
+   "title": "how are you today?",
+   "tags": [
+    "chit_chat"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "chit_chat",
+    "got": "chit_chat"
+   },
+   "latency_ms": 1641,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.16e-05, "latency_ms": 1639, "ttft_ms": null, "input_tokens": 566, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "chit_chat", "confidence": 1.0, "reason": "This is a friendly question about the assistant."}, "timed": true}
+   ],
+   "cost_usd": 7.16e-05,
+   "spent_usd": 7.16e-05,
+   "cache_hits": 0,
+   "detail": {}
+  },
+  {
+   "id": "25-can-you-explain-what",
+   "title": "can you explain what you can do?",
+   "tags": [
+    "chit_chat"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "expected": "chit_chat",
+    "got": "chit_chat"
+   },
+   "latency_ms": 1635,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.64e-05, "latency_ms": 1633, "ttft_ms": null, "input_tokens": 569, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "chit_chat", "confidence": 0.99, "reason": "You’re asking about my capabilities, not sharing or asking about a personal memory."}, "timed": true}
+   ],
+   "cost_usd": 7.64e-05,
+   "spent_usd": 7.64e-05,
+   "cache_hits": 0,
+   "detail": {}
+  }
+ ]
+}
