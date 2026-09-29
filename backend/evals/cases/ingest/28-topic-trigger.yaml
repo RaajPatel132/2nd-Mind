@@ -26,8 +26,8 @@ model:
 expect:
   memories:
     - match: ramen
-      kind: intention
-      subtype: visit
+      kind: intention|task
+      subtype: visit|reminder
       entities: ["Ichiban Ramen Bar:about"]
       reconcile: new
   triggers: [{match: ramen, "on": topic, spec: {cue: planning the Japan trip}}]

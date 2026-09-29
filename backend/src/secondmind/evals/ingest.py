@@ -416,11 +416,11 @@ def _check_diff(run: CaseRun, expect: Mapping[str, Any], result: Score) -> None:
             result.check("reconcile", ok, "no ∅ duplicate (no_op) entry")
         else:
             # "P-MOD-1|model": the policy refuses it, or the model already declined to propose
-            # it (rule_id None): the person's memory is the same, and both say why.
+            # it (rule MODEL): the person's memory is the same, and both say why.
             rules = set(str(rule).split("|"))
             ok = any(
                 e.op == "not_written"
-                and (e.rule_id in rules or (e.rule_id is None and "model" in rules))
+                and (e.rule_id in rules or (e.rule_id in (None, "MODEL") and "model" in rules))
                 for e in entries
             )
             result.check("state", ok, f"no ∅ entry for {rule}")
