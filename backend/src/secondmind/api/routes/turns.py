@@ -84,7 +84,12 @@ async def create_turn(
         return await usage_for(services, user_id)
 
     return StreamingResponse(
-        turn_stream(handle, lambda t: turn_out(services, t), quota_after=quota_after),
+        turn_stream(
+            handle,
+            lambda t: turn_out(services, t),
+            quota_after=quota_after,
+            keepalive_s=settings.sse_heartbeat_s,
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

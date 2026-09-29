@@ -131,7 +131,11 @@ class Settings(BaseSettings):
 
     # --- web hardening (R.11) and behaviour behind a load balancer (R.12)
     max_request_bytes: Annotated[int, Field(ge=1_024, le=50_000_000)] = 262_144
+    # Origins besides the request's own host that may make state-changing requests (comma
+    # separated, e.g. "https://staging.example.com"); empty: same-origin only.
+    allowed_origins: str = ""
     staging_access_code: SecretStr | None = None
+    login_attempts_per_minute: Annotated[int, Field(ge=1, le=1_000)] = 5
     sse_heartbeat_s: Annotated[float, Field(gt=0, le=300)] = 15.0
     shutdown_grace_s: Annotated[float, Field(ge=0, le=600)] = 30.0
 
@@ -185,6 +189,10 @@ class Settings(BaseSettings):
             raise ValueError("DEV_AUTH on staging needs STAGING_ACCESS_CODE")
         if self.log_include_content:
             raise ValueError(f"LOG_INCLUDE_CONTENT must be false when ENV={self.env}")
+
+    @property
+    def allowed_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     @property
     def quota_limits_usd(self) -> dict[str, Decimal]:

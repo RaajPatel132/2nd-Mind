@@ -12,7 +12,9 @@ from secondmind.api.errors import install_error_handlers
 from secondmind.api.middleware import RequestIdMiddleware
 from secondmind.api.routes import auth, dev, memory, system, turns
 from secondmind.api.schemas import SSE_EVENTS
+from secondmind.api.security import RequestGuardMiddleware, SecurityHeadersMiddleware
 from secondmind.api.services import Services
+from secondmind.config import Settings
 from secondmind.observability import get_logger
 
 log = get_logger(__name__)
@@ -25,8 +27,24 @@ def create_app(
     *,
     services: Services | None = None,
     services_factory: Callable[[], Awaitable[Services]] | None = None,
+    settings: Settings | None = None,
 ) -> FastAPI:
-    """Build the app. Pass ready ``services`` (tests) or a factory run at start-up."""
+    """Build the app. Pass ready ``services`` (tests) or a factory run at start-up (then the
+    ``settings`` it will use, which decide the middleware and which routes exist)."""
+    if settings is None:
+        # Without either (the OpenAPI snapshot), describe everything: development defaults.
+        settings = (
+            services.config.settings
+            if services is not None
+            else Settings.model_construct(
+                env="development",
+                dev_auth=True,
+                session_cookie_secure=False,
+                max_request_bytes=262_144,
+                allowed_origins="",
+            )
+        )
+    production = settings.env == "production"
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -54,18 +72,28 @@ def create_app(
         description="Chat-first personal memory. The web app is one client of this API.",
         lifespan=lifespan,
         generate_unique_id_function=lambda route: route.name,
-        docs_url="/docs/api",
+        # The interactive docs and the schema are for development and staging, not production.
+        docs_url=None if production else "/docs/api",
+        openapi_url=None if production else "/openapi.json",
         redoc_url=None,
     )
     if services is not None:
         app.state.services = services
+    # Innermost first: the request guard, the request id, then headers on everything.
+    app.add_middleware(
+        RequestGuardMiddleware,
+        max_bytes=settings.max_request_bytes,
+        allowed_origins=settings.allowed_origin_list,
+    )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware, hsts=settings.session_cookie_secure)
     install_error_handlers(app)
     app.include_router(system.router)
     app.include_router(auth.router)
     app.include_router(turns.router)
     app.include_router(memory.router)
-    app.include_router(dev.router)
+    if settings.dev_auth:  # the dev helpers exist only where dev sign-in does
+        app.include_router(dev.router)
     app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]
     return app
 

@@ -27,4 +27,4 @@ def create() -> FastAPI:
         fmt=settings.log_format,
         include_content=settings.log_include_content,
     )
-    return create_app(services_factory=lambda: build_services(config))
+    return create_app(services_factory=lambda: build_services(config), settings=settings)
