@@ -82,6 +82,7 @@ async def test_turn_is_persisted_with_events_and_ledger(
         "step",
         "model_call",
         "step",
+        "quota",
     ]
 
     async with owner_db.identity() as session:
