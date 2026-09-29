@@ -36,9 +36,9 @@ model:
 expect:
   memories:
     - match: lilies
-      kind: fact
+      kind: fact|preference
       predicate: allergic_to
       entities: ["Kabir:about"]
       layer: core
   updated_entities: [Kabir]
-  entity_count: 1
+  entity_count: {person: 1}

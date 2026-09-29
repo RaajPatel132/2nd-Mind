@@ -307,22 +307,28 @@ def _touched(run: CaseRun) -> set[uuid.UUID]:
     return {r.target_id for r in run.log if r.target_type is TargetType.ITEM and r.after}
 
 
-def _find(run: CaseRun, match: str, *, touched_only: bool = True) -> ItemRecord | None:
-    """The first memory this turn wrote whose title or text holds ``match`` (``a|b``: either)."""
+def _find(
+    run: CaseRun, match: str, *, kind: str | None = None, touched_only: bool = True
+) -> ItemRecord | None:
+    """The first memory this turn wrote whose title or text holds ``match`` (``a|b``: either).
+    Where the expectation names a kind, a memory of that kind is preferred: a model may give a
+    preference and a gift idea the same title, and the words alone cannot tell them apart."""
     touched = _touched(run)
     wanted = [m.strip() for m in match.split("|") if m.strip()]
+    kinds = set(str(kind).split("|")) if kind else set()
+    found: list[ItemRecord] = []
     for item in run.items:
         if touched_only and item.id not in touched:
             continue
         title, text = item.title.lower(), item.text.lower()
         if any(m in title or m in text for m in wanted):
-            return item
-    return None
+            found.append(item)
+    return next((i for i in found if i.kind.value in kinds), found[0] if found else None)
 
 
 def _check_memory(run: CaseRun, want: Mapping[str, Any], result: Score) -> None:
     match = str(want["match"]).lower()
-    item = _find(run, match)
+    item = _find(run, match, kind=want.get("kind"))
     if item is None:
         result.failures.append(f"no memory written matching {match!r}")
         for name in FIELDS:
@@ -441,9 +447,15 @@ def _check_entities(run: CaseRun, expect: Mapping[str, Any], result: Score) -> N
         result.check("entity", ok, f"entity {want} not updated")
     if "entity_count" in expect:
         live = [e for e in run.entities if e.kind is not EntityKind.SELF and e.status == "active"]
-        result.check(
-            "entity", len(live) == expect["entity_count"], f"{[e.name for e in live]} entities"
-        )
+        want = expect["entity_count"]
+        # A number counts every entity; {person: 1} counts one kind: a model may also list the
+        # thing a fact is about ("lilies"), and that is not a second person.
+        if isinstance(want, Mapping):
+            for kind, count in want.items():
+                got = [e.name for e in live if e.kind.value == kind]
+                result.check("entity", len(got) == count, f"{got} {kind} entities != {count}")
+        else:
+            result.check("entity", len(live) == want, f"{[e.name for e in live]} entities")
     for want in expect.get("relations", []):
         result.check("entity", want in run.relations, f"relation {want} not in {run.relations}")
 

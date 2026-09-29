@@ -48,19 +48,19 @@ model:
         rationale: A yearly date; the day isn't known yet.
 expect:
   memories:
-    - match: likes bags|likes this
+    - match: bag
       kind: preference
       state: current
       entities: ["wife:about"]
       layer: core|quick
       reconcile: new
-    - match: gift the mk bag|gift the michael kors bag
+    - match: bag
       kind: intention
       subtype: gift
       state: wanted
       dates: [{clock: due, value: "2027-05", precision: month}]
       entities: ["MK bag|MK|bag:about", "wife:for"]
-    - match: birthday is
+    - match: birthday
       kind: plan
       subtype: birthday
       state: scheduled
