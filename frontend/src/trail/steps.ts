@@ -4,6 +4,7 @@
  * type check.
  */
 import {
+  Ban,
   Bell,
   CalendarClock,
   CheckCheck,
@@ -148,6 +149,14 @@ export const STEPS: Record<AgentStep, StepSpec> = {
     chips: RL.triggersChips,
     Plain: R.TriggersPlain,
     Tech: R.TriggersTech,
+  },
+  blocked: {
+    icon: Ban,
+    running: 'Checking the limits',
+    done: L.blockedDone,
+    chips: L.blockedChips,
+    Plain: D.BlockedPlain,
+    Tech: D.BlockedTech,
   },
   fetch: {
     icon: Globe,

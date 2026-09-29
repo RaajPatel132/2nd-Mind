@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "AgentStep": {
-        "description": "The agent steps a turn can report, in the UI's catalogue (docs/design/system.md \u00a78).\n\n``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is\nreserved: in the schema so the UI's catalogue is complete, not emitted yet.",
+        "description": "The agent steps a turn can report, in the UI's catalogue (docs/design/system.md \u00a78).\n\n``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``blocked`` (R.10) is a\nturn the spend gate stopped before any model call; ``fetch`` (S4) is reserved: in the\nschema so the UI's catalogue is complete, not emitted yet.",
         "enum": [
           "understand",
           "extract",
@@ -19,7 +19,8 @@
           "search",
           "rank",
           "triggers",
-          "fetch"
+          "fetch",
+          "blocked"
         ],
         "title": "AgentStep",
         "type": "string"
@@ -94,6 +95,59 @@
           "op"
         ],
         "title": "AggregateTrace",
+        "type": "object"
+      },
+      "BlockedEvent": {
+        "additionalProperties": false,
+        "description": "A turn stopped before any model call (ADR-0032): why, and the limit against the value\nwhen there is one. ``reason`` is a ``BlockReason`` value from the metering module.",
+        "properties": {
+          "limit_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Usd"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "type": {
+            "const": "blocked",
+            "default": "blocked",
+            "title": "Type",
+            "type": "string"
+          },
+          "used_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Usd"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason",
+          "message"
+        ],
+        "title": "BlockedEvent",
         "type": "object"
       },
       "CheckOut": {
@@ -3152,6 +3206,7 @@
           "event": {
             "discriminator": {
               "mapping": {
+                "blocked": "#/components/schemas/BlockedEvent",
                 "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
@@ -3192,6 +3247,9 @@
               },
               {
                 "$ref": "#/components/schemas/ErrorEvent"
+              },
+              {
+                "$ref": "#/components/schemas/BlockedEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"
@@ -4004,6 +4062,7 @@
           "event": {
             "discriminator": {
               "mapping": {
+                "blocked": "#/components/schemas/BlockedEvent",
                 "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
@@ -4044,6 +4103,9 @@
               },
               {
                 "$ref": "#/components/schemas/ErrorEvent"
+              },
+              {
+                "$ref": "#/components/schemas/BlockedEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"
@@ -4609,29 +4671,65 @@
         "type": "object"
       },
       "UsageOut": {
-        "description": "The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4.",
+        "description": "The signed-in user's quota in dollars, as it stands now (FR-12.5, ADR-0032), and whether\nnew turns are stopped (``read_only``): browsing, Upcoming, undo and the glass box still\nwork, as none of them call a model.",
         "properties": {
-          "limit_tokens": {
-            "title": "Limit Tokens",
-            "type": "integer"
+          "limit_usd": {
+            "title": "Limit Usd",
+            "type": "number"
           },
-          "remaining_tokens": {
-            "title": "Remaining Tokens",
-            "type": "integer"
+          "read_only": {
+            "default": false,
+            "description": "New turns are stopped right now.",
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "read_only_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why, and what still works, in words for the composer.",
+            "title": "Read Only Message"
+          },
+          "read_only_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "kill_switch, daily_cap, monthly_cap, provider_credit, quota or spend_check_unavailable.",
+            "title": "Read Only Reason"
+          },
+          "remaining_usd": {
+            "title": "Remaining Usd",
+            "type": "number"
           },
           "tier": {
             "$ref": "#/components/schemas/Tier"
           },
           "used_tokens": {
+            "description": "Charged (weighted) tokens, as information.",
             "title": "Used Tokens",
             "type": "integer"
+          },
+          "used_usd": {
+            "title": "Used Usd",
+            "type": "number"
           }
         },
         "required": [
           "tier",
-          "limit_tokens",
-          "used_tokens",
-          "remaining_tokens"
+          "limit_usd",
+          "used_usd",
+          "remaining_usd",
+          "used_tokens"
         ],
         "title": "UsageOut",
         "type": "object"
@@ -5310,7 +5408,7 @@
     },
     "/v1/me/usage": {
       "get": {
-        "description": "The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).\nRead only: enforcement arrives in S4.",
+        "description": "The signed-in user's quota in dollars (tier, limit, used, remaining) and whether new\nturns are stopped, and why (FR-12.5, ADR-0032).",
         "operationId": "my_usage",
         "responses": {
           "200": {
@@ -5955,6 +6053,24 @@
               }
             },
             "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "summary": "Create Turn",

@@ -91,7 +91,7 @@ test('timing & cost draws the waterfall and the quota after the turn', async ({ 
   const turn = await send(page, 'I live in Bengaluru')
   const glassBox = await inspect(page, turn)
   await expect(glassBox.getByTestId('waterfall-row')).toHaveCount(8)
-  await expect(glassBox.getByTestId('quota-after')).toContainText(/Quota after this turn: [\d,]+ tokens left/)
+  await expect(glassBox.getByTestId('quota-after')).toContainText(/Quota after this turn: \$[\d.]+ of \$[\d.]+ left/)
 })
 
 test('the avatar popover shows the dev identity, and sign out ends the session', async ({ page }, testInfo) => {

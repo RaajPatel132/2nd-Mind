@@ -203,7 +203,15 @@ function Workspace({ session }: { session: Session }) {
           )}
         </main>
         {view === 'chat' && (
-          <Composer value={draft} onChange={setDraft} onSend={send} sending={conversation.sending} inputRef={composerRef} docked={docked} />
+          <Composer
+            value={draft}
+            onChange={setDraft}
+            onSend={send}
+            sending={conversation.sending}
+            inputRef={composerRef}
+            docked={docked}
+            notice={usage.usage?.read_only ? usage.usage.read_only_message : null}
+          />
         )}
         <Inspector turn={inspected} open={open} mode={mode} onClose={close} timezone={workspace.timezone} quotaNow={usage.usage} />
         <ItemSheet

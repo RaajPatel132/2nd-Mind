@@ -14,13 +14,15 @@ type Props = {
   sending: boolean
   inputRef: RefObject<HTMLTextAreaElement | null>
   docked: boolean
+  /** Why new answers are stopped, and what still works; null when they aren't (ADR-0032). */
+  notice?: string | null
 }
 
 /**
  * The floating composer: 16px above the bottom edge over a fade to canvas, as wide as the
  * conversation. Grows to 8 lines, then scrolls. ↵ sends, ⇧↵ adds a line.
  */
-export function Composer({ value, onChange, onSend, sending, inputRef, docked }: Props) {
+export function Composer({ value, onChange, onSend, sending, inputRef, docked, notice }: Props) {
   const [focused, setFocused] = useState(false)
   const [example, setExample] = useState(0)
   const reduce = useReducedMotion()
@@ -59,6 +61,15 @@ export function Composer({ value, onChange, onSend, sending, inputRef, docked }:
         docked && '2xl:right-115',
       )}
     >
+      {notice && (
+        <p
+          role="status"
+          data-testid="composer-notice"
+          className="pointer-events-auto mx-auto mb-2 max-w-180 rounded-lg border border-line-control bg-surface-2 px-4 py-2.5 text-label font-normal text-fg-2"
+        >
+          {notice}
+        </p>
+      )}
       <form
         onSubmit={submit}
         className={cx(

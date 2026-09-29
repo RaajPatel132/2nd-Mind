@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getUsage, type Usage } from '../api/client'
-import { formatCompact } from '../lib/format'
+import { formatMoney } from '../lib/format'
 
 export type LastSpend = { tokens: number; costUsd: number }
 
@@ -33,7 +33,7 @@ export function useUsage() {
   const report = useCallback((next: Usage, spent: number, costUsd: number) => {
     setUsage(next)
     setLast({ tokens: spent, costUsd })
-    if (spent > 0) setDelta({ key: Date.now(), text: `−${formatCompact(spent)}` })
+    if (costUsd > 0) setDelta({ key: Date.now(), text: `−${formatMoney(costUsd)}` })
   }, [])
 
   return { usage, last, delta, report, refresh }

@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { logout, type Me, type Picker, type Usage } from '../api/client'
 import type { LastSpend } from '../hooks/useUsage'
-import { formatTokens, formatUsd, initialsOf } from '../lib/format'
+import { formatMoney, formatUsd, initialsOf } from '../lib/format'
 import { BrandMark, Button, CountUp, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
 import { t } from '../ui/motion'
 import { ModelPicker } from './ModelPicker'
@@ -81,19 +81,19 @@ export function TopBar({ me, providerMode, picker, model, onModel, usage, last, 
               {providerMode}
             </span>
           )}
-          <Account me={me} usage={usage} last={last} delta={delta} baseline={picker?.baseline_label ?? null} />
+          <Account me={me} usage={usage} last={last} delta={delta} />
         </div>
       </div>
     </header>
   )
 }
 
-function Account({ me, usage, last, delta, baseline }: Pick<Props, 'me' | 'usage' | 'last' | 'delta'> & { baseline: string | null }) {
+function Account({ me, usage, last, delta }: Pick<Props, 'me' | 'usage' | 'last' | 'delta'>) {
   const [open, setOpen] = useState(false)
   const ring = useRef<HTMLButtonElement>(null)
   const popId = useId()
   const reduce = useReducedMotion()
-  const remaining = usage && usage.limit_tokens > 0 ? usage.remaining_tokens / usage.limit_tokens : 1
+  const remaining = usage && usage.limit_usd > 0 ? usage.remaining_usd / usage.limit_usd : 1
   const initials = initialsOf(me.user.email ?? '')
 
   return (
@@ -123,15 +123,14 @@ function Account({ me, usage, last, delta, baseline }: Pick<Props, 'me' | 'usage
           <Overline>Quota</Overline>
           <p className="m-0 mb-0.5 mt-1.5 flex items-baseline gap-1.5">
             <CountUp
-              value={remaining * 100}
-              format={(n) => n.toFixed(1)}
+              value={usage?.remaining_usd ?? 0}
+              format={formatMoney}
               className="font-voice text-display text-fg"
             />
-            <span className="font-voice text-title-lg text-fg-2">%</span>
             <span className="ml-1 text-label text-fg-2">left</span>
           </p>
           <p className="m-0 font-machine text-mono-sm text-fg-3 tnum" data-testid="quota-remaining">
-            {usage ? `${formatTokens(usage.remaining_tokens)} of ${formatTokens(usage.limit_tokens)} tokens` : 'Loading…'}
+            {usage ? `${formatMoney(usage.remaining_usd)} of ${formatMoney(usage.limit_usd)} left` : 'Loading…'}
           </p>
           <div className="mb-3.5 mt-3 h-1 overflow-hidden rounded-full bg-surface-2" aria-hidden>
             <motion.span
@@ -148,14 +147,18 @@ function Account({ me, usage, last, delta, baseline }: Pick<Props, 'me' | 'usage
             </dd>
             <dt className="text-label text-fg-3">Last turn</dt>
             <dd className="m-0 justify-self-end font-machine text-mono-sm text-fg-2 tnum" data-testid="quota-last">
-              {last ? `−${formatTokens(last.tokens)} tokens · ${formatUsd(last.costUsd)}` : '—'}
+              {last ? `−${formatUsd(last.costUsd)}` : '—'}
             </dd>
           </dl>
           <p className="m-0 mt-3 text-label font-normal text-fg-3">
-            {baseline
-              ? `A lifetime allowance, counted in ${baseline} tokens. Bigger models use it faster; every call counts, embeddings included.`
-              : 'A lifetime allowance. Every model call counts, embeddings included.'}
+            A lifetime allowance in dollars. Every model call counts at its price, embeddings
+            included; housekeeping the app does on its own is free to you.
           </p>
+          {usage?.read_only && (
+            <p className="m-0 mt-3 rounded-md bg-surface-2 p-3 text-label font-normal text-fg-2" data-testid="quota-readonly">
+              {usage.read_only_message}
+            </p>
+          )}
           <div className="-mx-4 my-3.5 h-px bg-line-strong" />
           <div className="flex items-center gap-3">
             <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-2 font-ui text-mono-sm font-semibold">

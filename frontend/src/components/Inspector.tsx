@@ -7,7 +7,7 @@ import { ChevronRight, X } from 'lucide-react'
 import { useId, useMemo, useState, type ReactNode } from 'react'
 import type { AgentStep, ModelCallEvent, Usage } from '../api/client'
 import type { ChatTurn } from '../hooks/useConversation'
-import { formatClock, formatMs, formatSeconds, formatTokens, formatUsd, shortId } from '../lib/format'
+import { formatClock, formatMoney, formatMs, formatSeconds, formatTokens, formatUsd, shortId } from '../lib/format'
 import { DiffTech, ToolCalls } from '../trail/details'
 import { RetrievalPanel } from '../trail/recall'
 import { factsOf, stepViews, type Facts, type StepView } from '../trail/model'
@@ -172,20 +172,20 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
         <span className="font-voice text-title-lg text-fg">{formatSeconds(end - start)}</span>
         <span>{tokens ? `${formatTokens(tokens)} tokens` : 'no tokens'}</span>
         <span data-testid="turn-cost">{formatUsd(u.cost_usd)}</span>
-        <span data-testid="turn-charged">−{formatTokens(u.charged_tokens)} quota</span>
+        <span data-testid="turn-charged">{formatTokens(u.charged_tokens)} weighted tokens</span>
       </div>
       <Waterfall views={views} spans={spansOf(facts)} start={start} end={end} />
       <ModelTable calls={facts.calls} />
       <p className="m-0 text-label font-normal text-fg-2" data-testid="quota-after">
         {quota ? (
           <>
-            Quota after this turn: <b className="font-machine text-mono font-medium text-fg">{formatTokens(quota.remaining_tokens)}</b> tokens left (
-            {((quota.remaining_tokens / Math.max(1, quota.limit_tokens)) * 100).toFixed(1)}%)
+            Quota after this turn: <b className="font-machine text-mono font-medium text-fg">{formatMoney(quota.remaining_usd)}</b> of{' '}
+            {formatMoney(quota.limit_usd)} left
           </>
         ) : quotaNow ? (
           <>
-            Quota now: <b className="font-machine text-mono font-medium text-fg">{formatTokens(quotaNow.remaining_tokens)}</b> tokens left (
-            {((quotaNow.remaining_tokens / Math.max(1, quotaNow.limit_tokens)) * 100).toFixed(1)}%)
+            Quota now: <b className="font-machine text-mono font-medium text-fg">{formatMoney(quotaNow.remaining_usd)}</b> of{' '}
+            {formatMoney(quotaNow.limit_usd)} left
           </>
         ) : (
           'Quota is loading.'

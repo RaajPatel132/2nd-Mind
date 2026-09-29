@@ -157,3 +157,20 @@ export function diffChips(ctx: StepContext): string[] {
 export function none(): string[] {
   return []
 }
+
+// ------------------------------------------------------------------ blocked
+
+const BLOCK_LABELS: Record<string, string> = {
+  kill_switch: 'Paused for everyone',
+  daily_cap: "Today's limit reached",
+  monthly_cap: "This month's limit reached",
+  provider_credit: 'Model credit used up',
+  quota: 'Your allowance is used up',
+  spend_check_unavailable: 'Spending can’t be checked',
+}
+export function blockedDone({ facts }: StepContext): string {
+  return facts.blocked ? (BLOCK_LABELS[facts.blocked.reason] ?? 'Turn stopped') : 'Turn stopped'
+}
+export function blockedChips({ facts }: StepContext): string[] {
+  return facts.blocked ? [facts.blocked.reason, 'no model called'] : []
+}

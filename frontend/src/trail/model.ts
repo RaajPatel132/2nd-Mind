@@ -5,6 +5,7 @@
  */
 import type {
   AgentStep,
+  BlockedEvent,
   CitationsEvent,
   RetrievalEvent,
   DecisionEvent,
@@ -71,6 +72,8 @@ export type Facts = {
   policies: PolicyEvent[]
   calls: ModelCallEvent[]
   error?: ErrorEvent
+  /** The spend gate stopped this turn before any model call (ADR-0032). */
+  blocked?: BlockedEvent
 }
 
 export function factsOf(events: readonly TrailEvent[]): Facts {
@@ -103,6 +106,9 @@ export function factsOf(events: readonly TrailEvent[]): Facts {
         break
       case 'error':
         facts.error = event
+        break
+      case 'blocked':
+        facts.blocked = event
         break
     }
   }

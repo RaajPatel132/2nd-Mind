@@ -207,8 +207,8 @@ export interface paths {
         };
         /**
          * My Usage
-         * @description The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).
-         *     Read only: enforcement arrives in S4.
+         * @description The signed-in user's quota in dollars (tier, limit, used, remaining) and whether new
+         *     turns are stopped, and why (FR-12.5, ADR-0032).
          */
         get: operations["my_usage"];
         put?: never;
@@ -409,11 +409,12 @@ export interface components {
          * AgentStep
          * @description The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
          *
-         *     ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is
-         *     reserved: in the schema so the UI's catalogue is complete, not emitted yet.
+         *     ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``blocked`` (R.10) is a
+         *     turn the spend gate stopped before any model call; ``fetch`` (S4) is reserved: in the
+         *     schema so the UI's catalogue is complete, not emitted yet.
          * @enum {string}
          */
-        AgentStep: "understand" | "extract" | "dates" | "entities" | "reconcile" | "enrich" | "guard" | "save" | "answer" | "undo" | "confirm" | "plan" | "search" | "rank" | "triggers" | "fetch";
+        AgentStep: "understand" | "extract" | "dates" | "entities" | "reconcile" | "enrich" | "guard" | "save" | "answer" | "undo" | "confirm" | "plan" | "search" | "rank" | "triggers" | "fetch" | "blocked";
         /**
          * AggregateTrace
          * @description An exact number from SQL, with the ids it counted (S3.5).
@@ -440,6 +441,31 @@ export interface components {
             op: "count" | "sum" | "min" | "max" | "average";
             /** Value */
             value?: number | null;
+        };
+        /**
+         * BlockedEvent
+         * @description A turn stopped before any model call (ADR-0032): why, and the limit against the value
+         *     when there is one. ``reason`` is a ``BlockReason`` value from the metering module.
+         */
+        BlockedEvent: {
+            /** Limit Usd */
+            limit_usd?: number | null;
+            /** Message */
+            message: string;
+            /** Reason */
+            reason: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "blocked";
+            /** Used Usd */
+            used_usd?: number | null;
+            /**
+             * V
+             * @default 1
+             */
+            v: number;
         };
         /** CheckOut */
         CheckOut: {
@@ -1786,7 +1812,7 @@ export interface components {
          */
         SseTurnEvent: {
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -2179,7 +2205,7 @@ export interface components {
              */
             created_at: string;
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -2417,16 +2443,39 @@ export interface components {
         };
         /**
          * UsageOut
-         * @description The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4.
+         * @description The signed-in user's quota in dollars, as it stands now (FR-12.5, ADR-0032), and whether
+         *     new turns are stopped (``read_only``): browsing, Upcoming, undo and the glass box still
+         *     work, as none of them call a model.
          */
         UsageOut: {
-            /** Limit Tokens */
-            limit_tokens: number;
-            /** Remaining Tokens */
-            remaining_tokens: number;
+            /** Limit Usd */
+            limit_usd: number;
+            /**
+             * Read Only
+             * @description New turns are stopped right now.
+             * @default false
+             */
+            read_only: boolean;
+            /**
+             * Read Only Message
+             * @description Why, and what still works, in words for the composer.
+             */
+            read_only_message?: string | null;
+            /**
+             * Read Only Reason
+             * @description kill_switch, daily_cap, monthly_cap, provider_credit, quota or spend_check_unavailable.
+             */
+            read_only_reason?: string | null;
+            /** Remaining Usd */
+            remaining_usd: number;
             tier: components["schemas"]["Tier"];
-            /** Used Tokens */
+            /**
+             * Used Tokens
+             * @description Charged (weighted) tokens, as information.
+             */
             used_tokens: number;
+            /** Used Usd */
+            used_usd: number;
         };
         /**
          * UsageTotals
@@ -3426,6 +3475,17 @@ export interface operations {
             /** @description Invalid request */
             422: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many turns in a minute; `Retry-After` says how long to wait */
+            429: {
+                headers: {
+                    /** @description Seconds */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {

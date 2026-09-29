@@ -2,7 +2,7 @@
  * The two layers of every step: "What happened" (plain words, the product's voice) and "Under the
  * hood" (Machine type). The Inspector's panels are built from these same components.
  */
-import { formatDay, formatInZone, formatMs, plural, shortId, truncate, weekdayIn } from '../lib/format'
+import { formatDay, formatInZone, formatMoney, formatMs, plural, shortId, truncate, weekdayIn } from '../lib/format'
 import type { ReactNode } from 'react'
 import { DiffList, FactLine, FixDate, KV, MTable, ModelLines } from './parts'
 import { diffCounts } from './model'
@@ -406,4 +406,32 @@ export function ReservedPlain() {
 
 export function ReservedTech({ ctx }: P) {
   return <ModelLines calls={ctx.calls} />
+}
+
+// ------------------------------------------------------------------ blocked
+
+export function BlockedPlain({ ctx }: P) {
+  const blocked = ctx.facts.blocked
+  if (!blocked) return <Plain>This turn was stopped before any model ran.</Plain>
+  return (
+    <Plain>
+      {blocked.message} No model was called, so this turn cost nothing. You can still browse your
+      memory, check Upcoming, undo, and open this glass box.
+    </Plain>
+  )
+}
+
+export function BlockedTech({ ctx }: P) {
+  const blocked = ctx.facts.blocked
+  if (!blocked) return <Muted>No limit was recorded.</Muted>
+  return (
+    <KV
+      rows={[
+        ['reason', blocked.reason],
+        ['limit', blocked.limit_usd != null ? formatMoney(blocked.limit_usd) : '—'],
+        ['used', blocked.used_usd != null ? formatMoney(blocked.used_usd) : '—'],
+        ['model calls', '0'],
+      ]}
+    />
+  )
 }
