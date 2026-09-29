@@ -119,15 +119,25 @@ jobs:
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1
           git /repo --redact --verbose --exit-code 1
 
+  # The images staging will run (ADR-0012): linux/arm64, built natively on an arm64 runner and
+  # tagged by git SHA. Scanned, not pushed (the registry arrives with S4).
   images:
-    name: images + trivy
-    runs-on: ubuntu-latest
+    name: images (linux/arm64, tagged by SHA) + trivy
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::12}" >> "$GITHUB_ENV"
       - name: build api/worker and web images
         run: docker compose build api web
+      - name: the images are arm64 and carry the SHA tag
+        run: |
+          for image in secondmind-api secondmind-web; do
+            arch=$(docker image inspect "$image:$IMAGE_TAG" --format '{{.Architecture}}')
+            echo "$image:$IMAGE_TAG is $arch"; test "$arch" = arm64
+          done
       - name: trivy (fail on fixable CRITICAL)
-        run: scripts/trivy-scan.sh secondmind-api:local secondmind-web:local
+        run: scripts/trivy-scan.sh "secondmind-api:$IMAGE_TAG" "secondmind-web:$IMAGE_TAG"
 
   e2e:
     name: e2e (compose, fake providers)
