@@ -18,10 +18,12 @@ from secondmind.providers.contract import (
 from secondmind.providers.errors import (
     USER_MESSAGE,
     Attempt,
+    CallsRefusedError,
     ProviderError,
     ProviderErrorKind,
     ProviderUnavailableError,
     StreamInterruptedError,
+    validation_summary,
 )
 from secondmind.providers.fake import (
     FakeOutcome,
@@ -39,6 +41,7 @@ from secondmind.providers.resilience import (
     backoff_delay,
 )
 from secondmind.providers.router import (
+    CallGuard,
     ChatResult,
     EmbeddingResult,
     ModelCall,
@@ -57,6 +60,8 @@ __all__ = [
     "Attempt",
     "BreakerRegistry",
     "BreakerState",
+    "CallGuard",
+    "CallsRefusedError",
     "ChatMessage",
     "ChatResult",
     "CircuitBreaker",
@@ -84,4 +89,5 @@ __all__ = [
     "ToolCall",
     "ToolSpec",
     "backoff_delay",
+    "validation_summary",
 ]

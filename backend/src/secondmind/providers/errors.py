@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from pydantic import ValidationError
+
 from secondmind.core import SecondMindError
 
 
@@ -64,6 +66,14 @@ class Attempt:
     outcome: str
 
 
+def validation_summary(exc: ValidationError, limit: int = 3) -> str:
+    """Where a structured reply failed validation, as field paths and error types: enough to
+    fix a prompt or a schema, and never the values (which can be the person's words)."""
+    found = [f"{'.'.join(str(p) for p in e['loc'])} ({e['type']})" for e in exc.errors()]
+    more = f" and {len(found) - limit} more" if len(found) > limit else ""
+    return "; ".join(found[:limit]) + more
+
+
 USER_MESSAGE = "The model provider is unavailable right now. Please try again in a moment."
 
 
@@ -87,3 +97,14 @@ class StreamInterruptedError(ProviderUnavailableError):
     """The provider failed after tokens reached the user; never retried (S1.8)."""
 
     code = "provider_stream_interrupted"
+
+
+class CallsRefusedError(ProviderUnavailableError):
+    """A model call refused before it left (ADR-0032): the kill switch is on or a spend cap is
+    reached, and the call isn't part of a turn that was already admitted."""
+
+    code = "calls_refused"
+
+    def __init__(self, step: str, reason: str) -> None:
+        super().__init__(step, [Attempt("-", "-", f"refused: {reason}")])
+        self.reason = reason

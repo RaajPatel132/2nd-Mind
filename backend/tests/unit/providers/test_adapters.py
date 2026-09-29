@@ -1,11 +1,11 @@
 """Adapter mapping over a mocked HTTP transport: no network, real SDK request building."""
 
 import json
-from typing import Any
+from typing import Any, Literal
 
 import httpx2
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from secondmind.config import ResolvedProvider
 from secondmind.providers import (
@@ -15,6 +15,7 @@ from secondmind.providers import (
     ProviderErrorKind,
     ToolCall,
     ToolSpec,
+    validation_summary,
 )
 from secondmind.providers.adapters import AnthropicAdapter, OpenAIAdapter, build_adapter
 
@@ -324,3 +325,20 @@ async def test_anthropic_reports_a_cut_off_structured_reply_as_invalid_output() 
     with pytest.raises(ProviderError) as exc:
         await adapter.structured(_request(model="claude-haiku-4-5"), _Inner)
     assert exc.value.kind is ProviderErrorKind.INVALID_OUTPUT
+
+
+def test_an_invalid_reply_is_described_by_field_and_error_type_not_by_value() -> None:
+    """The log says where the model went wrong, so a prompt can be fixed, without the person's
+    words (a wrong value can be part of what they said)."""
+
+    class Shape(BaseModel):
+        count: int
+        state: Literal["open", "done"]
+
+    with pytest.raises(ValidationError) as caught:
+        Shape.model_validate({"count": "my private note", "state": "sleeping"})
+    text = validation_summary(caught.value)
+    assert "count (int_parsing)" in text
+    assert "state (literal_error)" in text
+    assert "private" not in text
+    assert "sleeping" not in text

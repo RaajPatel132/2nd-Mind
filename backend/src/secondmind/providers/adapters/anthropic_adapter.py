@@ -21,6 +21,7 @@ from secondmind.providers import (
     StreamEnd,
     TextDelta,
     ToolCall,
+    validation_summary,
 )
 
 # Hard ceiling for one HTTP request; the router's per-step timeouts are the real limits.
@@ -93,7 +94,7 @@ class AnthropicAdapter:
         except ValidationError as exc:  # a reply cut short (max_tokens) doesn't parse
             raise ProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
-                f"no valid {schema.__name__} in the response: {exc.error_count()} error(s)",
+                f"no valid {schema.__name__} in the response: {validation_summary(exc)}",
                 provider=self._name,
             ) from exc
         value = message.parsed_output
@@ -146,7 +147,7 @@ class AnthropicAdapter:
         except ValidationError as exc:
             raise ProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
-                f"the {schema.__name__} the model gave is invalid: {exc.error_count()} error(s)",
+                f"the {schema.__name__} the model gave is invalid: {validation_summary(exc)}",
                 provider=self._name,
             ) from exc
         return AdapterStructured(value=value, usage=_usage(message.usage))

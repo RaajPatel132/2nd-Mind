@@ -26,6 +26,7 @@ from secondmind.providers import (
     StreamEnd,
     TextDelta,
     ToolCall,
+    validation_summary,
 )
 
 _SDK_TIMEOUT_S = 600.0
@@ -143,7 +144,7 @@ class OpenAIAdapter:
         except ValidationError as exc:
             raise ProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
-                f"no valid {schema.__name__} in the response: {exc.error_count()} error(s)",
+                f"no valid {schema.__name__} in the response: {validation_summary(exc)}",
                 provider=self._name,
             ) from exc
         message = completion.choices[0].message

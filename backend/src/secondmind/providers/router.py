@@ -23,6 +23,8 @@ import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal
+from typing import Protocol
 
 from pydantic import BaseModel
 
@@ -45,6 +47,7 @@ from secondmind.providers.contract import (
 )
 from secondmind.providers.errors import (
     Attempt,
+    CallsRefusedError,
     ProviderError,
     ProviderErrorKind,
     ProviderUnavailableError,
@@ -56,6 +59,26 @@ from secondmind.providers.resilience import (
     ResiliencePolicy,
     backoff_delay,
 )
+
+
+class CallGuard(Protocol):
+    """Spend safety as the router sees it (ADR-0032); implemented by ``metering``."""
+
+    async def refuse(self) -> str | None:
+        """A reason no new model work may start (kill switch, a spend cap), else None."""
+        ...
+
+    async def skip_provider(self, provider: str) -> bool:
+        """True while ``provider``'s credit is used up: its calls go to the fallback."""
+        ...
+
+    async def spent(self, provider: str, cost: Decimal) -> None:
+        """A priced call returned: add its cost to the spend counters."""
+        ...
+
+    async def out_of_credit(self, provider: str) -> None:
+        """``provider`` answered that the account has no credit left."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,8 +171,13 @@ class ModelRouter:
         now: Clock = utc_now,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         rand: Callable[[], float] = random.random,
+        guard: CallGuard | None = None,
+        admitted: bool = False,
     ) -> None:
         self._routing = routing
+        self._guard = guard
+        # A turn the spend gate let in finishes even if the switch flips (ADR-0032).
+        self._admitted = admitted
         self._prices = prices
         self._adapters = dict(adapters)
         self._policy = policy
@@ -173,17 +201,32 @@ class ModelRouter:
     def with_pick(self, ref: ModelRef) -> "ModelRouter":
         """A router for one turn with every chat step on ``ref`` (a picker model). Shares
         this router's adapters and breakers. Raises ``ValueError`` if ``ref`` can't be picked."""
-        return ModelRouter(
-            routing=self._routing.with_pick(ref),
-            prices=self._prices,
-            adapters=self._adapters,
-            policy=self._policy,
-            breakers=self._breakers,
-            monotonic=self._monotonic,
-            now=self._now,
-            sleep=self._sleep,
-            rand=self._rand,
-        )
+        return self._copy(routing=self._routing.with_pick(ref))
+
+    def admitted(self) -> "ModelRouter":
+        """This router for a turn the spend gate admitted: its calls aren't refused by the kill
+        switch or a cap reached mid-turn (a provider out of credit is still skipped)."""
+        return self._copy(admitted=True)
+
+    def with_guard(self, guard: CallGuard | None) -> "ModelRouter":
+        return self._copy(guard=guard)
+
+    def _copy(self, **changes: object) -> "ModelRouter":
+        params: dict[str, object] = {
+            "routing": self._routing,
+            "prices": self._prices,
+            "adapters": self._adapters,
+            "policy": self._policy,
+            "breakers": self._breakers,
+            "monotonic": self._monotonic,
+            "now": self._now,
+            "sleep": self._sleep,
+            "rand": self._rand,
+            "guard": self._guard,
+            "admitted": self._admitted,
+        }
+        params.update(changes)
+        return ModelRouter(**params)  # type: ignore[arg-type]
 
     def route(self, step: Step) -> ResolvedRoute:
         return self._routing.route(step)
@@ -205,8 +248,11 @@ class ModelRouter:
     ) -> AsyncIterator[RouterStreamEvent]:
         """Stream text deltas, then one :class:`ChatResult` with usage."""
         state = self._start(step, StepKind.CHAT, prompt)
+        await self._check(state)
         payload = _Payload(system=system, messages=messages, cache_prefix=cache_prefix)
         for index, ref in enumerate(self._candidates(state.route)):
+            if await self._skip(state, ref):
+                continue
             adapter = self._adapters[ref.provider]
             breaker = self._breakers.get(ref.provider)
             tries = 0
@@ -247,6 +293,7 @@ class ModelRouter:
                 breaker.record_success()
                 ttft = None if first_token_at is None else self._ms_since(state.t0, first_token_at)
                 call = self._finish(state, ref, reply.usage, index, ttft)
+                await self._spent(call)
                 yield ChatResult(
                     text=reply.text,
                     call=call,
@@ -332,7 +379,10 @@ class ModelRouter:
         invoke: Callable[[ProviderAdapter, AdapterRequest], Awaitable[R]],
         usage_of: Callable[[R], RawUsage],
     ) -> tuple[R, ModelCall]:
+        await self._check(state)
         for index, ref in enumerate(self._candidates(state.route)):
+            if await self._skip(state, ref):
+                continue
             adapter = self._adapters[ref.provider]
             breaker = self._breakers.get(ref.provider)
             tries = 0
@@ -353,7 +403,9 @@ class ModelRouter:
                     err = exc
                 else:
                     breaker.record_success()
-                    return result, self._finish(state, ref, usage_of(result), index, None)
+                    call = self._finish(state, ref, usage_of(result), index, None)
+                    await self._spent(call)
+                    return result, call
                 finally:
                     if not settled:
                         breaker.release_probe()
@@ -393,6 +445,23 @@ class ModelRouter:
             cache_prefix=payload.cache_prefix,
         )
 
+    async def _check(self, state: _CallState) -> None:
+        if self._guard is None or self._admitted:
+            return
+        reason = await self._guard.refuse()
+        if reason is not None:
+            raise CallsRefusedError(state.step.value, reason)
+
+    async def _skip(self, state: _CallState, ref: ModelRef) -> bool:
+        if self._guard is None or not await self._guard.skip_provider(ref.provider):
+            return False
+        state.attempts.append(Attempt(ref.provider, ref.model, "skipped: out of credit"))
+        return True
+
+    async def _spent(self, call: ModelCall) -> None:
+        if self._guard is not None and call.usage.cost_usd:
+            await self._guard.spent(call.provider, call.usage.cost_usd)
+
     def _fail(
         self, state: _CallState, breaker: CircuitBreaker, ref: ModelRef, err: ProviderError
     ) -> None:
@@ -413,6 +482,8 @@ class ModelRouter:
     ) -> bool:
         """Record the failure; back off and return True if this attempt should be retried."""
         self._fail(state, breaker, ref, err)
+        if err.kind is ProviderErrorKind.CREDIT and self._guard is not None:
+            await self._guard.out_of_credit(ref.provider)
         if err.retryable and tries <= self._policy.max_retries:
             await self._sleep(backoff_delay(tries, self._policy, self._rand))
             return True
@@ -497,7 +568,9 @@ def _timeout(ref: ModelRef, timeout_s: float) -> ProviderError:
 
 def _attempt(ref: ModelRef, err: ProviderError) -> Attempt:
     status = f" {err.status_code}" if err.status_code else ""
-    return Attempt(ref.provider, ref.model, f"{err.kind.value}{status}")
+    # An invalid reply says where it was wrong (field paths only), so a prompt can be fixed.
+    why = f": {err.message}" if err.kind is ProviderErrorKind.INVALID_OUTPUT else ""
+    return Attempt(ref.provider, ref.model, f"{err.kind.value}{status}{why}")
 
 
 def _reply_usage(reply: AdapterReply) -> RawUsage:
