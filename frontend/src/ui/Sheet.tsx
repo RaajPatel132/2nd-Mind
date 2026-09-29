@@ -84,7 +84,7 @@ export function Sheet({ open, mode, onClose, label, children, testId }: Props) {
           {...motionProps(mode === 'bottom' ? 'sheetUp' : 'sheetRight')}
           className={cx(
             'flex flex-col bg-surface outline-none',
-            mode === 'docked' && 'sticky top-0 h-dvh w-115 shrink-0 border-l border-line',
+            mode === 'docked' && 'fixed inset-y-0 right-0 z-20 w-115 border-l border-line',
             mode === 'overlay' && 'fixed inset-y-0 right-0 z-40 w-115 max-w-full border-l border-line-strong shadow-overlay',
             mode === 'bottom' && 'fixed inset-x-0 bottom-0 z-40 h-9/10 rounded-t-lg border-t border-line-strong shadow-overlay',
           )}
