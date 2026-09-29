@@ -87,9 +87,9 @@ def test_malformed_prompt_files_fail_loading(tmp_path: Path, content: str, error
 def test_the_extract_prompt_names_every_state_the_memory_model_allows() -> None:
     """The extract prompt lists each kind's states; a model that invents one costs a retry.
     The list must follow ``KIND_STATES`` when a state is added."""
-    text = (PROMPTS / "extract" / "v6.md").read_text()
+    text = (PROMPTS / "extract" / "v7.md").read_text()
     for kind, states in KIND_STATES.items():
         if kind is Kind.PATTERN:  # proposed by background jobs, never by extraction
             continue
         for state in states:
-            assert state in text, f"extract@6 doesn't name {state!r} ({kind.value})"
+            assert state in text, f"extract@7 doesn't name {state!r} ({kind.value})"

@@ -80,7 +80,7 @@ steps:
     timeout_s: 45
     max_output_tokens: 4096
     effort: medium
-    prompt: extract@6
+    prompt: extract@7
   resolve:
     provider: openai
     model: gpt-6-luna
