@@ -238,7 +238,8 @@ def _thinks_by_default(model: str) -> bool:
 
 def fill_omitted(schema: type[BaseModel], data: object) -> object:
     """``data`` with every field it left out that may be null set to null and every list set
-    to empty, recursively: what an unconstrained model most often skips."""
+    to empty, recursively: what an unconstrained model most often skips. A list or object it
+    wrote as a JSON string ("[{...}]", which Haiku does in long replies) is read back as one."""
     if not isinstance(data, dict):
         return data
     out = dict(data)
@@ -250,6 +251,7 @@ def fill_omitted(schema: type[BaseModel], data: object) -> object:
             elif get_origin(annotation) is list:
                 out[name] = []
             continue
+        out[name] = _unstringified(annotation, out[name])
         nested = _model_of(annotation)
         if nested is not None:
             if get_origin(annotation) is list and isinstance(out[name], list):
@@ -257,6 +259,17 @@ def fill_omitted(schema: type[BaseModel], data: object) -> object:
             else:
                 out[name] = fill_omitted(nested, out[name])
     return out
+
+
+def _unstringified(annotation: object, value: object) -> object:
+    """``value`` parsed from JSON when the field is a list or an object and a string was given."""
+    wants_structure = get_origin(annotation) is list or _model_of(annotation) is not None
+    if wants_structure and isinstance(value, str) and value.lstrip()[:1] in ("[", "{"):
+        try:
+            return json.loads(value)
+        except ValueError:
+            return value
+    return value
 
 
 def _allows_none(annotation: object) -> bool:

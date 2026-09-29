@@ -18,6 +18,7 @@ from secondmind.providers import (
     validation_summary,
 )
 from secondmind.providers.adapters import AnthropicAdapter, OpenAIAdapter, build_adapter
+from secondmind.providers.adapters.anthropic_adapter import fill_omitted
 
 COMPLETION = {
     "id": "chatcmpl-1",
@@ -342,3 +343,21 @@ def test_an_invalid_reply_is_described_by_field_and_error_type_not_by_value() ->
     assert "state (literal_error)" in text
     assert "private" not in text
     assert "sleeping" not in text
+
+
+def test_a_list_the_model_wrote_as_a_json_string_is_read_back_as_a_list() -> None:
+    """Haiku sometimes JSON-encodes a long list field inside its tool call."""
+
+    class Entity(BaseModel):
+        id: str
+        kind: Literal["person", "thing"]
+
+    class Out(BaseModel):
+        entities: list[Entity]
+        note: str | None
+
+    data = {"entities": '[{"id": "e1", "kind": "person"}]', "note": "ok"}
+    fixed = fill_omitted(Out, data)
+    assert Out.model_validate(fixed).entities[0].id == "e1"
+    broken = {"entities": "[{not json", "note": None}
+    assert fill_omitted(Out, broken) == broken  # left for the validator to report
