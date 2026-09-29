@@ -52,14 +52,6 @@ server {
         proxy_buffering off;
         proxy_cache off;
         proxy_read_timeout ${NGINX_READ_TIMEOUT};
-        # The API sets its own security headers on these responses; keep the API's and add
-        # nothing twice.
-        proxy_hide_header X-Frame-Options;
-        proxy_hide_header X-Content-Type-Options;
-        proxy_hide_header Referrer-Policy;
-        proxy_hide_header Content-Security-Policy;
-        proxy_hide_header Strict-Transport-Security;
-        proxy_hide_header Permissions-Policy;
     }
 
     # No add_header below this point: a location with its own add_header drops every header
