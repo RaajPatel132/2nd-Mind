@@ -91,6 +91,9 @@ class CallRecord:
     # What the model returned: a structured value, or the text of a chat reply (for triage and
     # for recording replays, R.5). Never set for embeddings.
     output: Any = None
+    # What the output refers to: for a rerank, each candidate's label -> its text and state, so a
+    # recorded score can be pinned to the candidate's words (R.5).
+    context: Any = None
 
     @property
     def spent_usd(self) -> Decimal:
@@ -113,6 +116,7 @@ class CallRecord:
             "billed": self.billed,
             "failed": self.failed,
             **({"output": self.output} if self.output is not None else {}),
+            **({"context": self.context} if self.context is not None else {}),
         }
 
 
@@ -291,6 +295,30 @@ def _reasons(ref: ModelRef) -> bool:
 # ------------------------------------------------------------------ the adapter wrapper
 
 
+CANDIDATE_TEXT_CHARS = 80
+
+
+def _context_of(request: AdapterRequest) -> dict[str, dict[str, Any]] | None:
+    """For a rerank request, each candidate's label with the start of its text and its state:
+    the recorded scores name candidates by label, and a replay pins them by their words."""
+    if request.step != "rerank":
+        return None
+    users = [m.content for m in request.messages if m.role == "user"]
+    try:
+        body = json.loads(users[-1]) if users else {}
+    except ValueError:
+        return None
+    labels: dict[str, dict[str, Any]] = {}
+    for candidate in body.get("candidates", []) if isinstance(body, dict) else []:
+        label = str(candidate.get("id", "")).strip().lower()
+        if label:
+            labels[label] = {
+                "text": str(candidate.get("text", ""))[:CANDIDATE_TEXT_CHARS],
+                "state": candidate.get("state"),
+            }
+    return labels or None
+
+
 class MeteredAdapter:
     """A provider adapter that records every call, optionally through the response cache or as
     a dry-run estimate for ``targets`` (step -> the live model the call stands in for)."""
@@ -342,6 +370,7 @@ class MeteredAdapter:
         cost: Decimal | None = None,
         failed: str | None = None,
         output: Any = None,
+        context: Any = None,
     ) -> None:
         now = time.perf_counter()
         self._log.add(
@@ -367,6 +396,7 @@ class MeteredAdapter:
                 billed=self._billed,
                 failed=failed,
                 output=output,
+                context=context,
             )
         )
 
@@ -490,7 +520,15 @@ class MeteredAdapter:
         if cached is not None:
             value = schema.model_validate(cached["value"])
             usage = _usage_of(cached["usage"])
-            self._record(request.step, ref, usage, started, hit=True, output=cached["value"])
+            self._record(
+                request.step,
+                ref,
+                usage,
+                started,
+                hit=True,
+                output=cached["value"],
+                context=_context_of(request),
+            )
             return AdapterStructured(value=value, usage=usage)
         try:
             result = await self._inner.structured(request, schema)
@@ -499,7 +537,15 @@ class MeteredAdapter:
             raise
         usage, cost = self._cost(request, ref, result.usage, schema)
         dumped = result.value.model_dump(mode="json")
-        self._record(request.step, ref, usage, started, cost=cost, output=dumped)
+        self._record(
+            request.step,
+            ref,
+            usage,
+            started,
+            cost=cost,
+            output=dumped,
+            context=_context_of(request),
+        )
         self._store(
             key,
             {

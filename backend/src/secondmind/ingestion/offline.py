@@ -142,6 +142,10 @@ def complete_extract(data: Mapping[str, Any]) -> dict[str, Any]:
         m["times"] = [{"direction": None, "recurring": False, **t} for t in m["times"]]
         if isinstance(m["value"], Mapping):
             m["value"] = {"text": None, "number": None, "unit": None, **m["value"]}
+        if isinstance(m["reminder"], Mapping):
+            m["reminder"] = {"lead": None, **m["reminder"]}  # `reminder: {}` is the default lead
+        if isinstance(m["trigger"], Mapping):
+            m["trigger"] = {"entity": None, "cue": None, **m["trigger"]}
         out["memories"].append(m)
     return out
 

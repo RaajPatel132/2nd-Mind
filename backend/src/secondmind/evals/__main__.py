@@ -10,19 +10,23 @@ Examples::
     python -m secondmind.evals recall --dry-run --routing economy-b --cases @probe
     python -m secondmind.evals ingest --live --routing economy-b --only failed --from 2026…
     python -m secondmind.evals report <run-a> <run-b>
+    python -m secondmind.evals record-replays ingest --from 2026… --diff   # then --write
 """
 
 import argparse
 import asyncio
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
 from secondmind.core import ConfigError
+from secondmind.evals import replays
 from secondmind.evals.harness import CONFIGURED, Harness
+from secondmind.evals.ingest import CASES_DIR as INGEST_CASES
+from secondmind.evals.recall import CASES_DIR as RECALL_CASES
 from secondmind.evals.runs import (
     RunRecord,
     failed_ids,
@@ -180,6 +184,27 @@ def _report(refs: Sequence[str]) -> int:
     return 0
 
 
+def _record_replays(args: argparse.Namespace) -> int:
+    """Show what a live run's recorded outputs would change in the golden cases' ``model:``
+    blocks, and with ``--write`` change them (R.5). The expectations are never touched."""
+    run = load_run(args.run)
+    if run.suite != args.of:
+        sys.stderr.write(f"{run.run_id} is a {run.suite} run, not {args.of}\n")
+        return 2
+    only = [c.strip() for c in args.cases.split(",")] if args.cases else None
+    if only:
+        only = [c.id for c in run.cases if any(c.id.startswith(o) for o in only)]
+    directory = INGEST_CASES if args.of == "ingest" else RECALL_CASES
+    changes = replays.compare(run, args.of, directory, only)
+    sys.stdout.write(replays.summary(changes, show_diff=args.diff) + "\n")
+    if args.write:
+        changed = [c for c in changes if c.changed]
+        for change in changed:
+            replays.rewrite_model(change.path, change.model)
+        sys.stdout.write(f"rewrote the model block of {len(changed)} case files\n")
+    return 0
+
+
 def _spend(clear_halt: bool, record: str | None, note: str | None) -> int:
     book = SpendBook.load()
     if clear_halt:
@@ -281,16 +306,25 @@ def main(argv: list[str] | None = None) -> int:
     spend.add_argument("--record", default=None, help="add spend made outside the harness: p=usd,…")
     spend.add_argument("--note", default=None, help="why (stored with the entry)")
     sub.add_parser("live-check", help="one tiny request per routed and picker model")
+    record = sub.add_parser(
+        "record-replays", help="rebuild the golden cases' model blocks from a live run (R.5)"
+    )
+    record.add_argument("of", choices=("ingest", "recall"), help="the suite")
+    record.add_argument("--from", dest="run", required=True, help="the live run id or file")
+    record.add_argument("--cases", default=None, help="ids or prefixes, comma separated")
+    record.add_argument("--diff", action="store_true", help="print each case's diff")
+    record.add_argument("--write", action="store_true", help="rewrite the case files")
     seed = sub.add_parser("seed-dev", help="seed the recall fixture into the dev workspace")
     seed.add_argument("--email", default=None, help="the user to seed (default DEV_USER_EMAIL)")
     seed.add_argument("--web-url", default="http://localhost:8080", help="printed with the login")
     args = parser.parse_args(argv)
     configure_logging(level="WARNING", fmt="console")  # the table is the output, not turn logs
-    commands = {
+    commands: dict[str, Callable[[], int]] = {
         "seed-dev": lambda: asyncio.run(_seed_dev(args.email, args.web_url)),
         "report": lambda: _report(args.runs),
         "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
+        "record-replays": lambda: _record_replays(args),
     }
     try:
         return commands.get(args.suite, lambda: _run_suite(args))()

@@ -136,6 +136,10 @@ eval-ingest: ## Ingestion golden cases on replayed model outputs, with the score
 eval-ingest-live: ## Ingestion golden cases on real providers (keys from .env; budgeted; costs money)
 	$(LIVE_RUN) python -m secondmind.evals ingest --live $(EVAL_ARGS)
 
+.PHONY: record-replays
+record-replays: ## Rebuild golden model blocks from a live run: SUITE=ingest|recall FROM=<run id> [CASES=…] [WRITE=1]
+	$(BACKEND_RUN) python -m secondmind.evals record-replays $(SUITE) --from $(FROM) $(if $(CASES),--cases $(CASES)) $(if $(WRITE),--write,--diff)
+
 .PHONY: eval-recall
 eval-recall: ## Recall golden cases on replayed plans and rerank scores (throwaway Postgres)
 	$(BACKEND_RUN) python -m secondmind.evals recall $(EVAL_ARGS)
