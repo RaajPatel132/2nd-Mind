@@ -14,6 +14,7 @@ import type {
   MemoryDiffEvent,
   ModelCallEvent,
   PolicyEvent,
+  TimeResolution,
   ToolCallEvent,
   TurnEvent,
 } from '../api/client'
@@ -139,4 +140,16 @@ export function diffCounts(diff: MemoryDiffEvent | undefined): DiffCounts {
     else if (e.op === 'not_written') c.notWritten += 1
   }
   return c
+}
+
+/** Time expressions grouped under the memory each was written to (a message can date several). */
+export function datesByMemory(list: readonly TimeResolution[]): { key: string; title: string | null; dates: TimeResolution[] }[] {
+  const groups: { key: string; title: string | null; dates: TimeResolution[] }[] = []
+  for (const t of list) {
+    const key = t.item_id ?? t.memory ?? ''
+    const group = groups.find((g) => g.key === key)
+    if (group) group.dates.push(t)
+    else groups.push({ key, title: t.memory ?? null, dates: [t] })
+  }
+  return groups
 }

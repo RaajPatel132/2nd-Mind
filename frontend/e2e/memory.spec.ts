@@ -21,7 +21,13 @@ test.describe('saving memories', () => {
     await expect((await openStep(turn, 'extract')).getByTestId('decision-memory')).toHaveCount(3)
     const entities = await openStep(turn, 'entities')
     await expect(entities.locator('[data-testid="decision-entity"][data-outcome="new"]', { hasText: 'wife' })).toHaveCount(1)
-    await expect((await openStep(turn, 'dates')).getByTestId('decision-date').first()).toContainText('next May')
+    const dates = await openStep(turn, 'dates')
+    await expect(dates.getByTestId('decision-date').first()).toContainText('next May')
+    // R.8: two memories have a date, and each date sits under its own memory.
+    const groups = dates.getByTestId('dates-group')
+    await expect(groups).toHaveCount(2)
+    await expect(groups.first().getByTestId('dates-group-title')).toContainText(/gift/i)
+    await expect(groups.last().getByTestId('dates-group-title')).toContainText(/birthday/i)
     const save = await openStep(turn, 'save')
     const added = save.locator('[data-testid="diff-entry"][data-op="added"]')
     await expect(added).toHaveCount(5) // wife, the MK bag, and the three memories

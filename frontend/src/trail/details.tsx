@@ -5,7 +5,7 @@
 import { formatDay, formatInZone, formatMoney, formatMs, plural, shortId, truncate, weekdayIn } from '../lib/format'
 import type { ReactNode } from 'react'
 import { DiffList, FactLine, FixDate, KV, MTable, ModelLines } from './parts'
-import { diffCounts } from './model'
+import { datesByMemory, diffCounts } from './model'
 import type { StepContext } from './types'
 
 type P = { ctx: StepContext }
@@ -95,32 +95,47 @@ export function ExtractTech({ ctx }: P) {
 export function DatesPlain({ ctx }: P) {
   const list = ctx.facts.decision?.time_resolutions ?? []
   if (list.length === 0) return <Plain>I worked out the dates in your message.</Plain>
+  const groups = datesByMemory(list)
   return (
-    <>
-      {list.slice(0, 2).map((t, i) => (
-        <Plain key={`${t.expression}-${String(i)}`}>
-          I read “{t.expression}” as {formatDay(t.value)}, because it's {weekdayIn(t.now, t.timezone)} today in {t.timezone}.
-          {t.assumed && ` That was an assumption${t.alternative ? `; the other reading was ${t.alternative}` : ''}.`}
-          {t.item_id && <FixDate itemId={t.item_id} />}
-        </Plain>
+    <div className="grid gap-3">
+      {groups.map((g) => (
+        <section key={g.key || 'dates'} data-testid="dates-group" className="grid gap-1">
+          {groups.length > 1 && g.title && (
+            <p className="m-0 text-label text-fg-3" data-testid="dates-group-title">
+              For “{g.title}”
+            </p>
+          )}
+          {g.dates.slice(0, 3).map((t, i) => (
+            <Plain key={`${t.expression}-${String(i)}`}>
+              I read “{t.expression}” as {formatDay(t.value)}, because it's {weekdayIn(t.now, t.timezone)} today in {t.timezone}.
+              {t.assumed && ` That was an assumption${t.alternative ? `; the other reading was ${t.alternative}` : ''}.`}
+              {t.item_id && <FixDate itemId={t.item_id} />}
+            </Plain>
+          ))}
+        </section>
       ))}
-    </>
+    </div>
   )
 }
-
 export function DatesTech({ ctx }: P) {
   const list = ctx.facts.decision?.time_resolutions ?? []
   const first = list[0]
+  const groups = datesByMemory(list)
   return (
     <>
-      <MTable
-        head={['expression', 'value', 'precision', 'clock', 'rule']}
-        rows={list.map((t, i) => ({
-          key: `${t.expression}-${t.clock}-${String(i)}`,
-          testId: 'decision-date',
-          cells: [`“${t.expression}”`, t.rrule ? `${t.value} (${t.rrule})` : t.value, t.precision, t.clock, t.rule],
-        }))}
-      />
+      {groups.map((g) => (
+        <div key={g.key || 'dates'} className="mb-3 last:mb-0" data-testid="dates-group-tech">
+          {groups.length > 1 && g.title && <p className="m-0 mb-1.5 font-machine text-mono-sm text-fg-3">{g.title}</p>}
+          <MTable
+            head={['expression', 'value', 'precision', 'clock', 'rule']}
+            rows={g.dates.map((t, i) => ({
+              key: `${t.expression}-${t.clock}-${String(i)}`,
+              testId: 'decision-date',
+              cells: [`“${t.expression}”`, t.rrule ? `${t.value} (${t.rrule})` : t.value, t.precision, t.clock, t.rule],
+            }))}
+          />
+        </div>
+      ))}
       {first && (
         <div className="mt-3">
           <KV rows={[['now', formatInZone(first.now, first.timezone)], ['timezone', first.timezone]]} />
