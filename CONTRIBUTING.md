@@ -72,6 +72,20 @@ Co-authored-by: …                            # attribution trailers are not us
 Keep commits small and cohesive: one outcome per commit. If the subject needs "and", it's
 probably two commits.
 
+## Changing the database schema
+
+A deploy is rolling: for a while the old code runs against the new schema, and the new code may
+have to run against the old one after a rollback. So a column or table is never dropped or
+renamed in the same release that stops using it.
+
+1. **Release N** stops reading and writing the column (and adds its replacement, if any).
+2. **Release N+1** drops or renames it. Its migration sets a module constant `CONTRACT_AFTER = "<revision of release N's last migration>"`.
+
+`backend/tests/unit/test_migration_compat.py` fails a migration whose `upgrade()` drops or
+renames without that constant. Adding columns, tables and indexes needs nothing. Migrations run
+as the schema owner behind an advisory lock, so two started together take turns; the RDS-like
+test (`tests/integration/test_rds_like.py`) runs them as a non-superuser owner.
+
 ## Definition of done
 
 1. Acceptance criteria met and shown by tests (or the sprint report says how it was checked).
