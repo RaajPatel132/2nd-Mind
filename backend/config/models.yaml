@@ -2,6 +2,7 @@
 # edit this file, or override from the environment without touching it:
 #   MODEL_<STEP>=<provider>:<model>            e.g. MODEL_ANSWER=openai:gpt-6-sol
 #   MODEL_<STEP>_FALLBACK=<provider>:<model>   or "none" to disable the fallback
+#   EFFORT_<STEP>=none|low|medium|high          a step's reasoning depth
 # MODEL_PROVIDER_MODE decides what happens when a provider has no credentials:
 #   auto (default): use the step's fallback if it has credentials, else the fake provider
 #   live: refuse to start      fake: every step uses the fake provider

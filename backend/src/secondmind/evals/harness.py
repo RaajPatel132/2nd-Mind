@@ -85,6 +85,8 @@ def routing_overlay(name: str, directory: Path = ROUTINGS_DIR) -> dict[str, str]
     fallbacks = raw.get("fallbacks") or {}
     for step, ref in (raw.get("steps") or {}).items():
         env[f"MODEL_{str(step).upper()}"] = str(ref)
+    for step, effort in (raw.get("efforts") or {}).items():
+        env[f"EFFORT_{str(step).upper()}"] = str(effort)
     for step in Step:
         if step.value in fallbacks:
             env[f"MODEL_{step.value.upper()}_FALLBACK"] = str(fallbacks[step.value])

@@ -192,7 +192,7 @@ class AnthropicAdapter:
                 {"name": t.name, "description": t.description, "input_schema": t.parameters}
                 for t in request.tools
             ]
-        if request.effort and _supports_effort(request.model):
+        if request.effort and request.effort != "none" and _supports_effort(request.model):
             params["output_config"] = {"effort": request.effort}
         return params
 

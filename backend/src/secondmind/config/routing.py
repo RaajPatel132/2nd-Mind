@@ -15,7 +15,7 @@ model it stands in for); ``live`` marks it unavailable.
 from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast, get_args
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -49,7 +49,8 @@ STEP_KINDS: dict[Step, StepKind] = {
 FAKE_PROVIDER = "fake"
 FAKE_MODELS: dict[StepKind, str] = {StepKind.CHAT: "fake-chat", StepKind.EMBEDDING: "fake-embed"}
 
-Effort = Literal["low", "medium", "high"]
+# "none" turns reasoning off where the provider allows it (structured steps that answer fast).
+Effort = Literal["none", "low", "medium", "high"]
 
 
 class ModelRef(BaseModel):
@@ -254,6 +255,7 @@ def resolve_routing(
     """Apply ``MODEL_<STEP>[_FALLBACK]`` overrides and the provider mode."""
     providers = _resolve_providers(file, environ)
     overrides = _read_overrides(environ, providers)
+    efforts = _read_efforts(environ)
     routes: dict[Step, ResolvedRoute] = {}
     missing_creds: list[str] = []
 
@@ -290,7 +292,7 @@ def resolve_routing(
             fallback=fallback,
             timeout_s=cfg.timeout_s,
             max_output_tokens=cfg.max_output_tokens,
-            effort=cfg.effort,
+            effort=efforts.get(step, cfg.effort),
             prompt=cfg.prompt,
             substituted=substituted,
         )
@@ -403,6 +405,26 @@ def _resolve_providers(
             has_credentials=has_creds,
             api_key_env=cfg.api_key_env,
         )
+    return out
+
+
+def _read_efforts(environ: Mapping[str, str]) -> dict[Step, Effort]:
+    """``EFFORT_<STEP>=none|low|medium|high``: a step's reasoning depth, without a file edit."""
+    steps = {s.value.upper(): s for s in Step}
+    out: dict[Step, Effort] = {}
+    for key, raw in environ.items():
+        upper = key.upper()
+        if not upper.startswith("EFFORT_") or not raw.strip():
+            continue
+        step = steps.get(upper.removeprefix("EFFORT_"))
+        if step is None:
+            raise ConfigError(
+                f"{upper}: unknown step; steps: {', '.join(s.lower() for s in steps)}"
+            )
+        value = raw.strip().lower()
+        if value not in get_args(Effort):
+            raise ConfigError(f"{upper}: {value!r} is not one of {', '.join(get_args(Effort))}")
+        out[step] = cast(Effort, value)
     return out
 
 
