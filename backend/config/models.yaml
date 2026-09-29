@@ -59,7 +59,7 @@ steps:
     timeout_s: 20
     max_output_tokens: 1024
     effort: low
-    prompt: intent@2
+    prompt: intent@3
   extract:
     provider: anthropic
     model: claude-haiku-4-5
@@ -67,7 +67,7 @@ steps:
     timeout_s: 45
     max_output_tokens: 8192
     effort: medium
-    prompt: extract@4
+    prompt: extract@5
   resolve:
     provider: openai
     model: gpt-6-luna
