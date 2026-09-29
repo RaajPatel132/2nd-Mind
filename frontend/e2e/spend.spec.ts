@@ -25,13 +25,14 @@ test('@prodlike the kill switch gives the next message a notice, and off brings 
     await expect(turn.getByTestId('assistant-message')).toContainText('browse your memory')
     // The composer says the same, and the glass box explains the stop; no model ran.
     await expect(page.getByTestId('composer-notice')).toContainText('paused for everyone')
+    await expect(turn.locator('[data-testid="trail-step"][data-step="blocked"]')).toContainText('Paused for everyone')
     const glassBox = await inspect(page, turn)
-    await expect(glassBox).toContainText('Paused for everyone')
     await expect(glassBox.getByTestId('turn-cost')).toHaveText('$0')
+    await page.keyboard.press('Escape')
 
     // Browsing does not call a model: Upcoming still opens.
     await page.getByTestId('nav-upcoming').click()
-    await expect(page.getByRole('heading', { name: /upcoming/i }).first()).toBeVisible()
+    await expect(page.getByTestId('upcoming')).toBeVisible()
     await page.getByTestId('nav-upcoming').click()
   } finally {
     killSwitch('off')

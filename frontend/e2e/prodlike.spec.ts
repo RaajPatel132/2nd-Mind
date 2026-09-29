@@ -34,7 +34,8 @@ test('@prodlike save, recall and undo on real models, and the glass box explains
   // No provider tag in the top bar: live is the normal state.
   await expect(page.getByTestId('provider-mode')).toHaveCount(0)
 
-  const save = await send(page, 'I live in Bengaluru')
+  await send(page, 'I live in Bengaluru')
+  const save = page.getByTestId('turn').first() // send() returns the latest turn, a moving target
   await expect(save.getByTestId('receipt')).toBeVisible()
   const recall = await send(page, 'Where do I live?', 'Bengaluru')
 
