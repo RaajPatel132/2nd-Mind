@@ -9,7 +9,7 @@ import { freshUser, inspect, send } from './helpers.ts'
  */
 test.describe.configure({ mode: 'serial' })
 
-test('the kill switch gives the next message a notice, and off brings answers back', async ({ page }, testInfo) => {
+test('@prodlike the kill switch gives the next message a notice, and off brings answers back', async ({ page }, testInfo) => {
   test.setTimeout(120_000)
   await freshUser(page, testInfo)
   await send(page, 'I live in Bengaluru', 'Bengaluru')

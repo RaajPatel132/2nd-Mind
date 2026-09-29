@@ -3,7 +3,9 @@ import { expect, type Locator, type Page, type TestInfo } from '@playwright/test
 /** A fresh dev user, so every test starts from an empty memory. */
 export async function freshUser(page: Page, testInfo: TestInfo) {
   const email = `e2e-${testInfo.project.name}-${String(Date.now())}-${String(testInfo.workerIndex)}@example.test`
-  const response = await page.request.post('/v1/auth/dev-login', { data: { email } })
+  // The production-shaped stack (make up-prodlike) asks for the staging access code.
+  const accessCode = process.env.E2E_ACCESS_CODE
+  const response = await page.request.post('/v1/auth/dev-login', { data: accessCode ? { email, access_code: accessCode } : { email } })
   expect(response.ok()).toBeTruthy()
   await page.goto('/')
   await expect(page.getByTestId('composer')).toBeVisible({ timeout: 30_000 })

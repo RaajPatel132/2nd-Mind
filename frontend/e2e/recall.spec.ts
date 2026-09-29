@@ -39,6 +39,15 @@ test.describe('recall', () => {
     await expect(sheet).toContainText('I live in Pune.')
   })
 
+  test('what the assistant suggested can be saved with a plain "yes"', async ({ page }, testInfo) => {
+    await seeded(page, testInfo)
+    const ask = await send(page, 'What books did you suggest for a slow weekend?', 'Tea by the Window')
+    await expect(ask.getByTestId('assistant-message')).toContainText(/save|add/i)
+    const yes = await send(page, 'yes')
+    await expect(yes.getByTestId('assistant-message')).toContainText(/saved|added/i)
+    await expect(yes.getByTestId('receipt')).toBeVisible()
+  })
+
   test('a date is fixed from the glass box as its own undoable turn', async ({ page }, testInfo) => {
     await freshUser(page, testInfo)
     const turn = await send(page, 'Remind me to renew my passport before it expires on the 3rd of next month.', /passport/i)
