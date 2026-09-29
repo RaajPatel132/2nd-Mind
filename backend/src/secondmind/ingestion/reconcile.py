@@ -245,9 +245,12 @@ def _value_key(value: dict[str, object]) -> tuple[str, str]:
 
 
 def adds_detail(existing: ItemRecord, draft: Draft) -> bool:
+    """Something the person said that the saved wish lacks: an attribute or a summary. Tags are
+    labels the model picks, and two readings of the same sentence pick different ones ("watch,
+    series" then "series"): a tag alone is not a detail, or saving Dark twice reads "Added
+    detail to Dark" on some days and "Already saved" on others."""
     new = draft.content
     return bool(
-        set(new.tags) - set(existing.tags)
-        or {k: v for k, v in new.attributes.items() if existing.attributes.get(k) != v}
+        {k: v for k, v in new.attributes.items() if existing.attributes.get(k) != v}
         or (new.summary and not existing.summary)
     )
