@@ -5,22 +5,53 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Kabir's birthday is 14 March
 model:
-  intent: {intent: save, confidence: 0.95, reason: "A birthday."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You shared Kabir’s birthday, a personal detail worth keeping.
   extract:
     entities:
-      - {id: e1, mention: Kabir, name: Kabir, kind: person}
+    - id: e1
+      mention: Kabir
+      name: Kabir
+      kind: person
     memories:
-      - ref: m1
-        kind: plan
-        subtype: birthday
-        title: Kabir's birthday
-        text: Kabir's birthday is on [[t1]].
-        category: people/birthdays
-        subject: e1
-        entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: 14 March, clock: occurred, direction: future, recurring: true}]
-        reminder: {lead: null}
-        importance: 4
+    - ref: m1
+      kind: plan
+      subtype: birthday
+      state: scheduled
+      title: Kabir's birthday
+      text: Kabir's birthday is on 14 March.
+      category: personal/birthday
+      subject: e1
+      predicate: birthday
+      entities:
+      - entity: e1
+        role: about
+      times:
+      - id: t1
+        expression: 14 March
+        clock: occurred
+        direction: future
+        recurring: true
+      reminder: {}
+      modality: asserted
+      sensitivity: personal
+      importance: 3
+      layer: core
+      layer_rationale: Recurring personal birthday is core knowledge for remembering important dates.
+      rationale: Birthday of a named person is a recurring plan with automatic reminder the day before.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - When is Kabir’s birthday?
+      - What date should I remember for Kabir’s birthday?
+      - Kabir birthday date
+      cues:
+      - when planning a birthday celebration for Kabir
+      - when choosing a birthday gift for Kabir
+      - when adding Kabir’s birthday to my calendar
 expect:
   memories:
     - match: kabir's birthday

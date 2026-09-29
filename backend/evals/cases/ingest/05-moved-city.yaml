@@ -25,22 +25,51 @@ setup:
             layer_rationale: Where the user lives is a standing fact.
 input: I moved to Pune
 model:
-  intent: {intent: save, confidence: 0.95, reason: "A change of city."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You’re sharing a change in where you live.
   extract:
     entities:
-      - {id: e1, mention: Pune, name: Pune, kind: place}
+    - id: e1
+      mention: I
+      kind: self
+    - id: e2
+      mention: Pune
+      name: Pune
+      kind: place
     memories:
-      - ref: m1
-        kind: fact
-        title: I live in Pune
-        text: I live in Pune.
-        category: personal/home
-        subject: self
-        predicate: lives_in
-        value: {text: Pune}
-        entities: [{entity: e1, role: at}]
-        layer: core
-        layer_rationale: Where the user lives is a standing fact.
+    - ref: m1
+      kind: fact
+      state: current
+      title: Live in Pune
+      text: I live in Pune.
+      category: personal/home
+      subject: self
+      predicate: lives_in
+      value:
+        text: Pune
+      entities:
+      - entity: e2
+        role: at
+      modality: asserted
+      sensitivity: personal
+      importance: 4
+      layer: core
+      layer_rationale: Standing fact about where the user lives, core knowledge to always have in context.
+      rationale: A fact that has changed from the prior standing fact (Bengaluru). The user moved, so this
+        is now the current location.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - Where is my home base?
+      - Which city do I live in?
+      - What city should I use for local recommendations?
+      cues:
+      - when finding services near my home
+      - when planning activities in my city
+      - when looking for local recommendations
 expect:
   memories:
     - match: live in pune

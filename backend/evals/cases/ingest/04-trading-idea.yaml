@@ -5,20 +5,50 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: I have an idea of building an end-to-end skill that can trade for itself.
 model:
-  intent: {intent: save, confidence: 0.9, reason: "An idea to keep."}
+  intent:
+    confidence: 0.91
+    intent: save
+    reason: You’re sharing an idea to build an end-to-end skill that can trade autonomously.
   extract:
     entities:
-      - {id: e1, mention: trade, name: trading, kind: topic}
+    - id: e1
+      mention: I
+      kind: self
     memories:
-      - ref: m1
-        kind: note
-        subtype: idea
-        title: End-to-end trading skill
-        text: Idea - build an end-to-end skill that can trade by itself.
-        category: ideas/projects
-        tags: [career, idea, claude-skill, trading]
-        entities: [{entity: e1, role: about}]
-        rationale: The user calls it an idea.
+    - ref: m1
+      kind: note
+      subtype: idea
+      state: current
+      title: End-to-end trading skill
+      text: I have an idea of building an end-to-end skill that can trade for itself.
+      category: projects
+      tags:
+      - trading
+      - automation
+      - skill-building
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sensitivity: normal
+      importance: 3
+      layer: archive
+      layer_rationale: An idea that has just been expressed, not yet an active project or intention with
+        a timeline, so archive for now.
+      rationale: 'This is a note with subtype idea: the user is expressing a concept or idea they want to
+        develop, not yet committing to learning or building it actively. It''s about an automated trading
+        skill/system.'
+  enrich:
+    memories:
+    - alt:
+      - What’s my self-trading skill idea?
+      - What trading automation project did I consider?
+      - What was my end-to-end trading concept?
+      cues:
+      - when planning an autonomous trading tool
+      - when reviewing my ideas for trading automation
+      - when exploring projects that trade independently
+      ref: m1
 expect:
   memories:
     - match: skill that can trade

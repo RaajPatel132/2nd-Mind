@@ -7,13 +7,21 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: 'You’re asking about a saved preference: you’re done with thrillers and want lighter shows now.'
   plan:
     sub_queries:
     - shape: why
       question: Why don't I watch thrillers anymore?
-      topic: why no more thrillers
+      topic: why I don't watch thrillers anymore
+      about: thrillers
+      filters:
+        kinds:
+        - preference
+        states:
+        - current
+        predicate: genre_taste
+        current_only: true
   rerank:
   - match: lighter shows
     score: 0.95

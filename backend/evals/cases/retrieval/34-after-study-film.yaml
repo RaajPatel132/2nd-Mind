@@ -8,23 +8,22 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.98
+    reason: You’re asking for a suggestion based on your saved routine of unwinding with a film after a
+      weekend study session and your preference for lighter shows.
   plan:
     sub_queries:
     - shape: situational
       question: I'm done studying this weekend, how should I unwind?
-      topic: unwinding after study
+      topic: unwinding after studying
+      about: unwinding
       times:
       - expression: this weekend
         clock: occurred
         direction: future
-      filters:
-        kinds:
-        - intention
     - shape: list
-      question: Which shows do I want to watch?
-      topic: watch list
+      question: What shows or films do I want to watch?
+      topic: watch intentions
       filters:
         kinds:
         - intention
@@ -32,4 +31,5 @@ model:
         - watch
         states:
         - wanted
-      expanded_from: A film after a weekend study session
+        - active
+      expanded_from: Unwinds with a film after a weekend study session.

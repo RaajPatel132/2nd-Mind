@@ -4,22 +4,62 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Training for a half marathon in Feb
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A goal."}
+  intent:
+    intent: save
+    confidence: 0.98
+    reason: 'You’re sharing an ongoing fitness goal and its target timing: training for a half marathon
+      in February.'
   extract:
     entities:
-      - {id: e1, mention: a half marathon, name: Half marathon, kind: project}
+    - id: e1
+      mention: a half marathon
+      name: Half marathon
+      kind: project
+    - id: e2
+      mention: self
+      kind: self
     memories:
-      - ref: m1
-        kind: intention
-        subtype: train
-        state: active
-        title: Half marathon
-        text: I'm training for a half marathon in [[t1]].
-        category: health/fitness
-        entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: in Feb, clock: due, direction: future}]
-        layer: quick
-        layer_rationale: An active goal.
+    - ref: m1
+      kind: intention
+      subtype: train
+      state: active
+      title: Half marathon
+      text: I am training for a half marathon in February.
+      category: health/fitness
+      tags:
+      - training
+      - running
+      - half-marathon
+      subject: self
+      entities:
+      - entity: e1
+        role: about
+      times:
+      - id: t1
+        expression: February
+        clock: due
+        direction: future
+      modality: asserted
+      sentiment: 1
+      sensitivity: normal
+      importance: 4
+      layer: quick
+      layer_rationale: An intention being actively worked on, with a near-term target date, belongs in quick
+        memory.
+      rationale: An intention to train for a half marathon is an active goal with a specific target timeframe.
+        Subtype 'train' captures the verb. The project entity 'Half marathon' contextualizes the goal. February
+        is marked as the due date.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - How am I training for the February 2027 race?
+      - What running event am I preparing for?
+      - What’s my February 2027 fitness goal?
+      cues:
+      - when planning my running workouts
+      - when setting race preparation goals
+      - when choosing a fitness gift for me
 expect:
   memories:
     - match: half marathon

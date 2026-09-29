@@ -5,26 +5,25 @@ shape: count
 aggregate: 46
 model:
   intent:
+    confidence: 0.99
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking for a total from your saved running activity in September.
   plan:
     sub_queries:
-    - shape: count
-      question: How far did I run in total in September?
-      topic: distance run in September
+    - about: running
+      aggregate:
+        field: value
+        op: sum
       filters:
-        kinds:
-        - episode
-        subtypes:
-        - measurement
         attribute:
           key: activity
           value: run
-      aggregate:
-        op: sum
-        field: value
+        kinds:
+        - episode
+      question: How far did I run in total in September?
+      shape: count
       times:
-      - expression: in September
-        clock: occurred
+      - clock: occurred
         direction: past
+        expression: in September
+      topic: total running distance in September

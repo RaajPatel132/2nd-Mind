@@ -1,0 +1,742 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T161742Z-2ab79d4",
+ "suite": "recall",
+ "mode": "live",
+ "routing": "economy-c",
+ "started_at": "2026-09-29T16:17:42.395675Z",
+ "finished_at": "2026-09-29T16:18:25.633736Z",
+ "git_sha": "2ab79d4d23a2",
+ "git_dirty": true,
+ "config_hash": "ef9934a503cfc07b79a3772165aa4ae0e3974f39cbcd6543a8a08bdc86fd7cd3",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@7",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-5.4-mini",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-10-06T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {
+  "cases": [
+   "01",
+   "02",
+   "03",
+   "04",
+   "05",
+   "06",
+   "07",
+   "08",
+   "09",
+   "10",
+   "11",
+   "12"
+  ]
+ },
+ "batch": "B6",
+ "budget_usd": 0.08,
+ "estimate_usd": 0.05808531,
+ "status": "complete",
+ "note": "B6: re-read from the cache to capture the rerank candidates for the recorder",
+ "setup_calls": [
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 43, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null}
+ ],
+ "cases": [
+  {
+   "id": "01-where-live",
+   "title": "Knowledge update: the current home wins, the old one is left out",
+   "tags": [
+    "latest"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 341,
+   "ttft_ms": 258,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.66e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 716, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 1.0, "intent": "recall", "reason": "You’re asking me to recall your saved location."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003254, "latency_ms": 6, "ttft_ms": null, "input_tokens": 2734, "cached_input_tokens": 0, "output_tokens": 104, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": true, "kinds": ["fact"], "predicate": "lives_in", "role": null, "states": ["current"], "subtypes": []}, "question": "Where do I live?", "role": null, "set": null, "shape": "latest", "times": [], "topic": "where I live"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0032385, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2200, "cached_input_tokens": 0, "output_tokens": 353, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly states your current city.", "score": 1.0}, {"id": "c2", "reason": "", "score": 0.3}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.1}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "context": {"c1": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c2": {"text": "No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now", "state": "superseded"}, "c3": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c4": {"text": "Fact: Rohan is Nisha's husband. About Rohan and Nisha (sister). Noted Sunday 12 ", "state": "current"}, "c5": {"text": "Fact: The MK bag's serial number is 123ABC. About MK bag and Kabir (partner). No", "state": "current"}, "c6": {"text": "Note: FitZone moved to the far side of the city, forty minutes from home each wa", "state": "current"}, "c7": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c8": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c9": {"text": "Logged run: I ran 5 km in 31 minutes at Vetal Hill on Wednesday 2 September 2026", "state": "happened"}, "c10": {"text": "To do: Renew my passport, due Tuesday 20 October 2026. Open.", "state": "open"}, "c11": {"text": "Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in ", "state": "happened"}, "c12": {"text": "Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni", "state": "happened"}, "c13": {"text": "Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m", "state": "happened"}, "c14": {"text": "Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i", "state": "happened"}, "c15": {"text": "Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,", "state": "happened"}, "c16": {"text": "Logged cancelled the fitzone membership: Cancelled my FitZone gym membership on ", "state": "happened"}, "c17": {"text": "To do: Ask Nisha about her interview, for Nisha (sister). Open.", "state": "open"}, "c18": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c19": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c20": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000759, "latency_ms": 0, "ttft_ms": 0, "input_tokens": 704, "cached_input_tokens": 0, "output_tokens": 11, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You live in Pune [1].", "timed": true}
+   ],
+   "cost_usd": 0.00440972,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "latest"
+    ],
+    "selected": [
+     "live_pune"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "rohan_jazz",
+     "rohan_husband",
+     "mk_bag",
+     "gym_reason",
+     "vegetarian",
+     "done_thrillers",
+     "run_sep_02",
+     "renew_passport"
+    ],
+    "aggregate": null,
+    "reply": "You live in Pune [1]."
+   }
+  },
+  {
+   "id": "02-serial-number",
+   "title": "§8.2 attribute: the bag's serial number",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 1
+   },
+   "latency_ms": 370,
+   "ttft_ms": 259,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.04e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking for a detail that may have been saved about the bag."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010414, "latency_ms": 6, "ttft_ms": null, "input_tokens": 3, "cached_input_tokens": 2734, "output_tokens": 153, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [{"mention": "the bag", "name": "MK bag", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["fact"], "predicate": "serial_number", "role": null, "states": [], "subtypes": []}, "question": "What's the serial number of the bag?", "role": null, "set": null, "shape": "exact", "times": [], "topic": "bag serial number"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00311175, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2211, "cached_input_tokens": 0, "output_tokens": 323, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly gives the bag’s serial number.", "score": 1.0}, {"id": "c2", "reason": "Mentions the same MK bag.", "score": 0.7}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "context": {"c1": {"text": "Fact: The MK bag's serial number is 123ABC. About MK bag and Kabir (partner). No", "state": "current"}, "c2": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c3": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c4": {"text": "Fact: Rohan is Nisha's husband. About Rohan and Nisha (sister). Noted Sunday 12 ", "state": "current"}, "c5": {"text": "Logged purchase: Bought new running shoes on Friday 28 August 2026. August 2026,", "state": "happened"}, "c6": {"text": "Routine: kabir's birthday every year on 14 March, for Kabir (partner), since Mar", "state": "scheduled"}, "c7": {"text": "Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla", "state": "scheduled"}, "c8": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c9": {"text": "Pattern (confirmed): Unwinds with a film after a weekend study session.", "state": "confirmed"}, "c10": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c11": {"text": "To do: Renew my passport, due Tuesday 20 October 2026. Open.", "state": "open"}, "c12": {"text": "Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis", "state": "happened"}, "c13": {"text": "Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb", "state": "happened"}, "c14": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c15": {"text": "Logged pottery class: Did a pottery class at Clay and Kiln Studio; made a lopsid", "state": "happened"}, "c16": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c17": {"text": "To do: Ask Nisha about her interview, for Nisha (sister). Open.", "state": "open"}, "c18": {"text": "Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in ", "state": "happened"}, "c19": {"text": "Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m", "state": "happened"}, "c20": {"text": "Logged run: I ran 12 km in 78 minutes on Sunday 20 September 2026, in the mornin", "state": "happened"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000991, "latency_ms": 0, "ttft_ms": 0, "input_tokens": 781, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "The MK bag's serial number is 123ABC [1]. Just to clarify though—that's Kabir's bag, not yours. Did you need this for something specific?", "timed": true}
+   ],
+   "cost_usd": 0.00429771,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "mk_bag",
+     "kabir_likes_mk"
+    ],
+    "ranked": [
+     "mk_bag",
+     "kabir_likes_mk",
+     "live_pune",
+     "rohan_husband",
+     "running_shoes",
+     "kabir_birthday",
+     "saturday_workshop",
+     "dinner_tonight",
+     "pattern_film",
+     "goa_trip"
+    ],
+    "aggregate": null,
+    "reply": "The MK bag's serial number is 123ABC [1]. Just to clarify though—that's Kabir's bag, not yours. Did you need this for something specific?"
+   }
+  },
+  {
+   "id": "03-kabir-birthday",
+   "title": "A recurring date by person",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 10027,
+   "ttft_ms": 9928,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.93e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to retrieve a personal detail about Kabir."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011062, "latency_ms": 6, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 164, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [{"mention": "Kabir", "name": "Kabir", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["fact"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "When is Kabir's birthday?", "role": null, "set": null, "shape": "exact", "times": [], "topic": "Kabir's birthday"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0031365, "latency_ms": 9625, "ttft_ms": null, "input_tokens": 2190, "cached_input_tokens": 0, "output_tokens": 332, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.4, "reason": ""}, {"id": "c2", "score": 1.0, "reason": "Directly states Kabir's birthday"}, {"id": "c3", "score": 0.4, "reason": ""}, {"id": "c4", "score": 0.4, "reason": ""}, {"id": "c5", "score": 0.4, "reason": ""}, {"id": "c6", "score": 0.4, "reason": ""}, {"id": "c7", "score": 0.4, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Fact: The MK bag's serial number is 123ABC. About MK bag and Kabir (partner). No", "state": "current"}, "c2": {"text": "Routine: kabir's birthday every year on 14 March, for Kabir (partner), since Mar", "state": "scheduled"}, "c3": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c4": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c5": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c6": {"text": "Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb", "state": "happened"}, "c7": {"text": "Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla", "state": "scheduled"}, "c8": {"text": "Fact: Rohan is Nisha's husband. About Rohan and Nisha (sister). Noted Sunday 12 ", "state": "current"}, "c9": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c10": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c11": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c12": {"text": "Note: Meenu (Meenakshi Iyer) runs the Thursday standup at work. About Meenakshi ", "state": "current"}, "c13": {"text": "Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun", "state": "current"}, "c14": {"text": "Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t", "state": "happened"}, "c15": {"text": "Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis", "state": "happened"}, "c16": {"text": "To do: Ask Nisha about her interview, for Nisha (sister). Open.", "state": "open"}, "c17": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c18": {"text": "Happened: Dentist appointment on Saturday 3 October 2026, 5 pm. Weekend, October", "state": "happened"}, "c19": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c20": {"text": "No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000812, "latency_ms": 0, "ttft_ms": 0, "input_tokens": 727, "cached_input_tokens": 0, "output_tokens": 17, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "Kabir's birthday is on 14 March [1].", "timed": true}
+   ],
+   "cost_usd": 0.00414882,
+   "spent_usd": 0.0031365,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "kabir_birthday"
+    ],
+    "ranked": [
+     "mk_bag",
+     "kabir_birthday",
+     "kabir_likes_mk",
+     "dinner_tonight",
+     "goa_trip",
+     "run_misfiled_subtype",
+     "saturday_workshop",
+     "rohan_husband",
+     "watch_dark",
+     "live_pune"
+    ],
+    "aggregate": null,
+    "reply": "Kabir's birthday is on 14 March [1]."
+   }
+  },
+  {
+   "id": "04-show-taste-now",
+   "title": "Evolved preference: what I'm into now, not the old taste",
+   "tags": [
+    "latest"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 3429,
+   "ttft_ms": 3298,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.86e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 721, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to recall your current TV preferences."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014016, "latency_ms": 3, "ttft_ms": null, "input_tokens": 3, "cached_input_tokens": 2736, "output_tokens": 225, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": true, "kinds": ["preference"], "predicate": "genre_taste", "role": null, "states": ["current"], "subtypes": []}, "question": "What kind of shows am I into these days?", "role": null, "set": null, "shape": "latest", "times": [{"anchor": null, "clock": "valid", "direction": "any", "expression": "these days"}], "topic": "show genre preferences"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 41, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0034515, "latency_ms": 3112, "ttft_ms": null, "input_tokens": 2346, "cached_input_tokens": 0, "output_tokens": 376, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states current show preference."}, {"id": "c2", "score": 0.4, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.4, "reason": ""}, {"id": "c5", "score": 0.3, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.4, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.4, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c2": {"text": "Logged watched severance season 2: Watched Severance season 2 and loved it on Fr", "state": "happened"}, "c3": {"text": "Happened: Dentist appointment on Saturday 3 October 2026, 5 pm. Weekend, October", "state": "happened"}, "c4": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c5": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}, "c6": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c7": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c8": {"text": "Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis", "state": "happened"}, "c9": {"text": "Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni", "state": "happened"}, "c10": {"text": "Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla", "state": "scheduled"}, "c11": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c12": {"text": "Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,", "state": "happened"}, "c13": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c14": {"text": "Logged pottery class: Did a pottery class at Clay and Kiln Studio; made a lopsid", "state": "happened"}, "c15": {"text": "Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i", "state": "happened"}, "c16": {"text": "Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m", "state": "happened"}, "c17": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c18": {"text": "Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb", "state": "happened"}, "c19": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c20": {"text": "Moved: Dentist appointment was on Friday 2 October 2026, 5 pm; moved to Saturday", "state": "moved"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000915, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 755, "cached_input_tokens": 0, "output_tokens": 32, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You're into lighter shows these days [1]. You mentioned you're done with thrillers, so you've moved away from that genre.", "timed": true}
+   ],
+   "cost_usd": 0.00459608,
+   "spent_usd": 0.0034515,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "latest"
+    ],
+    "selected": [
+     "done_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "watched_severance",
+     "dentist_new",
+     "watch_severance",
+     "likes_thrillers",
+     "dinner_tonight",
+     "watch_dark",
+     "quiet_hours_read",
+     "run_sep_09",
+     "saturday_workshop"
+    ],
+    "aggregate": null,
+    "reply": "You're into lighter shows these days [1]. You mentioned you're done with thrillers, so you've moved away from that genre."
+   }
+  },
+  {
+   "id": "05-lived-before",
+   "title": "History: where I lived before Pune",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 2
+   },
+   "latency_ms": 4108,
+   "ttft_ms": 3791,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.03e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking about a personal detail that may be in your saved memories."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.112e-05, "latency_ms": 5, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 125, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "living location", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "Pune", "name": "Pune", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["fact"], "predicate": "lives_in", "role": null, "states": ["superseded"], "subtypes": []}, "question": "Where did I live before Pune?", "role": null, "set": null, "shape": "history", "times": [], "topic": "where I lived before Pune"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 27, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00313725, "latency_ms": 2259, "ttft_ms": null, "input_tokens": 2251, "cached_input_tokens": 0, "output_tokens": 322, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "Confirms current Pune residence."}, {"id": "c2", "score": 1.0, "reason": "Directly states the previous city."}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c2": {"text": "No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now", "state": "superseded"}, "c3": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c4": {"text": "Fact: Rohan is Nisha's husband. About Rohan and Nisha (sister). Noted Sunday 12 ", "state": "current"}, "c5": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c6": {"text": "Fact: The MK bag's serial number is 123ABC. About MK bag and Kabir (partner). No", "state": "current"}, "c7": {"text": "Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m", "state": "happened"}, "c8": {"text": "Note: FitZone moved to the far side of the city, forty minutes from home each wa", "state": "current"}, "c9": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c10": {"text": "Logged run: I ran 5 km in 31 minutes at Vetal Hill on Wednesday 2 September 2026", "state": "happened"}, "c11": {"text": "Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,", "state": "happened"}, "c12": {"text": "Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in ", "state": "happened"}, "c13": {"text": "Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i", "state": "happened"}, "c14": {"text": "Done: Book the hotel for the Goa trip.", "state": "done"}, "c15": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c16": {"text": "Note: Meenu (Meenakshi Iyer) runs the Thursday standup at work. About Meenakshi ", "state": "current"}, "c17": {"text": "Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb", "state": "happened"}, "c18": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c19": {"text": "Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni", "state": "happened"}, "c20": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000938, "latency_ms": 1439, "ttft_ms": 1242, "input_tokens": 773, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You lived in Bengaluru, from June 2023 until you moved to Pune on 12 September [1][2].", "timed": true}
+   ],
+   "cost_usd": 0.00425721,
+   "spent_usd": 0.00407525,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "live_pune",
+     "live_bengaluru"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "half_marathon_goal",
+     "rohan_husband",
+     "rohan_jazz",
+     "mk_bag",
+     "run_sep_27",
+     "gym_reason",
+     "goa_trip",
+     "run_sep_02"
+    ],
+    "aggregate": null,
+    "reply": "You lived in Bengaluru, from June 2023 until you moved to Pune on 12 September [1][2]."
+   }
+  },
+  {
+   "id": "06-taste-history",
+   "title": "History of a preference",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 2866,
+   "ttft_ms": 2754,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.24e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to compare your current show preferences with what I know about your past taste."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012072, "latency_ms": 7, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 184, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["preference"], "predicate": "genre_taste", "role": null, "states": ["current", "superseded"], "subtypes": []}, "question": "How has my taste in shows changed?", "role": null, "set": null, "shape": "history", "times": [], "topic": "show preferences over time"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 27, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00319125, "latency_ms": 2463, "ttft_ms": null, "input_tokens": 2059, "cached_input_tokens": 0, "output_tokens": 366, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states current show preference change."}, {"id": "c2", "score": 1.0, "reason": "Shows the earlier preference before change."}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.4, "reason": ""}, {"id": "c10", "score": 0.4, "reason": ""}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.4, "reason": ""}, {"id": "c13", "score": 0.4, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c2": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}, "c3": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c4": {"text": "Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun", "state": "current"}, "c5": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c6": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c7": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c8": {"text": "Happened: Dentist appointment on Saturday 3 October 2026, 5 pm. Weekend, October", "state": "happened"}, "c9": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c10": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c11": {"text": "Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju", "state": "dropped"}, "c12": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c13": {"text": "Logged watched severance season 2: Watched Severance season 2 and loved it on Fr", "state": "happened"}, "c14": {"text": "No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now", "state": "superseded"}, "c15": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c16": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c17": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c18": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c19": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c20": {"text": "Logged pottery class: Did a pottery class at Clay and Kiln Studio; made a lopsid", "state": "happened"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001004, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 759, "cached_input_tokens": 0, "output_tokens": 49, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "Your taste in shows has shifted away from thrillers. Until mid-September, you liked thrillers [2], but since Sunday 20 September you've been done with them and want lighter shows instead [1].", "timed": true}
+   ],
+   "cost_usd": 0.00440891,
+   "spent_usd": 0.00319125,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "done_thrillers",
+     "likes_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "likes_thrillers",
+     "live_pune",
+     "rohan_birds",
+     "rohan_jazz",
+     "vegetarian",
+     "kabir_likes_mk",
+     "dentist_new",
+     "watch_mindhunter",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "Your taste in shows has shifted away from thrillers. Until mid-September, you liked thrillers [2], but since Sunday 20 September you've been done with them and want lighter shows instead [1]."
+   }
+  },
+  {
+   "id": "07-diet",
+   "title": "A core preference by exact lookup",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 372,
+   "ttft_ms": 281,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.75e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 715, "cached_input_tokens": 0, "output_tokens": 32, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 1.0, "intent": "recall", "reason": "You’re asking me to recall a saved detail about you."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.982e-05, "latency_ms": 6, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 2722, "output_tokens": 103, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "diet", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["preference"], "predicate": "diet", "role": null, "states": ["current"], "subtypes": []}, "question": "Am I vegetarian?", "role": null, "set": null, "shape": "exact", "times": [], "topic": "whether I am vegetarian"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00309225, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2119, "cached_input_tokens": 0, "output_tokens": 334, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly says you're vegetarian.", "score": 1.0}, {"id": "c2", "reason": "", "score": 0.0}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "context": {"c1": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c2": {"text": "Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun", "state": "current"}, "c3": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c4": {"text": "Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.", "state": "current"}, "c5": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c6": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c7": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c8": {"text": "Fact: I live in Pune. True since Saturday 12 September 2026.", "state": "current"}, "c9": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c10": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c11": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c12": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c13": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c14": {"text": "Note: Went for a 6 km run along the river this morning; my knees felt fine. Note", "state": "current"}, "c15": {"text": "Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in ", "state": "happened"}, "c16": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c17": {"text": "Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i", "state": "happened"}, "c18": {"text": "Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,", "state": "happened"}, "c19": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}, "c20": {"text": "No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000759, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 699, "cached_input_tokens": 0, "output_tokens": 12, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "Yes, you're vegetarian [1].", "timed": true}
+   ],
+   "cost_usd": 0.00401887,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "vegetarian"
+    ],
+    "ranked": [
+     "vegetarian",
+     "rohan_birds",
+     "done_thrillers",
+     "rohan_jazz",
+     "kabir_likes_mk",
+     "try_blue_lotus",
+     "try_saffron",
+     "live_pune",
+     "try_tin_spoon",
+     "half_marathon_goal"
+    ],
+    "aggregate": null,
+    "reply": "Yes, you're vegetarian [1]."
+   }
+  },
+  {
+   "id": "08-watch-list",
+   "title": "List: wanted shows only (not watched, not dropped)",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 2762,
+   "ttft_ms": 2622,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.02e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 717, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to recall what you’ve saved to your watch list."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.462e-05, "latency_ms": 4, "ttft_ms": null, "input_tokens": 3, "cached_input_tokens": 2732, "output_tokens": 134, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted", "active"], "subtypes": ["watch"]}, "question": "What's on my watch list?", "role": null, "set": null, "shape": "list", "times": [], "topic": "watch list"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00308025, "latency_ms": 2364, "ttft_ms": null, "input_tokens": 2037, "cached_input_tokens": 0, "output_tokens": 345, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly on your watch list"}, {"id": "c2", "score": 1.0, "reason": "Directly on your watch list"}, {"id": "c3", "score": 0.4, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.4, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.3, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c2": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c3": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c4": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c5": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c6": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c7": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c8": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c9": {"text": "Logged watched severance season 2: Watched Severance season 2 and loved it on Fr", "state": "happened"}, "c10": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c11": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c12": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c13": {"text": "Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun", "state": "current"}, "c14": {"text": "Note (idea): Trading idea: a momentum strategy on index funds, rebalanced monthl", "state": "current"}, "c15": {"text": "Saved link: The Rust book, ownership chapters. The free online Rust book; the ow", "state": "saved"}, "c16": {"text": "Pattern (confirmed): Unwinds with a film after a weekend study session.", "state": "confirmed"}, "c17": {"text": "Logged purchase: Bought new running shoes on Friday 28 August 2026. August 2026,", "state": "happened"}, "c18": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c19": {"text": "Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju", "state": "dropped"}, "c20": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001069, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 774, "cached_input_tokens": 0, "output_tokens": 59, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You want to watch Dark with Kabir [1] and Mindhunter [2]. Both are on your wish list—Dark is more recent (noted 2 weeks ago), while Mindhunter has been there since 5 weeks ago.", "timed": true}
+   ],
+   "cost_usd": 0.00433445,
+   "spent_usd": 0.00308025,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "watch_severance",
+     "learn_rust",
+     "try_tin_spoon",
+     "try_saffron",
+     "half_marathon_goal",
+     "try_blue_lotus",
+     "watched_severance",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "You want to watch Dark with Kabir [1] and Mindhunter [2]. Both are on your wish list—Dark is more recent (noted 2 weeks ago), while Mindhunter has been there since 5 weeks ago."
+   }
+  },
+  {
+   "id": "09-shows-queued",
+   "title": "§8.2 category: shows queued",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 3933,
+   "ttft_ms": 3819,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.93e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to recall shows you’ve saved to watch."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.162e-05, "latency_ms": 7, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 106, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted"], "subtypes": ["watch"]}, "question": "What shows do I have queued?", "role": null, "set": null, "shape": "list", "times": [], "topic": "queued shows"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 28, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.003198, "latency_ms": 3508, "ttft_ms": null, "input_tokens": 2098, "cached_input_tokens": 0, "output_tokens": 361, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.98, "reason": "Queued show on watch list."}, {"id": "c2", "score": 0.98, "reason": "Queued show on watch list."}, {"id": "c3", "score": 0.1, "reason": "Already watched, not queued."}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.4, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.2, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c2": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c3": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c4": {"text": "Logged watched severance season 2: Watched Severance season 2 and loved it on Fr", "state": "happened"}, "c5": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c6": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c7": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c8": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c9": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c10": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c11": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c12": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c13": {"text": "Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis", "state": "happened"}, "c14": {"text": "To do: Back up the photos on my phone. Open.", "state": "open"}, "c15": {"text": "To do: Ask Nisha about her interview, for Nisha (sister). Open.", "state": "open"}, "c16": {"text": "Saved link: The Rust book, ownership chapters. The free online Rust book; the ow", "state": "saved"}, "c17": {"text": "Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t", "state": "happened"}, "c18": {"text": "Logged cancelled the fitzone membership: Cancelled my FitZone gym membership on ", "state": "happened"}, "c19": {"text": "Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju", "state": "dropped"}, "c20": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001261, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 776, "cached_input_tokens": 0, "output_tokens": 97, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You have two shows queued:\n\n1. Dark with Kabir [1] — noted 2 weeks ago\n2. Mindhunter [2] — noted 5 weeks ago\n\nBoth are on your wish list. Given what you mentioned about being done with thrillers, I'm curious whether these still appeal to you, especially Mindhunter which is pretty intense. Would you like to revisit either of these?", "timed": true}
+   ],
+   "cost_usd": 0.00463048,
+   "spent_usd": 0.003198,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "watch_severance",
+     "watched_severance",
+     "learn_rust",
+     "half_marathon_goal",
+     "try_tin_spoon",
+     "try_saffron",
+     "done_thrillers",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "You have two shows queued:\n\n1. Dark with Kabir [1] — noted 2 weeks ago\n2. Mindhunter [2] — noted 5 weeks ago\n\nBoth are on your wish list. Given what you mentioned about being done with thrillers, I'm curious whether these still appeal to you, especially Mindhunter which is pretty intense. Would you like to revisit either of these?"
+   }
+  },
+  {
+   "id": "10-open-tasks",
+   "title": "List: open tasks, not the done one",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 4,
+    "soft_only": 0
+   },
+   "latency_ms": 4531,
+   "ttft_ms": 3399,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.82e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 717, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to retrieve your saved open intentions."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.952e-05, "latency_ms": 6, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2722, "output_tokens": 102, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["task"], "predicate": null, "role": null, "states": ["open"], "subtypes": []}, "question": "What are my open tasks?", "role": null, "set": null, "shape": "list", "times": [], "topic": "open tasks"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.8e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.003009, "latency_ms": 2310, "ttft_ms": null, "input_tokens": 2086, "cached_input_tokens": 0, "output_tokens": 321, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Open task, directly answers question"}, {"id": "c2", "score": 1.0, "reason": "Open task, directly answers question"}, {"id": "c3", "score": 1.0, "reason": "Open task, directly answers question"}, {"id": "c4", "score": 1.0, "reason": "Open task, directly answers question"}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "To do: Renew my passport, due Tuesday 20 October 2026. Open.", "state": "open"}, "c2": {"text": "To do: Back up the photos on my phone. Open.", "state": "open"}, "c3": {"text": "To do: Get the kitchen tap fixed. Open.", "state": "open"}, "c4": {"text": "To do: Ask Nisha about her interview, for Nisha (sister). Open.", "state": "open"}, "c5": {"text": "Saved link: The Rust book, ownership chapters. The free online Rust book; the ow", "state": "saved"}, "c6": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c7": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c8": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c9": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c10": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c11": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c12": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c13": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c14": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c15": {"text": "Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis", "state": "happened"}, "c16": {"text": "Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla", "state": "scheduled"}, "c17": {"text": "Logged run: I ran 12 km in 78 minutes on Sunday 20 September 2026, in the mornin", "state": "happened"}, "c18": {"text": "Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni", "state": "happened"}, "c19": {"text": "Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,", "state": "happened"}, "c20": {"text": "Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m", "state": "happened"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001446, "latency_ms": 1826, "ttft_ms": 804, "input_tokens": 811, "cached_input_tokens": 0, "output_tokens": 127, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You have four open tasks:\n\n1. Renew your passport — due in 2 weeks (Tuesday 20 October) [1]\n2. Back up the photos on your phone — noted 7 days ago [2]\n3. Get the kitchen tap fixed — noted 8 days ago [3]\n4. Ask Nisha about her interview — noted 5 days ago [4]\n\nThe passport has a deadline, but the other three have been sitting for a bit. Would you like me to help you prioritize or track progress on any of these?", "timed": true}
+   ],
+   "cost_usd": 0.004623,
+   "spent_usd": 0.004455,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "renew_passport",
+     "backup_photos",
+     "fix_tap",
+     "nisha_interview"
+    ],
+    "ranked": [
+     "renew_passport",
+     "backup_photos",
+     "fix_tap",
+     "nisha_interview",
+     "rust_book",
+     "learn_rust",
+     "half_marathon_goal",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan"
+    ],
+    "aggregate": null,
+    "reply": "You have four open tasks:\n\n1. Renew your passport — due in 2 weeks (Tuesday 20 October) [1]\n2. Back up the photos on your phone — noted 7 days ago [2]\n3. Get the kitchen tap fixed — noted 8 days ago [3]\n4. Ask Nisha about her interview — noted 5 days ago [4]\n\nThe passport has a deadline, but the other three have been sitting for a bit. Would you like me to help you prioritize or track progress on "
+   }
+  },
+  {
+   "id": "11-not-tried",
+   "title": "Set: want-to-try places with no visit",
+   "tags": [
+    "set"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "set",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 3762,
+   "ttft_ms": 3658,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.03e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking which restaurants from your saved plans you haven’t tried yet."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.812e-05, "latency_ms": 5, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 119, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted"], "subtypes": ["try"]}, "question": "Which restaurants haven't I tried yet?", "role": null, "set": {"entity": null, "op": "without", "other_kind": "episode"}, "shape": "set", "times": [], "topic": "restaurants not yet tried"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0036165, "latency_ms": 3387, "ttft_ms": null, "input_tokens": 2008, "cached_input_tokens": 0, "output_tokens": 469, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly says not tried yet."}, {"id": "c2", "score": 1.0, "reason": "Directly says not tried yet."}, {"id": "c3", "score": 1.0, "reason": "Directly says not tried yet."}, {"id": "c4", "score": 0.4, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.7, "reason": "Upcoming restaurant visit; likely untried."}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.7, "reason": "Shows The Tin Spoon was tried."}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c2": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c3": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c4": {"text": "Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday", "state": "wanted"}, "c5": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c6": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c7": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c8": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c9": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c10": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c11": {"text": "Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t", "state": "happened"}, "c12": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c13": {"text": "Saved link: The Rust book, ownership chapters. The free online Rust book; the ow", "state": "saved"}, "c14": {"text": "Saved article: Why momentum strategies fail after costs. Saved Friday 25 Septemb", "state": "saved"}, "c15": {"text": "Preference: I'm vegetarian. Noted Monday 4 May 2026.", "state": "current"}, "c16": {"text": "To do: Get the kitchen tap fixed. Open.", "state": "open"}, "c17": {"text": "To do: Renew my passport, due Tuesday 20 October 2026. Open.", "state": "open"}, "c18": {"text": "Done: Book the hotel for the Goa trip.", "state": "done"}, "c19": {"text": "To do: Back up the photos on my phone. Open.", "state": "open"}, "c20": {"text": "Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju", "state": "dropped"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00094, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 770, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You have two restaurants on your wish list that you haven't tried yet: Saffron Street [1] and Blue Lotus Kitchen [2].", "timed": true}
+   ],
+   "cost_usd": 0.00473534,
+   "spent_usd": 0.0036165,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "set"
+    ],
+    "selected": [
+     "try_saffron",
+     "try_blue_lotus"
+    ],
+    "ranked": [
+     "try_saffron",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan",
+     "watch_mindhunter",
+     "watch_dark",
+     "learn_rust",
+     "dinner_tonight",
+     "learn_guitar",
+     "half_marathon_goal"
+    ],
+    "aggregate": null,
+    "reply": "You have two restaurants on your wish list that you haven't tried yet: Saffron Street [1] and Blue Lotus Kitchen [2]."
+   }
+  },
+  {
+   "id": "12-shared-shows",
+   "title": "Set: shows Kabir and I both want to watch",
+   "tags": [
+    "set"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "set",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 3993,
+   "ttft_ms": 3873,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.18e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 723, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to recall shows that you and Kabir both want to watch."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010068, "latency_ms": 6, "ttft_ms": null, "input_tokens": 3, "cached_input_tokens": 2738, "output_tokens": 146, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "Kabir", "name": "Kabir", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted"], "subtypes": ["watch"]}, "question": "Which shows do Kabir and I both want to watch?", "role": null, "set": {"entity": "Kabir", "op": "shared_with", "other_kind": null}, "shape": "set", "times": [], "topic": "shows Kabir and I both want to watch"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 9.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 48, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00350175, "latency_ms": 3591, "ttft_ms": null, "input_tokens": 2149, "cached_input_tokens": 0, "output_tokens": 420, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.4, "reason": ""}, {"id": "c2", "score": 0.4, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.3, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.4, "reason": ""}, {"id": "c11", "score": 0.3, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "context": {"c1": {"text": "Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc", "state": "wanted"}, "c2": {"text": "Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa", "state": "wanted"}, "c3": {"text": "Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda", "state": "current"}, "c4": {"text": "Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a", "state": "scheduled"}, "c5": {"text": "Routine: kabir's birthday every year on 14 March, for Kabir (partner), since Mar", "state": "scheduled"}, "c6": {"text": "Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m", "state": "fulfilled"}, "c7": {"text": "Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p", "state": "happened"}, "c8": {"text": "Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb", "state": "happened"}, "c9": {"text": "Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla", "state": "scheduled"}, "c10": {"text": "Preference: I'm done with thrillers; I want lighter shows now. True since Sunday", "state": "current"}, "c11": {"text": "Logged watched severance season 2: Watched Severance season 2 and loved it on Fr", "state": "happened"}, "c12": {"text": "Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S", "state": "active"}, "c13": {"text": "Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. ", "state": "wanted"}, "c14": {"text": "Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N", "state": "wanted"}, "c15": {"text": "Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.", "state": "wanted"}, "c16": {"text": "Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le", "state": "wanted"}, "c17": {"text": "Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20", "state": "wanted"}, "c18": {"text": "Fact: The MK bag's serial number is 123ABC. About MK bag and Kabir (partner). No", "state": "current"}, "c19": {"text": "Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju", "state": "dropped"}, "c20": {"text": "No longer true since 20 September 2026: I liked thrillers. I'm done with thrille", "state": "superseded"}}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000947, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 737, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You want to watch Dark with Kabir [1]. That's the one I have on record so far.\n\nWould you like to tell me about other shows you're both interested in?", "timed": true}
+   ],
+   "cost_usd": 0.00464219,
+   "spent_usd": 0.00350175,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "set"
+    ],
+    "selected": [
+     "watch_dark"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "kabir_likes_mk",
+     "dinner_tonight",
+     "kabir_birthday",
+     "watch_severance",
+     "goa_trip",
+     "run_misfiled_subtype",
+     "saturday_workshop",
+     "done_thrillers"
+    ],
+    "aggregate": null,
+    "reply": "You want to watch Dark with Kabir [1]. That's the one I have on record so far.\n\nWould you like to tell me about other shows you're both interested in?"
+   }
+  }
+ ]
+}

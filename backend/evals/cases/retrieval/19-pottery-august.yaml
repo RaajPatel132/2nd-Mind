@@ -7,18 +7,22 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking me to retrieve a detail from your past activities.
   plan:
     sub_queries:
     - shape: time_window
       question: What did I do at the pottery studio in August?
-      topic: pottery studio in August
-      about: pottery studio
-      entities:
-      - mention: the pottery studio
-        name: Clay and Kiln Studio
+      topic: activities at the pottery studio
+      about: pottery studio activities
       times:
       - expression: in August
         clock: occurred
         direction: past
+      entities:
+      - mention: the pottery studio
+        name: Clay and Kiln Studio
+      filters:
+        kinds:
+        - episode
+        role: at

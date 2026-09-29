@@ -7,11 +7,14 @@ reply_contains:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking me to recall something you may have previously shared about Berlin.
   plan:
     sub_queries:
     - shape: conversation
       question: What did I tell you about Berlin?
-      topic: Berlin
+      topic: what the user said about Berlin
+      about: Berlin
+      entities:
+      - mention: Berlin
       role: user

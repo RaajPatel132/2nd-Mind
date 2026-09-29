@@ -4,19 +4,49 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: I'm vegetarian
 model:
-  intent: {intent: save, confidence: 0.95, reason: "A dietary preference."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You shared a personal dietary preference that may be useful to remember.
   extract:
+    entities:
+    - id: e1
+      mention: I
+      kind: self
     memories:
-      - ref: m1
-        kind: preference
-        title: Vegetarian
-        text: I'm vegetarian.
-        category: food/diet
-        subject: self
-        predicate: dietary_preference
-        value: {text: vegetarian}
-        layer: core
-        layer_rationale: A standing preference about the user.
+    - ref: m1
+      kind: preference
+      state: current
+      title: Vegetarian
+      text: I'm vegetarian.
+      category: food
+      tags:
+      - diet
+      subject: e1
+      predicate: diet
+      value:
+        text: vegetarian
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sensitivity: personal
+      importance: 3
+      layer: core
+      layer_rationale: Standing preference about the user that affects daily life (food choices, dining
+        out, meal planning).
+      rationale: This is a personal preference about the user's diet that should always be known.
+  enrich:
+    memories:
+    - alt:
+      - What are my dietary preferences?
+      - Do I eat meat?
+      - Am I vegetarian?
+      cues:
+      - when choosing a restaurant
+      - when planning meals
+      - when selecting food for me
+      ref: m1
 expect:
   memories:
     - match: vegetarian

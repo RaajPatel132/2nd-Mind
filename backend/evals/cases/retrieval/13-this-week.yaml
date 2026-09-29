@@ -12,14 +12,19 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.89
+    reason: You’re asking what plans or intentions you have coming up this week.
   plan:
     sub_queries:
     - shape: time_window
       question: What's coming up this week?
-      topic: this week's plans
+      topic: things coming up this week
       times:
       - expression: this week
         clock: occurred
         direction: future
+      filters:
+        kinds:
+        - plan
+        states:
+        - scheduled

@@ -19,20 +19,60 @@ setup:
             entities: [{entity: e1, role: about}]
 input: My wife Kabir is allergic to lilies
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A fact about the user's wife."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You’re sharing a useful fact about your wife’s allergy to remember.
   extract:
     entities:
-      - {id: e1, mention: My wife, name: Kabir, kind: person, label: wife}
+    - id: e1
+      mention: Kabir
+      name: Kabir
+      kind: person
+      label: wife
     memories:
-      - ref: m1
-        kind: fact
-        title: Kabir is allergic to lilies
-        text: Kabir (my wife) is allergic to lilies.
-        category: people/health
-        subject: e1
-        predicate: allergic_to
-        value: {text: lilies}
-        entities: [{entity: e1, role: about}]
+    - ref: m1
+      kind: fact
+      state: current
+      title: Kabir is allergic to lilies
+      text: My wife Kabir is allergic to lilies.
+      category: health
+      tags:
+      - allergy
+      attributes:
+      - key: allergen
+        value: lilies
+      subject: e1
+      predicate: allergic_to
+      value:
+        text: lilies
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sensitivity: personal
+      importance: 3
+      layer: core
+      layer_rationale: Standing fact about a key person (wife) that affects planning, especially for gifts
+        or flowers.
+      rationale: Fact about Kabir's medical condition. Stored as a core memory because it's important personal
+        information about the wife that should inform decisions about flowers, gifts, and dining.
+    relations:
+    - src: self
+      relation: spouse_of
+      dst: e1
+      evidence: m1
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - What flowers should I avoid buying Kabir?
+      - Is Kabir allergic to any flowers?
+      - Which flowers are unsafe for my wife?
+      cues:
+      - when choosing flowers for Kabir
+      - when ordering a bouquet for my wife
+      - when planning a flower-filled event with Kabir
 expect:
   memories:
     - match: lilies

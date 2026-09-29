@@ -5,28 +5,81 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Mindhunter, and remind me to call Nisha Sunday
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A show and a reminder."}
+  intent:
+    confidence: 0.97
+    intent: save
+    reason: You mentioned Mindhunter and a plan to call Nisha on Sunday, both of which are worth keeping.
   extract:
     entities:
-      - {id: e1, mention: Mindhunter, name: Mindhunter, kind: work}
-      - {id: e2, mention: Nisha, name: Nisha, kind: person}
+    - id: e1
+      mention: Mindhunter
+      name: Mindhunter
+      kind: work
+    - id: e2
+      mention: Nisha
+      name: Nisha
+      kind: person
     memories:
-      - ref: m1
-        kind: intention
-        subtype: watch
-        title: Mindhunter
-        text: I want to watch Mindhunter.
-        category: entertainment/series
-        entities: [{entity: e1, role: about}]
-      - ref: m2
-        kind: task
-        title: Call Nisha
-        text: Call Nisha on [[t1]].
-        category: people/calls
-        entities: [{entity: e2, role: with}]
-        times:
-          - {id: t1, expression: Sunday, clock: due, direction: future}
-          - {id: t2, expression: Sunday, clock: trigger, direction: future}
+    - ref: m1
+      kind: intention
+      subtype: watch
+      state: wanted
+      title: Mindhunter
+      text: I want to watch Mindhunter.
+      category: entertainment/series
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sentiment: 1
+      sensitivity: normal
+      importance: 2
+      layer: archive
+      layer_rationale: A watch intention without urgency or context is archived.
+      rationale: An intention to watch a show.
+    - ref: m2
+      kind: task
+      subtype: call
+      state: open
+      title: Call Nisha
+      text: I need to call Nisha.
+      category: communication
+      entities:
+      - entity: e2
+        role: with
+      times:
+      - id: t1
+        expression: Sunday
+        clock: due
+        direction: future
+      reminder:
+        lead: on the day
+      modality: asserted
+      sensitivity: normal
+      importance: 2
+      layer: quick
+      layer_rationale: A task due soon (this coming Sunday) is in the quick layer.
+      rationale: A task to call Nisha on Sunday with a reminder.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - What show do I want to watch?
+      - Which series is on my watchlist?
+      - What was that crime show I planned to watch?
+      cues:
+      - when choosing a show to watch
+      - when looking for a crime series
+      - when checking my watchlist
+    - ref: m2
+      alt:
+      - Who do I need to call?
+      - Who was I supposed to phone?
+      - What's the call I need to make?
+      cues:
+      - when reviewing my calls to make
+      - when deciding whom to phone
+      - when following up with Nisha
 expect:
   memories:
     - match: mindhunter

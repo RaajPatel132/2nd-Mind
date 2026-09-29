@@ -6,10 +6,20 @@ must_abstain: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking what information you previously saved about sourdough.
   plan:
     sub_queries:
     - shape: semantic
       question: What did I save about sourdough?
       topic: sourdough
+      about: sourdough
+      times:
+      - expression: did I save
+        clock: mentioned
+        direction: past
+      entities:
+      - mention: sourdough
+      filters:
+        kinds:
+        - resource

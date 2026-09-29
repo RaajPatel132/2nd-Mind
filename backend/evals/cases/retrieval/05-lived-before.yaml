@@ -8,18 +8,82 @@ reply_contains:
 - Bengaluru
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking about a personal detail that may be in your saved memories.
   plan:
     sub_queries:
-    - shape: history
-      question: Where did I live before Pune?
-      topic: previous home
+    - about: living location
+      entities:
+      - mention: Pune
+        name: Pune
       filters:
+        kinds:
+        - fact
         predicate: lives_in
+        states:
+        - superseded
+      question: Where did I live before Pune?
+      shape: history
+      topic: where I lived before Pune
   rerank:
-  - match: Bengaluru
-    score: 0.95
-  - match: live in Pune
-    score: 0.3
+  - match: 'Fact: I live in Pune. True since Saturday 12 September 2026.'
+    score: 0.7
+    state: current
+  - match: 'No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now'
+    score: 1.0
+    state: superseded
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Fact: Rohan is Nisha''s husband. About Rohan and Nisha (sister). Noted Sunday 12 '
+    score: 0.0
+    state: current
+  - match: 'Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.'
+    score: 0.0
+    state: current
+  - match: 'Fact: The MK bag''s serial number is 123ABC. About MK bag and Kabir (partner). No'
+    score: 0.0
+    state: current
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened
+  - match: 'Note: FitZone moved to the far side of the city, forty minutes from home each wa'
+    score: 0.0
+    state: current
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 31 minutes at Vetal Hill on Wednesday 2 September 2026'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in '
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i'
+    score: 0.0
+    state: happened
+  - match: 'Done: Book the hotel for the Goa trip.'
+    score: 0.0
+    state: done
+  - match: 'Preference: I''m vegetarian. Noted Monday 4 May 2026.'
+    score: 0.0
+    state: current
+  - match: 'Note: Meenu (Meenakshi Iyer) runs the Thursday standup at work. About Meenakshi '
+    score: 0.0
+    state: current
+  - match: 'Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.0
+    state: wanted
+  - match: 'Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni'
+    score: 0.0
+    state: happened
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.0
+    state: scheduled

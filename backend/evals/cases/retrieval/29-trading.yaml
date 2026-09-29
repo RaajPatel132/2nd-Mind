@@ -8,13 +8,21 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking what information you previously saved about trading.
   plan:
     sub_queries:
     - shape: semantic
       question: What did I save about trading?
-      topic: trading
+      topic: saved information about trading
+      about: trading
+      entities:
+      - mention: trading
+        name: Trading
+      filters:
+        kinds:
+        - resource
+        role: about
   rerank:
   - match: strategies fail
     score: 0.85

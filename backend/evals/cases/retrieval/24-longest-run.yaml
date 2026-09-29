@@ -6,13 +6,14 @@ aggregate: 12
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking me to retrieve a detail from your running history.
   plan:
     sub_queries:
     - shape: count
       question: What's the longest run I've logged?
-      topic: longest run
+      topic: longest logged run
+      about: running
       filters:
         kinds:
         - episode

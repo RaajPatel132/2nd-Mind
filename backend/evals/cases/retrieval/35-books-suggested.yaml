@@ -7,11 +7,12 @@ reply_contains:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking me to recall book recommendations I may have suggested earlier.
   plan:
     sub_queries:
     - shape: conversation
       question: What books did you suggest for a slow weekend?
-      topic: book suggestions
+      topic: books suggested for a slow weekend
+      about: books
       role: assistant

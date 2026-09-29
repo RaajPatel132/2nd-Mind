@@ -5,21 +5,45 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: If I get the Berlin offer I'll move to Berlin
 model:
-  intent: {intent: save, confidence: 0.6, reason: "A possible move."}
+  intent:
+    confidence: 0.98
+    intent: save
+    reason: You shared a possible future plan to move to Berlin if you receive the offer.
   extract:
     entities:
-      - {id: e1, mention: Berlin, name: Berlin, kind: place}
+    - id: e1
+      mention: I
+      kind: self
+    - id: e2
+      mention: Berlin
+      name: Berlin
+      kind: place
     memories:
-      - ref: m1
-        kind: fact
-        title: Moving to Berlin
-        text: I'll move to Berlin if I get the Berlin offer.
-        subject: self
-        predicate: lives_in
-        value: {text: Berlin}
-        entities: [{entity: e1, role: at}]
-        modality: hypothetical
-        rationale: Conditional on an offer.
+    - ref: m1
+      kind: intention
+      subtype: visit
+      state: wanted
+      title: Move to Berlin
+      text: If I get the Berlin offer, I will move to Berlin.
+      category: life/relocation
+      tags:
+      - conditional
+      - future
+      subject: self
+      entities:
+      - entity: e1
+        role: about
+      - entity: e2
+        role: at
+      modality: hypothetical
+      sensitivity: normal
+      importance: 3
+      layer: archive
+      layer_rationale: A conditional future intention dependent on receiving an offer; not immediately active,
+        so archived.
+      rationale: This is a hypothetical intention (subtype 'visit' captures the relocation intent) contingent
+        on receiving the Berlin offer. Marked as hypothetical modality since it is conditional ('if I get
+        the offer'). The intention is about moving to Berlin, which is the place entity with role 'at'.
 expect:
   not_written: [P-MOD-1|model]
   counts: {fact: 0}

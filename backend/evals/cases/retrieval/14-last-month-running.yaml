@@ -12,13 +12,13 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.97
+    reason: You’re asking what running-related information you shared last month.
   plan:
     sub_queries:
     - shape: time_window
       question: Anything from last month about running?
-      topic: running last month
+      topic: running
       about: running
       times:
       - expression: last month

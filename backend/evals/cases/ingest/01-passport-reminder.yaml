@@ -10,25 +10,56 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Remind me to renew my passport before it expires on the 3rd of next month.
 model:
-  intent: {intent: save, confidence: 0.95, reason: "A deadline to keep, with a reminder."}
+  intent:
+    confidence: 0.98
+    intent: save
+    reason: You’ve asked to remember a reminder to renew your passport before it expires on October 3, 2026.
   extract:
     entities:
-      - {id: e1, mention: my passport, name: passport, kind: thing}
+    - id: e1
+      mention: passport
+      name: passport
+      kind: thing
     memories:
-      - ref: m1
-        kind: task
-        subtype: renewal
-        title: Renew passport
-        text: Renew my passport before it expires on [[t1]].
-        category: admin
-        tags: [passport, renewal]
-        entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: the 3rd of next month, clock: due, direction: future}]
-        reminder: {lead: null}
-        importance: 4
-        layer: quick
-        layer_rationale: Due within a month.
-        rationale: A dated deadline, and the user asked to be reminded.
+    - ref: m1
+      kind: task
+      subtype: renewal
+      state: open
+      title: Renew passport
+      text: I need to renew my passport before it expires on [[t1]].
+      category: admin
+      tags:
+      - passport
+      - expiry
+      subject: e1
+      entities:
+      - entity: e1
+        role: about
+      times:
+      - id: t1
+        expression: the 3rd of next month
+        clock: due
+        direction: future
+      reminder: {}
+      modality: asserted
+      sensitivity: normal
+      importance: 4
+      layer: quick
+      layer_rationale: Task with a specific deadline coming up soon, should be in quick layer for timely
+        action.
+      rationale: A task to renew passport before the stated expiry date. The reminder with default lead
+        (day before) ensures the user is prompted before the deadline.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - when does my passport expire
+      - passport renewal reminder
+      - renewing my passport before expiration
+      cues:
+      - when planning my passport renewal
+      - when checking what paperwork I need to handle
+      - when preparing for international travel
 expect:
   memories:
     - match: passport

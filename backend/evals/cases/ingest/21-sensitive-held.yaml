@@ -5,19 +5,55 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: I've been seeing a therapist for anxiety since March
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A personal health fact."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: This shares an ongoing personal fact about your mental health care that may be useful to remember.
   extract:
+    entities:
+    - id: e1
+      mention: I
+      kind: self
     memories:
-      - ref: m1
-        kind: fact
-        title: Seeing a therapist
-        text: I've been seeing a therapist for anxiety since [[t1]].
-        category: health/mental
-        subject: self
-        times: [{id: t1, expression: since March, clock: valid, direction: past}]
-        sensitivity: sensitive
-        layer: core
-        layer_rationale: An ongoing personal situation.
+    - ref: m1
+      kind: fact
+      subtype: health
+      state: current
+      title: Seeing a therapist for anxiety
+      text: I have been seeing a therapist for anxiety since [[t1]].
+      category: health/mental-health
+      tags:
+      - therapy
+      - anxiety
+      - mental-health
+      subject: self
+      entities:
+      - entity: e1
+        role: about
+      times:
+      - id: t1
+        expression: since March
+        clock: valid
+        direction: past
+      modality: asserted
+      sensitivity: sensitive
+      importance: 4
+      layer: core
+      layer_rationale: Standing fact about mental health support, important for understanding the user's
+        wellbeing and context.
+      rationale: This is a fact about an ongoing health situation (therapy for anxiety) that started in
+        March. Marked as sensitive because it involves mental health. Layer is core because it's a standing
+        fact about the user's wellbeing that should inform context.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - Who am I working with for anxiety?
+      - What support am I getting for my anxiety?
+      - Am I in therapy for anxiety?
+      cues:
+      - when discussing my anxiety support
+      - when considering mental health care options
 expect:
   memories:
     - match: therapist

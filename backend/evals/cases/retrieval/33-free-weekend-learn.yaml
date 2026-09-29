@@ -9,22 +9,55 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.94
+    reason: You’re asking for a learning suggestion, which can draw on what I know about your interests
+      and plans.
   plan:
     sub_queries:
     - shape: situational
       question: I'm free this weekend, what should I learn?
       topic: what to learn this weekend
+      about: learning
+      times:
+      - expression: this weekend
+        clock: occurred
+        direction: future
+    - shape: list
+      question: What active goals could inform what I should learn?
+      topic: active goals
+      filters:
+        kinds:
+        - plan
+        states:
+        - active
+        current_only: true
+      expanded_from: Train for and run the Pune half marathon.
+    - shape: list
+      question: What learning intentions do I have open?
+      topic: learning intentions
+      about: learning
       filters:
         kinds:
         - intention
         subtypes:
         - learn
-      times:
-      - expression: this weekend
-        clock: occurred
-        direction: future
+        states:
+        - wanted
+        - active
+      expanded_from: '- 2 to learn, 1 to train, 3 to try, 1 to visit, 2 to watch'
+    - shape: list
+      question: What watch intentions do I have open?
+      topic: watch intentions
+      about: watching
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - watch
+        states:
+        - wanted
+        - active
+      expanded_from: Unwinds with a film after a weekend study session.
   rerank:
   - match: Rust book
     score: 0.8

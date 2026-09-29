@@ -9,17 +9,80 @@ forbidden:
 - watch_crown
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall shows you’ve saved to watch.
   plan:
     sub_queries:
-    - shape: list
-      question: What shows do I have queued?
-      topic: queued shows
+    - about: shows
       filters:
         kinds:
         - intention
         states:
         - wanted
-        category: entertainment
+        subtypes:
+        - watch
+      question: What shows do I have queued?
+      shape: list
+      topic: queued shows
+  rerank:
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.98
+    state: wanted
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.98
+    state: wanted
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.1
+    state: fulfilled
+  - match: 'Logged watched severance season 2: Watched Severance season 2 and loved it on Fr'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 0.4
+    state: current
+  - match: 'Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.0
+    state: wanted
+  - match: 'Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis'
+    score: 0.0
+    state: happened
+  - match: 'To do: Back up the photos on my phone. Open.'
+    score: 0.0
+    state: open
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 0.0
+    state: open
+  - match: 'Saved link: The Rust book, ownership chapters. The free online Rust book; the ow'
+    score: 0.0
+    state: saved
+  - match: 'Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t'
+    score: 0.0
+    state: happened
+  - match: 'Logged cancelled the fitzone membership: Cancelled my FitZone gym membership on '
+    score: 0.0
+    state: happened
+  - match: 'Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju'
+    score: 0.2
+    state: dropped
+  - match: 'No longer true since 20 September 2026: I liked thrillers. I''m done with thrille'
+    score: 0.0
+    state: superseded

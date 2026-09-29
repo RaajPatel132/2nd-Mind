@@ -10,27 +10,30 @@ reply_contains:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.98
+    reason: You’re asking me to retrieve your September run count and what you previously saved about sourdough.
   plan:
     sub_queries:
     - shape: count
       question: How many runs did I log in September?
       topic: runs in September
+      about: running
+      times:
+      - expression: in September
+        clock: occurred
+        direction: past
       filters:
         kinds:
         - episode
-        subtypes:
-        - measurement
         attribute:
           key: activity
           value: run
       aggregate:
         op: count
-      times:
-      - expression: in September
-        clock: occurred
-        direction: past
     - shape: semantic
       question: What did I save about sourdough?
       topic: sourdough
+      about: sourdough
+      filters:
+        kinds:
+        - resource

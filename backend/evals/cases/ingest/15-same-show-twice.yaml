@@ -21,19 +21,34 @@ setup:
             entities: [{entity: e1, role: about}]
 input: Put Dark on my watch list
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A show to watch."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You’re adding Dark to your watch list, which is a preference or intention worth remembering.
   extract:
     entities:
-      - {id: e1, mention: Dark, name: Dark, kind: work}
+    - id: e1
+      mention: Dark
+      name: Dark
+      kind: work
     memories:
-      - ref: m1
-        kind: intention
-        subtype: watch
-        title: Dark
-        text: I want to watch Dark.
-        category: entertainment/series
-        tags: [series]
-        entities: [{entity: e1, role: about}]
+    - ref: m1
+      kind: intention
+      subtype: watch
+      state: wanted
+      title: Dark
+      text: I want to watch Dark.
+      category: entertainment/series
+      subject: e1
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sensitivity: normal
+      importance: 2
+      layer: quick
+      layer_rationale: Active intention to watch a series.
+      rationale: An intention to watch a TV series, stated clearly by the user.
 expect:
   not_written: [no_op]
   counts: {intention: 1}

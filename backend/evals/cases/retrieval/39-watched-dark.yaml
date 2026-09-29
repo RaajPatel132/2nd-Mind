@@ -12,18 +12,22 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking whether I have a saved record that you’ve watched Dark.
   plan:
     sub_queries:
     - shape: exact
       question: Have I watched Dark?
-      topic: watching Dark
+      topic: whether I watched Dark
+      about: watching Dark
       entities:
       - mention: Dark
+        name: Dark
       filters:
         kinds:
         - episode
+        subtypes:
+        - watch
   rerank:
   - match: Dark
     score: 0.8

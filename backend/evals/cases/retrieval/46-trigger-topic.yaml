@@ -10,13 +10,53 @@ fresh: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.93
+    reason: You’re asking what to keep in mind for a trip you’re planning.
   plan:
     sub_queries:
-    - shape: semantic
+    - shape: situational
       question: I'm planning the Japan trip, what should I remember?
-      topic: Japan trip
+      topic: planning the Japan trip
+      about: Japan trip
+      entities:
+      - mention: Japan trip
+        name: Japan trip
+      filters:
+        kinds:
+        - preference
+        - note
+        - rule
+        - pattern
+        - intention
+    - shape: list
+      question: What places do I want to try?
+      topic: places to try
+      filters:
+        kinds:
+        - intention
+        subtypes:
+        - try
+        states:
+        - wanted
+        - active
+      expanded_from: 'Most recent: Try The Tin Spoon; Try Saffron Street; Try Blue Lotus Kitchen'
+    - shape: semantic
+      question: What should I keep in mind about training for and running the Pune half marathon while planning
+        the Japan trip?
+      topic: Pune half marathon goal
+      about: training for and running the Pune half marathon
+      entities:
+      - mention: Pune half marathon
+        name: Pune half marathon
+      filters:
+        kinds:
+        - fact
+        - plan
+        - task
+        - pattern
+        subtypes:
+        - train
+      expanded_from: Train for and run the Pune half marathon.
   rerank:
   - match: Ichiban
     score: 0.9

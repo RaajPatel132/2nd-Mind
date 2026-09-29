@@ -10,13 +10,13 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking about your upcoming plans and whether you have any saved memories about trading.
   plan:
     sub_queries:
     - shape: time_window
       question: What's coming up this week?
-      topic: this week's plans
+      topic: upcoming events
       times:
       - expression: this week
         clock: occurred
@@ -24,3 +24,10 @@ model:
     - shape: semantic
       question: Did I save anything about trading?
       topic: trading
+      about: trading
+      entities:
+      - mention: trading
+        name: Trading
+      filters:
+        kinds:
+        - resource

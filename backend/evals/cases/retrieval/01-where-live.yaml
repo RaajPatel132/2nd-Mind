@@ -10,14 +10,79 @@ reply_contains:
 - Pune
 model:
   intent:
+    confidence: 1.0
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall your saved location.
   plan:
     sub_queries:
-    - shape: latest
-      question: Where do I live?
-      topic: where I live
-      filters:
-        predicate: lives_in
+    - filters:
         current_only: true
+        kinds:
+        - fact
+        predicate: lives_in
+        states:
+        - current
+      question: Where do I live?
+      shape: latest
+      topic: where I live
+  rerank:
+  - match: 'Fact: I live in Pune. True since Saturday 12 September 2026.'
+    score: 1.0
+    state: current
+  - match: 'No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now'
+    score: 0.3
+    state: superseded
+  - match: 'Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.'
+    score: 0.0
+    state: current
+  - match: 'Fact: Rohan is Nisha''s husband. About Rohan and Nisha (sister). Noted Sunday 12 '
+    score: 0.0
+    state: current
+  - match: 'Fact: The MK bag''s serial number is 123ABC. About MK bag and Kabir (partner). No'
+    score: 0.0
+    state: current
+  - match: 'Note: FitZone moved to the far side of the city, forty minutes from home each wa'
+    score: 0.1
+    state: current
+  - match: 'Preference: I''m vegetarian. Noted Monday 4 May 2026.'
+    score: 0.0
+    state: current
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 0.0
+    state: current
+  - match: 'Logged run: I ran 5 km in 31 minutes at Vetal Hill on Wednesday 2 September 2026'
+    score: 0.0
+    state: happened
+  - match: 'To do: Renew my passport, due Tuesday 20 October 2026. Open.'
+    score: 0.0
+    state: open
+  - match: 'Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in '
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Logged cancelled the fitzone membership: Cancelled my FitZone gym membership on '
+    score: 0.0
+    state: happened
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 0.0
+    state: open
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.0
+    state: wanted
+  - match: 'No longer true since 20 September 2026: I liked thrillers. I''m done with thrille'
+    score: 0.0
+    state: superseded

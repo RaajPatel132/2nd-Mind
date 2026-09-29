@@ -7,15 +7,17 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.98
+    reason: You’re asking what information you may have saved about Meenu.
   plan:
     sub_queries:
     - shape: entity
       question: What do I know about Meenu?
       topic: Meenu
+      about: Meenu
       entities:
       - mention: Meenu
+        name: Meenakshi Iyer
   rerank:
   - match: standup
     score: 0.9

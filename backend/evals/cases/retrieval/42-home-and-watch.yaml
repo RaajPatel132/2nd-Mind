@@ -13,14 +13,18 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 1.0
+    reason: You’re asking me to recall your location and what you’ve saved to your watch list.
   plan:
     sub_queries:
     - shape: latest
       question: Where do I live?
       topic: where I live
       filters:
+        kinds:
+        - fact
+        states:
+        - current
         predicate: lives_in
         current_only: true
     - shape: list
@@ -33,3 +37,4 @@ model:
         - watch
         states:
         - wanted
+        - active

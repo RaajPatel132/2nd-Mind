@@ -11,10 +11,17 @@ fresh: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking what information you previously saved about the Rust book.
   plan:
     sub_queries:
     - shape: semantic
       question: What did I save about the Rust book?
-      topic: the Rust book
+      topic: Rust book
+      about: Rust book
+      entities:
+      - mention: Rust
+        name: Rust
+      filters:
+        kinds:
+        - resource

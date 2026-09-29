@@ -6,23 +6,59 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Rohan said he's moving to Delhi
 model:
-  intent: {intent: save, confidence: 0.85, reason: "Something someone said."}
+  intent:
+    confidence: 0.98
+    intent: save
+    reason: This shares a life update about Rohan that may be useful to remember.
   extract:
     entities:
-      - {id: e1, mention: Rohan, name: Rohan, kind: person}
-      - {id: e2, mention: Delhi, name: Delhi, kind: place}
+    - id: e1
+      kind: person
+      mention: Rohan
+      name: Rohan
+    - id: e2
+      kind: place
+      mention: Delhi
+      name: Delhi
     memories:
-      - ref: m1
-        kind: fact
-        title: Rohan moving to Delhi
-        text: Rohan is moving to Delhi.
-        category: people/news
-        subject: e1
-        predicate: moving_to
-        value: {text: Delhi}
-        entities: [{entity: e1, role: about}, {entity: e2, role: at}]
-        modality: reported
-        rationale: Reported by Rohan; not confirmed.
+    - entities:
+      - entity: e1
+        role: about
+      - entity: e2
+        role: at
+      importance: 2
+      kind: fact
+      layer: archive
+      layer_rationale: Reported information about another person's move, not a standing fact about the user.
+      modality: reported
+      predicate: moving_to
+      rationale: This is information Rohan reported about his own plans. It's marked as reported modality
+        since it comes from what Rohan said rather than observed fact. It concerns another person's relocation,
+        so it's personal sensitivity and archived unless it directly affects the user.
+      ref: m1
+      sensitivity: personal
+      state: current
+      subject: e1
+      text: Rohan is moving to Delhi.
+      title: Rohan moving to Delhi
+      value:
+        text: Delhi
+    relations:
+    - dst: e2
+      evidence: m1
+      relation: moving_to
+      src: e1
+  enrich:
+    memories:
+    - alt:
+      - Where is Rohan relocating?
+      - What city is Rohan moving to?
+      - Is Rohan moving to Delhi?
+      cues:
+      - when planning a visit to Rohan
+      - when coordinating Rohan’s move
+      - when discussing Rohan’s new home
+      ref: m1
 expect:
   memories:
     - match: moving to delhi

@@ -5,22 +5,48 @@ now: "2026-10-01T21:00"
 timezone: Asia/Kolkata
 input: Next time I talk to Nisha, ask about her interview.
 model:
-  intent: {intent: save, confidence: 0.95, reason: "A reminder tied to a person."}
+  intent:
+    intent: save
+    confidence: 0.99
+    reason: You want to remember to ask Nisha about her interview the next time you talk.
   extract:
     entities:
-      - {id: e1, mention: Nisha, name: Nisha, kind: person}
+    - id: e1
+      mention: Nisha
+      name: Nisha
+      kind: person
     memories:
-      - ref: m1
-        kind: task
-        title: Ask Nisha about her interview
-        text: Ask Nisha about her interview.
-        category: people
-        entities: [{entity: e1, role: for}]
-        trigger: {"on": person, entity: e1, cue: null}
-        importance: 3
-        layer: quick
-        layer_rationale: Waiting for the next time Nisha comes up.
-        rationale: A task to do when the user next talks to Nisha.
+    - ref: m1
+      kind: task
+      subtype: ask
+      state: open
+      title: Ask Nisha about her interview
+      text: Ask Nisha about her interview.
+      category: communication
+      entities:
+      - entity: e1
+        role: with
+      trigger:
+        'on': person
+        entity: e1
+      modality: planned
+      sensitivity: normal
+      importance: 2
+      layer: quick
+      layer_rationale: Task to be done at the next opportunity with a key person
+      rationale: A task to ask Nisha about something when they next talk, triggered by a person encounter
+        rather than a specific time.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - Did I check in with Nisha about her job interview?
+      - What should I ask Nisha about?
+      - Remind me to follow up with Nisha after her interview.
+      cues:
+      - when following up with Nisha
+      - when checking in about Nisha’s job search
+      - when reviewing my reminders
 expect:
   memories:
     - match: interview

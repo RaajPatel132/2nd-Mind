@@ -22,21 +22,55 @@ setup:
             times: [{id: t1, expression: Thursday 1 October at 5pm, clock: occurred, direction: future}]
 input: My dentist appointment moved to Friday 2 October, 5 pm
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A changed appointment."}
+  intent:
+    confidence: 0.98
+    intent: save
+    reason: You’re sharing an updated dentist appointment time to keep on record.
   extract:
     entities:
-      - {id: e1, mention: My dentist, name: dentist, kind: org}
+    - id: e1
+      mention: dentist
+      name: dentist
+      kind: org
     memories:
-      - ref: m1
-        kind: plan
-        subtype: appointment
-        title: Dentist appointment
-        text: Dentist appointment on [[t1]].
-        category: health/appointments
-        entities: [{entity: e1, role: with}]
-        times: [{id: t1, expression: Friday 2 October at 5 pm, clock: occurred, direction: future}]
+    - ref: m1
+      kind: plan
+      subtype: appointment
+      title: Dentist appointment
+      text: My dentist appointment is [[t1]].
+      category: health/appointments
+      entities:
+      - entity: e1
+        role: at
+      times:
+      - id: t1
+        expression: Friday 2 October, 5 pm
+        clock: occurred
+        direction: future
+      reminder: {}
+      modality: asserted
+      sensitivity: normal
+      importance: 2
+      layer: quick
+      layer_rationale: Upcoming plan happening soon (within a week).
+      rationale: The user reports their dentist appointment has been rescheduled to Friday 2 October at
+        5 pm. This is a plan with subtype appointment at a healthcare organisation. The message indicates
+        the appointment moved, so this is the new state of the plan with no prior state marker. Layer is
+        quick because it is scheduled for the near future.
   reconcile:
-    - {decision: supersede, candidate: c1, reason: "The same appointment, moved to another day."}
+    decision: supersede
+    candidate: c1
+    reason: The appointment was moved from Thursday 1 October to Friday 2 October at 5 pm.
+  enrich:
+    memories:
+    - alt:
+      - When is my dentist visit?
+      - What time is my dental appointment on Friday 2 October 2026?
+      - Dentist appointment schedule
+      cues:
+      - when checking my appointments
+      - when planning around my dental visit
+      ref: m1
 expect:
   memories:
     - match: 2 october

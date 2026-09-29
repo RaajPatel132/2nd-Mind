@@ -9,14 +9,21 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.97
+    reason: You’re asking me to recall any tasks or plans you have due this month.
   plan:
     sub_queries:
     - shape: time_window
       question: What's due this month?
-      topic: due this month
+      topic: items due this month
       times:
       - expression: this month
         clock: due
         direction: future
+      filters:
+        kinds:
+        - task
+        - plan
+        states:
+        - open
+        - scheduled

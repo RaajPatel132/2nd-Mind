@@ -12,15 +12,21 @@ fresh: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking me to recall something saved about Nisha and you.
   plan:
     sub_queries:
-    - shape: entity
+    - shape: exact
       question: What did Nisha lend me?
-      topic: what Nisha lent me
+      topic: items Nisha lent me
+      about: lending
       entities:
       - mention: Nisha
+        name: Nisha
+      filters:
+        kinds:
+        - episode
+        role: by
   rerank:
   - match: lent me
     score: 0.95

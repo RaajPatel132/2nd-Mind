@@ -8,19 +8,86 @@ forbidden:
 - watch_mindhunter
 model:
   intent:
+    confidence: 0.99
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall shows that you and Kabir both want to watch.
   plan:
     sub_queries:
-    - shape: set
-      question: Which shows do Kabir and I both want to watch?
-      topic: shows to watch with Kabir
+    - about: shows
+      entities:
+      - mention: Kabir
+        name: Kabir
       filters:
         kinds:
         - intention
+        states:
+        - wanted
         subtypes:
         - watch
+      question: Which shows do Kabir and I both want to watch?
       set:
-        op: shared_with
         entity: Kabir
+        op: shared_with
+      shape: set
+      topic: shows Kabir and I both want to watch
+  rerank:
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.4
+    state: wanted
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.4
+    state: wanted
+  - match: 'Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda'
+    score: 0.0
+    state: current
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.0
+    state: scheduled
+  - match: 'Routine: kabir''s birthday every year on 14 March, for Kabir (partner), since Mar'
+    score: 0.0
+    state: scheduled
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.3
+    state: fulfilled
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb'
+    score: 0.0
+    state: happened
+  - match: 'Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla'
+    score: 0.0
+    state: scheduled
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 0.4
+    state: current
+  - match: 'Logged watched severance season 2: Watched Severance season 2 and loved it on Fr'
+    score: 0.3
+    state: happened
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 0.0
+    state: wanted
+  - match: 'Fact: The MK bag''s serial number is 123ABC. About MK bag and Kabir (partner). No'
+    score: 0.0
+    state: current
+  - match: 'Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju'
+    score: 0.0
+    state: dropped
+  - match: 'No longer true since 20 September 2026: I liked thrillers. I''m done with thrille'
+    score: 0.0
+    state: superseded

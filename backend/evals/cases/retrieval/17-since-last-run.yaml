@@ -10,22 +10,26 @@ reply_contains:
 - 2 days
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking for a personal detail about your running history, but I don’t have a date for
+      your last run saved.
   plan:
     sub_queries:
-    - shape: order
-      question: How long since my last run?
-      topic: last run
+    - about: running
       filters:
-        kinds:
-        - episode
-        subtypes:
-        - measurement
         attribute:
           key: activity
           value: run
+        kinds:
+        - episode
+      question: How long since my last run?
+      shape: order
+      times:
+      - clock: occurred
+        direction: past
+        expression: last run
+      topic: last run
   rerank:
   - match: 7 km
     score: 0.95

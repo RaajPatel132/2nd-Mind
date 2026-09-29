@@ -6,14 +6,22 @@ gold:
 - sleep_article
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking whether you previously saved any tips for sleeping better.
   plan:
     sub_queries:
-    - shape: semantic
+    - about: sleep
+      about_sensitive: true
+      entities:
+      - mention: sleeping
+        name: Sleep
+      filters:
+        kinds:
+        - resource
       question: Any tips I saved for sleeping better?
-      topic: sleep tips
+      shape: semantic
+      topic: tips for sleeping better
   rerank:
   - match: article on sleep
     score: 0.9

@@ -8,18 +8,25 @@ gold:
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking about a personal preference that may have been saved about someone connected to
+      Nisha.
   plan:
     sub_queries:
     - shape: entity
       question: What does Nisha's husband like?
-      topic: what Nisha's husband likes
+      topic: Nisha's husband's preferences
+      about: Nisha's husband
       entities:
-      - mention: Nisha's husband
+      - mention: Nisha
         name: Nisha
         path:
         - spouse_of
+      filters:
+        kinds:
+        - preference
+        states:
+        - current
   rerank:
   - match: jazz
     score: 0.9

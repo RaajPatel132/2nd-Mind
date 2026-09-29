@@ -8,16 +8,79 @@ reply_contains:
 - 123ABC
 model:
   intent:
+    confidence: 0.99
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking for a detail that may have been saved about the bag.
   plan:
     sub_queries:
-    - shape: exact
-      question: What's the serial number of the bag?
-      topic: the bag's serial number
-      entities:
+    - entities:
       - mention: the bag
         name: MK bag
       filters:
+        kinds:
+        - fact
         predicate: serial_number
+      question: What's the serial number of the bag?
+      shape: exact
+      topic: bag serial number
+  rerank:
+  - match: 'Fact: The MK bag''s serial number is 123ABC. About MK bag and Kabir (partner). No'
+    score: 1.0
+    state: current
+  - match: 'Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda'
+    score: 0.7
+    state: current
+  - match: 'Fact: I live in Pune. True since Saturday 12 September 2026.'
+    score: 0.0
+    state: current
+  - match: 'Fact: Rohan is Nisha''s husband. About Rohan and Nisha (sister). Noted Sunday 12 '
+    score: 0.0
+    state: current
+  - match: 'Logged purchase: Bought new running shoes on Friday 28 August 2026. August 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Routine: kabir''s birthday every year on 14 March, for Kabir (partner), since Mar'
+    score: 0.0
+    state: scheduled
+  - match: 'Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla'
+    score: 0.0
+    state: scheduled
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.0
+    state: scheduled
+  - match: 'Pattern (confirmed): Unwinds with a film after a weekend study session.'
+    score: 0.0
+    state: confirmed
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'To do: Renew my passport, due Tuesday 20 October 2026. Open.'
+    score: 0.0
+    state: open
+  - match: 'Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Logged pottery class: Did a pottery class at Clay and Kiln Studio; made a lopsid'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.0
+    state: wanted
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 0.0
+    state: open
+  - match: 'Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in '
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 12 km in 78 minutes on Sunday 20 September 2026, in the mornin'
+    score: 0.0
+    state: happened

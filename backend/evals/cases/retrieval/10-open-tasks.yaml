@@ -10,16 +10,77 @@ forbidden:
 - book_hotel
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to retrieve your saved open intentions.
   plan:
     sub_queries:
-    - shape: list
-      question: What are my open tasks?
-      topic: open tasks
-      filters:
+    - filters:
         kinds:
         - task
         states:
         - open
+      question: What are my open tasks?
+      shape: list
+      topic: open tasks
+  rerank:
+  - match: 'To do: Renew my passport, due Tuesday 20 October 2026. Open.'
+    score: 1.0
+    state: open
+  - match: 'To do: Back up the photos on my phone. Open.'
+    score: 1.0
+    state: open
+  - match: 'To do: Get the kitchen tap fixed. Open.'
+    score: 1.0
+    state: open
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 1.0
+    state: open
+  - match: 'Saved link: The Rust book, ownership chapters. The free online Rust book; the ow'
+    score: 0.0
+    state: saved
+  - match: 'Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le'
+    score: 0.0
+    state: wanted
+  - match: 'Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis'
+    score: 0.0
+    state: happened
+  - match: 'Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla'
+    score: 0.0
+    state: scheduled
+  - match: 'Logged run: I ran 12 km in 78 minutes on Sunday 20 September 2026, in the mornin'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened

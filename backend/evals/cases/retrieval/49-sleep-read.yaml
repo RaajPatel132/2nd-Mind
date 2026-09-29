@@ -6,17 +6,79 @@ gold:
 - sleep_article
 model:
   intent:
+    confidence: 0.99
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall something you may have saved about sleep.
   plan:
     sub_queries:
-    - shape: semantic
-      question: What did I read about sleep?
-      topic: reading about sleep
+    - about: sleep
+      entities:
+      - mention: sleep
+        name: Sleep
       filters:
         kinds:
         - resource
+      question: What did I read about sleep?
+      shape: semantic
+      topic: things read about sleep
   rerank:
-  - match: article on sleep
-    score: 0.9
+  - match: 'Saved article: Why momentum strategies fail after costs. Saved Friday 25 Septemb'
+    score: 0.0
+    state: saved
+  - match: 'Saved link: The Rust book, ownership chapters. The free online Rust book; the ow'
+    score: 0.0
+    state: saved
+  - match: 'Note: Read an article on sleep: keep screens out of the bedroom and no caffeine '
+    score: 1.0
+    state: current
+  - match: 'Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis'
+    score: 0.1
+    state: happened
+  - match: 'Pattern (confirmed): Unwinds with a film after a weekend study session.'
+    score: 0.0
+    state: confirmed
+  - match: 'Logged run: I ran 12 km in 78 minutes on Sunday 20 September 2026, in the mornin'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 7 km in 44 minutes at Vetal Hill on Sunday 4 October 2026, in '
+    score: 0.0
+    state: happened
+  - match: 'To do: Back up the photos on my phone. Open.'
+    score: 0.0
+    state: open
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.0
+    state: fulfilled
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 31 minutes at Vetal Hill on Wednesday 2 September 2026'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.0
+    state: wanted
+  - match: 'Happened: Dentist appointment on Saturday 3 October 2026, 5 pm. Weekend, October'
+    score: 0.0
+    state: happened
+  - match: 'Logged purchase: Bought new running shoes on Friday 28 August 2026. August 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Logged watched severance season 2: Watched Severance season 2 and loved it on Fr'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.0
+    state: wanted
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 0.0
+    state: open

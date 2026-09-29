@@ -5,17 +5,46 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Gym every Mon/Wed/Fri at 7
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A routine."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: 'You’re sharing a recurring gym schedule: Monday, Wednesday, and Friday at 7.'
   extract:
     memories:
-      - ref: m1
-        kind: plan
-        subtype: routine
-        title: Gym
-        text: I go to the gym [[t1]].
-        category: health/fitness
-        tags: [gym, exercise]
-        times: [{id: t1, expression: every Mon/Wed/Fri at 7, clock: occurred, direction: future, recurring: true}]
+    - ref: m1
+      kind: plan
+      subtype: routine
+      state: scheduled
+      title: Gym
+      text: I go to the gym every Mon/Wed/Fri at 7.
+      category: health/fitness
+      tags:
+      - routine
+      - exercise
+      subject: self
+      times:
+      - id: t1
+        expression: every Mon/Wed/Fri at 7
+        clock: occurred
+        recurring: true
+      modality: asserted
+      sensitivity: normal
+      importance: 3
+      layer: quick
+      layer_rationale: A recurring routine that happens regularly; belongs in quick layer for active scheduling.
+      rationale: A standing routine (every Mon/Wed/Fri at 7) is a plan with subtype routine. No specific
+        reminder requested, so reminder is null.
+  enrich:
+    memories:
+    - alt:
+      - What's my gym schedule?
+      - Which mornings do I work out?
+      - When do I go to the gym?
+      cues:
+      - when planning my weekly schedule
+      - when arranging morning activities
+      - when deciding which days to exercise
+      ref: m1
 expect:
   memories:
     - match: gym

@@ -9,13 +9,13 @@ aggregate: 2
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 1.0
+    reason: You’re asking me to recall how many shows you want to watch.
   plan:
     sub_queries:
     - shape: count
       question: How many shows do I want to watch?
-      topic: shows to watch
+      topic: shows I want to watch
       filters:
         kinds:
         - intention

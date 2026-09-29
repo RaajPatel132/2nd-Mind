@@ -36,19 +36,56 @@ setup:
             times: [{id: t1, expression: on Saturday, clock: occurred, direction: past}]
 input: watched Severance again last night
 model:
-  intent: {intent: save, confidence: 0.9, reason: "Something the user did."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You shared that you rewatched Severance last night, which is an experience worth remembering.
   extract:
     entities:
-      - {id: e1, mention: Severance, name: Severance, kind: work}
+    - id: e1
+      mention: Severance
+      name: Severance
+      kind: work
+    - id: e2
+      mention: I
+      kind: self
     memories:
-      - ref: m1
-        kind: episode
-        subtype: experience
-        title: Watched Severance again
-        text: I watched Severance again on [[t1]].
-        attributes: {activity: watched}
-        entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: last night, clock: occurred, direction: past}]
+    - ref: m1
+      kind: episode
+      subtype: experience
+      state: happened
+      title: Watched Severance
+      text: I watched Severance again [[t1]].
+      category: entertainment/series
+      tags:
+      - tv
+      - rewatch
+      entities:
+      - entity: e1
+        role: about
+      times:
+      - id: t1
+        expression: last night
+        clock: occurred
+        direction: past
+      modality: asserted
+      sensitivity: normal
+      importance: 1
+      layer: archive
+      layer_rationale: Past viewing experience, not immediately relevant to current tasks or goals.
+      rationale: An episode recording a past viewing experience. The subtype 'experience' fits a watched
+        episode. Category fits entertainment/series for a TV show.
+  enrich:
+    memories:
+    - ref: m1
+      alt:
+      - When did I rewatch Severance?
+      - What show did I watch again on 22 September 2026?
+      - Did I watch Severance at night?
+      cues:
+      - when recalling shows I rewatched
+      - when discussing my evening TV habits
+      - when looking for a show to watch again
 expect:
   memories:
     - match: severance

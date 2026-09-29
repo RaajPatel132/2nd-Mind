@@ -19,17 +19,52 @@ setup:
             entities: [{entity: e1, role: about}]
 input: Watch Dark, a dark psychological sci-fi thriller
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A show to watch."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You’re adding Dark to your watchlist and describing its genre.
   extract:
     entities:
-      - {id: e1, mention: Dark, name: Dark, kind: work}
+    - id: e1
+      mention: Dark
+      name: Dark
+      kind: work
     memories:
-      - ref: m1
-        kind: intention
-        subtype: watch
-        title: Dark
-        text: I want to watch Dark, a dark psychological sci-fi thriller.
-        entities: [{entity: e1, role: about}]
+    - ref: m1
+      kind: intention
+      subtype: watch
+      state: wanted
+      title: Dark
+      text: I want to watch Dark, a dark psychological sci-fi thriller.
+      category: entertainment/series
+      tags:
+      - psychological
+      - sci-fi
+      - thriller
+      attributes:
+      - key: genre
+        value: psychological sci-fi thriller
+      entities:
+      - entity: e1
+        role: about
+      modality: asserted
+      sensitivity: normal
+      importance: 2
+      layer: quick
+      layer_rationale: This is an active intention being added to the watch list.
+      rationale: An intention (watch) about a work. Dark is a series; the genre description helps identify
+        it. Stored in quick layer because it's being added to watch list.
+  enrich:
+    memories:
+    - alt:
+      - What psychological sci-fi series do I want to watch?
+      - Which dark thriller is on my watchlist?
+      - What show called Dark did I want to see?
+      cues:
+      - when choosing a psychological thriller to watch
+      - when looking for a dark sci-fi series
+      - when picking a show for a weekend binge
+      ref: m1
 expect:
   memories:
     - match: sci-fi

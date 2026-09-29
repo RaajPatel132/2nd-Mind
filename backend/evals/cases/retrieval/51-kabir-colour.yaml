@@ -5,18 +5,81 @@ shape: exact
 must_abstain: true
 model:
   intent:
+    confidence: 0.99
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking about a personal detail that may be in your saved memories.
   plan:
     sub_queries:
-    - shape: exact
-      question: What's Kabir's favourite colour?
-      topic: Kabir's favourite colour
+    - about: favourite colour
       entities:
       - mention: Kabir
+        name: Kabir
       filters:
-        predicate: favourite_colour
+        kinds:
+        - preference
+        states:
+        - current
+      question: What's Kabir's favourite colour?
+      shape: exact
+      topic: Kabir's favourite colour
   rerank:
-  - match: Kabir
-    score: 0.1
+  - match: 'Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda'
+    score: 0.4
+    state: current
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.0
+    state: scheduled
+  - match: 'Routine: kabir''s birthday every year on 14 March, for Kabir (partner), since Mar'
+    score: 0.0
+    state: scheduled
+  - match: 'Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla'
+    score: 0.0
+    state: scheduled
+  - match: 'Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb'
+    score: 0.0
+    state: happened
+  - match: 'Fact: The MK bag''s serial number is 123ABC. About MK bag and Kabir (partner). No'
+    score: 0.0
+    state: current
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.0
+    state: wanted
+  - match: 'Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun'
+    score: 0.0
+    state: current
+  - match: 'Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.'
+    score: 0.0
+    state: current
+  - match: 'Preference: I''m vegetarian. Noted Monday 4 May 2026.'
+    score: 0.0
+    state: current
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 0.0
+    state: current
+  - match: 'To do: Ask Nisha about her interview, for Nisha (sister). Open.'
+    score: 0.0
+    state: open
+  - match: 'Fact: Rohan is Nisha''s husband. About Rohan and Nisha (sister). Noted Sunday 12 '
+    score: 0.0
+    state: current
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Fact: I live in Pune. True since Saturday 12 September 2026.'
+    score: 0.0
+    state: current
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 0.0
+    state: wanted
+  - match: 'Note: Meenu (Meenakshi Iyer) runs the Thursday standup at work. About Meenakshi '
+    score: 0.0
+    state: current
+  - match: 'Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t'
+    score: 0.0
+    state: happened
+  - match: 'No longer true since 12 September 2026: I lived in Bengaluru. I live in Pune now'
+    score: 0.0
+    state: superseded

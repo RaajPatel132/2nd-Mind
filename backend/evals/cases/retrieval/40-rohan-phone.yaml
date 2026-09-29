@@ -6,17 +6,23 @@ must_abstain: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking for a personal detail about someone that may be saved in memory.
   plan:
     sub_queries:
     - shape: exact
       question: What's Rohan's phone number?
       topic: Rohan's phone number
+      about: phone number
       entities:
       - mention: Rohan
+        name: Rohan
       filters:
-        predicate: phone_number
+        kinds:
+        - fact
+        attribute:
+          key: phone number
+          value: phone number
   rerank:
   - match: Rohan
     score: 0.1

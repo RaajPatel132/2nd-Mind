@@ -5,21 +5,56 @@ now: "2026-09-23T10:00"
 timezone: Asia/Kolkata
 input: Rohan is Nisha's husband
 model:
-  intent: {intent: save, confidence: 0.9, reason: "How two people are related."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: This shares a relationship fact about Rohan and Nisha that may be useful to remember.
   extract:
     entities:
-      - {id: e1, mention: Rohan, name: Rohan, kind: person}
-      - {id: e2, mention: Nisha, name: Nisha, kind: person}
+    - id: e1
+      mention: Rohan
+      name: Rohan
+      kind: person
+    - id: e2
+      mention: Nisha
+      name: Nisha
+      kind: person
     memories:
-      - ref: m1
-        kind: fact
-        title: Rohan is Nisha's husband
-        text: Rohan is Nisha's husband.
-        category: people/relationships
-        subject: e1
-        entities: [{entity: e1, role: about}, {entity: e2, role: about}]
+    - ref: m1
+      kind: fact
+      state: current
+      title: Rohan is Nisha's husband
+      text: Rohan is Nisha's husband.
+      subject: e1
+      predicate: spouse_of
+      entities:
+      - entity: e1
+        role: about
+      - entity: e2
+        role: about
+      modality: asserted
+      sensitivity: personal
+      importance: 2
+      layer: core
+      layer_rationale: 'A relationship between two key people: stored in core memory so their connection
+        is always known.'
+      rationale: A relational fact about two people. Stored as a fact with predicate spouse_of, with sensitivity
+        personal because it involves relationships.
     relations:
-      - {src: e1, relation: husband_of, dst: e2, evidence: m1}
+    - src: e1
+      relation: spouse_of
+      dst: e2
+      evidence: m1
+  enrich:
+    memories:
+    - alt:
+      - Who is Nisha married to?
+      - What is Rohan's relationship to Nisha?
+      - Nisha's husband
+      cues:
+      - when recalling Nisha's family relationships
+      - when referring to Rohan in relation to Nisha
+      ref: m1
 expect:
   memories:
     - match: husband

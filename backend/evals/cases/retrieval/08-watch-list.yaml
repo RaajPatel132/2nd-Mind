@@ -10,21 +10,80 @@ forbidden:
 - watch_severance
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall what you’ve saved to your watch list.
   plan:
     sub_queries:
-    - shape: list
-      question: What's on my watch list?
-      topic: watch list
-      filters:
+    - filters:
         kinds:
         - intention
-        subtypes:
-        - watch
         states:
         - wanted
+        - active
+        subtypes:
+        - watch
+      question: What's on my watch list?
+      shape: list
+      topic: watch list
   rerank:
-  - match: Severance
-    score: 0.2
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 1.0
+    state: wanted
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 1.0
+    state: wanted
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.4
+    state: fulfilled
+  - match: 'Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 0.0
+    state: wanted
+  - match: 'Logged watched severance season 2: Watched Severance season 2 and loved it on Fr'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.0
+    state: wanted
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 0.4
+    state: current
+  - match: 'Preference: Rohan loves birdwatching, especially at dawn. About Rohan. Noted Sun'
+    score: 0.0
+    state: current
+  - match: 'Note (idea): Trading idea: a momentum strategy on index funds, rebalanced monthl'
+    score: 0.0
+    state: current
+  - match: 'Saved link: The Rust book, ownership chapters. The free online Rust book; the ow'
+    score: 0.0
+    state: saved
+  - match: 'Pattern (confirmed): Unwinds with a film after a weekend study session.'
+    score: 0.0
+    state: confirmed
+  - match: 'Logged purchase: Bought new running shoes on Friday 28 August 2026. August 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Preference: Kabir likes MK bags. About Kabir (partner) and MK bag. Noted Thursda'
+    score: 0.0
+    state: current
+  - match: 'Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju'
+    score: 0.3
+    state: dropped
+  - match: 'No longer true since 20 September 2026: I liked thrillers. I''m done with thrille'
+    score: 0.0
+    state: superseded

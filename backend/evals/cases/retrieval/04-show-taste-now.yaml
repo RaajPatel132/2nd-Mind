@@ -8,20 +8,84 @@ forbidden:
 - likes_thrillers
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking me to recall your current TV preferences.
   plan:
     sub_queries:
-    - shape: latest
-      question: What kind of shows am I into these days?
-      topic: show taste
+    - about: shows
       filters:
-        predicate: genre_taste
         current_only: true
+        kinds:
+        - preference
+        predicate: genre_taste
+        states:
+        - current
+      question: What kind of shows am I into these days?
+      shape: latest
+      times:
+      - clock: valid
+        direction: any
+        expression: these days
+      topic: show genre preferences
   rerank:
-  - match: thrillers
-    score: 0.2
+  - match: 'Preference: I''m done with thrillers; I want lighter shows now. True since Sunday'
+    score: 1.0
+    state: current
+  - match: 'Logged watched severance season 2: Watched Severance season 2 and loved it on Fr'
+    score: 0.4
+    state: happened
+  - match: 'Happened: Dentist appointment on Saturday 3 October 2026, 5 pm. Weekend, October'
+    score: 0.0
+    state: happened
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.4
+    state: fulfilled
+  - match: 'No longer true since 20 September 2026: I liked thrillers. I''m done with thrille'
+    score: 0.3
     state: superseded
-  - match: lighter shows
-    score: 0.9
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.0
+    state: scheduled
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.4
+    state: wanted
+  - match: 'Logged finished the quiet hours: Finished reading The Quiet Hours, the novel Nis'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 5 km in 30 minutes on Wednesday 9 September 2026, in the morni'
+    score: 0.0
+    state: happened
+  - match: 'Upcoming: Pottery workshop with Kabir on Saturday 10 October 2026, 11 am, at Cla'
+    score: 0.0
+    state: scheduled
+  - match: 'Preference: Rohan loves live jazz. About Rohan. Noted Sunday 12 July 2026.'
+    score: 0.0
+    state: current
+  - match: 'Logged run: I ran 10 km in 64 minutes at Vetal Hill on Sunday 13 September 2026,'
+    score: 0.0
+    state: happened
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.4
+    state: wanted
+  - match: 'Logged pottery class: Did a pottery class at Clay and Kiln Studio; made a lopsid'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 8 km in 52 minutes at Vetal Hill on Sunday 6 September 2026, i'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: I ran 6 km on the beach in Goa on Sunday 27 September 2026, in the m'
+    score: 0.0
+    state: happened
+  - match: 'Happened: Goa trip with Kabir on Friday 25 September 2026, at Goa, with Kabir (p'
+    score: 0.0
+    state: happened
+  - match: 'Logged run: Evening run with Kabir, 4 km around the lake on Wednesday 23 Septemb'
+    score: 0.0
+    state: happened
+  - match: 'Fact: I live in Pune. True since Saturday 12 September 2026.'
+    score: 0.0
+    state: current
+  - match: 'Moved: Dentist appointment was on Friday 2 October 2026, 5 pm; moved to Saturday'
+    score: 0.0
+    state: moved

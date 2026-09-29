@@ -6,8 +6,8 @@ must_abstain: true
 model:
   intent:
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    confidence: 0.99
+    reason: You’re asking for a personal detail about Kabir that may have been saved.
   plan:
     sub_queries:
     - shape: exact
@@ -15,8 +15,13 @@ model:
       topic: Kabir's shoe size
       entities:
       - mention: Kabir
+        name: Kabir
       filters:
-        predicate: shoe_size
+        kinds:
+        - fact
+        attribute:
+          key: shoe size
+          value: shoe size
   rerank:
   - match: running shoes
     score: 0.1

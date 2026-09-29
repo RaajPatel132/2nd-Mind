@@ -20,18 +20,53 @@ setup:
             times: [{id: t1, expression: on Monday morning, clock: occurred, direction: past}]
 input: Ran 5 km in 31 min this morning
 model:
-  intent: {intent: save, confidence: 0.9, reason: "A logged run."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: This is a personal exercise accomplishment that may be useful to remember.
   extract:
     memories:
-      - ref: m1
-        kind: episode
-        subtype: measurement
-        title: Run
-        text: I ran 5 km in 31 min.
-        category: health/fitness
-        attributes: {activity: run}
-        value: {number: 5, unit: km}
-        times: [{id: t1, expression: this morning, clock: occurred, direction: past}]
+    - ref: m1
+      kind: episode
+      subtype: measurement
+      state: happened
+      title: 5 km run
+      text: I ran 5 km in 31 minutes [[t1]].
+      category: health/fitness
+      tags:
+      - running
+      attributes:
+      - key: distance
+        value: 5 km
+      - key: time
+        value: 31 min
+      subject: self
+      times:
+      - id: t1
+        expression: this morning
+        clock: occurred
+        direction: past
+      modality: asserted
+      sentiment: 1
+      sensitivity: normal
+      importance: 2
+      layer: archive
+      layer_rationale: A past episode/measurement; archived unless part of a training plan or health goal
+        being tracked.
+      rationale: 'An episode recording a running measurement: distance and time. Subtype ''measurement''
+        fits the quantified activity. Category ''health/fitness'' for physical activity. Sentiment is slightly
+        positive as running is generally a healthy accomplishment.'
+  enrich:
+    memories:
+    - alt:
+      - How fast did I run 5 km on Wednesday 23 September 2026?
+      - My 5 km running time
+      - When did I finish a 5 km run in 31 minutes?
+      cues:
+      - when tracking my running pace
+      - when comparing my 5 km times
+      - when reviewing my morning exercise on Wednesday 23 September 2026
+      ref: m1
 expect:
   memories:
     - match: ran 5 km

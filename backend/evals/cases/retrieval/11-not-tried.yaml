@@ -9,19 +9,82 @@ forbidden:
 - try_tin_spoon
 model:
   intent:
+    confidence: 0.98
     intent: recall
-    confidence: 0.9
-    reason: asks about saved things
+    reason: You’re asking which restaurants from your saved plans you haven’t tried yet.
   plan:
     sub_queries:
-    - shape: set
-      question: Which restaurants haven't I tried yet?
-      topic: restaurants not tried
-      filters:
+    - filters:
         kinds:
         - intention
+        states:
+        - wanted
         subtypes:
         - try
+      question: Which restaurants haven't I tried yet?
       set:
         op: without
         other_kind: episode
+      shape: set
+      topic: restaurants not yet tried
+  rerank:
+  - match: 'Wish list, to try: Saffron Street (restaurant). Added Friday 11 September 2026. '
+    score: 1.0
+    state: wanted
+  - match: 'Wish list, to try: Blue Lotus Kitchen (restaurant). Added Tuesday 8 September 20'
+    score: 1.0
+    state: wanted
+  - match: 'Wish list, to try: The Tin Spoon (restaurant). Added Tuesday 1 September 2026. N'
+    score: 1.0
+    state: wanted
+  - match: 'Wish list, to visit: Ichiban Ramen Bar (restaurant) and Japan trip. Added Friday'
+    score: 0.4
+    state: wanted
+  - match: 'Wish list, to watch: Mindhunter (TV series). Added Sunday 30 August 2026. Not wa'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to watch: Dark (TV series). Added Tuesday 22 September 2026. Not watc'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to learn: Rust. Added Saturday 15 August 2026. Not learned yet.'
+    score: 0.0
+    state: wanted
+  - match: 'Upcoming: Dinner at Saffron Street with Kabir on Tuesday 6 October 2026, 8 pm, a'
+    score: 0.7
+    state: scheduled
+  - match: 'Wish list, to learn: Fingerstyle guitar. Added Saturday 5 September 2026. Not le'
+    score: 0.0
+    state: wanted
+  - match: 'Wish list, to train: Pune half marathon. Added Saturday 1 August 2026. Target: S'
+    score: 0.0
+    state: active
+  - match: 'Logged brunch with nisha at the tin spoon: Brunch with Nisha at The Tin Spoon; t'
+    score: 0.7
+    state: happened
+  - match: Watched Severance (TV series) on Friday 18 September 2026, at night. It was on m
+    score: 0.0
+    state: fulfilled
+  - match: 'Saved link: The Rust book, ownership chapters. The free online Rust book; the ow'
+    score: 0.0
+    state: saved
+  - match: 'Saved article: Why momentum strategies fail after costs. Saved Friday 25 Septemb'
+    score: 0.0
+    state: saved
+  - match: 'Preference: I''m vegetarian. Noted Monday 4 May 2026.'
+    score: 0.0
+    state: current
+  - match: 'To do: Get the kitchen tap fixed. Open.'
+    score: 0.0
+    state: open
+  - match: 'To do: Renew my passport, due Tuesday 20 October 2026. Open.'
+    score: 0.0
+    state: open
+  - match: 'Done: Book the hotel for the Goa trip.'
+    score: 0.0
+    state: done
+  - match: 'To do: Back up the photos on my phone. Open.'
+    score: 0.0
+    state: open
+  - match: 'Dropped from my wish list, to watch: The Crown (TV series). Added Wednesday 1 Ju'
+    score: 0.0
+    state: dropped

@@ -23,21 +23,58 @@ setup:
             entities: [{entity: e2, role: about}, {entity: e1, role: by}]
 input: watched Severance last night, loved it
 model:
-  intent: {intent: save, confidence: 0.92, reason: "Something the user did."}
+  intent:
+    confidence: 0.99
+    intent: save
+    reason: You’re sharing that you watched and loved Severance, which is a preference worth remembering.
   extract:
     entities:
-      - {id: e1, mention: Severance, name: Severance, kind: work}
+    - id: e1
+      mention: I
+      kind: self
+    - id: e2
+      mention: Severance
+      name: Severance
+      kind: work
     memories:
-      - ref: m1
-        kind: episode
-        subtype: experience
-        title: Watched Severance
-        text: I watched Severance on [[t1]] and loved it.
-        category: entertainment/series
-        attributes: {activity: watched}
-        entities: [{entity: e1, role: about}]
-        times: [{id: t1, expression: last night, clock: occurred, direction: past}]
-        sentiment: 2
+    - ref: m1
+      kind: episode
+      state: happened
+      title: Watched Severance
+      text: I watched Severance [[t1]] and loved it.
+      category: entertainment/series
+      tags:
+      - tv
+      - watched
+      subject: self
+      entities:
+      - entity: e1
+        role: about
+      - entity: e2
+        role: about
+      times:
+      - id: t1
+        expression: last night
+        clock: occurred
+        direction: past
+      modality: asserted
+      sentiment: 2
+      sensitivity: normal
+      importance: 2
+      layer: archive
+      layer_rationale: Past episode, archived after completion.
+      rationale: An episode of watching Severance with strong positive sentiment (loved it).
+  enrich:
+    memories:
+    - alt:
+      - Which show did I love after watching it?
+      - What did I watch on Tuesday 22 September 2026?
+      - What series should I watch more of?
+      cues:
+      - when choosing a show to watch
+      - when recalling shows I enjoyed
+      - when looking for recommendations similar to Severance
+      ref: m1
 expect:
   memories:
     - match: watched severance
