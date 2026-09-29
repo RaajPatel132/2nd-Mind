@@ -15,6 +15,8 @@ x-prodlike-env: &prodlike-env
   SESSION_SECRET: ${PRODLIKE_SESSION_SECRET:?run make up-prodlike, which generates it}
   STAGING_ACCESS_CODE: ${PRODLIKE_ACCESS_CODE:?run make up-prodlike, which generates it}
   DEV_AUTH: "true"
+  # The public origin the browser uses, as it will be set for staging behind CloudFront.
+  ALLOWED_ORIGINS: http://localhost:8080
   LOG_INCLUDE_CONTENT: "false"
   TRACE_INCLUDE_CONTENT: "false"
 
