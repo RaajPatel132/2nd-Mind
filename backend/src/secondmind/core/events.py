@@ -58,8 +58,9 @@ class PolicyDecision(StrEnum):
 class AgentStep(StrEnum):
     """The agent steps a turn can report, in the UI's catalogue (docs/design/system.md §8).
 
-    ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``fetch`` (S4) is
-    reserved: in the schema so the UI's catalogue is complete, not emitted yet.
+    ``plan``, ``search``, ``rank`` and ``triggers`` are recall's (S3); ``blocked`` (R.10) is a
+    turn the spend gate stopped before any model call; ``fetch`` (S4) is reserved: in the
+    schema so the UI's catalogue is complete, not emitted yet.
     """
 
     UNDERSTAND = "understand"
@@ -78,6 +79,7 @@ class AgentStep(StrEnum):
     RANK = "rank"
     TRIGGERS = "triggers"
     FETCH = "fetch"
+    BLOCKED = "blocked"
 
 
 class StepStatus(StrEnum):
@@ -137,6 +139,17 @@ class ErrorEvent(_Event):
     message: str
     step: str | None = None
     retryable: bool = False
+
+
+class BlockedEvent(_Event):
+    """A turn stopped before any model call (ADR-0032): why, and the limit against the value
+    when there is one. ``reason`` is a ``BlockReason`` value from the metering module."""
+
+    type: Literal["blocked"] = "blocked"
+    reason: str
+    message: str
+    limit_usd: float | None = None
+    used_usd: float | None = None
 
 
 # ------------------------------------------------------------------ S2: decisions and diffs
@@ -559,6 +572,7 @@ TurnEvent = Annotated[
     | PolicyEvent
     | ModelCallEvent
     | ErrorEvent
+    | BlockedEvent
     | StepEvent,
     Field(discriminator="type"),
 ]

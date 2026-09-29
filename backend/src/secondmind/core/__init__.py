@@ -5,6 +5,7 @@ from secondmind.core.errors import (
     ConfigError,
     ForbiddenError,
     NotFoundError,
+    RateLimitedError,
     SecondMindError,
     UnauthenticatedError,
     ValidationFailedError,
@@ -13,6 +14,7 @@ from secondmind.core.events import (
     TURN_EVENT_ADAPTER,
     AgentStep,
     AggregateTrace,
+    BlockedEvent,
     Citation,
     CitationsEvent,
     Classification,
@@ -83,6 +85,7 @@ from secondmind.core.memory_model import (
 )
 from secondmind.core.money import UsdAmount, usd
 from secondmind.core.scope import WorkspaceScope
+from secondmind.core.tier import Tier
 from secondmind.core.trail import NullTrail, StepRun, Trail
 from secondmind.core.usage import Usage, UsageTotals
 
@@ -93,6 +96,7 @@ __all__ = [
     "TURN_EVENT_ADAPTER",
     "AgentStep",
     "AggregateTrace",
+    "BlockedEvent",
     "Citation",
     "CitationsEvent",
     "Classification",
@@ -129,6 +133,7 @@ __all__ = [
     "PolicyDecision",
     "PolicyEvent",
     "PolicyVerdict",
+    "RateLimitedError",
     "ReconcileDecision",
     "ReconcileInfo",
     "Reconciliation",
@@ -146,6 +151,7 @@ __all__ = [
     "StepStatus",
     "SubQueryTrace",
     "TargetType",
+    "Tier",
     "TimeClock",
     "TimePrecision",
     "TimeResolution",

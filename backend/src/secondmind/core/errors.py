@@ -29,3 +29,13 @@ class ForbiddenError(SecondMindError):
 
 class ValidationFailedError(SecondMindError):
     code = "validation_failed"
+
+
+class RateLimitedError(SecondMindError):
+    """Too many requests from one identity (ADR-0032): try again after ``retry_after_s``."""
+
+    code = "rate_limited"
+
+    def __init__(self, message: str, retry_after_s: float) -> None:
+        super().__init__(message)
+        self.retry_after_s = retry_after_s
