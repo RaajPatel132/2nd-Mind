@@ -4,8 +4,10 @@ What to do when something needs doing to a running stack. The sections marked **
 on the production-shaped local stack (`make up-prodlike`) in Sprint 3.9, with the output shown;
 the AWS ones are stubs that name the sprint that fills them in (NFR-10.10).
 
-Commands run from the repository root. On the local stack `make` talks to the compose services;
-on AWS the same CLI runs as an ECS task (S4) and the same Redis flag applies.
+Commands run from the repository root. On the local stack `make` talks to the compose services
+(add `STACK=prodlike` to address the rehearsal stack instead); on AWS the same CLI runs as an ECS
+task (S4) and the same Redis flag applies. **Tried** means run for real on `make up-prodlike` with
+live models on 2026-09-29; the output shown is what came back.
 
 ## Contents
 
@@ -39,6 +41,17 @@ for five minutes later, not dropped. Browsing, Upcoming, undo and the glass box 
 **Check it.** `GET /v1/me/usage` returns `read_only: true` with `read_only_reason: "kill_switch"`;
 the composer shows the same words. `make spend-now` should stop moving.
 
+**Tried** (`make kill-switch on STACK=prodlike`, then a message):
+
+```text
+kill switch is ON (from the runtime flag)
+Every api and worker process refuses new model work within a few seconds.
+usage: {'tier': 'standard', 'limit_usd': 2.5, 'used_usd': 0.0, 'read_only': True, 'read_only_reason': 'kill_switch'}
+turn: completed | New answers are paused for everyone right now. You can still browse your memory, ...
+blocked: kill_switch limit None used None            cost: 0.0
+kill switch is off (from the runtime flag)
+```
+
 **Also:** `KILL_SWITCH=true` in the environment sets the value a fresh process starts with; the
 Redis flag, once set, wins. If Redis itself is down the gate fails closed (turns are paused) and
 `/readyz` fails, which is the right behaviour: nothing can be counted.
@@ -57,6 +70,18 @@ app is used up" and no model call. The cap resets at 00:00 UTC (day) or on the 1
 counters are rebuilt from the usage ledger every 10 minutes, so a restart or a drift never
 loses count.
 
+**Tried** (`SPEND_CAP_DAILY_USD=0.005` on the api and worker, with $0.43 already spent today):
+
+```text
+today   $0.4253 of $0.00
+usage: {'tier': 'standard', 'limit_usd': 2.5, 'used_usd': 0.0, 'read_only': True, 'read_only_reason': 'daily_cap'}
+turn: completed | Today's spending limit for the whole app is used up. You can still browse ...
+blocked: daily_cap limit 0.005 used 0.4252776         cost: 0.0
+```
+
+The rehearsal overlay pins the real caps ($0.50 a day, $5 a month); a developer's `.env` may
+carry larger ones for eval runs, so check `make spend-now` shows the caps you expect.
+
 **To let people carry on now:** raise the cap and restart the api and worker tasks
 (`SPEND_CAP_DAILY_USD=1.00`); that is a decision to spend more, so check `make spend-now` and the
 provider dashboards first. **To find out where the money went:** the ledger has every call with
@@ -71,8 +96,20 @@ than the next rung, so an outage does not make turns dearer than about 2× (meas
 $0.0105 a turn with OpenAI unreachable, against $0.0054). If both providers are down the turn
 fails cleanly with "The model provider is unavailable right now", no half-written memory.
 
-**Try it:** `OPENAI_BASE_URL=http://127.0.0.1:9 make up-prodlike` points OpenAI at a dead host;
-send a message and open the glass box: intent, plan and rerank show "fallback from openai:…".
+**Tried** (a compose override setting `OPENAI_BASE_URL=http://127.0.0.1:9` on the api and worker,
+then "I like oolong tea"): the turn completed, and the glass box shows the fallbacks.
+
+```text
+model_call: intent anthropic:claude-haiku-4-5 fallback={'from_provider': 'openai', 'from_model': 'gpt-6-luna', 'reason': 'connection; connection; connection'}
+model_call: extract anthropic:claude-haiku-4-5
+model_call: enrich anthropic:claude-haiku-4-5 fallback={... 'reason': 'skipped: breaker open'}
+cost: 0.010825   (about $0.0087 when OpenAI is up)
+```
+
+The first call retried three times, then the breaker opened and the next step skipped straight to
+Haiku. **Known gap:** embeddings have only OpenAI behind them, so during an OpenAI outage a save
+completes and is found by its text keys, but its vector keys are not made (no `embed` call in
+that turn); ledger row 46 in Sprint 3.9's ledger tracks re-embedding on recovery.
 
 **Out of credit.** When a provider answers "credit balance is too low" (Anthropic 402 or 400,
 OpenAI `insufficient_quota`), the app marks it out for an hour and skips it: its steps use their
@@ -90,6 +127,13 @@ make set-tier EMAIL=someone@example.com TIER=premium     # guest | standard | pr
 Guest is Auto only, $0.75 lifetime; standard picks Luna, GPT-5.4 mini or Haiku 4.5, $2.50;
 premium adds Sonnet 5, $4.00. Every change is written to `tier_changes` (who, when, from, to).
 The person's quota and picker follow on their next turn.
+
+**Tried** (`make set-tier EMAIL=… TIER=premium STACK=prodlike`, then back):
+
+```text
+trial-3bf87c@example.com: standard -> premium (by app (admin CLI), at 2026-09-29T17:16:01+00:00)
+Their quota and model picker follow it on their next turn.
+```
 
 ## 5. Deploy
 
