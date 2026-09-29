@@ -4,8 +4,9 @@ import uuid
 
 from secondmind.agent.adapters.inmemory import InMemoryTurns, InMemoryTurnStore
 from secondmind.core import utc_now
+from secondmind.metering.adapters import InMemorySpendStore
 
-__all__ = ["InMemoryIdentity", "InMemoryTurnStore", "InMemoryTurns"]
+__all__ = ["InMemoryIdentity", "InMemorySpendStore", "InMemoryTurnStore", "InMemoryTurns"]
 
 
 class InMemoryIdentity:

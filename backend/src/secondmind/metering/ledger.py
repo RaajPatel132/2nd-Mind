@@ -1,7 +1,9 @@
-"""Usage ledger entries (FR-12.1). Quota enforcement reads this ledger from S4.
+"""Usage ledger entries (FR-12.1). Quotas and spend caps read this ledger (ADR-0032).
 
-``charged_tokens`` is what the quota counts: the call's tokens at its model's weight against
-the baseline (ADR-0030), fixed when the call is recorded."""
+``cost_usd`` is what the quota counts. ``charged_tokens`` is the call's tokens at its model's
+weight against the baseline (ADR-0030), kept as information. ``system`` marks a call the app
+paid for (background indexing, housekeeping), which is on the ledger so spend caps see every
+dollar but isn't charged to the person."""
 
 import uuid
 
@@ -26,10 +28,16 @@ class LedgerEntry(BaseModel):
     cost_usd: UsdAmount
     charged_tokens: int = Field(ge=0)
     price_version: str
+    system: bool = False
 
     @classmethod
     def from_model_call(
-        cls, *, workspace_id: uuid.UUID, turn_id: uuid.UUID, event: ModelCallEvent
+        cls,
+        *,
+        workspace_id: uuid.UUID,
+        turn_id: uuid.UUID,
+        event: ModelCallEvent,
+        system: bool = False,
     ) -> "LedgerEntry":
         u = event.usage
         return cls(
@@ -44,4 +52,5 @@ class LedgerEntry(BaseModel):
             cost_usd=u.cost_usd,
             charged_tokens=u.charged,
             price_version=u.price_version,
+            system=system,
         )

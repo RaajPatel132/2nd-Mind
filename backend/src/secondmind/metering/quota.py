@@ -1,51 +1,55 @@
-"""Quota: how much of a user's lifetime token allowance is left (FR-12.5). Read only until S4,
-which adds enforcement. ``used`` is the sum of the user's usage ledger across their
-workspaces; every model call counts, embeddings included, at its model's weight against the
-baseline (ADR-0030), so the allowance is counted in baseline-model tokens."""
+"""Quota (FR-12.1/12.2, ADR-0032): what's left of a person's lifetime allowance, in dollars of
+model spend, by tier. ``used`` is the sum of the person's usage ledger across their
+workspaces; every call counts at its real cost, embeddings included, except system usage
+(background indexing and housekeeping), which the app pays for. Charged tokens stay on every
+call as information (ADR-0030), shown next to the dollars."""
 
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
-from enum import StrEnum
+from decimal import Decimal
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class Tier(StrEnum):
-    GUEST = "guest"
-    STANDARD = "standard"
-    PREMIUM = "premium"
+from secondmind.core import Tier, UsdAmount, usd
 
 
 @dataclass(frozen=True, slots=True)
 class QuotaLimits:
-    """Token limits per tier, from ``QUOTA_TOKENS_<TIER>``."""
+    """Dollar limits per tier, from ``QUOTA_USD_<TIER>``."""
 
-    guest: int
-    standard: int
-    premium: int
+    guest: Decimal
+    standard: Decimal
+    premium: Decimal
 
-    def for_tier(self, tier: Tier) -> int:
+    def for_tier(self, tier: Tier) -> Decimal:
         return {Tier.GUEST: self.guest, Tier.STANDARD: self.standard, Tier.PREMIUM: self.premium}[
             tier
         ]
 
 
 class QuotaUsage(BaseModel):
-    """A user's quota as it stands now."""
+    """A person's quota as it stands now."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     tier: Tier
-    limit_tokens: int = Field(ge=0)
-    used_tokens: int = Field(ge=0)
-    remaining_tokens: int = Field(ge=0)
+    limit_usd: UsdAmount
+    used_usd: UsdAmount
+    remaining_usd: UsdAmount
+    used_tokens: int = Field(ge=0, description="Charged (weighted) tokens, as information.")
+
+
+@dataclass(frozen=True, slots=True)
+class Spent:
+    usd: Decimal
+    tokens: int
 
 
 class LedgerReader(Protocol):
-    async def tokens_used(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> int:
-        """Total quota tokens (weighted) the user was charged in these workspaces."""
+    async def spent(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> Spent:
+        """What the person was charged in these workspaces (system usage left out)."""
         ...
 
 
@@ -54,14 +58,20 @@ class Quotas:
         self._ledger = ledger
         self._limits = limits
 
-    async def usage(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> QuotaUsage:
-        # Every signed-in user is on the standard tier until accounts and tiers arrive (S6).
-        tier = Tier.STANDARD
-        limit = self._limits.for_tier(tier)
-        used = await self._ledger.tokens_used(user_id, workspace_ids)
+    @property
+    def limits(self) -> QuotaLimits:
+        return self._limits
+
+    async def usage(
+        self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID], tier: Tier
+    ) -> QuotaUsage:
+        limit = usd(self._limits.for_tier(tier))
+        spent = await self._ledger.spent(user_id, workspace_ids)
+        used = usd(spent.usd)
         return QuotaUsage(
             tier=tier,
-            limit_tokens=limit,
-            used_tokens=used,
-            remaining_tokens=max(0, limit - used),
+            limit_usd=limit,
+            used_usd=used,
+            remaining_usd=max(Decimal(0), usd(limit - used)),
+            used_tokens=spent.tokens,
         )

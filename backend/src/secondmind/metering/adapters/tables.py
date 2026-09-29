@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -12,6 +13,7 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    false,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -38,12 +40,15 @@ class UsageLedgerRow(Base):
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 8))
     charged_tokens: Mapped[int] = mapped_column(Integer)
     price_version: Mapped[str] = mapped_column(String(32))
+    # The app paid for this call (background indexing, housekeeping), not the person.
+    system: Mapped[bool] = mapped_column(Boolean, server_default=false())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
         ForeignKeyConstraint(
             ["turn_id", "workspace_id"], ["turns.id", "turns.workspace_id"], ondelete="CASCADE"
         ),
+        Index("ix_usage_ledger_created_at", "created_at"),
         Index("ix_usage_ledger_owner_user_id_created_at", "owner_user_id", "created_at"),
         Index("ix_usage_ledger_turn_id", "turn_id"),
         Index("ix_usage_ledger_workspace_id", "workspace_id"),
