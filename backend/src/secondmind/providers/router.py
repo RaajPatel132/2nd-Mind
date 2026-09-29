@@ -21,7 +21,7 @@ import asyncio
 import random
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from decimal import Decimal
 from typing import Protocol
@@ -386,10 +386,11 @@ class ModelRouter:
             adapter = self._adapters[ref.provider]
             breaker = self._breakers.get(ref.provider)
             tries = 0
+            attempt_payload, repaired = payload, False
             while breaker.allow():
                 tries += 1
                 state.total_attempts += 1
-                request = self._request(state, ref, payload)
+                request = self._request(state, ref, attempt_payload)
                 settled = False
                 try:
                     async with asyncio.timeout(state.route.timeout_s):
@@ -409,6 +410,12 @@ class ModelRouter:
                 finally:
                     if not settled:
                         breaker.release_probe()
+                if err.kind is ProviderErrorKind.INVALID_OUTPUT and err.raw_output and not repaired:
+                    # The model answered but broke the schema (an enum value it made up): ask it
+                    # once to correct that, as ingestion does for a reply that breaks a rule.
+                    self._fail(state, breaker, ref, err)
+                    attempt_payload, repaired = _repair(payload, err), True
+                    continue
                 if await self._retry_after(state, breaker, ref, err, tries):
                     continue
                 break
@@ -563,6 +570,21 @@ class ModelRouter:
 def _timeout(ref: ModelRef, timeout_s: float) -> ProviderError:
     return ProviderError(
         ProviderErrorKind.TIMEOUT, f"no response within {timeout_s:g}s", provider=ref.provider
+    )
+
+
+def _repair(payload: "_Payload", err: ProviderError) -> "_Payload":
+    """The same request, plus the invalid reply and what was wrong with it (paths and error
+    types only), for one correction."""
+    return replace(
+        payload,
+        messages=[
+            *payload.messages,
+            ChatMessage(role="assistant", content=err.raw_output or ""),
+            ChatMessage.user(
+                f"That output was invalid: {err.message}. Return the whole output again, corrected."
+            ),
+        ],
     )
 
 

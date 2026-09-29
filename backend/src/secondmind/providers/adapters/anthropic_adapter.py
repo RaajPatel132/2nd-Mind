@@ -1,5 +1,6 @@
 """Anthropic adapter: Messages API streaming, structured output (``messages.parse``) and tools."""
 
+import json
 from collections.abc import AsyncIterator, Sequence
 from types import UnionType
 from typing import Any, NoReturn, Union, get_args, get_origin
@@ -149,6 +150,7 @@ class AnthropicAdapter:
                 ProviderErrorKind.INVALID_OUTPUT,
                 f"the {schema.__name__} the model gave is invalid: {validation_summary(exc)}",
                 provider=self._name,
+                raw_output=json.dumps(call.input, ensure_ascii=False),
             ) from exc
         return AdapterStructured(value=value, usage=_usage(message.usage))
 

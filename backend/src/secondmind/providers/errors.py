@@ -44,11 +44,15 @@ class ProviderError(SecondMindError):
         *,
         provider: str,
         status_code: int | None = None,
+        raw_output: str | None = None,
     ) -> None:
         super().__init__(message)
         self.kind = kind
         self.provider = provider
         self.status_code = status_code
+        # What an invalid structured reply said (JSON), so the router can ask the same model to
+        # correct it. Never logged: it holds the person's words.
+        self.raw_output = raw_output
 
     @property
     def retryable(self) -> bool:

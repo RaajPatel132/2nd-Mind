@@ -10,6 +10,7 @@ Usage is plausible (~4 characters per token).
 import asyncio
 import hashlib
 import itertools
+import json
 import math
 import re
 import struct
@@ -31,7 +32,7 @@ from secondmind.providers.contract import (
     TextDelta,
     ToolCall,
 )
-from secondmind.providers.errors import ProviderError, ProviderErrorKind
+from secondmind.providers.errors import ProviderError, ProviderErrorKind, validation_summary
 
 DEFAULT_EMBEDDING_DIM = 1536
 _TOKEN_RE = re.compile(r"\S+\s*|\s+")
@@ -212,8 +213,9 @@ class FakeProvider:
             raise ProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
                 f"fake has no valid scripted output for {schema.__name__} on step "
-                f"{request.step!r}: {exc.error_count()} validation error(s)",
+                f"{request.step!r}: {validation_summary(exc)}",
                 provider=self._name,
+                raw_output=json.dumps(data),
             ) from exc
         usage = self._usage(request, value.model_dump_json())
         return AdapterStructured(value=value, usage=usage)
