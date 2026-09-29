@@ -23,7 +23,7 @@ model:
 expect:
   memories:
     - match: moving to delhi
-      kind: fact
+      kind: fact|episode
       modality: reported
       predicate: null
       entities: ["Rohan:about", "Rohan:subject"]

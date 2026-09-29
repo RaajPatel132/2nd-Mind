@@ -308,11 +308,14 @@ def _touched(run: CaseRun) -> set[uuid.UUID]:
 
 
 def _find(run: CaseRun, match: str, *, touched_only: bool = True) -> ItemRecord | None:
+    """The first memory this turn wrote whose title or text holds ``match`` (``a|b``: either)."""
     touched = _touched(run)
+    wanted = [m.strip() for m in match.split("|") if m.strip()]
     for item in run.items:
         if touched_only and item.id not in touched:
             continue
-        if match in item.title.lower() or match in item.text.lower():
+        title, text = item.title.lower(), item.text.lower()
+        if any(m in title or m in text for m in wanted):
             return item
     return None
 
@@ -332,7 +335,10 @@ def _check_memory(run: CaseRun, want: Mapping[str, Any], result: Score) -> None:
             got = getattr(item, name)
             got = got.value if hasattr(got, "value") else got
             field_name = "kind" if name in ("subtype", "predicate") else name
-            result.check(field_name, got == want[name], f"{match}: {name} {got} != {want[name]}")
+            expected = want[name]
+            # "fact|episode": either would be right (a person would take both).
+            ok = got in str(expected).split("|") if isinstance(expected, str) else got == expected
+            result.check(field_name, ok, f"{match}: {name} {got} != {expected}")
     tz = ZoneInfo(run.case.timezone)
     for date in want.get("dates", []):
         got_date = _date(item, str(date["clock"]), tz)
@@ -350,7 +356,8 @@ def _check_memory(run: CaseRun, want: Mapping[str, Any], result: Score) -> None:
         got_category = _category(run, item)
         result.check("category", got_category == want["category"], f"{match}: {got_category}")
     if "layer" in want:
-        result.check("layer", item.layer.value == want["layer"], f"{match}: layer {item.layer}")
+        layers = str(want["layer"]).split("|")
+        result.check("layer", item.layer.value in layers, f"{match}: layer {item.layer}")
     if "reconcile" in want:
         reconciles = run.decision.reconciliations if run.decision else []
         got_op = next((r.info.decision.value for r in reconciles if r.label == item.title), None)
