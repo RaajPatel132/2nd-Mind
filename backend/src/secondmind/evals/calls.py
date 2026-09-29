@@ -20,6 +20,7 @@ The cache lives in ``evals/runs/.cache/`` (gitignored). Failed calls that were p
 import hashlib
 import json
 import math
+import os
 import time
 from collections import defaultdict
 from collections.abc import AsyncIterator, Mapping, Sequence
@@ -404,7 +405,18 @@ class MeteredAdapter:
         return self._estimator.chat(request, ref, schema)
 
     def _key(self, kind: str, material: Mapping[str, Any]) -> str | None:
-        return None if self._cache is None else self._cache.key(self.name, kind, material)
+        if self._cache is None:
+            return None
+        key = self._cache.key(self.name, kind, material)
+        dump = os.environ.get("LIVE_DUMP_REQUESTS")
+        if dump:  # to see why two identical-looking runs missed the cache: diff two dumps
+            path = Path(dump)
+            path.mkdir(parents=True, exist_ok=True)
+            step = str(material.get("step", kind))
+            (path / f"{step}-{key[:10]}.json").write_text(
+                json.dumps(material, indent=1, sort_keys=True, default=str), encoding="utf-8"
+            )
+        return key
 
     def _store(self, key: str | None, value: dict[str, Any]) -> None:
         if self._cache is not None and key is not None:

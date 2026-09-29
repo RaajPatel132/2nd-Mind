@@ -1,0 +1,992 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T122015Z-996c9bf",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-29T12:20:15.733878Z",
+ "finished_at": "2026-09-29T12:22:39.307809Z",
+ "git_sha": "996c9bf24f77",
+ "git_dirty": true,
+ "config_hash": "86b84a7932694628b365c1f4978844a9c70a415402a7a192b9a5f6d1a347debf",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "01",
+   "02",
+   "03",
+   "04",
+   "05",
+   "08",
+   "09",
+   "11",
+   "12",
+   "13",
+   "15",
+   "19",
+   "21",
+   "22",
+   "23",
+   "24",
+   "25",
+   "26",
+   "27"
+  ]
+ },
+ "batch": "B3",
+ "budget_usd": 0.2,
+ "estimate_usd": 0.14450754,
+ "status": "complete",
+ "note": "B3: extract@6 on every case that failed once, and the passport reminder",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "01-passport-reminder",
+   "title": "§8.1 (a): a task due the 3rd of next month, with the default reminder the day before",
+   "tags": [
+    "dates",
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 16326,
+   "ttft_ms": 16323,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.67e-05, "latency_ms": 3277, "ttft_ms": null, "input_tokens": 657, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.94, "reason": "You’re setting a reminder to renew your passport before it expires on October 3, 2026."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008217, "latency_ms": 5758, "ttft_ms": null, "input_tokens": 5947, "cached_input_tokens": 0, "output_tokens": 454, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [{"ref": "m1", "kind": "task", "subtype": "renewal", "format": null, "state": "open", "title": "Renew passport", "text": "I need to renew my passport before it expires [[t1]].", "summary": null, "category": "admin/travel", "tags": ["passport", "renewal"], "attributes": [], "subject": "passport", "predicate": null, "value": null, "entities": [], "times": [{"id": "t1", "expression": "the 3rd of next month", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "This is a task with a deadline in the near future, so it belongs in quick layer for timely action.", "rationale": "A renewal task with an explicit deadline. The user asked to be reminded, so reminder is set with default lead (the day before the deadline)."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008064, "latency_ms": 2595, "ttft_ms": null, "input_tokens": 6239, "cached_input_tokens": 0, "output_tokens": 365, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "passport", "name": "passport", "kind": "thing", "label": null}], "memories": [{"ref": "m1", "kind": "task", "subtype": "renewal", "format": null, "state": "open", "title": "Renew passport", "text": "I need to renew my passport before it expires [[t1]].", "summary": null, "category": "admin/travel", "tags": ["passport", "renewal"], "attributes": [], "subject": "e1", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [{"id": "t1", "expression": "the 3rd of next month", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "This is a task with a deadline in the near future, so it belongs in quick layer for timely action.", "rationale": "A renewal task with an explicit deadline. The user asked to be reminded, so reminder is set with default lead (the day before the deadline)."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 807, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001055, "latency_ms": 3011, "ttft_ms": null, "input_tokens": 445, "cached_input_tokens": 0, "output_tokens": 122, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["When does my passport expire?", "What do I need to renew before 3 October 2026?", "My passport renewal reminder"], "cues": ["When planning my passport renewal before 3 October 2026", "When checking upcoming identity-document deadlines"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.86e-06, "latency_ms": 846, "ttft_ms": null, "input_tokens": 93, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0164754,
+   "spent_usd": 0.0164754,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a task: Renew passport, due Sat 3 Oct. I'll remind you Fri 2 Oct.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'likes bags'",
+    "no memory written matching 'gift the mk bag'",
+    "no memory written matching 'birthday is in'",
+    "no new entity MK bag|MK:thing; new: ['wife', 'Michael Kors', 'bag']"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 3,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 5,
+     "category": 1,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 17388,
+   "ttft_ms": 17387,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.48e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 663, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared a gift idea and your wife’s preference for her birthday next May."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.014063, "latency_ms": 11528, "ttft_ms": null, "input_tokens": 5953, "cached_input_tokens": 0, "output_tokens": 1622, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "I", "name": null, "kind": "self", "label": null}, {"id": "e2", "mention": "my wife", "name": null, "kind": "person", "label": "wife"}, {"id": "e3", "mention": "MK", "name": "Michael Kors", "kind": "org", "label": null}, {"id": "e4", "mention": "bag", "name": null, "kind": "thing", "label": null}], "memories": [{"ref": "m1", "kind": "preference", "subtype": null, "format": null, "state": "current", "title": "MK bag", "text": "My wife likes this Michael Kors bag, serial 123ABC.", "summary": null, "category": "personal/preferences", "tags": ["bag", "wife"], "attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "subject": "e2", "predicate": "likes", "value": {"text": "MK bag, serial 123ABC", "number": null, "unit": null}, "entities": [{"entity": "e2", "role": "about"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "personal", "importance": 2, "links": [{"type": "gift_for_event", "to": "m2"}], "layer": "quick", "layer_rationale": "Preference linked to an upcoming gift opportunity.", "rationale": "This is a standing preference of the wife about a specific product she likes, with brand and serial information."}, {"ref": "m2", "kind": "plan", "subtype": "birthday", "format": null, "state": "scheduled", "title": "Wife's birthday", "text": "My wife's birthday is [[t1]].", "summary": null, "category": "personal/occasions", "tags": ["birthday", "wife"], "attributes": [], "subject": "e2", "predicate": null, "value": null, "entities": [{"entity": "e2", "role": "about"}], "times": [{"id": "t1", "expression": "next May", "clock": "occurred", "direction": "future", "recurring": true}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 4, "links": [{"type": "gift_for_event", "to": "m3"}], "layer": "core", "layer_rationale": "Recurring birthday is core information about a key person (wife).", "rationale": "Annual birthday is recurring; reminders are set for the day before by default."}, {"ref": "m3", "kind": "intention", "subtype": "gift", "format": null, "state": "wanted", "title": "MK bag for wife", "text": "Gift the Michael Kors bag (serial 123ABC) to my wife on her birthday [[t1]].", "summary": null, "category": "personal/gifts", "tags": ["gift", "wife", "birthday"], "attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "subject": "e1", "predicate": null, "value": null, "entities": [{"entity": "e2", "role": "for"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "times": [{"id": "t1", "expression": "next May", "clock": "due", "direction": "future", "recurring": false}], "reminder": null, "trigger": null, "modality": "planned", "sentiment": 1, "rating": null, "sensitivity": "personal", "importance": 3, "links": [{"type": "gift_for_event", "to": "m2"}, {"type": "derived_from", "to": "m1"}], "layer": "quick", "layer_rationale": "Gift intention tied to an upcoming significant date.", "rationale": "Gift subtype for a planned present; linked to both the wife's birthday (when it will be given) and her preference (why this gift)."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 772, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 432, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.8e-07, "latency_ms": 266, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2e-07, "latency_ms": 293, "ttft_ms": null, "input_tokens": 10, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.6e-07, "latency_ms": 263, "ttft_ms": null, "input_tokens": 23, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001355, "latency_ms": 3097, "ttft_ms": null, "input_tokens": 540, "cached_input_tokens": 0, "output_tokens": 163, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["Which Michael Kors handbag does my wife like?", "What’s the serial number of her preferred MK bag?"], "cues": ["when choosing a gift for my wife", "when identifying her preferred handbag"]}, {"ref": "m2", "alt": ["When is my wife's birthday?", "Which month should I plan her birthday around?"], "cues": ["when planning my wife's birthday", "when scheduling a birthday gift or celebration"]}, {"ref": "m3", "alt": ["What gift am I planning for my wife's birthday in May 2027?", "Which MK bag should I give my wife for her birthday?"], "cues": ["when preparing my wife's May 2027 birthday gift", "when checking my gift plans for her birthday"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.9e-06, "latency_ms": 682, "ttft_ms": null, "input_tokens": 245, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01428934,
+   "spent_usd": 0.01420454,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Saved as a preference: MK bag. Saved as a repeating plan: Wife's birthday, every year in May. I'll remind you Fri 30 Apr 2027. Saved a gift idea: MK bag for wife, due May 2027. Added to core memory: MK bag. Added to core memory: Wife's birthday. I've assumed 'my wife' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "03-mindhunter",
+   "title": "§8.1 (d): a show to watch, category entertainment, to-watch state",
+   "tags": [
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 1,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 1,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 8136,
+   "ttft_ms": 8134,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.51e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 651, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.97, "intent": "save", "reason": "You noted that Mindhunter is a psychology thriller you can watch when you have nothing to do."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008543, "latency_ms": 4961, "ttft_ms": null, "input_tokens": 5943, "cached_input_tokens": 0, "output_tokens": 520, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Mindhunter", "name": "Mindhunter", "kind": "work", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Mindhunter", "text": "I want to watch Mindhunter, a psychology thriller, when I have nothing else to do.", "summary": null, "category": "entertainment/series", "tags": ["psychology", "thriller"], "attributes": [{"key": "genre", "value": "psychology thriller"}], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "archive", "layer_rationale": "A flexible, unscheduled intention to watch a show when time permits; not actively being worked on or due soon.", "rationale": "An intention to watch a work (Mindhunter) identified by its genre and the flexible timing ('when nothing to do'). No specific date given, so no time expression and no reminder."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 981, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.42e-05, "latency_ms": 1869, "ttft_ms": null, "input_tokens": 447, "cached_input_tokens": 0, "output_tokens": 79, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["What psychological thrillers do I want to watch?", "Which show should I watch when I have free time?", "Is Mindhunter on my watchlist?"], "cues": ["when choosing something to watch during downtime", "when looking for a psychology thriller", "when I'm unsure what to watch"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.82e-06, "latency_ms": 300, "ttft_ms": null, "input_tokens": 91, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0087145,
+   "spent_usd": 0.0086294,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Added Mindhunter to your watch list.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "04-trading-idea",
+   "title": "§8.1 (e): an idea, as a note",
+   "tags": [
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 4517,
+   "ttft_ms": 4515,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.8e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 655, "cached_input_tokens": 0, "output_tokens": 45, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re sharing an idea you may want to develop later: building an end-to-end skill that can trade autonomously."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008296, "latency_ms": 4505, "ttft_ms": null, "input_tokens": 5946, "cached_input_tokens": 0, "output_tokens": 470, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "I", "name": null, "kind": "self", "label": null}], "memories": [{"ref": "m1", "kind": "note", "subtype": "idea", "format": null, "state": "current", "title": "End-to-end skill that can trade for itself", "text": "I have an idea of building an end-to-end skill that can trade for itself.", "summary": null, "category": null, "tags": [], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "It's a current idea being thought through, worth keeping in quick access for ongoing reflection and development.", "rationale": "This is a note with subtype idea: a creative thought or concept the user is considering. It describes a project concept they're thinking about building rather than a committed goal or plan."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.61e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 451, "cached_input_tokens": 0, "output_tokens": 102, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["What was my idea for an autonomous trading skill?", "The end-to-end skill I want to build that trades on its own", "My self-trading skill concept"], "cues": ["when brainstorming projects involving autonomous trading", "when exploring ideas for end-to-end AI skills"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.88e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 94, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00848232,
+   "spent_usd": 0.008296,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Saved as a note: End-to-end skill that can trade for itself.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "05-moved-city",
+   "title": "Supersede: a new value for the same subject + predicate keeps the old one as history",
+   "tags": [
+    "setup",
+    "supersede"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 5,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 5,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 5219,
+   "ttft_ms": 5217,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.28e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 643, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re sharing a change in where you live that may be useful to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008875, "latency_ms": 4831, "ttft_ms": null, "input_tokens": 5940, "cached_input_tokens": 0, "output_tokens": 587, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "I", "name": null, "kind": "self", "label": null}, {"id": "e2", "mention": "Pune", "name": "Pune", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Live in Pune", "text": "I live in Pune.", "summary": null, "category": "personal/home", "tags": [], "attributes": [], "subject": "self", "predicate": "lives_in", "value": {"text": "Pune", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 4, "links": [], "layer": "core", "layer_rationale": "Standing fact about where the user lives, always in context.", "rationale": "A current fact about the user's location, superseding the previous fact that they live in Bengaluru. The predicate 'lives_in' captures the core information."}], "relations": [{"src": "e1", "relation": "lives_in", "dst": "e2", "evidence": "m1"}], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.48e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 433, "cached_input_tokens": 0, "output_tokens": 103, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["Where do I live?", "What's my home city?", "Which city am I based in?"], "cues": ["when finding local services near my home", "when planning activities in my city", "when looking for nearby recommendations"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-06, "latency_ms": 367, "ttft_ms": null, "input_tokens": 110, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0090548,
+   "spent_usd": 0.0088772,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "Updated: you live in Pune now (Bengaluru until today). Added to core memory: Live in Pune.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "08-hypothetical",
+   "title": "Hypothetical not asserted: 'if I get the offer I'll move' is not a fact",
+   "tags": [
+    "P-MOD-1|model"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 4779,
+   "ttft_ms": 4777,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.33e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 648, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "save", "reason": "You’re sharing a conditional plan to move to Berlin if you get the offer."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008553, "latency_ms": 4772, "ttft_ms": null, "input_tokens": 5938, "cached_input_tokens": 0, "output_tokens": 523, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Berlin", "name": "Berlin", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "visit", "format": null, "state": "wanted", "title": "Move to Berlin", "text": "If I get the Berlin offer, I will move to Berlin.", "summary": null, "category": "relocation", "tags": ["conditional", "job-related"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "hypothetical", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "A conditional intention contingent on a job offer; storing as quick because it involves a potential major life decision.", "rationale": "This is a hypothetical intention about relocation contingent on receiving a job offer. The modality is 'hypothetical' because it depends on the condition 'if I get the Berlin offer'. Stored as an intention with subtype 'visit' (though it's broader than a visit, it represents movement/relocation to a place). The state is 'wanted' since it's conditional but expressed as something that would happen."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00863656,
+   "spent_usd": 0.008553,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "I didn't save 'Move to Berlin' as if it were settled: it's hypothetical.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "09-gym-routine",
+   "title": "Routine: 'every Mon/Wed/Fri at 7' becomes a weekly RRULE",
+   "tags": [
+    "dates"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 3929,
+   "ttft_ms": 3927,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.13e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 648, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re sharing a recurring gym routine to keep in mind."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007754, "latency_ms": 3909, "ttft_ms": null, "input_tokens": 5939, "cached_input_tokens": 0, "output_tokens": 363, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [{"ref": "m1", "kind": "plan", "subtype": "routine", "format": null, "state": "scheduled", "title": "Gym", "text": "I go to the gym [[t1]].", "summary": null, "category": "health/fitness", "tags": ["routine", "gym", "exercise"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [], "times": [{"id": "t1", "expression": "every Mon/Wed/Fri at 7", "clock": "occurred", "direction": null, "recurring": true}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "A recurring routine the user follows regularly, placed in quick layer for ongoing visibility.", "rationale": "A recurring routine about gym visits: kind plan, subtype routine. No reminder set as this is a standing pattern, not a one-off event requiring notification."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.87e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 442, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["When do I work out?", "What’s my gym schedule?", "Which mornings do I go to the gym?"], "cues": ["when planning my weekly routine", "when scheduling appointments around gym time", "when deciding which days to exercise"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.48e-06, "latency_ms": 4, "ttft_ms": null, "input_tokens": 74, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0079158,
+   "spent_usd": 0.007754,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Saved as a repeating plan: Gym, every Monday, Wednesday and Friday at 7 am. I took 'every Mon/Wed/Fri at 7' as Fri 25 Sep, 7 am (not 19:00 instead of 07:00).",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "11-reported-claim",
+   "title": "Reported: 'Rohan said he's moving to Delhi' is reported, about Rohan, no lives_in",
+   "tags": [],
+   "passed": false,
+   "failures": [
+    "moving to delhi: kind episode != fact"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 11989,
+   "ttft_ms": 11987,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.5e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 645, "cached_input_tokens": 0, "output_tokens": 61, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared an update about Rohan’s plans: he’s moving to Delhi."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008901, "latency_ms": 5120, "ttft_ms": null, "input_tokens": 5936, "cached_input_tokens": 0, "output_tokens": 593, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Rohan", "name": "Rohan", "kind": "person", "label": null}, {"id": "e2", "mention": "Delhi", "name": "Delhi", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "episode", "subtype": "conversation", "format": null, "state": "happened", "title": "Rohan moving to Delhi", "text": "Rohan said he's moving to Delhi.", "summary": null, "category": null, "tags": [], "attributes": [], "subject": "Rohan", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "reported", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "Reported information about someone's move; placed in quick layer as it's a significant change in a known person's situation.", "rationale": "Episode of reported information: Rohan told the user about his move to Delhi. Modality is reported since it's someone else's statement, not the user's direct knowledge. Subtype is conversation to capture the communication."}], "relations": [{"src": "e1", "relation": "will_move_to", "dst": "e2", "evidence": "m1"}], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008319, "latency_ms": 2739, "ttft_ms": null, "input_tokens": 6304, "cached_input_tokens": 0, "output_tokens": 403, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Rohan", "name": "Rohan", "kind": "person", "label": null}, {"id": "e2", "mention": "Delhi", "name": "Delhi", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "episode", "subtype": "conversation", "format": null, "state": "happened", "title": "Rohan moving to Delhi", "text": "Rohan said he's moving to Delhi.", "summary": null, "category": null, "tags": [], "attributes": [], "subject": "e1", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "reported", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "Reported information about someone's move; placed in quick layer as it's a significant change in a known person's situation.", "rationale": "Episode of reported information: Rohan told the user about his move to Delhi. Modality is reported since it's someone else's statement, not the user's direct knowledge. Subtype is conversation to capture the communication."}], "relations": [{"src": "e1", "relation": "will_move_to", "dst": "e2", "evidence": "m1"}], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.2e-07, "latency_ms": 965, "ttft_ms": null, "input_tokens": 31, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.38e-05, "latency_ms": 2542, "ttft_ms": null, "input_tokens": 438, "cached_input_tokens": 0, "output_tokens": 100, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["What did Rohan say about moving?", "Where is Rohan relocating?", "Is Rohan moving to Delhi?"], "cues": ["when discussing Rohan’s move", "when asking where Rohan plans to live"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-06, "latency_ms": 578, "ttft_ms": null, "input_tokens": 60, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01741062,
+   "spent_usd": 0.01731562,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Logged: Rohan moving to Delhi.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "12-runs-not-merged",
+   "title": "Episodes not merged: two 5 km runs on different days are two episodes",
+   "tags": [
+    "dates",
+    "new",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 2,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 2,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 4189,
+   "ttft_ms": 4187,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.03e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 648, "cached_input_tokens": 0, "output_tokens": 31, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "This records a personal running achievement from this morning."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008244, "latency_ms": 4173, "ttft_ms": null, "input_tokens": 5939, "cached_input_tokens": 0, "output_tokens": 461, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [{"ref": "m1", "kind": "episode", "subtype": "measurement", "format": null, "state": "happened", "title": "5 km run", "text": "I ran 5 km in 31 minutes [[t1]].", "summary": null, "category": "health/fitness", "tags": ["running"], "attributes": [{"key": "distance", "value": "5 km"}, {"key": "time", "value": "31 min"}], "subject": "self", "predicate": null, "value": null, "entities": [], "times": [{"id": "t1", "expression": "this morning", "clock": "occurred", "direction": "past", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "A recent exercise episode with a measurement, relevant to fitness tracking.", "rationale": "Episode subtype measurement captures a quantified completion of an activity. The time is expressed as a placeholder for code to resolve 'this morning'."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001004, "latency_ms": 2, "ttft_ms": null, "input_tokens": 449, "cached_input_tokens": 0, "output_tokens": 111, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["How fast did I run 5 km on 23 September 2026?", "My 5K time from Wednesday morning", "What was my running pace for 5 km?"], "cues": ["when tracking my running progress", "when comparing 5K times", "when reviewing my workout on 23 September 2026"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.46e-06, "latency_ms": 4, "ttft_ms": null, "input_tokens": 123, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00842716,
+   "spent_usd": 0.008244,
+   "cache_hits": 3,
+   "detail": {
+    "reply": "Logged: 5 km run, Wed 23 Sep, 8 am.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "13-multi-item",
+   "title": "Multi-item: a show to watch and a task to call Nisha, with a reminder",
+   "tags": [
+    "dates",
+    "multi",
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 10420,
+   "ttft_ms": 10418,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001074, "latency_ms": 1, "ttft_ms": null, "input_tokens": 649, "cached_input_tokens": 0, "output_tokens": 85, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You mentioned Mindhunter and asked to be reminded to call Nisha on Sunday, both of which are worth keeping."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.010152, "latency_ms": 6081, "ttft_ms": null, "input_tokens": 5942, "cached_input_tokens": 0, "output_tokens": 842, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Mindhunter", "name": "Mindhunter", "kind": "work", "label": null}, {"id": "e2", "mention": "Nisha", "name": "Nisha", "kind": "person", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Mindhunter", "text": "I want to watch Mindhunter.", "summary": null, "category": "entertainment/series", "tags": [], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 1, "links": [], "layer": "archive", "layer_rationale": "An intention to watch, stored for future reference but not imminent.", "rationale": "Intention to watch a series; Mindhunter is the work entity."}, {"ref": "m2", "kind": "task", "subtype": null, "format": null, "state": "open", "title": "Call Nisha", "text": "I need to call Nisha [[t1]].", "summary": null, "category": "communication", "tags": [], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e2", "role": "with"}], "times": [{"id": "t1", "expression": "Sunday", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": "on the day"}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "A task with a specific near-term due date (Sunday), so it belongs in the quick layer for timely retrieval.", "rationale": "Task to call Nisha on Sunday; reminder set for the day of the call as requested."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 1, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001322, "latency_ms": 3514, "ttft_ms": null, "input_tokens": 487, "cached_input_tokens": 0, "output_tokens": 167, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["What series do I want to watch?", "Which crime drama is on my watchlist?", "What was I planning to stream?"], "cues": ["when choosing a show to watch", "when browsing crime dramas"]}, {"ref": "m2", "alt": ["Who do I need to call?", "When should I call Nisha?", "What phone call do I have planned for 27 September 2026?"], "cues": ["when checking my calls to make", "when planning tasks for 27 September 2026"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.34e-06, "latency_ms": 799, "ttft_ms": null, "input_tokens": 167, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01039556,
+   "spent_usd": 0.01028754,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Added Mindhunter to your watch list. Saved as a task: Call Nisha, due Sun 27 Sep. I'll remind you Sun 27 Sep.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "15-same-show-twice",
+   "title": "Same wish twice: saving Dark again is a no-op, not a second intention",
+   "tags": [
+    "no_op",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 4591,
+   "ttft_ms": 4589,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.01e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 651, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re adding Dark to your watch list."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007634, "latency_ms": 4582, "ttft_ms": null, "input_tokens": 5939, "cached_input_tokens": 0, "output_tokens": 339, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Dark", "name": "Dark", "kind": "work", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Dark", "text": "I want to watch Dark.", "summary": null, "category": "entertainment/series", "tags": [], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "An active intention on the watch list should be in quick access.", "rationale": "The user is expressing an intention to watch Dark, a TV series. This is a watch intention."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true}
+   ],
+   "cost_usd": 0.0077141,
+   "spent_usd": 0.007634,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Already saved: Dark.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "19-birthday",
+   "title": "Birthday: a yearly plan on 14 March linked to Kabir, reminded the day before",
+   "tags": [
+    "dates",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 5728,
+   "ttft_ms": 5726,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.16e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 646, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared Kabir’s birthday, a personal detail worth remembering."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007957, "latency_ms": 5710, "ttft_ms": null, "input_tokens": 5937, "cached_input_tokens": 0, "output_tokens": 404, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Kabir", "name": "Kabir", "kind": "person", "label": null}], "memories": [{"ref": "m1", "kind": "plan", "subtype": "birthday", "format": null, "state": "scheduled", "title": "Kabir's birthday", "text": "Kabir's birthday is [[t1]].", "summary": null, "category": "personal/dates", "tags": ["birthday"], "attributes": [], "subject": "e1", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [{"id": "t1", "expression": "14 March", "clock": "occurred", "direction": "future", "recurring": true}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 3, "links": [], "layer": "core", "layer_rationale": "Recurring birthday of a known person; always in context for planning and reminders.", "rationale": "Birthdays are plans with subtype birthday, recurring, always have a reminder with default lead (day before), and are personal sensitivity."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.74e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 444, "cached_input_tokens": 0, "output_tokens": 66, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["When is Kabir's birthday?", "What date is Kabir's birthday?", "Kabir birthday date"], "cues": ["when planning a birthday celebration for Kabir", "when choosing a birthday gift for Kabir"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.5e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 75, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00811782,
+   "spent_usd": 0.007957,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Saved as a repeating plan: Kabir's birthday, every year on 14 March. I'll remind you Sat 13 Mar 2027. Added to core memory: Kabir's birthday.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "21-sensitive-held",
+   "title": "Sensitive: saved to the archive, the core write held (P-SENS-1)",
+   "tags": [
+    "dates",
+    "sensitive"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 2,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 2,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 10390,
+   "ttft_ms": 10386,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.47e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 647, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "This is personal health information and a timeline about your ongoing therapy that may be useful to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.009078, "latency_ms": 5903, "ttft_ms": null, "input_tokens": 5938, "cached_input_tokens": 0, "output_tokens": 628, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "a therapist", "name": null, "kind": "person", "label": "therapist"}, {"id": "e2", "mention": "anxiety", "name": null, "kind": "topic", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Therapy for anxiety", "text": "I've been seeing a therapist for anxiety since [[t1]].", "summary": null, "category": "health/mental-health", "tags": ["therapy", "mental-health", "ongoing"], "attributes": [], "subject": "self", "predicate": "in_therapy_for", "value": {"text": "anxiety", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "by"}, {"entity": "e2", "role": "about"}], "times": [{"id": "t1", "expression": "since March", "clock": "valid", "direction": "past", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "sensitive", "importance": 4, "links": [], "layer": "core", "layer_rationale": "Standing fact about the user's health and ongoing therapy, important to context for understanding current wellbeing and support", "rationale": "Health-related fact marked sensitive per policy. Started in March (past), currently ongoing. Marked core layer as this is a significant standing fact about the user's mental health and active support."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 4, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001088, "latency_ms": 3308, "ttft_ms": null, "input_tokens": 443, "cached_input_tokens": 0, "output_tokens": 129, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["Who am I seeing a therapist for?", "What support am I getting for anxiety?", "My anxiety therapy"], "cues": ["when discussing my mental health support", "when reflecting on how I manage anxiety", "when considering changes to my care"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.64e-06, "latency_ms": 1140, "ttft_ms": null, "input_tokens": 82, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00927346,
+   "spent_usd": 0.00918844,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "Saved as a fact: Therapy for anxiety, since March 2026. Held for your confirmation: Therapy for anxiety (sensitive, so it goes to core only if you confirm). I've assumed 'a therapist' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "22-keys-location",
+   "title": "Where a thing is: a supersedable located_at fact about the keys",
+   "tags": [],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 7951,
+   "ttft_ms": 7949,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.16e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 646, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "This is a practical detail about where your spare keys are kept."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008615, "latency_ms": 6039, "ttft_ms": null, "input_tokens": 5935, "cached_input_tokens": 0, "output_tokens": 536, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "spare keys", "name": "Spare keys", "kind": "thing", "label": null}, {"id": "e2", "mention": "kitchen cabinet", "name": "Kitchen cabinet", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Spare keys location", "text": "Spare keys are in the kitchen cabinet.", "summary": null, "category": "home", "tags": [], "attributes": [], "subject": "e1", "predicate": "located_at", "value": {"text": "kitchen cabinet", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 3, "links": [], "layer": "core", "layer_rationale": "Standing fact about a practical location in the home that should always be in context.", "rationale": "A factual statement about where something is stored. The spare keys and their location are practical home information."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.8e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 9, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.97e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 437, "cached_input_tokens": 0, "output_tokens": 72, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["Where are my spare keys?", "Where did I put the backup keys?", "Which cabinet has the extra keys?"], "cues": ["when I need to find my spare keys", "when someone needs access to my home", "when checking the kitchen cabinets"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.48e-06, "latency_ms": 1890, "ttft_ms": null, "input_tokens": 74, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00877796,
+   "spent_usd": 0.00861648,
+   "cache_hits": 3,
+   "detail": {
+    "reply": "Saved as a fact: Spare keys location. Added to core memory: Spare keys location.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "23-learn-rust",
+   "title": "An intention to learn, linked to a topic",
+   "tags": [],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 4142,
+   "ttft_ms": 4139,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.37e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 642, "cached_input_tokens": 0, "output_tokens": 59, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.97, "intent": "save", "reason": "You’re sharing a goal to learn Rust."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007752, "latency_ms": 4124, "ttft_ms": null, "input_tokens": 5932, "cached_input_tokens": 0, "output_tokens": 364, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Rust", "name": "Rust", "kind": "topic", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "learn", "format": null, "state": "wanted", "title": "Rust", "text": "I want to learn Rust.", "summary": null, "category": "learning/programming", "tags": ["programming", "language"], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "An active learning goal being expressed, goes to quick layer for visibility.", "rationale": "Intention to learn a programming language. Subtype 'learn' captures the goal. Category is learning/programming. Topic Rust is the subject of the intention."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.63e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 433, "cached_input_tokens": 0, "output_tokens": 106, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["What programming language do I want to learn?", "Which language am I planning to study?", "What do I want to learn about Rust?"], "cues": ["when choosing a programming project", "when planning what to study", "when looking for a new coding skill"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.42e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 71, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00794354,
+   "spent_usd": 0.007752,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Added Rust to things to learn.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "24-half-marathon",
+   "title": "A goal: a project entity plus an intention with a target month",
+   "tags": [
+    "dates",
+    "entities"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 2,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 2,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 8572,
+   "ttft_ms": 8570,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.95e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 645, "cached_input_tokens": 0, "output_tokens": 50, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You’re sharing a half-marathon training goal for February."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008644, "latency_ms": 5244, "ttft_ms": null, "input_tokens": 5934, "cached_input_tokens": 0, "output_tokens": 542, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "a half marathon", "name": "Half marathon", "kind": "project", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "train", "format": null, "state": "active", "title": "Half marathon", "text": "I'm training for a half marathon in February.", "summary": null, "category": "health/fitness", "tags": ["running", "training"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [{"id": "t1", "expression": "in February", "clock": "due", "direction": "future", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "An active intention with a near-term target date (February 2027) belongs in quick memory for ongoing reference during training.", "rationale": "Training for a future event is an intention with subtype 'train'. The state is 'active' because the user is currently working towards it. The target date in February is recorded in times with clock 'due'. The half marathon is a project entity that the intention is about."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.4e-07, "latency_ms": 572, "ttft_ms": null, "input_tokens": 12, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.29e-05, "latency_ms": 2298, "ttft_ms": null, "input_tokens": 439, "cached_input_tokens": 0, "output_tokens": 98, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["What race am I preparing for?", "What running goal am I training toward?", "When is my half marathon training plan for?"], "cues": ["when planning my running workouts", "when discussing race preparation", "when choosing a running goal"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.58e-06, "latency_ms": 428, "ttft_ms": null, "input_tokens": 79, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00882822,
+   "spent_usd": 0.00873872,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Saved as a wish: Half marathon, due February 2027.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "25-save-and-recall",
+   "title": "Save and recall: the save happens first, then recall runs on the question",
+   "tags": [],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 3,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 4357,
+   "ttft_ms": 4349,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.56e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 651, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 1.0, "intent": "save_and_recall", "reason": "You asked to add Dark to your watchlist and to recall what else is already on it."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00814, "latency_ms": 4340, "ttft_ms": null, "input_tokens": 5940, "cached_input_tokens": 0, "output_tokens": 440, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Dark", "name": "Dark", "kind": "work", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Dark", "text": "I want to watch Dark.", "summary": null, "category": "entertainment/series", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "An active intention to watch should be in quick layer for easy reference.", "rationale": "The user wants to add Dark to their watchlist. Dark is a German science fiction series. This is an intention with subtype 'watch'."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.13e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 433, "cached_input_tokens": 0, "output_tokens": 76, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["What series do I want to watch?", "Is Dark on my watchlist?", "What was the name of the show I wanted to see?"], "cues": ["when choosing a series to watch", "when checking my TV watchlist", "when looking for a mystery show"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.46e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 73, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003458, "latency_ms": 3, "ttft_ms": null, "input_tokens": 2453, "cached_input_tokens": 0, "output_tokens": 201, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted", "active"], "subtypes": ["watch"]}, "question": "What else is on my watchlist?", "role": null, "set": null, "shape": "list", "times": [], "topic": "watchlist"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.8e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 34, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00865496,
+   "spent_usd": 0.00814,
+   "cache_hits": 6,
+   "detail": {
+    "reply": "Added Dark to your watch list.\n\nI don't have anything saved about watchlist.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "26-labelled-secret",
+   "title": "Model-labelled secret: refused, and the stored turn has the value redacted",
+   "tags": [
+    "P-SECRET-1|model"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 6059,
+   "ttft_ms": 6051,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.37e-05, "latency_ms": 2467, "ttft_ms": null, "input_tokens": 652, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.99, "reason": "You shared the combination for your gym locker, which is information to remember."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007877, "latency_ms": 3573, "ttft_ms": null, "input_tokens": 5942, "cached_input_tokens": 0, "output_tokens": 387, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Gym locker combination", "text": "My gym locker opens with a combination lock.", "summary": null, "category": "health/fitness", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "secret", "importance": 4, "links": [], "layer": "core", "layer_rationale": "Essential security information needed for regular gym access.", "rationale": "This is a secret combination lock code that opens the user's gym locker. Stored as a fact with secret sensitivity. The actual combination is stored in secret_spans to keep it out of all readable fields."}], "relations": [], "not_written": [], "secret_spans": ["17-38-02"]}, "timed": true}
+   ],
+   "cost_usd": 0.0079707,
+   "spent_usd": 0.0079707,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "I didn't save that: it looks like a password or another secret, and I don't store those. Nothing was written.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "27-person-trigger",
+   "title": "A reminder for when a person comes up: a task for Nisha with an on-person trigger",
+   "tags": [
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 4502,
+   "ttft_ms": 4500,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.41e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 651, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You want to remember to ask Nisha about her interview the next time you talk."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008351, "latency_ms": 4488, "ttft_ms": null, "input_tokens": 5941, "cached_input_tokens": 0, "output_tokens": 482, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Nisha", "name": "Nisha", "kind": "person", "label": null}], "memories": [{"ref": "m1", "kind": "task", "subtype": "null", "format": null, "state": "open", "title": "Ask Nisha about her interview", "text": "Ask Nisha about her interview.", "summary": null, "category": null, "tags": [], "attributes": [], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "with"}], "times": [], "reminder": null, "trigger": {"on": "person", "entity": "e1", "cue": null}, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "quick", "layer_rationale": "A task to be done in conversation, triggered by a future event (talking to Nisha).", "rationale": "This is a task with a moment trigger: it should be brought to mind when the user next talks to Nisha, rather than at a scheduled time."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.78e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 438, "cached_input_tokens": 0, "output_tokens": 88, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["check in with Nisha about her job interview", "ask how Nisha’s interview went"], "cues": ["when I’m following up with Nisha", "when I want to remember Nisha’s interview"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.12e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 56, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00852416,
+   "spent_usd": 0.008351,
+   "cache_hits": 4,
+   "detail": {
+    "reply": "Saved as a task: Ask Nisha about her interview.\n\nBy the way, you wanted to ask Nisha about her interview.",
+    "status": "completed"
+   }
+  }
+ ]
+}

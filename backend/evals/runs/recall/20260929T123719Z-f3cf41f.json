@@ -1,0 +1,184 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T123719Z-f3cf41f",
+ "suite": "recall",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-29T12:37:19.425264Z",
+ "finished_at": "2026-09-29T12:37:41.120265Z",
+ "git_sha": "f3cf41f11897",
+ "git_dirty": true,
+ "config_hash": "86b84a7932694628b365c1f4978844a9c70a415402a7a192b9a5f6d1a347debf",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-10-06T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {
+  "cases": [
+   "06",
+   "07"
+  ]
+ },
+ "batch": "B3",
+ "budget_usd": 0.05,
+ "estimate_usd": 0.0041267,
+ "status": "complete",
+ "note": "cache determinism check 1",
+ "setup_calls": [
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 38, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null}
+ ],
+ "cases": [
+  {
+   "id": "06-taste-history",
+   "title": "History of a preference",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 11122,
+   "ttft_ms": 10443,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.28e-05, "latency_ms": 1920, "ttft_ms": null, "input_tokens": 723, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.98, "reason": "You’re asking me to compare your current show preferences with what I know about your past tastes."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003686, "latency_ms": 2446, "ttft_ms": null, "input_tokens": 2741, "cached_input_tokens": 0, "output_tokens": 189, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "history", "question": "How has my taste in shows changed?", "topic": "taste in shows", "about": "shows", "times": [], "entities": [], "filters": {"kinds": ["preference"], "subtypes": [], "states": ["current", "superseded"], "category": null, "predicate": "genre_taste", "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 27, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004393, "latency_ms": 4750, "ttft_ms": null, "input_tokens": 2063, "cached_input_tokens": 0, "output_tokens": 466, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Previously liked thrillers"}, {"id": "c2", "score": 1.0, "reason": "Now prefers lighter shows"}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.4, "reason": ""}, {"id": "c10", "score": 0.4, "reason": ""}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.4, "reason": ""}, {"id": "c13", "score": 0.4, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001039, "latency_ms": 1594, "ttft_ms": 1033, "input_tokens": 764, "cached_input_tokens": 0, "output_tokens": 55, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You've shifted away from thrillers. Until 20 September, you liked them [1], but now you're done with thrillers and want lighter shows instead [2]. That's a pretty recent change—just 2 weeks ago.", "timed": true}
+   ],
+   "cost_usd": 0.00194024,
+   "spent_usd": 0.0019397,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "likes_thrillers",
+     "done_thrillers"
+    ],
+    "ranked": [
+     "likes_thrillers",
+     "done_thrillers",
+     "vegetarian",
+     "live_pune",
+     "rohan_birds",
+     "rohan_jazz",
+     "dentist_new",
+     "kabir_likes_mk",
+     "watch_mindhunter",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "You've shifted away from thrillers. Until 20 September, you liked them [1], but now you're done with thrillers and want lighter shows instead [2]. That's a pretty recent change—just 2 weeks ago."
+   }
+  },
+  {
+   "id": "07-diet",
+   "title": "A core preference by exact lookup",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 8472,
+   "ttft_ms": 8314,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.84e-05, "latency_ms": 1211, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 1.0, "reason": "You’re asking me to recall a saved detail about your diet."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012336, "latency_ms": 2819, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 2726, "output_tokens": 190, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "exact", "question": "Am I vegetarian?", "topic": "whether I am vegetarian", "about": "diet", "times": [], "entities": [], "filters": {"kinds": ["preference"], "subtypes": [], "states": ["current"], "category": null, "predicate": "diet", "attribute": null, "role": null, "current_only": true}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003918, "latency_ms": 3189, "ttft_ms": null, "input_tokens": 2123, "cached_input_tokens": 0, "output_tokens": 359, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states you are vegetarian."}, {"id": "c2", "score": 0.0, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000764, "latency_ms": 871, "ttft_ms": 834, "input_tokens": 704, "cached_input_tokens": 0, "output_tokens": 12, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Yes, you're vegetarian [1].", "timed": true}
+   ],
+   "cost_usd": 0.00136786,
+   "spent_usd": 0.00136756,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "vegetarian"
+    ],
+    "ranked": [
+     "vegetarian",
+     "done_thrillers",
+     "rohan_birds",
+     "rohan_jazz",
+     "kabir_likes_mk",
+     "try_blue_lotus",
+     "try_saffron",
+     "live_pune",
+     "try_tin_spoon",
+     "half_marathon_goal"
+    ],
+    "aggregate": null,
+    "reply": "Yes, you're vegetarian [1]."
+   }
+  }
+ ]
+}

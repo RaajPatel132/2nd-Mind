@@ -1,0 +1,167 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T122411Z-f3cf41f",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-29T12:24:11.357731Z",
+ "finished_at": "2026-09-29T12:24:11.455494Z",
+ "git_sha": "f3cf41f11897",
+ "git_dirty": false,
+ "config_hash": "86b84a7932694628b365c1f4978844a9c70a415402a7a192b9a5f6d1a347debf",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "02",
+   "11"
+  ]
+ },
+ "batch": "B3",
+ "budget_usd": 0.02185616,
+ "estimate_usd": 0.01529892,
+ "status": "complete",
+ "note": "B3: re-score 02 and 11 from the cache after the golden fix",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 6,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 15,
+   "ttft_ms": 14,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.48e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 663, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared a gift idea and your wife’s preference for her birthday next May."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.014063, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5953, "cached_input_tokens": 0, "output_tokens": 1622, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "self", "label": null, "mention": "I", "name": null}, {"id": "e2", "kind": "person", "label": "wife", "mention": "my wife", "name": null}, {"id": "e3", "kind": "org", "label": null, "mention": "MK", "name": "Michael Kors"}, {"id": "e4", "kind": "thing", "label": null, "mention": "bag", "name": null}], "memories": [{"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal/preferences", "entities": [{"entity": "e2", "role": "about"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "format": null, "importance": 2, "kind": "preference", "layer": "quick", "layer_rationale": "Preference linked to an upcoming gift opportunity.", "links": [{"to": "m2", "type": "gift_for_event"}], "modality": "asserted", "predicate": "likes", "rating": null, "rationale": "This is a standing preference of the wife about a specific product she likes, with brand and serial information.", "ref": "m1", "reminder": null, "sensitivity": "personal", "sentiment": 1, "state": "current", "subject": "e2", "subtype": null, "summary": null, "tags": ["bag", "wife"], "text": "My wife likes this Michael Kors bag, serial 123ABC.", "times": [], "title": "MK bag", "trigger": null, "value": {"number": null, "text": "MK bag, serial 123ABC", "unit": null}}, {"attributes": [], "category": "personal/occasions", "entities": [{"entity": "e2", "role": "about"}], "format": null, "importance": 4, "kind": "plan", "layer": "core", "layer_rationale": "Recurring birthday is core information about a key person (wife).", "links": [{"to": "m3", "type": "gift_for_event"}], "modality": "asserted", "predicate": null, "rating": null, "rationale": "Annual birthday is recurring; reminders are set for the day before by default.", "ref": "m2", "reminder": {"lead": null}, "sensitivity": "personal", "sentiment": null, "state": "scheduled", "subject": "e2", "subtype": "birthday", "summary": null, "tags": ["birthday", "wife"], "text": "My wife's birthday is [[t1]].", "times": [{"clock": "occurred", "direction": "future", "expression": "next May", "id": "t1", "recurring": true}], "title": "Wife's birthday", "trigger": null, "value": null}, {"attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "category": "personal/gifts", "entities": [{"entity": "e2", "role": "for"}, {"entity": "e3", "role": "about"}, {"entity": "e4", "role": "about"}], "format": null, "importance": 3, "kind": "intention", "layer": "quick", "layer_rationale": "Gift intention tied to an upcoming significant date.", "links": [{"to": "m2", "type": "gift_for_event"}, {"to": "m1", "type": "derived_from"}], "modality": "planned", "predicate": null, "rating": null, "rationale": "Gift subtype for a planned present; linked to both the wife's birthday (when it will be given) and her preference (why this gift).", "ref": "m3", "reminder": null, "sensitivity": "personal", "sentiment": 1, "state": "wanted", "subject": "e1", "subtype": "gift", "summary": null, "tags": ["gift", "wife", "birthday"], "text": "Gift the Michael Kors bag (serial 123ABC) to my wife on her birthday [[t1]].", "times": [{"clock": "due", "direction": "future", "expression": "next May", "id": "t1", "recurring": false}], "title": "MK bag for wife", "trigger": null, "value": null}], "not_written": [], "relations": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 0, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.8e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 10, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.6e-07, "latency_ms": 0, "ttft_ms": null, "input_tokens": 23, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001355, "latency_ms": 0, "ttft_ms": null, "input_tokens": 540, "cached_input_tokens": 0, "output_tokens": 163, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["Which Michael Kors handbag does my wife like?", "What’s the serial number of her preferred MK bag?"], "cues": ["when choosing a gift for my wife", "when identifying her preferred handbag"], "ref": "m1"}, {"alt": ["When is my wife's birthday?", "Which month should I plan her birthday around?"], "cues": ["when planning my wife's birthday", "when scheduling a birthday gift or celebration"], "ref": "m2"}, {"alt": ["What gift am I planning for my wife's birthday in May 2027?", "Which MK bag should I give my wife for her birthday?"], "cues": ["when preparing my wife's May 2027 birthday gift", "when checking my gift plans for her birthday"], "ref": "m3"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.9e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 245, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01428934,
+   "spent_usd": 0.0,
+   "cache_hits": 9,
+   "detail": {
+    "reply": "Saved as a preference: MK bag. Saved as a repeating plan: Wife's birthday, every year in May. I'll remind you Fri 30 Apr 2027. Saved a gift idea: MK bag for wife, due May 2027. Added to core memory: MK bag. Added to core memory: Wife's birthday. I've assumed 'my wife' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "11-reported-claim",
+   "title": "Reported: 'Rohan said he's moving to Delhi' is reported, about Rohan, no lives_in",
+   "tags": [],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 19,
+   "ttft_ms": 18,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.5e-05, "latency_ms": 0, "ttft_ms": null, "input_tokens": 645, "cached_input_tokens": 0, "output_tokens": 61, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared an update about Rohan’s plans: he’s moving to Delhi."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008901, "latency_ms": 3, "ttft_ms": null, "input_tokens": 5936, "cached_input_tokens": 0, "output_tokens": 593, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "person", "label": null, "mention": "Rohan", "name": "Rohan"}, {"id": "e2", "kind": "place", "label": null, "mention": "Delhi", "name": "Delhi"}], "memories": [{"attributes": [], "category": null, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "format": null, "importance": 2, "kind": "episode", "layer": "quick", "layer_rationale": "Reported information about someone's move; placed in quick layer as it's a significant change in a known person's situation.", "links": [], "modality": "reported", "predicate": null, "rating": null, "rationale": "Episode of reported information: Rohan told the user about his move to Delhi. Modality is reported since it's someone else's statement, not the user's direct knowledge. Subtype is conversation to capture the communication.", "ref": "m1", "reminder": null, "sensitivity": "normal", "sentiment": null, "state": "happened", "subject": "Rohan", "subtype": "conversation", "summary": null, "tags": [], "text": "Rohan said he's moving to Delhi.", "times": [], "title": "Rohan moving to Delhi", "trigger": null, "value": null}], "not_written": [], "relations": [{"dst": "e2", "evidence": "m1", "relation": "will_move_to", "src": "e1"}], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008319, "latency_ms": 2, "ttft_ms": null, "input_tokens": 6304, "cached_input_tokens": 0, "output_tokens": 403, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "kind": "person", "label": null, "mention": "Rohan", "name": "Rohan"}, {"id": "e2", "kind": "place", "label": null, "mention": "Delhi", "name": "Delhi"}], "memories": [{"attributes": [], "category": null, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "at"}], "format": null, "importance": 2, "kind": "episode", "layer": "quick", "layer_rationale": "Reported information about someone's move; placed in quick layer as it's a significant change in a known person's situation.", "links": [], "modality": "reported", "predicate": null, "rating": null, "rationale": "Episode of reported information: Rohan told the user about his move to Delhi. Modality is reported since it's someone else's statement, not the user's direct knowledge. Subtype is conversation to capture the communication.", "ref": "m1", "reminder": null, "sensitivity": "normal", "sentiment": null, "state": "happened", "subject": "e1", "subtype": "conversation", "summary": null, "tags": [], "text": "Rohan said he's moving to Delhi.", "times": [], "title": "Rohan moving to Delhi", "trigger": null, "value": null}], "not_written": [], "relations": [{"dst": "e2", "evidence": "m1", "relation": "will_move_to", "src": "e1"}], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 31, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.38e-05, "latency_ms": 5, "ttft_ms": null, "input_tokens": 438, "cached_input_tokens": 0, "output_tokens": 100, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"alt": ["What did Rohan say about moving?", "Where is Rohan relocating?", "Is Rohan moving to Delhi?"], "cues": ["when discussing Rohan’s move", "when asking where Rohan plans to live"], "ref": "m1"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-06, "latency_ms": 1, "ttft_ms": null, "input_tokens": 60, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01741062,
+   "spent_usd": 0.0,
+   "cache_hits": 6,
+   "detail": {
+    "reply": "Logged: Rohan moving to Delhi.",
+    "status": "completed"
+   }
+  }
+ ]
+}

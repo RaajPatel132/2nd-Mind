@@ -1,0 +1,169 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T121658Z-996c9bf",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-29T12:16:58.893228Z",
+ "finished_at": "2026-09-29T12:17:18.841415Z",
+ "git_sha": "996c9bf24f77",
+ "git_dirty": false,
+ "config_hash": "ba138b2fdb5759a65450f60bc037fbc6f76721dc222e22963ab5998373025f20",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@5",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "02",
+   "26"
+  ]
+ },
+ "batch": "B3",
+ "budget_usd": 0.08,
+ "estimate_usd": 0.01479596,
+ "status": "complete",
+ "note": "B3: schema repair on the two cases that failed with an invalid entity kind",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'likes bags'",
+    "no memory written matching 'gift the mk bag'",
+    "no memory written matching 'birthday is in'",
+    "no new entity wife:person; new: []",
+    "no new entity MK bag|MK:thing; new: []",
+    "reply '' lacks \"I've assumed 'My wife' is someone new\""
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 3,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 5,
+     "category": 1,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 18049,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.48e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 663, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared a gift idea and your wife’s preference for her birthday next May."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008274, "latency_ms": 12452, "ttft_ms": null, "input_tokens": 4774, "cached_input_tokens": 0, "output_tokens": 700, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": [{"id": "e1", "mention": "my wife", "name": null, "kind": "person", "label": "wife"}, {"id": "e2", "mention": "bag from MK", "name": null, "kind": "thing", "label": null}, {"id": "e3", "mention": "her birthday", "name": null, "kind": "plan", "label": null}], "memories": [{"ref": "m1", "kind": "preference", "subtype": null, "format": null, "state": "current", "title": "Bag from MK", "text": "My wife likes this bag from MK.", "summary": null, "category": "shopping", "tags": ["bag", "fashion"], "attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "subject": "e1", "predicate": "likes", "value": {"text": "bag from MK", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "normal", "importance": 2, "links": [{"type": "gift_for_event", "to": "m2"}], "layer": "quick", "layer_rationale": "A preference about the wife that is linked to an upcoming gift plan.", "rationale": "Preference of the wife for a specific bag, identified by brand and serial number, noted for a future gift."}, {"ref": "m2", "kind": "intention", "subtype": "gift", "format": null, "state": "wanted", "title": "Gift bag to wife", "text": "Gift the MK bag (serial 123ABC) to my wife on her birthday [[t1]].", "summary": null, "category": "shopping", "tags": ["gift", "birthday"], "attributes": [{"key": "brand", "value": "Michael Kors"}, {"key": "serial", "value": "123ABC"}], "subject": null, "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "for"}, {"entity": "e2", "role": "about"}], "times": [{"id": "t1", "expression": "next May", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "normal", "importance": 3, "links": [{"type": "gift_for_event", "to": "m3"}], "layer": "quick", "layer_rationale": "An upcoming gift plan tied to a birthday next May, relevant for near-term planning.", "rationale": "Gift intention for the wife's birthday, with specific item (bag with serial number) and target date in May."}, {"ref": "m3", "kind": "plan", "subtype": "birthday", "format": null, "state": "scheduled", "title": "Wife's birthday", "text": "My wife's birthday is [[t1]].", "summary": null, "category": "personal", "tags": ["birthday"], "attributes": [], "subject": "e1", "predicate": "birthday", "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [{"id": "t1", "expression": "next May", "clock": "occurred", "direction": "future", "recurring": true}], "reminder": {"lead": null}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 4, "links": [{"type": "gift_for_event", "to": "m2"}], "layer": "core", "layer_rationale": "A birthday is a standing plan about a key person (wife) that should always be in context.", "rationale": "Birthday date for the wife, marked as recurring annually, with default reminder the day before."}], "relations": [{"src": "e1", "relation": "likes", "dst": "e2", "evidence": "m1"}], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.009273, "latency_ms": 5592, "ttft_ms": null, "input_tokens": 5773, "cached_input_tokens": 0, "output_tokens": 700, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "[{\"id\": \"e1\", \"mention\": \"my wife\", \"name\": null, \"kind\": \"person\", \"label\": \"wife\"}, {\"id\": \"e2\", \"mention\": \"bag from MK\", \"name\": null, \"kind\": \"thing\", \"label\": null}], \"memories\": [{\"ref\": \"m1\", \"kind\": \"preference\", \"subtype\": null, \"format\": null, \"state\": \"current\", \"title\": \"Bag from MK\", \"text\": \"My wife likes this bag from MK.\", \"summary\": null, \"category\": \"shopping\", \"tags\": [\"bag\", \"fashion\"], \"attributes\": [{\"key\": \"brand\", \"value\": \"Michael Kors\"}, {\"key\": \"serial\", \"value\": \"123ABC\"}], \"subject\": \"e1\", \"predicate\": \"likes\", \"value\": {\"text\": \"bag from MK\", \"number\": null, \"unit\": null}, \"entities\": [{\"entity\": \"e1\", \"role\": \"about\"}, {\"entity\": \"e2\", \"role\": \"about\"}], \"times\": [], \"reminder\": null, \"trigger\": null, \"modality\": \"asserted\", \"sentiment\": 1, \"rating\": null, \"sensitivity\": \"normal\", \"importance\": 2, \"links\": [{\"type\": \"gift_for_event\", \"to\": \"m2\"}], \"layer\": \"quick\", \"layer_rationale\": \"A preference about the wife that is linked to an upcoming gift plan.\", \"rationale\": \"Preference of the wife for a specific bag, identified by brand and serial number, noted for a future gift.\"}, {\"ref\": \"m2\", \"kind\": \"intention\", \"subtype\": \"gift\", \"format\": null, \"state\": \"wanted\", \"title\": \"Gift bag to wife\", \"text\": \"Gift the MK bag (serial 123ABC) to my wife on her birthday [[t1]].\", \"summary\": null, \"category\": \"shopping\", \"tags\": [\"gift\", \"birthday\"], \"attributes\": [{\"key\": \"brand\", \"value\": \"Michael Kors\"}, {\"key\": \"serial\", \"value\": \"123ABC\"}], \"subject\": null, \"predicate\": null, \"value\": null, \"entities\": [{\"entity\": \"e1\", \"role\": \"for\"}, {\"entity\": \"e2\", \"role\": \"about\"}], \"times\": [{\"id\": \"t1\", \"expression\": \"next May\", \"clock\": \"due\", \"direction\": \"future\", \"recurring\": false}], \"reminder\": {\"lead\": null}, \"trigger\": null, \"modality\": \"asserted\", \"sentiment\": 1, \"rating\": null, \"sensitivity\": \"normal\", \"importance\": 3, \"links\": [{\"type\": \"gift_for_event\", \"to\": \"m3\"}], \"layer\": \"quick\", \"layer_rationale\": \"An upcoming gift plan tied to a birthday next May, relevant for near-term planning.\", \"rationale\": \"Gift intention for the wife's birthday, with specific item (bag with serial number) and target date in May.\"}, {\"ref\": \"m3\", \"kind\": \"plan\", \"subtype\": \"birthday\", \"format\": null, \"state\": \"scheduled\", \"title\": \"Wife's birthday\", \"text\": \"My wife's birthday is [[t1]].\", \"summary\": null, \"category\": \"personal\", \"tags\": [\"birthday\"], \"attributes\": [], \"subject\": \"e1\", \"predicate\": \"birthday\", \"value\": null, \"entities\": [{\"entity\": \"e1\", \"role\": \"about\"}], \"times\": [{\"id\": \"t1\", \"expression\": \"next May\", \"clock\": \"occurred\", \"direction\": \"future\", \"recurring\": true}], \"reminder\": {\"lead\": null}, \"trigger\": null, \"modality\": \"asserted\", \"sentiment\": null, \"rating\": null, \"sensitivity\": \"personal\", \"importance\": 4, \"links\": [{\"type\": \"gift_for_event\", \"to\": \"m2\"}], \"layer\": \"core\", \"layer_rationale\": \"A birthday is a standing plan about a key person (wife) that should always be in context.\", \"rationale\": \"Birthday date for the wife, marked as recurring annually, with default reminder the day before.\"}], \"relations\": [{\"src\": \"e1\", \"relation\": \"likes\", \"dst\": \"e2\", \"evidence\": \"m1\"}], \"not_written\": [], \"secret_spans\": []"}, "timed": true}
+   ],
+   "cost_usd": 0.0176318,
+   "spent_usd": 0.017547,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "",
+    "status": "failed"
+   }
+  },
+  {
+   "id": "26-labelled-secret",
+   "title": "Model-labelled secret: refused, and the stored turn has the value redacted",
+   "tags": [
+    "P-SECRET-1|model"
+   ],
+   "passed": false,
+   "failures": [
+    "no ∅ entry for P-SECRET-1|model",
+    "'17-38-02' was stored"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 1816,
+   "ttft_ms": 1814,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.64e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 649, "cached_input_tokens": 0, "output_tokens": 63, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "save", "reason": "You shared your gym locker combination, which is information to keep in memory."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.006481, "latency_ms": 1725, "ttft_ms": null, "input_tokens": 5781, "cached_input_tokens": 0, "output_tokens": 140, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [], "memories": [], "relations": [], "not_written": [{"what": "gym locker combination 17-38-02", "reason": "Secret: security codes and access combinations should not be stored in memory system"}], "secret_spans": []}, "timed": true}
+   ],
+   "cost_usd": 0.0065774,
+   "spent_usd": 0.006481,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Not saved: gym locker combination 17-38-02 (Secret: security codes and access combinations should not be stored in memory system).",
+    "status": "completed"
+   }
+  }
+ ]
+}
