@@ -6,9 +6,10 @@ with both providers' strict structured-output modes. Code validates the meaning 
 """
 
 import re
-from typing import Literal
+import types
+from typing import Any, Literal, Union, get_args, get_origin
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from secondmind.core import KIND_STATES, Kind
 
@@ -31,8 +32,32 @@ LayerLabel = Literal["core", "quick", "archive"]
 FormatLabel = Literal["article", "video", "pdf", "image", "link", "other"]
 
 
+_NULL_WORDS = frozenset({"null", "none", ""})
+
+
+def _allows_null(annotation: Any) -> bool:
+    return type(None) in get_args(annotation) and get_origin(annotation) in (Union, types.UnionType)
+
+
 class _Out(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _null_words(cls, data: Any) -> Any:
+        """A model that writes the word for null where the schema allows null ("subtype":
+        "null", seen from Haiku 4.5) means null: the word must not become a vocabulary term."""
+        if not isinstance(data, dict):
+            return data
+        return {
+            key: None
+            if isinstance(value, str)
+            and value.strip().lower() in _NULL_WORDS
+            and key in cls.model_fields
+            and _allows_null(cls.model_fields[key].annotation)
+            else value
+            for key, value in data.items()
+        }
 
 
 class IntentOutput(_Out):
