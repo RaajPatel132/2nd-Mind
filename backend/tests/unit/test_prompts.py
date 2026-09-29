@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from secondmind.config import DEFAULT_RESOURCES_DIR, PromptRegistry, lock_violations, read_lock
 from secondmind.config.prompts import update_lock
-from secondmind.core import ConfigError
+from secondmind.core import KIND_STATES, ConfigError, Kind
 
 PROMPTS = DEFAULT_RESOURCES_DIR / "prompts"
 
@@ -82,3 +82,14 @@ def test_malformed_prompt_files_fail_loading(tmp_path: Path, content: str, error
     (tmp_path / "bad" / "v1.md").write_text(content)
     with pytest.raises(ConfigError, match=error):
         PromptRegistry.load(tmp_path)
+
+
+def test_the_extract_prompt_names_every_state_the_memory_model_allows() -> None:
+    """The extract prompt lists each kind's states; a model that invents one costs a retry.
+    The list must follow ``KIND_STATES`` when a state is added."""
+    text = (PROMPTS / "extract" / "v4.md").read_text()
+    for kind, states in KIND_STATES.items():
+        if kind is Kind.PATTERN:  # proposed by background jobs, never by extraction
+            continue
+        for state in states:
+            assert state in text, f"extract@4 doesn't name {state!r} ({kind.value})"

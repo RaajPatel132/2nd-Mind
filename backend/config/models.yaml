@@ -67,7 +67,7 @@ steps:
     timeout_s: 45
     max_output_tokens: 8192
     effort: medium
-    prompt: extract@3
+    prompt: extract@4
   resolve:
     provider: openai
     model: gpt-6-luna
@@ -100,7 +100,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 2048
     effort: low
-    prompt: plan@2
+    prompt: plan@3
   # Listwise scores for the top fused candidates of a recall (S3.7).
   rerank:
     provider: openai
@@ -109,7 +109,7 @@ steps:
     timeout_s: 20
     max_output_tokens: 2048
     effort: low
-    prompt: rerank@2
+    prompt: rerank@3
   # Turns a correction by chat into a target and a change (S3.12).
   correct:
     provider: openai
