@@ -6,6 +6,7 @@ listed with a comment in ``.env.example``.
 
 import os
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -30,6 +31,13 @@ ProviderMode = Literal["auto", "live", "fake"]
 
 # backend/ in a checkout, /app in the image: holds config/ and prompts/.
 DEFAULT_RESOURCES_DIR = Path(__file__).resolve().parents[3]
+# The example secrets in .env.example and compose: fine locally, refused on shared stacks.
+DEFAULT_SESSION_SECRETS = frozenset(
+    {
+        "change-me-local-dev-secret-0123456789abcdef",
+        "test-secret-test-secret-test-secret-000",
+    }
+)
 
 
 class Settings(BaseSettings):
@@ -108,13 +116,24 @@ class Settings(BaseSettings):
     upcoming_days: Annotated[int, Field(ge=1, le=365)] = 30
     quick_frequent_min: Annotated[int, Field(ge=1, le=100)] = 3
 
-    # --- reserved for S4: quotas, spend caps and the kill switch
-    quota_tokens_guest: Annotated[int, Field(ge=0)] = 50_000
-    quota_tokens_standard: Annotated[int, Field(ge=0)] = 1_000_000
-    quota_tokens_premium: Annotated[int, Field(ge=0)] = 10_000_000
-    spend_cap_daily_usd: Annotated[Decimal, Field(ge=0)] = Decimal(5)
-    spend_cap_monthly_usd: Annotated[Decimal, Field(ge=0)] = Decimal(50)
+    # --- spend safety (R.10, ADR-0032): quotas, caps, provider credit, kill switch, rate limit
+    quota_usd_guest: Annotated[Decimal, Field(ge=0)] = Decimal("0.75")
+    quota_usd_standard: Annotated[Decimal, Field(ge=0)] = Decimal("2.50")
+    quota_usd_premium: Annotated[Decimal, Field(ge=0)] = Decimal("4.00")
+    spend_cap_daily_usd: Annotated[Decimal, Field(ge=0)] = Decimal("0.50")
+    spend_cap_monthly_usd: Annotated[Decimal, Field(ge=0)] = Decimal(5)
+    spend_cap_warn_ratio: Annotated[float, Field(gt=0, le=1)] = 0.8
+    provider_credit_usd_anthropic: Annotated[Decimal | None, Field(ge=0)] = None
+    provider_credit_usd_openai: Annotated[Decimal | None, Field(ge=0)] = None
+    provider_credit_since: date | None = None
     kill_switch: bool = False
+    rate_turns_per_minute: Annotated[int, Field(ge=1, le=10_000)] = 10
+
+    # --- web hardening (R.11) and behaviour behind a load balancer (R.12)
+    max_request_bytes: Annotated[int, Field(ge=1_024, le=50_000_000)] = 262_144
+    staging_access_code: SecretStr | None = None
+    sse_heartbeat_s: Annotated[float, Field(gt=0, le=300)] = 15.0
+    shutdown_grace_s: Annotated[float, Field(ge=0, le=600)] = 30.0
 
     @classmethod
     def settings_customise_sources(
@@ -144,9 +163,45 @@ class Settings(BaseSettings):
                 raise ValueError("DEV_AUTH must be false when ENV=production")
             if self.log_include_content:
                 raise ValueError("LOG_INCLUDE_CONTENT must be false when ENV=production")
-            if self.model_provider_mode == "fake":
-                raise ValueError("MODEL_PROVIDER_MODE=fake is not allowed when ENV=production")
+        if self.env in ("staging", "production"):
+            self._deployed_guards()
         return self
+
+    def _deployed_guards(self) -> None:
+        """Staging and production run on shared infrastructure with real keys (R.11)."""
+        env = self.env.upper()
+        if self.session_secret.get_secret_value() in DEFAULT_SESSION_SECRETS:
+            raise ValueError(f"SESSION_SECRET must not be the example value when ENV={self.env}")
+        if not self.session_cookie_secure:
+            raise ValueError(f"SESSION_COOKIE_SECURE must be true when ENV={self.env}")
+        if self.model_provider_mode != "live":
+            raise ValueError(f"MODEL_PROVIDER_MODE must be live when ENV={self.env}")
+        if self.tracing_enabled and not self.tracing_configured:
+            raise ValueError(
+                f"tracing is on but not configured when ENV={env.lower()}: set LANGFUSE_HOST, "
+                "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY, or TRACING_ENABLED=false"
+            )
+        if self.env == "staging" and self.dev_auth and self.staging_access_code is None:
+            raise ValueError("DEV_AUTH on staging needs STAGING_ACCESS_CODE")
+        if self.log_include_content:
+            raise ValueError(f"LOG_INCLUDE_CONTENT must be false when ENV={self.env}")
+
+    @property
+    def quota_limits_usd(self) -> dict[str, Decimal]:
+        return {
+            "guest": self.quota_usd_guest,
+            "standard": self.quota_usd_standard,
+            "premium": self.quota_usd_premium,
+        }
+
+    @property
+    def provider_credits_usd(self) -> dict[str, Decimal]:
+        """What the app may spend per provider (only the providers with a limit set)."""
+        limits = {
+            "anthropic": self.provider_credit_usd_anthropic,
+            "openai": self.provider_credit_usd_openai,
+        }
+        return {k: v for k, v in limits.items() if v is not None}
 
     @property
     def tracing_configured(self) -> bool:
