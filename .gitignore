@@ -53,3 +53,6 @@ backend/evals/runs/**/*.fake.json
 backend/evals/runs/.cache/
 backend/evals/runs/.spend
 backend/evals/runs/.spend.tmp
+
+# Screenshots of the live walkthrough (kept locally)
+frontend/walkthrough-shots/
