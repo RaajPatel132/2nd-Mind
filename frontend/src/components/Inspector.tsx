@@ -165,7 +165,7 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
   const tokens = u.input_tokens + u.cached_input_tokens + u.output_tokens
   const start = Date.parse(t.started_at)
   const end = t.finished_at ? Date.parse(t.finished_at) : start
-  const quota = turn.quotaAfter
+  const quota = turn.quotaAfter ?? facts.quota ?? null
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5 font-machine text-mono-sm text-fg-3 tnum" data-testid="turn-totals">

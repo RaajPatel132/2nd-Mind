@@ -20,7 +20,13 @@ from secondmind.api.schemas import (
 from secondmind.api.services import Services
 from secondmind.api.sse import turn_stream
 from secondmind.auth import resolve_scope
-from secondmind.core import RateLimitedError, Tier, UnauthenticatedError, ValidationFailedError
+from secondmind.core import (
+    QuotaEvent,
+    RateLimitedError,
+    Tier,
+    UnauthenticatedError,
+    ValidationFailedError,
+)
 from secondmind.metering import Block, QuotaUsage
 
 router = APIRouter(prefix="/v1", tags=["turns"])
@@ -81,6 +87,15 @@ async def create_turn(
     usage, block = await usage_and_block(services, user_id)
     if body.model is not None and not _may_pick(services, usage.tier, body.model):
         raise ValidationFailedError("That model isn't available on your plan.")
+
+    async def stored_quota() -> QuotaEvent:
+        usage = await usage_for(services, user_id)
+        return QuotaEvent(
+            limit_usd=float(usage.limit_usd),
+            used_usd=float(usage.used_usd),
+            remaining_usd=float(usage.remaining_usd),
+        )
+
     handle = await services.runner.start(
         scope,
         text=body.message,
@@ -88,6 +103,7 @@ async def create_turn(
         default_lead_minutes=workspace.default_lead_minutes,
         model=body.model,
         block=block,
+        quota_after=stored_quota,
     )
 
     async def quota_after() -> UsageOut:

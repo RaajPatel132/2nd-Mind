@@ -6,6 +6,7 @@
 import type {
   AgentStep,
   BlockedEvent,
+  QuotaEvent,
   CitationsEvent,
   RetrievalEvent,
   DecisionEvent,
@@ -75,6 +76,8 @@ export type Facts = {
   error?: ErrorEvent
   /** The spend gate stopped this turn before any model call (ADR-0032). */
   blocked?: BlockedEvent
+  /** The quota right after the turn, stored with it so a reload shows the same number. */
+  quota?: QuotaEvent
 }
 
 export function factsOf(events: readonly TrailEvent[]): Facts {
@@ -110,6 +113,9 @@ export function factsOf(events: readonly TrailEvent[]): Facts {
         break
       case 'blocked':
         facts.blocked = event
+        break
+      case 'quota':
+        facts.quota = event
         break
     }
   }

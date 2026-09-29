@@ -51,6 +51,7 @@ from secondmind.core import (
     ErrorEvent,
     ModelCallEvent,
     NullTrail,
+    QuotaEvent,
     RetrievalEvent,
     SaveOffer,
     StepStatus,
@@ -128,6 +129,7 @@ _AFFIRMATIVE = re.compile(
 )
 
 TurnCompletedHook = Callable[[WorkspaceScope, Turn], Awaitable[None]]
+QuotaAfter = Callable[[], Awaitable[QuotaEvent]]
 RecallStores = Callable[[WorkspaceScope], RecallStore]
 ConversationStores = Callable[[WorkspaceScope], ConversationStore]
 
@@ -214,6 +216,7 @@ class _TurnRun:
     secret_kinds: list[str] = field(default_factory=list)
     # The turn before this one (corrections target what it saved; "yes" accepts its offer).
     previous: Turn | None = None
+    quota_after: QuotaAfter | None = None
     tally: _Tally = field(default_factory=_Tally)
     trace: TurnTrace | None = None
     trail: TurnTrail | None = None
@@ -292,9 +295,12 @@ class TurnRunner:
         default_lead_minutes: int = 1440,
         model: str | None = None,
         block: Block | None = None,
+        quota_after: QuotaAfter | None = None,
     ) -> TurnHandle:
         """Store the turn and start it; the reply streams from the handle. With ``block`` (the
-        spend gate said no) the turn is stored as blocked and answers from a template."""
+        spend gate said no) the turn is stored as blocked and answers from a template.
+        ``quota_after`` reads the person's quota once the turn's usage is on the ledger; it is
+        stored with the turn's events."""
         message = text.strip()
         if not message:
             raise ValidationFailedError("message is empty")
@@ -323,6 +329,7 @@ class TurnRunner:
             default_lead_minutes=default_lead_minutes,
             secret_kinds=scan.kinds,
             previous=previous,
+            quota_after=quota_after,
         )
         run.trail = TurnTrail(store, turn.id, queue.put, clock=self._clock)
         work = self._run(run) if block is None else self._run_blocked(run, block)
@@ -998,6 +1005,11 @@ class TurnRunner:
                         "error_message": INTERNAL_ERROR_MESSAGE,
                     }
                 )
+            if run.quota_after is not None:
+                try:
+                    await self._trail(run).emit(await run.quota_after())
+                except Exception:
+                    log.exception("turn.quota_event_failed")
             done: TurnStreamEvent = (
                 TurnCompleted(final) if final.status is TurnStatus.COMPLETED else TurnFailed(final)
             )

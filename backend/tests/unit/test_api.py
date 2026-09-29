@@ -194,14 +194,20 @@ async def test_turn_streams_then_history_turn_and_events_are_readable(
     assert turn["trace"] == {"status": "disabled", "url": None}
 
     events = (await client.get(f"/v1/turns/{turn_id}/events")).json()["events"]
-    assert [e["seq"] for e in events] == [1, 2, 3, 4, 5]
+    assert [e["seq"] for e in events] == [1, 2, 3, 4, 5, 6]
     assert [e["event"]["type"] for e in events] == [
         "model_call",
         "intent",
         "step",
         "model_call",
         "step",
+        "quota",
     ]
+    # The quota after the turn is stored with it, so a reload shows the same number (R.8).
+    quota = events[5]["event"]
+    assert quota["limit_usd"] == 2.5
+    assert 0 < quota["used_usd"] < 2.5
+    assert quota["remaining_usd"] == pytest.approx(2.5 - quota["used_usd"])
     assert [e["event"]["step"] for e in events if e["event"]["type"] == "step"] == [
         "understand",
         "answer",

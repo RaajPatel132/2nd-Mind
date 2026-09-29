@@ -152,6 +152,16 @@ class BlockedEvent(_Event):
     used_usd: float | None = None
 
 
+class QuotaEvent(_Event):
+    """The person's quota right after the turn (FR-12.5), stored with its events so the
+    Inspector shows the same number after a reload."""
+
+    type: Literal["quota"] = "quota"
+    limit_usd: float
+    used_usd: float
+    remaining_usd: float
+
+
 # ------------------------------------------------------------------ S2: decisions and diffs
 
 
@@ -573,6 +583,7 @@ TurnEvent = Annotated[
     | ModelCallEvent
     | ErrorEvent
     | BlockedEvent
+    | QuotaEvent
     | StepEvent,
     Field(discriminator="type"),
 ]

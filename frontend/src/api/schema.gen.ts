@@ -1549,6 +1549,29 @@ export interface components {
             /** Rule Id */
             rule_id: string;
         };
+        /**
+         * QuotaEvent
+         * @description The person's quota right after the turn (FR-12.5), stored with its events so the
+         *     Inspector shows the same number after a reload.
+         */
+        QuotaEvent: {
+            /** Limit Usd */
+            limit_usd: number;
+            /** Remaining Usd */
+            remaining_usd: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "quota";
+            /** Used Usd */
+            used_usd: number;
+            /**
+             * V
+             * @default 1
+             */
+            v: number;
+        };
         /** ReadyOut */
         ReadyOut: {
             /** Checks */
@@ -1842,7 +1865,7 @@ export interface components {
          */
         SseTurnEvent: {
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -2235,7 +2258,7 @@ export interface components {
              */
             created_at: string;
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };

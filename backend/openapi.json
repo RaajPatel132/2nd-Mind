@@ -2612,6 +2612,42 @@
         "title": "PolicyVerdict",
         "type": "object"
       },
+      "QuotaEvent": {
+        "additionalProperties": false,
+        "description": "The person's quota right after the turn (FR-12.5), stored with its events so the\nInspector shows the same number after a reload.",
+        "properties": {
+          "limit_usd": {
+            "title": "Limit Usd",
+            "type": "number"
+          },
+          "remaining_usd": {
+            "title": "Remaining Usd",
+            "type": "number"
+          },
+          "type": {
+            "const": "quota",
+            "default": "quota",
+            "title": "Type",
+            "type": "string"
+          },
+          "used_usd": {
+            "title": "Used Usd",
+            "type": "number"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "limit_usd",
+          "used_usd",
+          "remaining_usd"
+        ],
+        "title": "QuotaEvent",
+        "type": "object"
+      },
       "ReadyOut": {
         "properties": {
           "checks": {
@@ -3244,6 +3280,7 @@
                 "memory_diff": "#/components/schemas/MemoryDiffEvent",
                 "model_call": "#/components/schemas/ModelCallEvent",
                 "policy": "#/components/schemas/PolicyEvent",
+                "quota": "#/components/schemas/QuotaEvent",
                 "retrieval": "#/components/schemas/RetrievalEvent",
                 "step": "#/components/schemas/StepEvent",
                 "tool_call": "#/components/schemas/ToolCallEvent"
@@ -3280,6 +3317,9 @@
               },
               {
                 "$ref": "#/components/schemas/BlockedEvent"
+              },
+              {
+                "$ref": "#/components/schemas/QuotaEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"
@@ -4100,6 +4140,7 @@
                 "memory_diff": "#/components/schemas/MemoryDiffEvent",
                 "model_call": "#/components/schemas/ModelCallEvent",
                 "policy": "#/components/schemas/PolicyEvent",
+                "quota": "#/components/schemas/QuotaEvent",
                 "retrieval": "#/components/schemas/RetrievalEvent",
                 "step": "#/components/schemas/StepEvent",
                 "tool_call": "#/components/schemas/ToolCallEvent"
@@ -4136,6 +4177,9 @@
               },
               {
                 "$ref": "#/components/schemas/BlockedEvent"
+              },
+              {
+                "$ref": "#/components/schemas/QuotaEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"

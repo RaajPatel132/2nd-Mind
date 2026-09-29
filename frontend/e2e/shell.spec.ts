@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { freshUser, inspect, send } from './helpers.ts'
+import { freshUser, inspect, lastTurn, send } from './helpers.ts'
 
 // UI.6, UI.9, UI.10, UI.11, UI.12: the shell's smaller promises.
 
@@ -92,6 +92,13 @@ test('timing & cost draws the waterfall and the quota after the turn', async ({ 
   const glassBox = await inspect(page, turn)
   await expect(glassBox.getByTestId('waterfall-row')).toHaveCount(8)
   await expect(glassBox.getByTestId('quota-after')).toContainText(/Quota after this turn: \$[\d.]+ of \$[\d.]+ left/)
+
+  // Stored with the turn's events: the same number after a reload, not "Quota now" (R.8).
+  const shown = await glassBox.getByTestId('quota-after').textContent()
+  await page.reload()
+  const again = await inspect(page, lastTurn(page))
+  await expect(again.getByTestId('quota-after')).toContainText('Quota after this turn')
+  await expect(again.getByTestId('quota-after')).toHaveText(shown ?? '')
 })
 
 test('the avatar popover shows the dev identity, and sign out ends the session', async ({ page }, testInfo) => {
