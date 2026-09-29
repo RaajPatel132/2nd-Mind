@@ -1,0 +1,14 @@
+# A labelled combination is a secret the deterministic pre-check sees: no model is called, and
+# the value is stored nowhere. (26 covers the ones only a model can label.)
+id: 30-combination-precheck
+title: "Locker combination refused by the pre-check, before any model call"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: My gym locker combination is 17-38-02
+model: {}
+expect:
+  intent: save
+  not_written: [P-SECRET-1]
+  counts: {fact: 0}
+  absent: ["17-38-02"]
+  reply_contains: ["I didn't save that"]

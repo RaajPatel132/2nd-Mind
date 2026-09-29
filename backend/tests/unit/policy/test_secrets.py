@@ -21,6 +21,9 @@ GENERIC_LIKE = "abcDEF" + "1234567890xyz"
         ("pin 90210 for the gym locker", "90210", "pin"),
         ("OTP 551203, use it quickly", "551203", "one_time_code"),
         ("one-time code is 889913", "889913", "one_time_code"),
+        ("My gym locker combination is 17-38-02", "17-38-02", "combination"),
+        ("front door code 4471 for the cleaner", "4471", "combination"),
+        ("the safe combo: 12 34 56", "12 34 56", "combination"),
         (f"api key = {GENERIC_LIKE}", GENERIC_LIKE, "api_key"),
         (f"use {OPENAI_LIKE} for the script", OPENAI_LIKE, "api_key"),
         (f"aws key {AWS_LIKE}", AWS_LIKE, "api_key"),
@@ -44,6 +47,9 @@ def test_secret_shapes_are_found_and_redacted(text: str, secret: str, kind: str)
         "Kabir's birthday is 14 March",
         "Ran 5 km in 31 min",
         "the code review is on Friday",
+        "The combination of paneer and peas works well",
+        "Locker 17 is on the second floor",
+        "I need the door code from the landlord",
     ],
 )
 def test_ordinary_messages_are_not_secrets(text: str) -> None:

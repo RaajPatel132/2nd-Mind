@@ -40,6 +40,14 @@ _PHRASE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         ),
     ),
     (
+        "combination",
+        re.compile(
+            r"\b(?:combination|combo|(?:door|gate|alarm|lock|safe|entry|access|locker)\s+code)"
+            r"\s*(?:is|was|=|:)?\s*(?P<value>\d[\d -]{2,}\d)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
         "api_key",
         re.compile(
             r"\b(?:api[_ -]?key|secret[_ -]?key|access[_ -]?token|auth[_ -]?token|"
