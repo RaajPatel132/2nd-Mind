@@ -3,9 +3,11 @@ re-file, a "yes" to the count check's offer, and an edit in place. Each is a tur
 that undo reverses."""
 
 import uuid
+from decimal import Decimal
 from typing import Any
 
 import pytest
+from sqlalchemy import text
 
 from secondmind.agent import Turn, TurnKind, TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
@@ -248,6 +250,40 @@ async def test_undo_reverts_writes_but_not_what_was_said(
     await runner.undo(seeded.scope, turn_id=turn.id, timezone="Asia/Kolkata")
     said = SqlConversationStore(app_db, seeded.scope)
     assert await said.indexed_turns([turn.id]) == {turn.id}
+
+
+async def test_the_ledger_holds_every_dollar_of_a_turn_and_its_background_indexing(
+    app_db: Database, identity: SqlIdentityStore, router: Any
+) -> None:
+    """R.7: the turn's calls are on the ledger against the person; the embeddings made when the
+    turn is indexed are on it too, flagged as the app's, so spend caps see every dollar."""
+    seeded, runner = await world(app_db, identity, router)
+    turn = await say(runner, seeded.scope, "What did I save about trading?")
+
+    async def ledger() -> list[tuple[str, Decimal, bool]]:
+        async with app_db.workspace(seeded.scope) as session:
+            found = await session.execute(
+                text(
+                    "SELECT step, cost_usd, system FROM usage_ledger"
+                    " WHERE turn_id = :t ORDER BY created_at, id"
+                ),
+                {"t": turn.id},
+            )
+            return [(str(step), Decimal(cost), bool(system)) for step, cost, system in found.all()]
+
+    before = await ledger()
+    assert before
+    assert not any(system for _, _, system in before)
+    assert sum(cost for _, cost, _ in before) == Decimal(str(turn.usage.cost_usd))
+
+    assert await runner.index_conversation(seeded.scope, turn.id) > 0
+    rows = await ledger()
+    added = rows[len(before) :]
+    assert added, "indexing wrote no ledger rows"
+    assert all(system and step == "embed" for step, _, system in added)
+    person = sum(cost for _, cost, system in rows if not system)
+    assert person == Decimal(str(turn.usage.cost_usd))  # the person's quota did not move
+    assert sum(cost for _, cost, _ in rows) == person + sum(cost for _, cost, _ in added)
 
 
 async def test_an_edit_links_and_unlinks_entities_and_keys_follow(
