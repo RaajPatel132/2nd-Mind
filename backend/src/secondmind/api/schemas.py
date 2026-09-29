@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind, TurnStatus
 from secondmind.auth import User, Workspace, WorkspaceKind
-from secondmind.core import AgentStep, EntityRole, Layer, TurnEvent, UsageTotals
+from secondmind.core import AgentStep, EntityRole, Layer, Tier, TurnEvent, UsageTotals, UsdAmount
 from secondmind.corrections import CorrectionChanges
 from secondmind.memory import (
     EntityRecord,
@@ -18,7 +18,7 @@ from secondmind.memory import (
     LinkRecord,
     TriggerRecord,
 )
-from secondmind.metering import QuotaUsage, Tier
+from secondmind.metering import Block, QuotaUsage
 
 
 class _Out(BaseModel):
@@ -306,16 +306,33 @@ class MeOut(_Out):
 
 
 class UsageOut(_Out):
-    """The signed-in user's token quota, as it stands now (FR-12.5). Read only until S4."""
+    """The signed-in user's quota in dollars, as it stands now (FR-12.5, ADR-0032), and whether
+    new turns are stopped (``read_only``): browsing, Upcoming, undo and the glass box still
+    work, as none of them call a model."""
 
     tier: Tier
-    limit_tokens: int
-    used_tokens: int
-    remaining_tokens: int
+    limit_usd: UsdAmount
+    used_usd: UsdAmount
+    remaining_usd: UsdAmount
+    used_tokens: int = Field(description="Charged (weighted) tokens, as information.")
+    read_only: bool = Field(default=False, description="New turns are stopped right now.")
+    read_only_reason: str | None = Field(
+        default=None,
+        description="kill_switch, daily_cap, monthly_cap, provider_credit, quota or "
+        "spend_check_unavailable.",
+    )
+    read_only_message: str | None = Field(
+        default=None, description="Why, and what still works, in words for the composer."
+    )
 
     @classmethod
-    def of(cls, usage: QuotaUsage) -> "UsageOut":
-        return cls(**usage.model_dump())
+    def of(cls, usage: QuotaUsage, block: Block | None = None) -> "UsageOut":
+        return cls(
+            **usage.model_dump(),
+            read_only=block is not None,
+            read_only_reason=None if block is None else block.reason.value,
+            read_only_message=None if block is None else block.reply,
+        )
 
 
 class RouteOut(_Out):

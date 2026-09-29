@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 
 from secondmind.agent import Turn
 from secondmind.api.deps import ServicesDep, UserIdDep, find_turn
-from secondmind.api.errors import ERROR_RESPONSES
+from secondmind.api.errors import ERROR_RESPONSES, RATE_LIMITED_RESPONSE
 from secondmind.api.schemas import (
     CreateTurnIn,
     TurnEventOut,
@@ -20,6 +20,8 @@ from secondmind.api.schemas import (
 from secondmind.api.services import Services
 from secondmind.api.sse import turn_stream
 from secondmind.auth import resolve_scope
+from secondmind.core import RateLimitedError, UnauthenticatedError
+from secondmind.metering import Block, QuotaUsage
 
 router = APIRouter(prefix="/v1", tags=["turns"])
 
@@ -32,9 +34,20 @@ SSE_DESCRIPTION = (
 
 
 async def usage_for(services: Services, user_id: uuid.UUID) -> UsageOut:
+    usage, block = await usage_and_block(services, user_id)
+    return UsageOut.of(usage, block)
+
+
+async def usage_and_block(
+    services: Services, user_id: uuid.UUID
+) -> tuple[QuotaUsage, Block | None]:
+    """The person's quota, and what stops their next turn (the app's blocks, then the quota)."""
+    user = await services.identity.get_user(user_id)
+    if user is None:
+        raise UnauthenticatedError("Sign in first.")
     workspaces = await services.identity.workspaces_for(user_id)
-    usage = await services.quotas.usage(user_id, [w.id for w in workspaces])
-    return UsageOut.of(usage)
+    usage = await services.quotas.usage(user_id, [w.id for w in workspaces], user.tier)
+    return usage, await services.gate.turn_block(usage)
 
 
 def turn_out(services: Services, turn: Turn) -> TurnOut:
@@ -44,7 +57,7 @@ def turn_out(services: Services, turn: Turn) -> TurnOut:
 @router.post(
     "/workspaces/{workspace_id}/turns",
     response_class=StreamingResponse,
-    responses={200: {"description": SSE_DESCRIPTION}, **ERROR_RESPONSES},
+    responses={200: {"description": SSE_DESCRIPTION}, **ERROR_RESPONSES, **RATE_LIMITED_RESPONSE},
 )
 async def create_turn(
     workspace_id: uuid.UUID, body: CreateTurnIn, services: ServicesDep, user_id: UserIdDep
@@ -53,12 +66,18 @@ async def create_turn(
     scope, workspace = await resolve_scope(
         services.identity, user_id=user_id, workspace_id=workspace_id
     )
+    settings = services.config.settings
+    wait = await services.gate.rate_limited(str(user_id), settings.rate_turns_per_minute)
+    if wait is not None:
+        raise RateLimitedError("You're sending messages too fast. Try again in a moment.", wait)
+    _, block = await usage_and_block(services, user_id)
     handle = await services.runner.start(
         scope,
         text=body.message,
         timezone=workspace.timezone,
         default_lead_minutes=workspace.default_lead_minutes,
         model=body.model,
+        block=block,
     )
 
     async def quota_after() -> UsageOut:

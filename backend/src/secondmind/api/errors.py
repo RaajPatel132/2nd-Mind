@@ -1,5 +1,7 @@
 """One error shape for the whole API: ``{"error": {"code", "message", "request_id"}}``."""
 
+import math
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -10,6 +12,7 @@ from secondmind.core import (
     ConfigError,
     ForbiddenError,
     NotFoundError,
+    RateLimitedError,
     SecondMindError,
     UnauthenticatedError,
     ValidationFailedError,
@@ -23,20 +26,26 @@ STATUS: dict[type[SecondMindError], int] = {
     UnauthenticatedError: 401,
     ForbiddenError: 403,
     ValidationFailedError: 422,
+    RateLimitedError: 429,
     ConfigError: 500,
 }
 
 
-def _response(status: int, code: str, message: str) -> JSONResponse:
+def _response(
+    status: int, code: str, message: str, headers: dict[str, str] | None = None
+) -> JSONResponse:
     request_id = current_log_context().get("request_id")
     body = ErrorResponse(error=ErrorBody(code=code, message=message, request_id=request_id))
-    return JSONResponse(status_code=status, content=body.model_dump(mode="json"))
+    return JSONResponse(status_code=status, content=body.model_dump(mode="json"), headers=headers)
 
 
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(SecondMindError)
     async def domain_error(_: Request, exc: SecondMindError) -> JSONResponse:
         status = next((s for t, s in STATUS.items() if isinstance(exc, t)), 500)
+        if isinstance(exc, RateLimitedError):
+            wait = str(max(1, math.ceil(exc.retry_after_s)))
+            return _response(status, exc.code, exc.message, {"Retry-After": wait})
         if status >= 500:
             log.error("api.error", code=exc.code)
             return _response(status, exc.code, "Internal error.")
@@ -65,4 +74,11 @@ ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
     401: {"model": ErrorResponse, "description": "Not signed in"},
     404: {"model": ErrorResponse, "description": "Not found (or not yours)"},
     422: {"model": ErrorResponse, "description": "Invalid request"},
+}
+RATE_LIMITED_RESPONSE: dict[int | str, dict[str, object]] = {
+    429: {
+        "model": ErrorResponse,
+        "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+        "headers": {"Retry-After": {"schema": {"type": "integer"}, "description": "Seconds"}},
+    }
 }

@@ -52,6 +52,6 @@ async def me(services: ServicesDep, user_id: UserIdDep) -> MeOut:
 
 @router.get("/me/usage", response_model=UsageOut, responses=ERROR_RESPONSES)
 async def my_usage(services: ServicesDep, user_id: UserIdDep) -> UsageOut:
-    """The signed-in user's token quota: tier, limit, used and remaining (FR-12.5).
-    Read only: enforcement arrives in S4."""
+    """The signed-in user's quota in dollars (tier, limit, used, remaining) and whether new
+    turns are stopped, and why (FR-12.5, ADR-0032)."""
     return await usage_for(services, user_id)

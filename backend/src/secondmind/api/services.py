@@ -18,8 +18,8 @@ from secondmind.core import Clock, WorkspaceScope, utc_now
 from secondmind.evals import seed_into
 from secondmind.jobs.adapters import QueueClient
 from secondmind.memory.adapters import SCHEMA_HEAD
-from secondmind.metering import QuotaLimits, Quotas
-from secondmind.metering.adapters import SqlLedgerReader
+from secondmind.metering import QuotaLimits, Quotas, SpendGate
+from secondmind.metering.adapters import SqlLedgerReader, build_gate
 from secondmind.observability import Tracer, get_logger
 
 log = get_logger(__name__)
@@ -44,6 +44,7 @@ class Services:
     tracer: Tracer
     signer: SessionSigner
     quotas: Quotas
+    gate: SpendGate
     checks: Mapping[str, Check]
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     clock: Clock = utc_now
@@ -74,9 +75,9 @@ class Services:
 
 def quota_limits(settings: Settings) -> QuotaLimits:
     return QuotaLimits(
-        guest=settings.quota_tokens_guest,
-        standard=settings.quota_tokens_standard,
-        premium=settings.quota_tokens_premium,
+        guest=settings.quota_usd_guest,
+        standard=settings.quota_usd_standard,
+        premium=settings.quota_usd_premium,
     )
 
 
@@ -115,7 +116,10 @@ async def build_services(config: AppConfig) -> Services:
         except Exception:
             log.warning("conversation.index_enqueue_failed", turn_id=str(turn.id))
 
-    runtime = build_runtime(config, on_entities_renamed=rerender, on_turn_completed=index_turn)
+    gate = build_gate(config)
+    runtime = build_runtime(
+        config, on_entities_renamed=rerender, on_turn_completed=index_turn, gate=gate
+    )
     db = runtime.db
     await require_embedding_dimensions(db, settings.embed_dimensions)
 
@@ -141,6 +145,9 @@ async def build_services(config: AppConfig) -> Services:
     async def redis_check() -> CheckResult:
         return CheckResult(ok=await queue.ping(), detail="ping")
 
+    async def close_gate() -> None:
+        await gate.store.aclose()  # type: ignore[attr-defined]
+
     return Services(
         config=config,
         identity=SqlIdentityStore(db),
@@ -148,11 +155,12 @@ async def build_services(config: AppConfig) -> Services:
         tracer=runtime.tracer,
         signer=SessionSigner(settings.session_secret.get_secret_value()),
         quotas=Quotas(SqlLedgerReader(db), quota_limits(settings)),
+        gate=gate,
         checks={
             "database": database_check,
             "redis": redis_check,
             "providers": provider_check(config),
         },
-        closers=[runtime.aclose, queue.aclose],
+        closers=[runtime.aclose, queue.aclose, close_gate],
         seed_recall=seed_recall if settings.dev_auth else None,
     )

@@ -1,7 +1,8 @@
 """S1.11: the /v1 API over in-memory stores and the fake provider (no database)."""
 
 import json
-from collections.abc import AsyncIterator
+import time
+from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 import httpx
@@ -16,14 +17,22 @@ from secondmind.config import DEFAULT_RESOURCES_DIR, load_app_config
 from secondmind.ingestion import load_replay, offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
-from secondmind.metering import Quotas
+from secondmind.metering import Quotas, SpendGate, SpendLimits
+from secondmind.metering.adapters import spend_limits
 from secondmind.observability import NullTracer
 from secondmind.providers import FakeOutcome, FakeScript, ProviderErrorKind
 from secondmind.providers.adapters import build_router
-from tests.fakes import InMemoryIdentity, InMemoryTurns
+from tests.fakes import InMemoryIdentity, InMemorySpendStore, InMemoryTurns
 
 
-def _services(base_env: dict[str, str], script: FakeScript | None = None, **env: str) -> Services:
+def _services(
+    base_env: dict[str, str],
+    script: FakeScript | None = None,
+    *,
+    monotonic: Callable[[], float] = time.monotonic,
+    limits: SpendLimits | None = None,
+    **env: str,
+) -> Services:
     config = load_app_config(
         base_env
         | {"MODEL_PROVIDER_MODE": "fake", "FAKE_PROVIDER_TOKEN_DELAY_MS": "0", "DEV_AUTH": "true"}
@@ -36,11 +45,14 @@ def _services(base_env: dict[str, str], script: FakeScript | None = None, **env:
     async def ok() -> CheckResult:
         return CheckResult(ok=True, detail="ok")
 
+    gate = SpendGate(
+        InMemorySpendStore(monotonic), limits or spend_limits(config), monotonic=monotonic
+    )
     return Services(
         config=config,
         identity=InMemoryIdentity(),
         runner=TurnRunner(
-            router=build_router(config, fake_script=script),
+            router=build_router(config, fake_script=script).with_guard(gate),
             prompts=config.prompts,
             stores=turns.store,
             tracer=NullTracer(),
@@ -51,6 +63,7 @@ def _services(base_env: dict[str, str], script: FakeScript | None = None, **env:
         tracer=NullTracer(),
         signer=SessionSigner(config.settings.session_secret.get_secret_value()),
         quotas=Quotas(turns, quota_limits(config.settings)),
+        gate=gate,
         checks={"database": ok, "redis": ok},
     )
 
@@ -207,9 +220,16 @@ async def test_usage_is_read_only_and_moves_with_each_turn(client: httpx.AsyncCl
     assert (await client.get("/v1/me/usage")).status_code == 401
     ws = await login(client)
     before = (await client.get("/v1/me/usage")).json()
-    assert before["tier"] == "standard"
-    assert before["used_tokens"] == 0
-    assert before["remaining_tokens"] == before["limit_tokens"] > 0
+    assert before == {
+        "tier": "standard",
+        "limit_usd": 2.5,
+        "used_usd": 0.0,
+        "remaining_usd": 2.5,
+        "used_tokens": 0,
+        "read_only": False,
+        "read_only_reason": None,
+        "read_only_message": None,
+    }
 
     response = await client.post(f"/v1/workspaces/{ws}/turns", json={"message": "hello"})
     name, completed = frames(response.text)[-1]
@@ -219,9 +239,13 @@ async def test_usage_is_read_only_and_moves_with_each_turn(client: httpx.AsyncCl
     used = usage["charged_tokens"]
     # The quota counts weighted tokens: fake-chat weighs half the baseline.
     assert 0 < used < raw
-    assert completed["quota"]["used_tokens"] == used
-    assert completed["quota"]["remaining_tokens"] == before["limit_tokens"] - used
-    assert (await client.get("/v1/me/usage")).json() == completed["quota"]
+    quota = completed["quota"]
+    assert quota["used_tokens"] == used
+    # The quota is money: what the turn's calls cost, off the tier's allowance.
+    assert usage["cost_usd"] > 0
+    assert quota["used_usd"] == pytest.approx(usage["cost_usd"])
+    assert quota["remaining_usd"] == pytest.approx(before["limit_usd"] - usage["cost_usd"])
+    assert (await client.get("/v1/me/usage")).json() == quota
 
 
 async def test_meta_lists_the_picker_by_provider_with_weights(
