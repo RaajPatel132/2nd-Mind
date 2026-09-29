@@ -55,7 +55,7 @@ Existing options fail in predictable ways:
 | G3 | **Ingestion optimised for retrieval, with proof.** What is extracted at write time measurably improves findability. | Ablation: retrieval hit rate with vs. without write-time enrichment (§11.3). |
 | G4 | **Correct time, person and entity handling.** | Relative-date accuracy and person-linking accuracy on dedicated eval cases. |
 | G5 | **A real product.** Chat to save, chat to recall, understood in ten seconds. | A first-time visitor completes one save and one recall on the sample persona within 30 seconds of landing. |
-| G6 | **Production hygiene.** Multi-user, deployed, traced, cost-metered, safe to expose publicly. | Live URL, per-user isolation tests, token quotas, global spend cap, kill switch, tracing on every turn. |
+| G6 | **Production hygiene.** Multi-user, deployed, traced, cost-metered, safe to expose publicly. | Live URL, per-user isolation tests, dollar quotas, global spend cap, kill switch, tracing on every turn. |
 | G7 | **Explainability.** Any turn can be opened to see what was decided, written, retrieved, and where time and money went. | Glass box panels (§7.9) populated for 100% of turns. |
 | G8 | **Provider-agnostic model layer.** Every model call goes through one interface; providers and models are chosen per step by configuration. | The full eval suite is run on at least two hosted providers, and the comparison is published on `/evals` (§11.6). Switching a step's model is a config change. |
 | G9 | **A platform surface, not just a UI.** The memory is usable programmatically through a versioned, key-authenticated, usage-metered API and an MCP server. | Public API v1 with OpenAPI docs, API keys, per-key rate limits and usage metering (§7.17). An MCP client can save to and recall from a workspace (§7.18). |
@@ -97,18 +97,20 @@ The owner uses the app as an ordinary Standard or Premium user with admin rights
 
 ### 4.3 Tiers and quotas
 
-Quotas are measured in **LLM tokens**, not requests, because tokens drive cost.
+Quotas are measured in **dollars of model spend**, because dollars are what the provider bills
+and what the operator can plan around (ADR-0032; it replaced the token quotas of ADR-0030).
 
-| Tier | Quota | Configured by |
+| Tier | Quota (default) | Configured by |
 |---|---|---|
-| Guest | Lifetime token quota per guest identity | `QUOTA_TOKENS_GUEST` |
-| Standard | Lifetime token quota per account | `QUOTA_TOKENS_STANDARD` |
-| Premium | Lifetime token quota per account | `QUOTA_TOKENS_PREMIUM` |
+| Guest | Lifetime allowance per guest identity: $0.75 | `QUOTA_USD_GUEST` |
+| Standard | Lifetime allowance per account: $2.50 | `QUOTA_USD_STANDARD` |
+| Premium | Lifetime allowance per account: $4.00 | `QUOTA_USD_PREMIUM` |
 
 - Quotas are **lifetime** allowances. An admin can top one up, or promote a user to Premium.
 - All values are environment-configured, with sensible defaults in the repo. No code change is needed to change them.
-- Which calls count (chat, vision, embeddings) and how they are weighted is a technical-plan decision. The rule is that the metered number tracks real cost.
-- A **global spend cap** (daily and monthly, env-configured) sits above all per-user quotas as a safety net, together with a **kill switch**. See §9.3.
+- Every call counts at its real cost, embeddings included. Work the app does on its own (background indexing, housekeeping) is recorded as system usage and is not charged to the person. Tokens stay on every call as information.
+- The tier also decides which models a person may pick besides Auto (ADR-0031): guests have Auto only.
+- A **global spend cap** (daily and monthly, env-configured), a **lifetime cap per provider** set below its prepaid balance, and a **kill switch** sit above all per-user quotas as a safety net. See §9.3 and ADR-0032.
 
 ---
 
@@ -228,7 +230,7 @@ For each save, the ingestion agent:
 - **FR-3.6** Enriches for retrieval: writes a title, a summary, synonyms or alternate phrasings where useful, and the structured fields that later filters rely on. This enrichment is what G3 measures.
 - **FR-3.7** Detects near-duplicates of existing items and updates or links rather than duplicating, recording the choice in the diff.
 - **FR-3.8** Records what it **chose not to write**, and why (for example "did not add 'likes thrillers' to core: a single mention is not a standing preference").
-- **FR-3.9** For reminders, sets a default lead time (configurable per user; initial default 1 day before) unless the user specified one.
+- **FR-3.9** For reminders, sets a default lead time (configurable per user; initial default 1 day before) unless the user specified one. "Remind me to call Nisha Sunday" means that day; a deadline ("by the 3rd") uses the default; a birthday or anniversary is always reminded the day before. A reminder for a whole-day event fires at 09:00 local (ADR-0022).
 
 ### 7.4 Write policy (P0)
 
@@ -315,8 +317,8 @@ The glass box lives **inside the conversation**. Each turn shows the agent's wor
 
 ### 7.12 Quotas, metering and admin
 
-- **FR-12.1** (P0) Every LLM call's tokens are metered against the workspace owner's quota (guest identity or account) and recorded per turn.
-- **FR-12.2** (P0) Before a turn runs, the system checks the remaining quota against an estimate. If it is exhausted, the app switches to **read-only mode**: the user can browse memory, the Upcoming view and past glass boxes, but cannot start new agent turns. The message is clear and offers "request more".
+- **FR-12.1** (P0) Every LLM call's cost is metered against the workspace owner's dollar quota (guest identity or account) and recorded per turn. System usage the app pays for is recorded but not charged.
+- **FR-12.2** (P0) Before a turn runs, the system checks the remaining quota against an estimate. If it is exhausted, the app switches to **read-only mode**: the user can browse memory, the Upcoming view, undo and past glass boxes, but cannot start new agent turns. The message says why and what still works; "request more" arrives with accounts (FR-12.3). The same read-only state covers the kill switch, a spend cap and a provider outage, and every refusal is a stored turn the glass box explains.
 - **FR-12.3** (P1) **Request more quota:** a signed-in user can submit a short request, which appears in the admin view.
 - **FR-12.4** (P0) **Admin view:** list users with tier, usage and remaining quota; promote or demote tier; top up quota; see total spend (today, month); review quota requests; toggle the kill switch. It can be minimal.
 - **FR-12.5** (P0) The user's remaining quota is visible in the UI (settings, and after each turn in the Timing & cost panel).
@@ -367,7 +369,7 @@ The chat UI is one client of the same API that anyone with a key can use.
 
 - **FR-17.1** (P0) A **versioned REST API** (`/v1/...`) covers the core operations: save (text, link, file), recall (query → answer with citations), list/get/update/delete items, people, upcoming, undo a turn, and fetch a turn's glass-box events. The web app uses this API; it has no private back door.
 - **FR-17.2** (P0) **API keys** per user: create, name, list, revoke; shown once at creation; stored hashed; optional expiry; **scopes** (for example `read`, `write`, `admin`). Guests cannot create keys.
-- **FR-17.3** (P0) **Metering.** Every API request is recorded per key: request count, LLM tokens and cost, and latency. API usage draws on the same token quota as the chat (§4.3), so a key can never exceed its owner's allowance.
+- **FR-17.3** (P0) **Metering.** Every API request is recorded per key: request count, LLM tokens and cost, and latency. API usage draws on the same quota as the chat (§4.3), so a key can never exceed its owner's allowance.
 - **FR-17.4** (P0) **Rate limits** per key and per user (requests per minute, concurrent turns), env-configured by tier. Responses carry standard rate-limit headers, and an exceeded limit returns `429` with a retry-after hint.
 - **FR-17.5** (P0) A **usage endpoint and usage page**: per key and per day, requests, tokens, cost and errors, with remaining quota.
 - **FR-17.6** (P0) **OpenAPI specification** generated from the code, with browsable docs at `/docs/api`. The specification is checked in CI so breaking changes are caught.
@@ -459,8 +461,8 @@ Assume now = 2026-09-23 10:00, timezone Asia/Kolkata, unless stated.
 
 ### 9.3 Cost and abuse safety (P0)
 
-- **NFR-3.1** Per-identity lifetime token quotas by tier (§4.3).
-- **NFR-3.2** A global daily and monthly spend cap (env-configured). When it is reached, new agent turns stop app-wide and the fallback (FR-15.7) takes over.
+- **NFR-3.1** Per-identity lifetime dollar quotas by tier (§4.3).
+- **NFR-3.2** A global daily and monthly spend cap and a lifetime cap per provider (env-configured). When one is reached, new agent turns stop app-wide with a notice and no model call; a provider that is used up hands its steps to the other provider's fallback first.
 - **NFR-3.3** A **kill switch** (config flag, no deploy needed) disables all LLM calls immediately.
 - **NFR-3.4** Per-identity rate limits on turns, uploads and link fetches, to stop bursts from draining a quota or the global cap. Env-configured.
 - **NFR-3.5** Sign-up abuse controls: email verification, a per-IP cap on new guest identities, and a per-IP sign-up throttle.
@@ -614,7 +616,7 @@ Phase 1 is done when all of the following hold:
 
 1. A visitor can open the live URL, open the sample persona without signing up, add an item, recall it, and inspect both turns in the glass box.
 2. A visitor can sign up, build their own memory, and cannot see anyone else's. The isolation tests pass in CI.
-3. Token quotas by tier, the global spend cap, the kill switch and the replay fallback all work and are tested.
+3. Dollar quotas by tier, the global spend caps, the kill switch and the replay fallback all work and are tested.
 4. `/evals` shows a stamped run covering every suite in §11.1, with results by query type, the ablation, and p50/p95 latency and cost per ingest and per query.
 5. Every turn is traced with per-step tokens, cost and latency, and linked from its glass box.
 6. `/architecture` documents decisions as trade-offs and includes the untrusted-content threat model and a Limitations section.
@@ -663,7 +665,7 @@ Goal: show, with evidence, when a small self-hosted model can replace a hosted f
 |---|---|---|
 | **Scope.** Multi-user accounts, PDFs and images on top of the core agent | Delays the first public release | P0/P1 split: ship the sample persona, text and links, glass box and evals first; images and PDFs are P1 |
 | **Real personal data from open sign-ups** | Privacy liability; breach impact | Isolation enforced at the data layer and tested; encryption; export and delete; minimal trace retention; privacy note |
-| **Cost abuse** by guests or scripted sign-ups | Budget drained | Lifetime token quotas, global caps, kill switch, rate limits, email verification, per-IP guest caps |
+| **Cost abuse** by guests or scripted sign-ups | Budget drained | Lifetime dollar quotas, global caps, kill switch, rate limits, email verification, per-IP guest caps |
 | **Prompt injection** via ingested content | Memory poisoning | Trust boundary in code; guarded core writes; injection eval at 100% target; trust level recorded on every item and every write, so a poisoned item and anything derived from it can be traced and undone |
 | **Relative-date errors** | Wrong reminders erode trust | Deterministic parser; explicit now and timezone; date precision; stated assumptions; a dedicated eval suite |
 | **Category sprawl** from agent freedom | Retrieval degrades | Normalisation against existing categories; drift metric; learned rules |
@@ -681,7 +683,7 @@ Goal: show, with evidence, when a small self-hosted model can replace a hosted f
 |---|---|---|
 | 1 | **Final product name.** Keep "2nd Mind" or pick something more searchable? | Keep "2nd Mind" as the working name |
 | 2 | OCR for scanned PDFs in Phase 1, or "text not extracted"? | Decide from the cost of the chosen OCR path in the technical plan |
-| 3 | Initial quota values per tier, and the global daily/monthly caps | Set in the technical plan from measured cost per turn |
+| 3 | Initial quota values per tier, and the global daily/monthly caps | **Decided (Sprint 3.9, from measured cost):** $0.75 / $2.50 / $4.00 lifetime; $0.50 a day and $5 a month app-wide |
 | 4 | Guest data expiry period | 7 days |
 | 5 | Which social login provider(s) | Technical plan |
 
@@ -698,7 +700,8 @@ Goal: show, with evidence, when a small self-hosted model can replace a hosted f
 | 2026-09-23 | Structure boundary: **fixed envelope + controlled type set**; category, tags and attributes are agent-decided, with category normalisation. |
 | 2026-09-23 | Correction loop: **undo and edit**, plus **learned rules** stored in core memory and measured. |
 | 2026-09-23 | **Multi-user** with open sign-up and per-user isolation; guests allowed, metered by signed device ID with IP backstop. |
-| 2026-09-23 | Three quota tiers (**Guest, Standard, Premium**), measured in **tokens**, as **lifetime** allowances, env-configured; admin can promote users and top up quotas. |
+| 2026-09-23 | Three quota tiers (**Guest, Standard, Premium**), as **lifetime** allowances, env-configured; admin can promote users and top up quotas. Measured in tokens, until the next line. |
+| 2026-09-29 | **Quotas are in dollars** (ADR-0032): $0.75 / $2.50 / $4.00 lifetime; global caps $0.50 a day and $5 a month plus a lifetime cap per provider; the model picker is tiered, with Auto for everyone (ADR-0031). |
 | 2026-09-23 | Sample persona: fictional product designer in Bengaluru, a personal copy per visitor, plus user-built memories. |
 | 2026-09-23 | Partial link extraction: **save what's there, flag it, offer to accept pasted text.** |
 | 2026-09-23 | Glass box exposes **decisions and summaries**, not full prompts or raw model output. |
