@@ -438,8 +438,12 @@ class IngestionPipeline:
         if m.subtype:
             subtype, normalisation = await normalise(m.subtype, subtypes, vocab="subtype")
             notes.normalisations.append(normalisation)
+        # A predicate says what is true now, one value at a time (it is what a later value
+        # supersedes): only an asserted statement can carry one. What someone else said, or
+        # a plan or a maybe, is about the future or another person's word.
+        asserted = m.modality == "asserted"
         predicate = None
-        if m.predicate:
+        if m.predicate and asserted:
             predicate, normalisation = await normalise(m.predicate, predicates, vocab="predicate")
             notes.normalisations.append(normalisation)
         category_slug = None
@@ -465,7 +469,7 @@ class IngestionPipeline:
             links.append((plan.entity_id, EntityRole(ref.role), plan.kind))
         subject = entities.get(m.subject) if m.subject else None
         value = None
-        if m.value is not None and (m.value.text or m.value.number is not None):
+        if asserted and m.value is not None and (m.value.text or m.value.number is not None):
             value = {"text": m.value.text, "number": m.value.number, "unit": m.value.unit}
         state = m.state or initial_state(kind)
         content = ItemContent(

@@ -1,0 +1,32 @@
+# Found live (R.3): a model gave a reported claim a predicate (moving_to). A predicate is what a
+# later value supersedes, so only an asserted statement keeps one; code drops it.
+id: 29-reported-with-predicate
+title: "A predicate on a reported claim is dropped: someone else's word supersedes nothing"
+now: "2026-09-23T10:00"
+timezone: Asia/Kolkata
+input: Rohan said he's moving to Delhi
+model:
+  intent: {intent: save, confidence: 0.85, reason: "Something someone said."}
+  extract:
+    entities:
+      - {id: e1, mention: Rohan, name: Rohan, kind: person}
+      - {id: e2, mention: Delhi, name: Delhi, kind: place}
+    memories:
+      - ref: m1
+        kind: fact
+        title: Rohan moving to Delhi
+        text: Rohan is moving to Delhi.
+        category: people/news
+        subject: e1
+        predicate: moving_to
+        value: {text: Delhi}
+        entities: [{entity: e1, role: about}, {entity: e2, role: at}]
+        modality: reported
+        rationale: Reported by Rohan; not confirmed.
+expect:
+  memories:
+    - match: moving to delhi
+      kind: fact
+      modality: reported
+      predicate: null
+      entities: ["Rohan:about", "Delhi:at"]
