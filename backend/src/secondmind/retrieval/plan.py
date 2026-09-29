@@ -227,6 +227,15 @@ class Planner:
                 note = _join(note, f"dropped an expansion not from core: {sq.expanded_from!r}")
                 continue
             subs.append(resolved)
+        if not subs:
+            # A recall always searches: an empty plan (or one whose sub-queries all failed to
+            # resolve) falls back to a search by meaning over the whole message.
+            note = _join(note, "the plan had nothing to search; searched by meaning")
+            source = "fallback"
+            for n, sq in enumerate(fallback_plan(ctx.message).sub_queries, start=1):
+                resolved = await resolver.resolve(n, sq)
+                if resolved is not None:
+                    subs.append(resolved)
         subs.extend(_booked_in_window(subs))
         for n, sub in enumerate(subs, start=1):
             sub.index = n
@@ -676,11 +685,16 @@ def _vocab_text(vocab: Sequence[object]) -> str:
 
 
 def _entities_text(entities: Sequence[EntityRecord]) -> str:
+    """The known entities for the planner, in a fixed order: the same workspace gives the same
+    prompt, whatever order the database returned rows in (so a response can be cached)."""
+    live = sorted(
+        (e for e in entities if e.kind is not EntityKind.SELF and e.status == "active"),
+        key=lambda e: (e.display.lower(), e.kind.value),
+    )
     lines = [
         f"- {e.display} [{e.kind.value}]"
-        + (f" aliases: {', '.join(e.aliases)}" if e.aliases else "")
-        for e in entities
-        if e.kind is not EntityKind.SELF and e.status == "active"
+        + (f" aliases: {', '.join(sorted(e.aliases))}" if e.aliases else "")
+        for e in live
     ]
     return "\n".join(lines[:200]) or "- (none yet)"
 

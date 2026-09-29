@@ -16,6 +16,7 @@ from secondmind.retrieval import (
     RecallSettings,
     fuse,
 )
+from secondmind.retrieval.plan import _entities_text
 from tests.unit.memory.helpers import create, item
 from tests.unit.retrieval.helpers import (
     NOW,
@@ -537,6 +538,33 @@ async def test_a_failed_rerank_falls_back_to_the_fused_order_and_says_so() -> No
     assert event.rerank_note
     assert ran.reply == "You live in Pune [1]."
     assert ran.outcome.cited == [w.ids["pune"]]
+
+
+async def test_a_plan_whose_parts_all_fail_to_resolve_falls_back_to_meaning() -> None:
+    w = await world()
+    invented = plan(  # an expansion "from core memory" that core never said: dropped
+        {
+            "question": "What could I gift my partner?",
+            "shape": "situational",
+            "expanded_from": "loves surprising people",
+        }
+    )
+    ran = await run_recall(w, "What could I gift my partner?", fake(("plan", invented)))
+    event = ran.events.of("retrieval")[0]
+    assert event.plan_source == "fallback"
+    assert "nothing to search" in event.plan_note
+    assert [q.shape for q in event.sub_queries] == ["semantic"]
+    assert ran_tools(ran.events) == {"search", "soft"}
+
+
+async def test_the_planner_sees_known_entities_in_a_fixed_order() -> None:
+    w = await world()
+    known = await w.memory.reader(w.scope).entities()
+    assert len(known) >= 3
+    forward = _entities_text(known)
+    assert forward == _entities_text(list(reversed(known)))
+    lines = forward.splitlines()
+    assert lines == sorted(lines, key=str.lower)
 
 
 async def test_extras_for_a_period_belong_to_it_by_when_they_happened_or_were_said() -> None:
