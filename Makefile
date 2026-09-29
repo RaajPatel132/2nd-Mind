@@ -43,6 +43,10 @@ PRODLIKE_TAG ?= $(shell git rev-parse --short=12 HEAD)
 PRODLIKE     := IMAGE_TAG=$(PRODLIKE_TAG) $(COMPOSE) -p secondmind-prodlike \
 	-f compose.yaml -f compose.prodlike.yaml $(if $(wildcard .env),--env-file .env) --env-file .prodlike.env
 
+# Operator commands (kill-switch, set-tier, spend-now) talk to the plain stack, or with STACK=prodlike
+# to the rehearsal stack.
+STACKCMD = $(if $(filter prodlike,$(STACK)),$(PRODLIKE),$(COMPOSE))
+
 .prodlike.env:
 	@umask 077; { echo "PRODLIKE_SESSION_SECRET=$$(openssl rand -hex 32)"; \
 		echo "PRODLIKE_ACCESS_CODE=$$(openssl rand -hex 6)"; } > $@
@@ -178,17 +182,17 @@ ADMIN := python -m secondmind.api.admin
 
 .PHONY: kill-switch on off
 kill-switch: ## make kill-switch on|off (or STATE=status): stop or resume every model call, no restart
-	@$(COMPOSE) exec -T api $(ADMIN) kill-switch $(or $(STATE),$(filter on off,$(MAKECMDGOALS)),status)
+	@$(STACKCMD) exec -T api $(ADMIN) kill-switch $(or $(STATE),$(filter on off,$(MAKECMDGOALS)),status)
 on off: ; @:
 
 .PHONY: set-tier
 set-tier: ## make set-tier EMAIL=… TIER=guest|standard|premium: change a person's tier (audited)
 	@test -n "$(EMAIL)" -a -n "$(TIER)" || { echo "usage: make set-tier EMAIL=a@b.c TIER=premium"; exit 2; }
-	@$(COMPOSE) exec -T api $(ADMIN) set-tier "$(EMAIL)" "$(TIER)"
+	@$(STACKCMD) exec -T api $(ADMIN) set-tier "$(EMAIL)" "$(TIER)"
 
 .PHONY: spend-now
 spend-now: ## Today's, this month's and each provider's spend counters (the running stack)
-	@$(COMPOSE) exec -T api $(ADMIN) spend
+	@$(STACKCMD) exec -T api $(ADMIN) spend
 
 .PHONY: backfill-conversation
 backfill-conversation: ## Index past chat turns for "what did you tell me" questions (runs in the worker)

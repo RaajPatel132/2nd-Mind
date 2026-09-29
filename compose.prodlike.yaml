@@ -17,6 +17,9 @@ x-prodlike-env: &prodlike-env
   DEV_AUTH: "true"
   # The public origin the browser uses, as it will be set for staging behind CloudFront.
   ALLOWED_ORIGINS: http://localhost:8080
+  # The caps the demo will run with, not the larger ones a developer .env may carry.
+  SPEND_CAP_DAILY_USD: "0.50"
+  SPEND_CAP_MONTHLY_USD: "5"
   LOG_INCLUDE_CONTENT: "false"
   TRACE_INCLUDE_CONTENT: "false"
 
