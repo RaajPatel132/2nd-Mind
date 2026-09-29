@@ -1,0 +1,934 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T130706Z-ba7913b",
+ "suite": "recall",
+ "mode": "live",
+ "routing": "economy-c",
+ "started_at": "2026-09-29T13:07:06.146338Z",
+ "finished_at": "2026-09-29T13:08:01.089929Z",
+ "git_sha": "ba7913bdbf28",
+ "git_dirty": true,
+ "config_hash": "9f687b82ef546727bd23af4195ee2046801537effdd28931c1fac9e4f3394278",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-5.4-mini",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-10-06T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {
+  "cases": [
+   "02",
+   "04",
+   "06",
+   "08",
+   "12",
+   "15",
+   "17",
+   "22",
+   "26",
+   "30",
+   "31",
+   "34",
+   "36",
+   "40",
+   "42"
+  ]
+ },
+ "batch": "B5",
+ "budget_usd": 0.1,
+ "estimate_usd": 0.08370574,
+ "status": "complete",
+ "note": "B5: candidate C (rerank on mini, intent without reasoning) on the probe cases",
+ "setup_calls": [
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 41, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null}
+ ],
+ "cases": [
+  {
+   "id": "02-serial-number",
+   "title": "§8.2 attribute: the bag's serial number",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 324,
+   "ttft_ms": 246,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.14e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to retrieve a detail that may have been saved about the bag."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.772e-05, "latency_ms": 4, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 118, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "bag", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "the bag", "name": "MK bag", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["fact"], "predicate": "serial_number", "role": null, "states": [], "subtypes": []}, "question": "What's the serial number of the bag?", "role": null, "set": null, "shape": "exact", "times": [], "topic": "bag serial number"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 32, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00304425, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2211, "cached_input_tokens": 0, "output_tokens": 308, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly gives the bag’s serial number.", "score": 1.0}, {"id": "c2", "reason": "", "score": 0.4}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000963, "latency_ms": 0, "ttft_ms": 0, "input_tokens": 728, "cached_input_tokens": 0, "output_tokens": 47, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "The MK bag's serial number is 123ABC [1]. Though I should note—that's Kabir's bag, not yours. Were you looking for the serial number of one of your own bags?", "timed": true}
+   ],
+   "cost_usd": 0.00418701,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "mk_bag"
+    ],
+    "ranked": [
+     "mk_bag",
+     "kabir_likes_mk",
+     "live_pune",
+     "rohan_husband",
+     "running_shoes",
+     "kabir_birthday",
+     "saturday_workshop",
+     "pattern_film",
+     "dinner_tonight",
+     "goa_trip"
+    ],
+    "aggregate": null,
+    "reply": "The MK bag's serial number is 123ABC [1]. Though I should note—that's Kabir's bag, not yours. Were you looking for the serial number of one of your own bags?"
+   }
+  },
+  {
+   "id": "04-show-taste-now",
+   "title": "Evolved preference: what I'm into now, not the old taste",
+   "tags": [
+    "latest"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 7234,
+   "ttft_ms": 7109,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.86e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 721, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to recall your current TV preferences."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011592, "latency_ms": 2, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2722, "output_tokens": 174, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": true, "kinds": ["preference"], "predicate": "genre_taste", "role": null, "states": ["current"], "subtypes": []}, "question": "What kind of shows am I into these days?", "role": null, "set": null, "shape": "latest", "times": [], "topic": "show preferences"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 33, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00358125, "latency_ms": 6919, "ttft_ms": null, "input_tokens": 2081, "cached_input_tokens": 0, "output_tokens": 449, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states your current show preference."}, {"id": "c2", "score": 0.2, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.4, "reason": ""}, {"id": "c8", "score": 0.4, "reason": ""}, {"id": "c9", "score": 0.4, "reason": ""}, {"id": "c10", "score": 0.4, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000863, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 29, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You're into lighter shows these days [1]. You mentioned 2 weeks ago that you're done with thrillers.", "timed": true}
+   ],
+   "cost_usd": 0.00464943,
+   "spent_usd": 0.00358125,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "latest"
+    ],
+    "selected": [
+     "done_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "likes_thrillers",
+     "rohan_jazz",
+     "rohan_birds",
+     "vegetarian",
+     "kabir_likes_mk",
+     "watch_mindhunter",
+     "watch_dark",
+     "watch_severance",
+     "watched_severance"
+    ],
+    "aggregate": null,
+    "reply": "You're into lighter shows these days [1]. You mentioned 2 weeks ago that you're done with thrillers."
+   }
+  },
+  {
+   "id": "06-taste-history",
+   "title": "History of a preference",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 6,
+    "soft_only": 4
+   },
+   "latency_ms": 7014,
+   "ttft_ms": 4601,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.14e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to compare your current show preferences with what you’ve said before."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.272e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 108, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["preference"], "predicate": "genre_taste", "role": null, "states": [], "subtypes": []}, "question": "How has my taste in shows changed?", "role": null, "set": null, "shape": "history", "times": [], "topic": "changes in taste in shows"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 27, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00318675, "latency_ms": 3244, "ttft_ms": null, "input_tokens": 2059, "cached_input_tokens": 0, "output_tokens": 365, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states current show preference"}, {"id": "c2", "score": 1.0, "reason": "Shows the earlier preference"}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.7, "reason": "Shows a show you wanted to watch"}, {"id": "c10", "score": 0.7, "reason": "Completed show on your watchlist"}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.7, "reason": "Another show on your watchlist"}, {"id": "c13", "score": 0.7, "reason": "Watched and loved a specific show"}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001958, "latency_ms": 3448, "ttft_ms": 1158, "input_tokens": 993, "cached_input_tokens": 0, "output_tokens": 193, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Your taste has shifted quite a bit. You used to like thrillers [2], but you're done with them now and want lighter shows instead [1] — that change happened around late September.\n\nInterestingly, you still have some thriller-adjacent shows on your list: you want to watch Mindhunter [3] and Dark with Kabir [5], both of which are pretty intense. But the recent thing you actually watched and loved was Severance season 2 [6], which you finished 3 weeks ago — that's more psychological drama than straightforward thriller.\n\nSo it looks like you're moving away from pure thrillers, though you haven't entirely cleared them from your wishlist yet. Would you like me to note that those older thriller intentions (Mindhunter, Dark) don't fit your new preference, or are you planning to watch them anyway?", "timed": true}
+   ],
+   "cost_usd": 0.00531941,
+   "spent_usd": 0.00514475,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "done_thrillers",
+     "likes_thrillers",
+     "watch_mindhunter",
+     "watch_severance",
+     "watch_dark",
+     "watched_severance"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "likes_thrillers",
+     "live_pune",
+     "rohan_jazz",
+     "vegetarian",
+     "rohan_birds",
+     "kabir_likes_mk",
+     "dentist_new",
+     "watch_mindhunter",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "Your taste has shifted quite a bit. You used to like thrillers [2], but you're done with them now and want lighter shows instead [1] — that change happened around late September.\n\nInterestingly, you still have some thriller-adjacent shows on your list: you want to watch Mindhunter [3] and Dark with Kabir [5], both of which are pretty intense. But the recent thing you actually watched and loved was"
+   }
+  },
+  {
+   "id": "08-watch-list",
+   "title": "List: wanted shows only (not watched, not dropped)",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 4855,
+   "ttft_ms": 4751,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.02e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 717, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to recall what you’ve saved to your watch list."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.202e-05, "latency_ms": 6, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2722, "output_tokens": 107, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted", "active"], "subtypes": ["watch"]}, "question": "What's on my watch list?", "role": null, "set": null, "shape": "list", "times": [], "topic": "watch list"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00337275, "latency_ms": 4425, "ttft_ms": null, "input_tokens": 2037, "cached_input_tokens": 0, "output_tokens": 410, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly on your watch list."}, {"id": "c2", "score": 1.0, "reason": "Directly on your watch list."}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.3, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.4, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.3, "reason": ""}, {"id": "c20", "score": 0.4, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000999, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 774, "cached_input_tokens": 0, "output_tokens": 45, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You want to watch Dark with Kabir [1] and Mindhunter [2]. Both are on your wish list—Dark is something you noted more recently, 2 weeks ago.", "timed": true}
+   ],
+   "cost_usd": 0.00454435,
+   "spent_usd": 0.00337275,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "try_saffron",
+     "learn_rust",
+     "watch_severance",
+     "ramen_japan",
+     "try_tin_spoon",
+     "try_blue_lotus",
+     "half_marathon_goal",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "You want to watch Dark with Kabir [1] and Mindhunter [2]. Both are on your wish list—Dark is something you noted more recently, 2 weeks ago."
+   }
+  },
+  {
+   "id": "12-shared-shows",
+   "title": "Set: shows Kabir and I both want to watch",
+   "tags": [
+    "set"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "set",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 4289,
+   "ttft_ms": 4138,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.28e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 723, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to retrieve which shows are on both your and Kabir’s watchlists."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012762, "latency_ms": 6, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 2722, "output_tokens": 197, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "Kabir", "name": "Kabir", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted"], "subtypes": ["watch"]}, "question": "Which shows do Kabir and I both want to watch?", "role": null, "set": {"entity": "Kabir", "op": "shared_with", "other_kind": null}, "shape": "set", "times": [], "topic": "shows Kabir and I both want to watch"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 9.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 48, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00386775, "latency_ms": 3792, "ttft_ms": null, "input_tokens": 2157, "cached_input_tokens": 0, "output_tokens": 500, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.4, "reason": ""}, {"id": "c2", "score": 0.4, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.4, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.4, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.4, "reason": ""}, {"id": "c20", "score": 0.4, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000867, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 737, "cached_input_tokens": 0, "output_tokens": 26, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You both want to watch Dark [1]. You noted this 2 weeks ago on 22 September.", "timed": true}
+   ],
+   "cost_usd": 0.00495613,
+   "spent_usd": 0.00386775,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "set"
+    ],
+    "selected": [
+     "watch_dark"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "kabir_likes_mk",
+     "goa_trip",
+     "kabir_birthday",
+     "watch_severance",
+     "saturday_workshop",
+     "dinner_tonight",
+     "run_misfiled_subtype",
+     "try_saffron"
+    ],
+    "aggregate": null,
+    "reply": "You both want to watch Dark [1]. You noted this 2 weeks ago on 22 September."
+   }
+  },
+  {
+   "id": "15-last-weekend",
+   "title": "Temporal: last weekend",
+   "tags": [
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 1
+   },
+   "latency_ms": 3596,
+   "ttft_ms": 3492,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.98e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking about something you may have previously shared about your activities."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011762, "latency_ms": 7, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 178, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "activities", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["episode"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "What did I do last weekend?", "role": null, "set": null, "shape": "time_window", "times": [{"anchor": null, "clock": "occurred", "direction": "past", "expression": "last weekend"}], "topic": "activities last weekend"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00359475, "latency_ms": 3165, "ttft_ms": null, "input_tokens": 2465, "cached_input_tokens": 0, "output_tokens": 388, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.95, "reason": "Sunday run from last weekend"}, {"id": "c2", "score": 0.95, "reason": "Saturday dentist appointment last weekend"}, {"id": "c3", "score": 0.2, "reason": ""}, {"id": "c4", "score": 0.2, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.2, "reason": ""}, {"id": "c7", "score": 0.2, "reason": ""}, {"id": "c8", "score": 0.2, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.2, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.3, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001048, "latency_ms": 0, "ttft_ms": 0, "input_tokens": 803, "cached_input_tokens": 0, "output_tokens": 49, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "Last weekend you had a dentist appointment on Saturday evening [2], and on Sunday morning you ran 7 km in 44 minutes at Vetal Hill [1]. That's solid training for the half marathon!", "timed": true}
+   ],
+   "cost_usd": 0.00485103,
+   "spent_usd": 0.00359475,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_oct_04",
+     "dentist_new"
+    ],
+    "ranked": [
+     "run_oct_04",
+     "dentist_new",
+     "run_sep_20",
+     "run_sep_27",
+     "saturday_workshop",
+     "run_sep_13",
+     "run_sep_06",
+     "pottery_class",
+     "run_sep_09",
+     "run_sep_02"
+    ],
+    "aggregate": null,
+    "reply": "Last weekend you had a dentist appointment on Saturday evening [2], and on Sunday morning you ran 7 km in 44 minutes at Vetal Hill [1]. That's solid training for the half marathon!"
+   }
+  },
+  {
+   "id": "17-since-last-run",
+   "title": "Order: how long since my last run (duration computed in code)",
+   "tags": [
+    "order"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "order",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.14285714285714285,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 8,
+    "soft_only": 0
+   },
+   "latency_ms": 4292,
+   "ttft_ms": 3810,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.38e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking about your personal running history, but I don’t have a date for your last run saved."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.362e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 110, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "running", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": {"key": "activity", "value": "run"}, "category": null, "current_only": false, "kinds": ["episode"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "How long since my last run?", "role": null, "set": null, "shape": "order", "times": [], "topic": "time since last run"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 25, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00342075, "latency_ms": 2692, "ttft_ms": null, "input_tokens": 2401, "cached_input_tokens": 0, "output_tokens": 360, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.6, "reason": ""}, {"id": "c2", "score": 0.6, "reason": ""}, {"id": "c3", "score": 0.6, "reason": ""}, {"id": "c4", "score": 0.6, "reason": ""}, {"id": "c5", "score": 0.6, "reason": ""}, {"id": "c6", "score": 0.6, "reason": ""}, {"id": "c7", "score": 1.0, "reason": "Most recent run, just two days ago."}, {"id": "c8", "score": 0.6, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.4, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001302, "latency_ms": 1157, "ttft_ms": 883, "input_tokens": 1102, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Your last run was 2 days ago, on Sunday 4 October, when you ran 7 km in 44 minutes at Vetal Hill [1].", "timed": true}
+   ],
+   "cost_usd": 0.00490067,
+   "spent_usd": 0.00472275,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "order"
+    ],
+    "selected": [
+     "run_sep_02",
+     "run_sep_09",
+     "run_sep_20",
+     "run_misfiled_subtype",
+     "run_sep_06",
+     "run_sep_13",
+     "run_oct_04",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_02",
+     "run_sep_09",
+     "run_sep_20",
+     "run_misfiled_subtype",
+     "run_sep_06",
+     "run_sep_13",
+     "run_oct_04",
+     "run_sep_27",
+     "running_shoes",
+     "live_pune"
+    ],
+    "aggregate": null,
+    "reply": "Your last run was 2 days ago, on Sunday 4 October, when you ran 7 km in 44 minutes at Vetal Hill [1]."
+   }
+  },
+  {
+   "id": "22-distance-september",
+   "title": "Sum of logged values",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "count",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 6,
+    "soft_only": 0
+   },
+   "latency_ms": 3643,
+   "ttft_ms": 3498,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.21e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 721, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking for a total from your past running records, which you may have saved."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010092, "latency_ms": 8, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2722, "output_tokens": 144, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "running", "about_sensitive": false, "aggregate": {"field": "value", "group_by": null, "op": "sum"}, "entities": [], "expanded_from": null, "filters": {"attribute": {"key": "activity", "value": "run"}, "category": null, "current_only": false, "kinds": ["episode"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "How far did I run in total in September?", "role": null, "set": null, "shape": "count", "times": [{"anchor": null, "clock": "occurred", "direction": "past", "expression": "in September"}], "topic": "total running distance in September"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 38, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00369975, "latency_ms": 3238, "ttft_ms": null, "input_tokens": 2419, "cached_input_tokens": 0, "output_tokens": 419, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c2", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c3", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c4", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c5", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c6", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c7", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 1.0, "reason": "September run distance, directly relevant"}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002122, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 1222, "cached_input_tokens": 0, "output_tokens": 180, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You ran 46 km in total in September [1][2][3][4][5][6]. That breaks down to 5 km on 2 September, 8 km on 6 September, 5 km on 9 September, 10 km on 13 September, 12 km on 20 September, and 6 km on the beach in Goa on 27 September.\n\nI also found two other runs that weren't logged in your counted runs: a 6 km run along the river on 16 September (when your knees felt fine) [8], and a 4 km evening run with Kabir around the lake on 23 September [7]. Would you like me to save those so they're included in your totals going forward?", "timed": true}
+   ],
+   "cost_usd": 0.00601553,
+   "spent_usd": 0.00369975,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_20",
+     "run_sep_02",
+     "run_sep_06",
+     "run_sep_27",
+     "run_sep_13"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_20",
+     "run_sep_02",
+     "run_sep_06",
+     "run_sep_27",
+     "run_sep_13",
+     "run_misfiled_subtype",
+     "quiet_hours_read",
+     "run_oct_04",
+     "running_shoes"
+    ],
+    "aggregate": 46.0,
+    "reply": "You ran 46 km in total in September [1][2][3][4][5][6]. That breaks down to 5 km on 2 September, 8 km on 6 September, 5 km on 9 September, 10 km on 13 September, 12 km on 20 September, and 6 km on the beach in Goa on 27 September.\n\nI also found two other runs that weren't logged in your counted runs: a 6 km run along the river on 16 September (when your knees felt fine) [8], and a 4 km evening run"
+   }
+  },
+  {
+   "id": "26-sister-husband",
+   "title": "2-hop through a label: my sister's husband",
+   "tags": [
+    "entity"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 3040,
+   "ttft_ms": 2787,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.94e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to recall a preference about someone you know."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012822, "latency_ms": 3, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 199, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "preferences", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "my sister", "name": "Nisha", "path": ["spouse_of"]}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["preference"], "predicate": null, "role": null, "states": ["current"], "subtypes": []}, "question": "What does my sister's husband like?", "role": null, "set": null, "shape": "entity", "times": [], "topic": "my sister's husband's preferences"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00315525, "latency_ms": 2530, "ttft_ms": null, "input_tokens": 2125, "cached_input_tokens": 0, "output_tokens": 347, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly states Rohan’s liking."}, {"id": "c2", "score": 1.0, "reason": "Directly states Rohan’s liking."}, {"id": "c3", "score": 0.9, "reason": "Identifies Nisha’s husband."}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000986, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 806, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "Your sister's husband is Rohan [3]. He loves birdwatching, especially at dawn [1], and he loves live jazz [2].", "timed": true}
+   ],
+   "cost_usd": 0.00435945,
+   "spent_usd": 0.00315525,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "entity"
+    ],
+    "selected": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband"
+    ],
+    "ranked": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband",
+     "kabir_likes_mk",
+     "nisha_interview",
+     "brunch_nisha",
+     "vegetarian",
+     "watch_severance",
+     "done_thrillers",
+     "dinner_tonight"
+    ],
+    "aggregate": null,
+    "reply": "Your sister's husband is Rohan [3]. He loves birdwatching, especially at dawn [1], and he loves live jazz [2].\n\nBy the way, you wanted to ask Nisha about her interview."
+   }
+  },
+  {
+   "id": "30-sleep-tips",
+   "title": "Semantic: a paraphrase finds the note",
+   "tags": [
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.3333333333333333,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 486,
+   "ttft_ms": 357,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.94e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking whether you have any saved tips for sleeping better."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011522, "latency_ms": 8, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 173, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "sleep", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "sleeping", "name": "Sleep", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["resource"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "Any tips I saved for sleeping better?", "role": null, "set": null, "shape": "semantic", "times": [], "topic": "tips for sleeping better"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.6e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 28, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00304425, "latency_ms": 2, "ttft_ms": null, "input_tokens": 2127, "cached_input_tokens": 0, "output_tokens": 322, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "", "score": 0.0}, {"id": "c2", "reason": "", "score": 0.0}, {"id": "c3", "reason": "Direct sleep tips saved here.", "score": 1.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000941, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 746, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You saved one tip on sleep, from an article you read 10 days ago: keep screens out of the bedroom and no caffeine after 2 pm [1].", "timed": true}
+   ],
+   "cost_usd": 0.00419043,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [
+     "sleep_article"
+    ],
+    "ranked": [
+     "trading_article",
+     "rust_book",
+     "sleep_article",
+     "backup_photos",
+     "running_shoes",
+     "pattern_film",
+     "try_saffron",
+     "learn_rust",
+     "watch_dark",
+     "trading_idea"
+    ],
+    "aggregate": null,
+    "reply": "You saved one tip on sleep, from an article you read 10 days ago: keep screens out of the bedroom and no caffeine after 2 pm [1]."
+   }
+  },
+  {
+   "id": "31-why-gym",
+   "title": "Why: the reason linked to the cancellation",
+   "tags": [
+    "why"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "why",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.05555555555555555,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 2
+   },
+   "latency_ms": 2746,
+   "ttft_ms": 2612,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.03e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking about a personal reason that may be stored in your memories."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012312, "latency_ms": 6, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 189, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "gym cancellation", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "the gym", "name": null, "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["episode", "plan"], "predicate": null, "role": null, "states": ["cancelled"], "subtypes": []}, "question": "Why did I cancel the gym?", "role": null, "set": null, "shape": "why", "times": [], "topic": "reason for cancelling the gym"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 28, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00327525, "latency_ms": 2387, "ttft_ms": null, "input_tokens": 2471, "cached_input_tokens": 0, "output_tokens": 316, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "Shows the cancellation happened."}, {"id": "c2", "score": 0.0, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 1.0, "reason": "Gives the cancellation reason directly."}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001025, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 785, "cached_input_tokens": 0, "output_tokens": 48, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You cancelled your FitZone gym membership because it moved to the far side of the city, forty minutes from home each way [1][2]. That was back on 28 July, two months ago now.", "timed": true}
+   ],
+   "cost_usd": 0.00451423,
+   "spent_usd": 0.00327525,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "why"
+    ],
+    "selected": [
+     "gym_cancel",
+     "gym_reason"
+    ],
+    "ranked": [
+     "gym_cancel",
+     "gym_routine",
+     "run_sep_20",
+     "run_sep_02",
+     "running_shoes",
+     "run_sep_09",
+     "run_sep_27",
+     "run_sep_06",
+     "run_oct_04",
+     "run_sep_13"
+    ],
+    "aggregate": null,
+    "reply": "You cancelled your FitZone gym membership because it moved to the far side of the city, forty minutes from home each way [1][2]. That was back on 28 July, two months ago now."
+   }
+  },
+  {
+   "id": "34-after-study-film",
+   "title": "Situational with a core pattern: a film after studying",
+   "tags": [
+    "situational"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "situational",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.047619047619047616,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 6,
+    "soft_only": 1
+   },
+   "latency_ms": 6427,
+   "ttft_ms": 5428,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.77e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 722, "cached_input_tokens": 0, "output_tokens": 51, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking for a suggestion based on your saved routine of unwinding with a film after a weekend study session and your preference for lighter shows."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00024052, "latency_ms": 6, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 2722, "output_tokens": 423, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "unwinding after studying", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": true, "kinds": ["pattern", "preference"], "predicate": "genre_taste", "role": null, "states": ["current"], "subtypes": []}, "question": "I'm done studying this weekend, how should I unwind?", "role": null, "set": null, "shape": "situational", "times": [{"anchor": null, "clock": "occurred", "direction": "future", "expression": "this weekend"}], "topic": "unwinding after studying"}, {"about": "shows", "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": "Confirmed patterns - Unwinds with a film after a weekend study session.", "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted", "active"], "subtypes": ["watch"]}, "question": "What shows do I still want to watch?", "role": null, "set": null, "shape": "list", "times": [], "topic": "shows to watch"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.5e-06, "latency_ms": 4, "ttft_ms": null, "input_tokens": 125, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0009405, "latency_ms": 1434, "ttft_ms": null, "input_tokens": 756, "cached_input_tokens": 0, "output_tokens": 83, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Saved Rust resource, not opened yet."}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0034395, "latency_ms": 2896, "ttft_ms": null, "input_tokens": 2354, "cached_input_tokens": 0, "output_tokens": 372, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "Suggests lighter post-study viewing."}, {"id": "c2", "score": 0.0, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 1.0, "reason": "Directly says how to unwind."}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.4, "reason": ""}, {"id": "c12", "score": 0.4, "reason": ""}, {"id": "c13", "score": 0.4, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.0031935, "latency_ms": 3382, "ttft_ms": null, "input_tokens": 2032, "cached_input_tokens": 0, "output_tokens": 371, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly answers the question."}, {"id": "c2", "score": 1.0, "reason": "Directly answers the question."}, {"id": "c3", "score": 0.1, "reason": ""}, {"id": "c4", "score": 0.4, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.0, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.4, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.1, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.003636, "latency_ms": 3689, "ttft_ms": null, "input_tokens": 2352, "cached_input_tokens": 0, "output_tokens": 416, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Scheduled for this weekend."}, {"id": "c2", "score": 0.3, "reason": ""}, {"id": "c3", "score": 0.1, "reason": ""}, {"id": "c4", "score": 0.3, "reason": ""}, {"id": "c5", "score": 0.1, "reason": ""}, {"id": "c6", "score": 0.2, "reason": ""}, {"id": "c7", "score": 0.1, "reason": ""}, {"id": "c8", "score": 0.1, "reason": ""}, {"id": "c9", "score": 0.1, "reason": ""}, {"id": "c10", "score": 0.1, "reason": ""}, {"id": "c11", "score": 0.1, "reason": ""}, {"id": "c12", "score": 0.2, "reason": ""}, {"id": "c13", "score": 0.1, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.3, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.1, "reason": ""}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001619, "latency_ms": 2148, "ttft_ms": 1305, "input_tokens": 1124, "cached_input_tokens": 0, "output_tokens": 99, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You unwind with a film after a weekend study session [2], and you're done with thrillers—you want lighter shows now [1]. So a lighter film this weekend sounds perfect for you.\n\nThough I should mention: you also have a pottery wheel workshop with Kabir at Clay and Kiln Studio on Saturday morning [5], so your weekend isn't entirely free. But there's still time for a film if you'd like one after that.", "timed": true}
+   ],
+   "cost_usd": 0.01316922,
+   "spent_usd": 0.0128285,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "situational",
+     "list",
+     "time_window",
+     "list"
+    ],
+    "selected": [
+     "done_thrillers",
+     "pattern_film",
+     "watch_dark",
+     "watch_mindhunter",
+     "saturday_workshop",
+     "rust_book"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "saturday_workshop",
+     "dentist_new",
+     "pattern_film",
+     "run_oct_04",
+     "run_sep_20",
+     "pottery_class",
+     "run_sep_27",
+     "renew_passport",
+     "run_sep_13"
+    ],
+    "aggregate": null,
+    "reply": "You unwind with a film after a weekend study session [2], and you're done with thrillers—you want lighter shows now [1]. So a lighter film this weekend sounds perfect for you.\n\nThough I should mention: you also have a pottery wheel workshop with Kabir at Clay and Kiln Studio on Saturday morning [5], so your weekend isn't entirely free. But there's still time for a film if you'd like one after that"
+   }
+  },
+  {
+   "id": "36-told-berlin",
+   "title": "Conversation: what I said, never saved",
+   "tags": [
+    "conversation"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "conversation",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 477,
+   "ttft_ms": 351,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.09e-05, "latency_ms": 2, "ttft_ms": null, "input_tokens": 719, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.98, "intent": "recall", "reason": "You’re asking me to retrieve something you may have previously told me about Berlin."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010622, "latency_ms": 8, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2722, "output_tokens": 155, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "Berlin", "about_sensitive": false, "aggregate": null, "entities": [{"mention": "Berlin", "name": "Berlin", "path": []}], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": [], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "What did I tell you about Berlin?", "role": "user", "set": null, "shape": "conversation", "times": [], "topic": "what the user said about Berlin"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00307425, "latency_ms": 2, "ttft_ms": null, "input_tokens": 2251, "cached_input_tokens": 0, "output_tokens": 308, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "", "score": 0.0}, {"id": "c2", "reason": "", "score": 0.0}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001083, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 813, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You told me on Thursday 24 September (12 days ago) that if you get the Berlin offer, you'll move [1]. That's all you've mentioned about Berlin so far—would you like to tell me more about this opportunity?", "timed": true}
+   ],
+   "cost_usd": 0.00435471,
+   "spent_usd": 0.0,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "conversation"
+    ],
+    "selected": [],
+    "ranked": [
+     "nisha_interview",
+     "goa_trip",
+     "kabir_likes_mk",
+     "live_pune",
+     "run_sep_27",
+     "run_sep_09",
+     "mk_bag",
+     "watched_severance",
+     "watch_dark",
+     "ramen_japan"
+    ],
+    "aggregate": null,
+    "reply": "You told me on Thursday 24 September (12 days ago) that if you get the Berlin offer, you'll move [1]. That's all you've mentioned about Berlin so far—would you like to tell me more about this opportunity?"
+   }
+  },
+  {
+   "id": "40-rohan-phone",
+   "title": "No answer about a known person",
+   "tags": [
+    "abstain",
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 2917,
+   "ttft_ms": 2795,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.98e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 718, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 0.99, "intent": "recall", "reason": "You’re asking me to retrieve a personal detail about someone you know."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011212, "latency_ms": 6, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2722, "output_tokens": 167, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": "phone number", "about_sensitive": true, "aggregate": null, "entities": [{"mention": "Rohan", "name": "Rohan", "path": []}], "expanded_from": null, "filters": {"attribute": {"key": "phone number", "value": "phone number"}, "category": null, "current_only": false, "kinds": ["fact"], "predicate": null, "role": null, "states": [], "subtypes": []}, "question": "What's Rohan's phone number?", "role": null, "set": null, "shape": "exact", "times": [], "topic": "Rohan's phone number"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 33, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00299925, "latency_ms": 2471, "ttft_ms": null, "input_tokens": 2037, "cached_input_tokens": 0, "output_tokens": 327, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.0, "reason": ""}, {"id": "c2", "score": 0.0, "reason": ""}, {"id": "c3", "score": 0.0, "reason": ""}, {"id": "c4", "score": 0.0, "reason": ""}, {"id": "c5", "score": 0.0, "reason": ""}, {"id": "c6", "score": 0.4, "reason": ""}, {"id": "c7", "score": 0.0, "reason": ""}, {"id": "c8", "score": 0.0, "reason": ""}, {"id": "c9", "score": 0.0, "reason": ""}, {"id": "c10", "score": 0.0, "reason": ""}, {"id": "c11", "score": 0.0, "reason": ""}, {"id": "c12", "score": 0.0, "reason": ""}, {"id": "c13", "score": 0.0, "reason": ""}, {"id": "c14", "score": 0.0, "reason": ""}, {"id": "c15", "score": 0.0, "reason": ""}, {"id": "c16", "score": 0.0, "reason": ""}, {"id": "c17", "score": 0.0, "reason": ""}, {"id": "c18", "score": 0.0, "reason": ""}, {"id": "c19", "score": 0.0, "reason": ""}, {"id": "c20", "score": 0.0, "reason": ""}]}, "timed": true}
+   ],
+   "cost_usd": 0.00320183,
+   "spent_usd": 0.00299925,
+   "cache_hits": 3,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [],
+    "ranked": [
+     "rohan_husband",
+     "rohan_jazz",
+     "rohan_birds",
+     "mk_bag",
+     "live_pune",
+     "backup_photos",
+     "therapist",
+     "dinner_tonight",
+     "try_saffron",
+     "kabir_birthday"
+    ],
+    "aggregate": null,
+    "reply": "I don't have anything saved about Rohan's phone number."
+   }
+  },
+  {
+   "id": "42-home-and-watch",
+   "title": "Multi-part: two answers, each cited",
+   "tags": [
+    "latest",
+    "list",
+    "multi"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 511,
+   "ttft_ms": 400,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.87e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 722, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"confidence": 1.0, "intent": "recall", "reason": "You’re asking me to recall your location and saved watchlist."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00016002, "latency_ms": 9, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 2722, "output_tokens": 262, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": true, "kinds": ["fact"], "predicate": "lives_in", "role": null, "states": ["current"], "subtypes": []}, "question": "Where do I live?", "role": null, "set": null, "shape": "latest", "times": [], "topic": "where I live"}, {"about": null, "about_sensitive": false, "aggregate": null, "entities": [], "expanded_from": null, "filters": {"attribute": null, "category": null, "current_only": false, "kinds": ["intention"], "predicate": null, "role": null, "states": ["wanted", "active"], "subtypes": ["watch"]}, "question": "What's on my watch list?", "role": null, "set": null, "shape": "list", "times": [], "topic": "watch list"}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.4e-07, "latency_ms": 4, "ttft_ms": null, "input_tokens": 42, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.003198, "latency_ms": 2, "ttft_ms": null, "input_tokens": 2200, "cached_input_tokens": 0, "output_tokens": 344, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly states your current home.", "score": 1.0}, {"id": "c2", "reason": "", "score": 0.3}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.0}, {"id": "c6", "reason": "", "score": 0.1}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.0}, {"id": "c12", "reason": "", "score": 0.0}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.0}, {"id": "c20", "reason": "", "score": 0.0}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-5.4-mini", "cost_usd": 0.00337275, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2037, "cached_input_tokens": 0, "output_tokens": 410, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "Directly on your watch list.", "score": 1.0}, {"id": "c2", "reason": "Directly on your watch list.", "score": 1.0}, {"id": "c3", "reason": "", "score": 0.0}, {"id": "c4", "reason": "", "score": 0.0}, {"id": "c5", "reason": "", "score": 0.3}, {"id": "c6", "reason": "", "score": 0.0}, {"id": "c7", "reason": "", "score": 0.0}, {"id": "c8", "reason": "", "score": 0.0}, {"id": "c9", "reason": "", "score": 0.0}, {"id": "c10", "reason": "", "score": 0.0}, {"id": "c11", "reason": "", "score": 0.4}, {"id": "c12", "reason": "", "score": 0.4}, {"id": "c13", "reason": "", "score": 0.0}, {"id": "c14", "reason": "", "score": 0.0}, {"id": "c15", "reason": "", "score": 0.0}, {"id": "c16", "reason": "", "score": 0.0}, {"id": "c17", "reason": "", "score": 0.0}, {"id": "c18", "reason": "", "score": 0.0}, {"id": "c19", "reason": "", "score": 0.3}, {"id": "c20", "reason": "", "score": 0.4}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001021, "latency_ms": 1, "ttft_ms": 0, "input_tokens": 831, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": "You live in Pune [1].\n\nOn your watch list, you want to watch Dark with Kabir [2] and Mindhunter [3].", "timed": true}
+   ],
+   "cost_usd": 0.00784131,
+   "spent_usd": 0.0,
+   "cache_hits": 6,
+   "detail": {
+    "planned": [
+     "latest",
+     "list"
+    ],
+    "selected": [
+     "live_pune",
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "rohan_jazz",
+     "rohan_husband",
+     "mk_bag",
+     "gym_reason",
+     "vegetarian",
+     "done_thrillers",
+     "run_sep_02",
+     "renew_passport"
+    ],
+    "aggregate": null,
+    "reply": "You live in Pune [1].\n\nOn your watch list, you want to watch Dark with Kabir [2] and Mindhunter [3]."
+   }
+  }
+ ]
+}
