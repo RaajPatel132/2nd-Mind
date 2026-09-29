@@ -117,17 +117,15 @@ export function withSeq(events: TurnEvent[]): TrailEvent[] {
 
 export const RUNNING_START: StepStart[] = [{ step: 'reconcile', at: NOW }]
 
-/** The model picker in every state: selected, a fake stand-in, and one with no API key. */
+/** The model picker: Auto first, a fake stand-in, and the price of each against Auto's. */
 export const PICKER: Picker = {
-  default: 'anthropic:claude-sonnet-5',
-  baseline: 'anthropic:claude-sonnet-5',
-  baseline_label: 'Claude Sonnet 5',
+  auto_label: 'Auto',
+  auto_note: 'Each step runs on the model that suits it: the best answer at the lowest price.',
+  auto_usd_per_turn: 0.0051,
   choices: [
-    { id: 'anthropic:claude-fable-5-1', label: 'Claude Fable 5.1', provider: 'anthropic', provider_label: 'Anthropic', weight: 5, simulated: false, available: true },
-    { id: 'anthropic:claude-opus-5', label: 'Claude Opus 5', provider: 'anthropic', provider_label: 'Anthropic', weight: 2.5, simulated: false, available: true },
-    { id: 'anthropic:claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'anthropic', provider_label: 'Anthropic', weight: 1, simulated: false, available: true },
-    { id: 'anthropic:claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'anthropic', provider_label: 'Anthropic', weight: 0.5, simulated: true, available: true },
-    { id: 'openai:gpt-6-sol', label: 'GPT-6 Sol', provider: 'openai', provider_label: 'OpenAI', weight: 1, simulated: false, available: false },
-    { id: 'openai:gpt-6-luna', label: 'GPT-6 Luna', provider: 'openai', provider_label: 'OpenAI', weight: 0.05, simulated: false, available: false },
+    { id: 'openai:gpt-6-luna', label: 'GPT-6 Luna', provider: 'openai', provider_label: 'OpenAI', relative_price: 0.2, tiers: ['standard', 'premium'], simulated: false, available: true },
+    { id: 'openai:gpt-5.4-mini', label: 'GPT-5.4 mini', provider: 'openai', provider_label: 'OpenAI', relative_price: 1.5, tiers: ['standard', 'premium'], simulated: false, available: true },
+    { id: 'anthropic:claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'anthropic', provider_label: 'Anthropic', relative_price: 1.9, tiers: ['standard', 'premium'], simulated: true, available: true },
+    { id: 'anthropic:claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'anthropic', provider_label: 'Anthropic', relative_price: 3.9, tiers: ['premium'], simulated: false, available: true },
   ],
 }

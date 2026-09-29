@@ -413,7 +413,7 @@ function ComponentsSection() {
   const [count, setCount] = useState(3482)
   const [text, setText] = useState('')
   const [delta, setDelta] = useState<{ key: number; text: string } | null>(null)
-  const [model, setModel] = useState(PICKER.default)
+  const [model, setModel] = useState<string | null>(null)
   const anchor = useRef<HTMLButtonElement>(null)
   return (
     <Section id="components" overline="Components" title="Every primitive, every state">
@@ -619,10 +619,10 @@ function ComponentsSection() {
         </Demo>
         <Demo
           title="Select (the model picker)"
-          note="A pill that opens a grouped listbox. ↑ ↓ move, ↵ picks, Esc closes. Here: a fake stand-in (Haiku) and a provider with no key (OpenAI, disabled)."
+          note="A pill that opens a grouped listbox. ↑ ↓ move, ↵ picks, Esc closes. Auto first, then each model with its price against Auto's; a fake stand-in (Haiku) is tagged."
         >
           <div className="flex min-h-12 justify-end">
-            <ModelPicker picker={PICKER} value={model} onChange={setModel} />
+            <ModelPicker picker={PICKER} offered={PICKER.choices} value={model} onChange={(id) => { setModel(id === 'auto' ? null : id) }} />
           </div>
         </Demo>
         <Demo title="TextArea, CardButton, brand" note="The composer's input grows to 8 lines, then scrolls.">

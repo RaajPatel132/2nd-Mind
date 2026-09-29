@@ -1453,15 +1453,20 @@ export interface components {
             /** Provider Label */
             provider_label: string;
             /**
+             * Relative Price
+             * @description What a typical recall turn costs on this model, against Auto (1 = the same).
+             */
+            relative_price: number;
+            /**
              * Simulated
              * @description The fake provider stands in for it (no credentials).
              */
             simulated: boolean;
             /**
-             * Weight
-             * @description Quota tokens per token on this model, against the baseline (1 = baseline).
+             * Tiers
+             * @description Who may pick it.
              */
-            weight: number;
+            tiers: components["schemas"]["Tier"][];
         };
         /**
          * Normalisation
@@ -1487,17 +1492,28 @@ export interface components {
         };
         /**
          * PickerOut
-         * @description The model picker (ADR-0030): choices in display order, grouped by provider.
+         * @description The model picker (ADR-0031). Auto (no `model`) is for everyone: each step runs on the
+         *     model that suits it. The choices are what a tier may pick instead, with their price against
+         *     Auto's, grouped by provider.
          */
         PickerOut: {
-            /** Baseline */
-            baseline: string;
-            /** Baseline Label */
-            baseline_label: string;
+            /**
+             * Auto Label
+             * @default Auto
+             */
+            auto_label: string;
+            /**
+             * Auto Note
+             * @description What Auto does, in a sentence.
+             */
+            auto_note: string;
+            /**
+             * Auto Usd Per Turn
+             * @description A typical recall turn on Auto, in dollars.
+             */
+            auto_usd_per_turn: number;
             /** Choices */
             choices: components["schemas"]["ModelChoiceOut"][];
-            /** Default */
-            default: string;
         };
         /**
          * PolicyDecision

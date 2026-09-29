@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { Picker } from '../api/client'
 
 const KEY = 'secondmind.model'
+export const AUTO = 'auto'
 
 function stored(): string | null {
   try {
@@ -11,24 +12,30 @@ function stored(): string | null {
   }
 }
 
+/** What this person's plan may pick besides Auto: the choices offered to their tier and usable. */
+export function offeredTo(picker: Picker | null | undefined, tier: string | undefined) {
+  return picker && tier ? picker.choices.filter((c) => c.available && (c.tiers as string[]).includes(tier)) : []
+}
+
 /**
- * The model picked for new turns: this viewer's last pick while it is still on offer and
- * usable, otherwise the server's default. Null when the server has no picker.
+ * The model for new turns: null is Auto (no pick is sent, and each step uses the model that
+ * suits it). A viewer's earlier pick counts only while their plan still offers it.
  */
-export function useModelPick(picker: Picker | null | undefined) {
-  const usable = useCallback((id: string | null) => Boolean(id && picker?.choices.some((c) => c.id === id && c.available)), [picker])
+export function useModelPick(picker: Picker | null | undefined, tier: string | undefined) {
   const [picked, setPicked] = useState<string | null>(() => stored())
-  const fallback = picker ? (usable(picker.default) ? picker.default : (picker.choices.find((c) => c.available)?.id ?? null)) : null
-  const model = usable(picked) ? picked : fallback
+  const offered = offeredTo(picker, tier)
+  const model = picked && offered.some((c) => c.id === picked) ? picked : null
 
   const pick = useCallback((id: string) => {
-    setPicked(id)
+    const next = id === AUTO ? null : id
+    setPicked(next)
     try {
-      window.localStorage.setItem(KEY, id)
+      if (next) window.localStorage.setItem(KEY, next)
+      else window.localStorage.removeItem(KEY)
     } catch {
       // Private mode or blocked storage: the pick lasts for this visit.
     }
   }, [])
 
-  return { model, pick }
+  return { model, pick, offered }
 }

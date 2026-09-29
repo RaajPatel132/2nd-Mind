@@ -103,18 +103,16 @@ export function formatClock(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
-/** A model's quota weight against the baseline: "1×", "2.5×", "0.42×". */
-export function formatWeight(weight: number): string {
-  const text = weight >= 1 ? String(Math.round(weight * 100) / 100) : weight.toFixed(2).replace(/0$/, '')
-  return `${text}×`
+/** A model's price for a typical turn against Auto's: "1.5×", "0.2×". */
+export function formatRelativePrice(price: number): string {
+  return `${price >= 10 ? String(Math.round(price)) : price.toFixed(1)}×`
 }
 
-/** How fast a model uses the quota against the baseline, in words ("Uses quota 2.5× as fast"). */
-export function weightNote(weight: number, isBaseline: boolean): string {
-  if (isBaseline) return 'The baseline for your quota'
-  if (weight === 1) return 'Uses quota at the baseline rate'
-  if (weight > 1) return `Uses quota ${formatWeight(weight)} as fast`
-  return `Uses ${String(Math.round((1 - weight) * 100))}% less quota`
+/** What that price means, in words ("About 2× Auto's price", "Cheaper: 0.2× Auto's price"). */
+export function priceNote(price: number): string {
+  if (price < 0.95) return `Cheaper: ${formatRelativePrice(price)} Auto's price`
+  if (price < 1.05) return "About Auto's price"
+  return `${formatRelativePrice(price)} Auto's price`
 }
 
 export function initialsOf(email: string): string {

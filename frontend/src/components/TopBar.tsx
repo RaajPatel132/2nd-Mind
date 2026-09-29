@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { logout, type Me, type Picker, type Usage } from '../api/client'
+import { logout, type Me, type ModelChoice, type Picker, type Usage } from '../api/client'
 import type { LastSpend } from '../hooks/useUsage'
 import { formatMoney, formatUsd, initialsOf } from '../lib/format'
 import { BrandMark, Button, CountUp, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
@@ -12,6 +12,9 @@ type Props = {
   providerMode: string
   /** The model picker; null when the server offers none (the provider-mode tag shows instead). */
   picker: Picker | null
+  /** What this person's plan may pick besides Auto; empty for a guest, who has Auto only. */
+  offered: ModelChoice[]
+  /** The pick, or null for Auto. */
   model: string | null
   onModel: (id: string) => void
   usage: Usage | null
@@ -26,7 +29,7 @@ type Props = {
  * Brand, wordmark and workspace on the left; the model picker and the avatar with its quota
  * ring on the right. Transparent at rest; surface, blur and a hairline once content scrolls under.
  */
-export function TopBar({ me, providerMode, picker, model, onModel, usage, last, delta, docked, view }: Props) {
+export function TopBar({ me, providerMode, picker, offered, model, onModel, usage, last, delta, docked, view }: Props) {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => {
@@ -74,8 +77,8 @@ export function TopBar({ me, providerMode, picker, model, onModel, usage, last, 
               {view === 'upcoming' ? 'Chat' : 'Upcoming'}
             </a>
           </nav>
-          {picker && model ? (
-            <ModelPicker picker={picker} value={model} onChange={onModel} />
+          {picker && offered.length > 0 ? (
+            <ModelPicker picker={picker} offered={offered} value={model} onChange={onModel} />
           ) : providerMode !== 'live' && (
             <span className="rounded-full px-2 py-0.5 font-machine text-mono-sm text-fg-3 ring-1 ring-inset ring-line-strong" data-testid="provider-mode">
               {providerMode}

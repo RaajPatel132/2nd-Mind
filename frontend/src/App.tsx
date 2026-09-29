@@ -71,7 +71,7 @@ function useDueSoon(workspaceId: string): string | null {
 function Workspace({ session }: { session: Session }) {
   const { workspace, meta, me } = session
   const usage = useUsage()
-  const { model, pick } = useModelPick(meta.picker)
+  const { model, pick, offered } = useModelPick(meta.picker, usage.usage?.tier)
   const toast = useToast()
   const [draft, setDraft] = useState('')
   const [inspecting, setInspecting] = useState<string | null>(null)
@@ -163,6 +163,7 @@ function Workspace({ session }: { session: Session }) {
           me={me}
           providerMode={meta.provider_mode}
           picker={meta.picker ?? null}
+          offered={offered}
           model={model}
           onModel={pick}
           usage={usage.usage}
