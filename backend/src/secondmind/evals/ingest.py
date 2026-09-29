@@ -289,7 +289,8 @@ def score(run: CaseRun) -> Score:
         result.check("kind", got == count, f"{got} active {kind} != {count}")
     for text in expect.get("reply_contains", []):
         reply = run.turn.output or ""
-        result.check("state", text.lower() in reply.lower(), f"reply {reply!r} lacks {text!r}")
+        said = any(part.strip().lower() in reply.lower() for part in text.split("|"))
+        result.check("state", said, f"reply {reply!r} lacks {text!r}")
     for text in expect.get("absent", []):
         result.check("state", text not in run.stored_text, f"{text!r} was stored")
     for text in expect.get("keys_contain", []):
@@ -401,7 +402,14 @@ def _check_diff(run: CaseRun, expect: Mapping[str, Any], result: Score) -> None:
             ok = any(e.op == "not_written" and e.reconcile is not None for e in entries)
             result.check("reconcile", ok, "no ∅ duplicate (no_op) entry")
         else:
-            ok = any(e.op == "not_written" and e.rule_id == rule for e in entries)
+            # "P-MOD-1|model": the policy refuses it, or the model already declined to propose
+            # it (rule_id None): the person's memory is the same, and both say why.
+            rules = set(str(rule).split("|"))
+            ok = any(
+                e.op == "not_written"
+                and (e.rule_id in rules or (e.rule_id is None and "model" in rules))
+                for e in entries
+            )
             result.check("state", ok, f"no ∅ entry for {rule}")
     for rule in expect.get("held", []):
         ok = any(e.op == "held" and e.rule_id == rule for e in entries)

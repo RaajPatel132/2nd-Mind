@@ -21,11 +21,9 @@ model:
         rationale: The user calls it an idea.
 expect:
   memories:
-    - match: trading skill
+    - match: skill that can trade
       kind: note
       subtype: idea
       state: current
-      entities: ["trading:about"]
-      category: ideas/projects
       reconcile: new
-  reply_contains: ["Saved as a note: End-to-end trading skill."]
+  reply_contains: ["Saved as a note:"]

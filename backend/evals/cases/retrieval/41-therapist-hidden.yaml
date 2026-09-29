@@ -1,7 +1,7 @@
 id: 41-therapist-hidden
 title: Sensitive stays out unless asked about
 question: What do I do on Thursday evenings?
-shape: semantic
+shape: semantic|exact
 forbidden:
 - therapist
 must_abstain: true

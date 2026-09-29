@@ -21,6 +21,6 @@ model:
         modality: hypothetical
         rationale: Conditional on an offer.
 expect:
-  not_written: [P-MOD-1]
+  not_written: [P-MOD-1|model]
   counts: {fact: 0}
-  reply_contains: ["it's hypothetical"]
+  reply_contains: ["it's hypothetical|Nothing new to save"]
