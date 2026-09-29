@@ -2432,15 +2432,23 @@
             "title": "Provider Label",
             "type": "string"
           },
+          "relative_price": {
+            "description": "What a typical recall turn costs on this model, against Auto (1 = the same).",
+            "title": "Relative Price",
+            "type": "number"
+          },
           "simulated": {
             "description": "The fake provider stands in for it (no credentials).",
             "title": "Simulated",
             "type": "boolean"
           },
-          "weight": {
-            "description": "Quota tokens per token on this model, against the baseline (1 = baseline).",
-            "title": "Weight",
-            "type": "number"
+          "tiers": {
+            "description": "Who may pick it.",
+            "items": {
+              "$ref": "#/components/schemas/Tier"
+            },
+            "title": "Tiers",
+            "type": "array"
           }
         },
         "required": [
@@ -2448,7 +2456,8 @@
           "label",
           "provider",
           "provider_label",
-          "weight",
+          "relative_price",
+          "tiers",
           "simulated",
           "available"
         ],
@@ -2497,15 +2506,22 @@
         "type": "object"
       },
       "PickerOut": {
-        "description": "The model picker (ADR-0030): choices in display order, grouped by provider.",
+        "description": "The model picker (ADR-0031). Auto (no `model`) is for everyone: each step runs on the\nmodel that suits it. The choices are what a tier may pick instead, with their price against\nAuto's, grouped by provider.",
         "properties": {
-          "baseline": {
-            "title": "Baseline",
+          "auto_label": {
+            "default": "Auto",
+            "title": "Auto Label",
             "type": "string"
           },
-          "baseline_label": {
-            "title": "Baseline Label",
+          "auto_note": {
+            "description": "What Auto does, in a sentence.",
+            "title": "Auto Note",
             "type": "string"
+          },
+          "auto_usd_per_turn": {
+            "description": "A typical recall turn on Auto, in dollars.",
+            "title": "Auto Usd Per Turn",
+            "type": "number"
           },
           "choices": {
             "items": {
@@ -2513,16 +2529,11 @@
             },
             "title": "Choices",
             "type": "array"
-          },
-          "default": {
-            "title": "Default",
-            "type": "string"
           }
         },
         "required": [
-          "default",
-          "baseline",
-          "baseline_label",
+          "auto_note",
+          "auto_usd_per_turn",
           "choices"
         ],
         "title": "PickerOut",

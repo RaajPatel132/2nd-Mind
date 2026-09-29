@@ -14,6 +14,7 @@ from secondmind.api.openapi import render
 from secondmind.api.services import quota_limits
 from secondmind.auth import SessionSigner
 from secondmind.config import DEFAULT_RESOURCES_DIR, load_app_config
+from secondmind.core import Tier
 from secondmind.ingestion import load_replay, offline_responders
 from secondmind.memory import Memory
 from secondmind.memory.adapters import InMemoryMemory
@@ -248,34 +249,46 @@ async def test_usage_is_read_only_and_moves_with_each_turn(client: httpx.AsyncCl
     assert (await client.get("/v1/me/usage")).json() == quota
 
 
-async def test_meta_lists_the_picker_by_provider_with_weights(
+async def test_meta_lists_the_picker_with_prices_against_auto_and_who_may_pick(
     client: httpx.AsyncClient,
 ) -> None:
     picker = (await client.get("/v1/meta")).json()["picker"]
-    assert picker["default"] == picker["baseline"] == "anthropic:claude-sonnet-5"
-    assert picker["baseline_label"] == "Claude Sonnet 5"
-    weights = {c["id"]: c["weight"] for c in picker["choices"]}
-    assert weights["anthropic:claude-sonnet-5"] == 1.0
-    assert weights["anthropic:claude-opus-5"] == 2.5
-    assert weights["anthropic:claude-fable-5-1"] == 5.0
-    assert weights["openai:gpt-6-luna"] == 0.05
-    providers = [c["provider"] for c in picker["choices"]]
-    assert providers == sorted(providers)  # grouped: every Anthropic model, then OpenAI
+    assert picker["auto_label"] == "Auto"
+    assert 0.004 < picker["auto_usd_per_turn"] < 0.008  # a recall turn on the economy routing
+    by_id = {c["id"]: c for c in picker["choices"]}
+    assert list(by_id) == [
+        "openai:gpt-6-luna",
+        "openai:gpt-5.4-mini",
+        "anthropic:claude-haiku-4-5",
+        "anthropic:claude-sonnet-5",
+    ]
+    assert (
+        by_id["openai:gpt-6-luna"]["relative_price"]
+        < 1
+        < by_id["openai:gpt-5.4-mini"]["relative_price"]
+    )
+    assert (
+        by_id["anthropic:claude-sonnet-5"]["relative_price"]
+        > by_id["anthropic:claude-haiku-4-5"]["relative_price"]
+    )
+    assert by_id["openai:gpt-6-luna"]["tiers"] == ["standard", "premium"]
+    assert by_id["anthropic:claude-sonnet-5"]["tiers"] == ["premium"]
     assert all(c["simulated"] and c["available"] for c in picker["choices"])
+    assert "default" not in picker  # no pick is Auto: the same for everyone
 
 
-async def test_a_picked_model_serves_every_chat_step_and_charges_its_weight(
+async def test_a_pick_is_served_on_that_model_for_every_chat_step_and_is_priced_as_it(
     client: httpx.AsyncClient,
 ) -> None:
     ws = await login(client)
-    body = {"message": "what should I cook tonight?", "model": "anthropic:claude-opus-5"}
+    body = {"message": "what should I cook tonight?", "model": "openai:gpt-5.4-mini"}
     response = await client.post(f"/v1/workspaces/{ws}/turns", json=body)
     name, completed = frames(response.text)[-1]
     assert name == "turn.completed"
     turn = completed["turn"]
     # A question: recall embeds it, and embeddings keep their own route (ADR-0030).
     chat = {step: m["model"] for step, m in turn["models"].items() if step != "embed"}
-    assert set(chat.values()) == {"claude-opus-5"}
+    assert set(chat.values()) == {"gpt-5.4-mini"}
     events = (await client.get(f"/v1/turns/{turn['id']}/events")).json()["events"]
     calls = [e["event"] for e in events if e["event"]["type"] == "model_call"]
     assert calls
@@ -283,10 +296,47 @@ async def test_a_picked_model_serves_every_chat_step_and_charges_its_weight(
         if call["step"] == "embed":
             continue
         u = call["usage"]
-        raw = u["input_tokens"] + u["cached_input_tokens"] + u["output_tokens"]
-        assert u["charged_tokens"] == int(raw * 2.5 + 0.5)
-    assert completed["usage"]["charged_tokens"] == sum(c["usage"]["charged_tokens"] for c in calls)
-    assert completed["quota"]["used_tokens"] == completed["usage"]["charged_tokens"]
+        # Input, cached input and output at gpt-5.4-mini's prices: $0.75 / $0.075 / $4.50 per 1M.
+        cost = (
+            u["input_tokens"] * 0.75 + u["cached_input_tokens"] * 0.075 + u["output_tokens"] * 4.5
+        ) / 1_000_000
+        assert u["cost_usd"] == pytest.approx(cost, abs=1e-7)
+    assert completed["quota"]["used_usd"] == pytest.approx(completed["usage"]["cost_usd"])
+
+
+async def test_a_pick_the_tier_is_not_offered_is_refused_before_the_turn_starts(
+    client: httpx.AsyncClient,
+) -> None:
+    ws = await login(client)
+    refused = await client.post(
+        f"/v1/workspaces/{ws}/turns",
+        json={"message": "hi", "model": "anthropic:claude-sonnet-5"},  # premium only
+    )
+    assert refused.status_code == 422
+    assert "isn't available on your plan" in refused.json()["error"]["message"]
+    assert (await client.get(f"/v1/workspaces/{ws}/turns")).json()["items"] == []
+
+
+async def test_an_upgrade_offers_the_dearer_model_on_the_next_turn(
+    base_env: dict[str, str],
+) -> None:
+    services = _services(base_env)
+    app = create_app(services=services)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        ws = await login(c)
+        (user_id,) = services.identity.users  # type: ignore[attr-defined]
+        user = services.identity.users[user_id]  # type: ignore[attr-defined]
+        services.identity.users[user_id] = user.model_copy(update={"tier": Tier.PREMIUM})  # type: ignore[attr-defined]
+        body = {"message": "hi", "model": "anthropic:claude-sonnet-5"}
+        ok = await c.post(f"/v1/workspaces/{ws}/turns", json=body)
+        assert ok.status_code == 200
+        assert frames(ok.text)[-1][0] == "turn.completed"
+        services.identity.users[user_id] = user.model_copy(update={"tier": Tier.GUEST})  # type: ignore[attr-defined]
+        for model in ("openai:gpt-6-luna", "anthropic:claude-sonnet-5"):
+            refused = await c.post(
+                f"/v1/workspaces/{ws}/turns", json={"message": "hi", "model": model}
+            )
+            assert refused.status_code == 422  # a guest has Auto only
 
 
 async def test_picking_a_model_not_on_the_list_is_refused(client: httpx.AsyncClient) -> None:

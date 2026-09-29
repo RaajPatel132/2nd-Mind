@@ -20,7 +20,7 @@ from secondmind.api.schemas import (
 from secondmind.api.services import Services
 from secondmind.api.sse import turn_stream
 from secondmind.auth import resolve_scope
-from secondmind.core import RateLimitedError, UnauthenticatedError
+from secondmind.core import RateLimitedError, Tier, UnauthenticatedError, ValidationFailedError
 from secondmind.metering import Block, QuotaUsage
 
 router = APIRouter(prefix="/v1", tags=["turns"])
@@ -50,6 +50,14 @@ async def usage_and_block(
     return usage, await services.gate.turn_block(usage)
 
 
+def _may_pick(services: Services, tier: Tier, model: str) -> bool:
+    """A pick must be one this tier is offered; anything else is refused before a turn starts."""
+    return any(
+        str(choice.ref) == model and tier in choice.tiers
+        for choice in services.config.routing.choices
+    )
+
+
 def turn_out(services: Services, turn: Turn) -> TurnOut:
     return TurnOut.of(turn, services.tracer.trace_url(turn.id))
 
@@ -70,7 +78,9 @@ async def create_turn(
     wait = await services.gate.rate_limited(str(user_id), settings.rate_turns_per_minute)
     if wait is not None:
         raise RateLimitedError("You're sending messages too fast. Try again in a moment.", wait)
-    _, block = await usage_and_block(services, user_id)
+    usage, block = await usage_and_block(services, user_id)
+    if body.model is not None and not _may_pick(services, usage.tier, body.model):
+        raise ValidationFailedError("That model isn't available on your plan.")
     handle = await services.runner.start(
         scope,
         text=body.message,

@@ -1,5 +1,8 @@
 """Liveness, readiness and build/config metadata."""
 
+from collections.abc import Callable
+from decimal import Decimal
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -13,7 +16,7 @@ from secondmind.api.schemas import (
     ReadyOut,
     RouteOut,
 )
-from secondmind.config import AppConfig
+from secondmind.config import AppConfig, ModelRef, Step
 
 router = APIRouter()
 
@@ -76,21 +79,43 @@ async def meta(services: ServicesDep) -> MetaOut:
 
 def picker_out(config: AppConfig) -> PickerOut | None:
     routing, prices = config.routing, config.prices
-    if routing.default_choice is None:
+    if not routing.choices or not routing.typical_turn:
         return None
-    baseline = prices.baseline_ref
-    base_choice = routing.choice(baseline)
+
+    def turn_cost(model_for: Callable[[Step], ModelRef]) -> Decimal:
+        return sum(
+            (
+                prices.cost(
+                    model_for(step),
+                    input_tokens=profile.input,
+                    cached_input_tokens=0,
+                    output_tokens=profile.output,
+                )
+                for step, profile in routing.typical_turn.items()
+            ),
+            Decimal(0),
+        )
+
+    def auto_model(step: Step) -> ModelRef:
+        route = routing.route(step)
+        return route.configured or route.primary
+
+    auto = turn_cost(auto_model)
+
+    def relative(ref: ModelRef) -> float:
+        return round(float(turn_cost(lambda _step: ref) / auto), 1) if auto else 1.0
+
     return PickerOut(
-        default=str(routing.default_choice),
-        baseline=str(baseline),
-        baseline_label=base_choice.label if base_choice else baseline.model,
+        auto_note="Each step runs on the model that suits it: the best answer at the lowest price.",
+        auto_usd_per_turn=float(auto),
         choices=[
             ModelChoiceOut(
                 id=str(c.ref),
                 label=c.label,
                 provider=c.ref.provider,
                 provider_label=c.provider_label,
-                weight=float(prices.weight(c.ref)),
+                relative_price=relative(c.ref),
+                tiers=list(c.tiers),
                 simulated=c.simulated,
                 available=c.available,
             )

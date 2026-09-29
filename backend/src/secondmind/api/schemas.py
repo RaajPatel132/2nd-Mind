@@ -353,19 +353,22 @@ class ModelChoiceOut(_Out):
     label: str
     provider: str
     provider_label: str
-    weight: float = Field(
-        description="Quota tokens per token on this model, against the baseline (1 = baseline)."
+    relative_price: float = Field(
+        description="What a typical recall turn costs on this model, against Auto (1 = the same)."
     )
+    tiers: list[Tier] = Field(description="Who may pick it.")
     simulated: bool = Field(description="The fake provider stands in for it (no credentials).")
     available: bool = Field(description="False when it can't be used (live mode, no key).")
 
 
 class PickerOut(_Out):
-    """The model picker (ADR-0030): choices in display order, grouped by provider."""
+    """The model picker (ADR-0031). Auto (no `model`) is for everyone: each step runs on the
+    model that suits it. The choices are what a tier may pick instead, with their price against
+    Auto's, grouped by provider."""
 
-    default: str
-    baseline: str
-    baseline_label: str
+    auto_label: str = "Auto"
+    auto_note: str = Field(description="What Auto does, in a sentence.")
+    auto_usd_per_turn: float = Field(description="A typical recall turn on Auto, in dollars.")
     choices: list[ModelChoiceOut]
 
 
