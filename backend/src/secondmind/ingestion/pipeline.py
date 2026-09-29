@@ -386,6 +386,7 @@ class IngestionPipeline:
         errors = validate_extraction(out)
         if not errors:
             return out
+        log.info("ingest.extraction_retry", problems=_problems(errors))
         retry = [
             *messages,
             ChatMessage(role="assistant", content=out.model_dump_json()),
@@ -397,7 +398,7 @@ class IngestionPipeline:
         out = await ctx.steps.structured(Step.EXTRACT, ExtractOutput, variables, retry)
         errors = validate_extraction(out)
         if errors:
-            log.warning("ingest.extraction_invalid", errors=len(errors))
+            log.warning("ingest.extraction_invalid", problems=_problems(errors))
             raise ExtractionInvalidError(errors)
         return out
 
@@ -1123,6 +1124,15 @@ def _decision_event(
         rationale=" ".join(p.draft.content.rationale or "" for p in plans).strip(),
         decided_by=notes.models,
     )
+
+
+_QUOTED = re.compile(r"'[^']*'")
+
+
+def _problems(errors: Sequence[str]) -> list[str]:
+    """What was wrong with an extraction, for the log: the checks that failed, with the model's
+    own values (which can be the person's words) left out."""
+    return sorted({_QUOTED.sub("'…'", e) for e in errors})[:8]
 
 
 def _entities_context(known: Sequence[EntityRecord]) -> str:
