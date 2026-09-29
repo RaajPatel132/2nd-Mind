@@ -5,7 +5,8 @@ from typing import Any
 
 import pytest
 
-from secondmind.core import Shape, ToolCallEvent
+from secondmind.core import Kind, Shape, ToolCallEvent, new_id
+from secondmind.memory import WriterTurn
 from secondmind.providers import FakeOutcome, ProviderErrorKind
 from secondmind.retrieval import (
     SHAPE_TOOLS,
@@ -15,7 +16,16 @@ from secondmind.retrieval import (
     RecallSettings,
     fuse,
 )
-from tests.unit.retrieval.helpers import RecordingStore, Sink, fake, plan, run_recall, world
+from tests.unit.memory.helpers import create, item
+from tests.unit.retrieval.helpers import (
+    NOW,
+    RecordingStore,
+    Sink,
+    fake,
+    plan,
+    run_recall,
+    world,
+)
 
 
 def ran_tools(sink: Sink) -> set[str]:
@@ -527,3 +537,65 @@ async def test_a_failed_rerank_falls_back_to_the_fused_order_and_says_so() -> No
     assert event.rerank_note
     assert ran.reply == "You live in Pune [1]."
     assert ran.outcome.cited == [w.ids["pune"]]
+
+
+async def test_extras_for_a_period_belong_to_it_by_when_they_happened_or_were_said() -> None:
+    w = await world()
+    october = create(
+        item(
+            "I ran 8 km",
+            Kind.EPISODE,
+            occurred_start=datetime(2026, 10, 4, 1, 0, tzinfo=UTC),
+            mentioned_at=datetime(2026, 10, 4, 3, 0, tzinfo=UTC),
+        )
+    )
+    shoes = create(  # bought in August, said in September: a filter miss that still belongs
+        item(
+            "I bought running shoes",
+            Kind.EPISODE,
+            occurred_start=datetime(2026, 8, 28, 5, 0, tzinfo=UTC),
+            mentioned_at=datetime(2026, 9, 15, 5, 0, tzinfo=UTC),
+        )
+    )
+    writer = w.memory.writer(
+        w.scope,
+        WriterTurn(
+            turn_id=new_id(), workspace_id=w.scope.workspace_id, kind="system", now=NOW.instant
+        ),
+        confirmed=True,
+    )
+    writer.add(october, shoes)
+    await writer.commit()
+    every = _found(w.ids["run"], october.item_id, shoes.item_id)
+
+    def search(query: Any, filters: Filters, *_: Any, **__: Any) -> Any:
+        # The filtered search honours the period (finds nothing here); the soft channel doesn't.
+        return [] if filters.window is not None else every()
+
+    liked = FakeOutcome(
+        structured={"scores": [{"id": f"c{n}", "score": 0.9, "reason": "fits"} for n in (1, 2, 3)]}
+    )
+    ran = await run_recall(
+        w,
+        "Anything from last month about running?",
+        fake(
+            (
+                "plan",
+                plan(
+                    {
+                        "question": "Anything from last month about running?",
+                        "shape": "time_window",
+                        "about": "running",
+                        "times": [{"expression": "last month", "clock": "occurred"}],
+                    }
+                ),
+            ),
+            ("rerank", liked),
+        ),
+        RecordingStore(results={"search": search}),
+    )
+    candidates = ran.events.of("retrieval")[0].sub_queries[0].candidates
+    selected = {c.title for c in candidates if c.selected}
+    assert selected == {"I ran 5 km", "I bought running shoes"}
+    left_out = next(c for c in candidates if c.title == "I ran 8 km")
+    assert not left_out.selected

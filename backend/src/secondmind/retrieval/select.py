@@ -101,6 +101,7 @@ def select(
     reranked: bool,
     settings: SelectSettings,
     counted: Sequence[uuid.UUID] = (),
+    items: Mapping[uuid.UUID, ItemRecord] | None = None,
 ) -> Selection:
     """Decide what reaches the answer; marks ``selected`` and ``reason`` on every candidate."""
     if sub.missing_entity:
@@ -116,7 +117,7 @@ def select(
             c.reason = "counted, so cited" if c.selected else "not counted"
         return Selection(selected=chosen)
     if sub.shape in LIST_LIKE or (sub.expansion and sub.expansion.source == "code"):
-        return _select_list(sub, candidates, reranked=reranked, settings=settings)
+        return _select_list(sub, candidates, reranked=reranked, settings=settings, items=items)
     return _select_ranked(candidates, reranked=reranked, settings=settings)
 
 
@@ -126,16 +127,39 @@ def _passes(c: Candidate, reranked: bool, settings: SelectSettings) -> bool:
     return bool(c.lexical)
 
 
+def _in_window(sub: SubQuery, item: ItemRecord) -> bool:
+    """Whether a memory belongs to the question's period by when it happened or was said. A
+    purchase made in August and mentioned in September is a "filter miss" that still belongs
+    to September's answers; something that happened and was said after the period doesn't."""
+    window = sub.window
+    if window is None:
+        return True
+    moments = [d for d in (item.occurred_start, item.due_at, item.mentioned_at) if d is not None]
+    return any(window.contains(moment) for moment in moments)
+
+
 def _select_list(
-    sub: SubQuery, candidates: Sequence[Candidate], *, reranked: bool, settings: SelectSettings
+    sub: SubQuery,
+    candidates: Sequence[Candidate],
+    *,
+    reranked: bool,
+    settings: SelectSettings,
+    items: Mapping[uuid.UUID, ItemRecord] | None = None,
 ) -> Selection:
     base = _current_first([c for c in candidates if c.filtered])
-    # A set is an exact operation: something similar that failed it isn't an extra.
-    extras = [
-        c
-        for c in candidates
-        if c.soft_only and _passes(c, reranked, settings) and sub.shape is not Shape.SET
-    ]
+
+    def joins(c: Candidate) -> bool:
+        if not (c.soft_only and _passes(c, reranked, settings)):
+            return False
+        # A set is an exact operation: something similar that failed it isn't an extra.
+        if sub.shape is Shape.SET:
+            return False
+        item = items.get(c.item_id) if items is not None else None
+        return not (
+            sub.shape is Shape.TIME_WINDOW and item is not None and not _in_window(sub, item)
+        )
+
+    extras = [c for c in candidates if joins(c)]
     kept = base[: settings.list_max_items]
     more = max(0, len(base) - len(kept))
     chosen = kept + extras[: settings.answer_top_k]

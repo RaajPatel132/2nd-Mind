@@ -617,6 +617,7 @@ class RecallPipeline:
                 reranked=mode == "model",
                 settings=self._s.select,
                 counted=counted,
+                items=h.items,
             )
             if run.sub.shape is Shape.COUNT and run.aggregate is not None:
                 run.count_check = count_check(
