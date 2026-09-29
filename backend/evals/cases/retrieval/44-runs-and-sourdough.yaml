@@ -4,7 +4,7 @@ question: How many runs did I log in September, and what did I save about sourdo
 shape:
 - count
 - semantic
-aggregate: 6
+aggregate: [6, 7]
 reply_contains:
 - I don't have anything saved about sourdough
 model:

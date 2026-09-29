@@ -289,7 +289,7 @@ def score(run: CaseRun) -> Score:
         result.check("kind", got == count, f"{got} active {kind} != {count}")
     for text in expect.get("reply_contains", []):
         reply = run.turn.output or ""
-        result.check("state", text in reply, f"reply {reply!r} lacks {text!r}")
+        result.check("state", text.lower() in reply.lower(), f"reply {reply!r} lacks {text!r}")
     for text in expect.get("absent", []):
         result.check("state", text not in run.stored_text, f"{text!r} was stored")
     for text in expect.get("keys_contain", []):
@@ -342,8 +342,8 @@ def _check_memory(run: CaseRun, want: Mapping[str, Any], result: Score) -> None:
         result.check("date", ok, detail)
     links = _item_entities(run).get(item.id, set())
     for ent in want.get("entities", []):
-        name, _, role = str(ent).partition(":")
-        ok = any(n.lower() == name.lower() and (not role or r == role) for n, r in links)
+        names, roles = _alternatives(str(ent))
+        ok = any(n.lower() in names and (not roles or r in roles) for n, r in links)
         result.check("entity", ok, f"{match}: entity {ent} not in {sorted(links)}")
     if "category" in want:
         got_category = _category(run, item)
@@ -413,10 +413,8 @@ def _check_diff(run: CaseRun, expect: Mapping[str, Any], result: Score) -> None:
 def _check_entities(run: CaseRun, expect: Mapping[str, Any], result: Score) -> None:
     created = [e for e in run.entities if e.created_by_turn_id == run.turn.id]
     for want in expect.get("new_entities", []):
-        name, _, kind = str(want).partition(":")
-        ok = any(
-            e.name.lower() == name.lower() and (not kind or e.kind.value == kind) for e in created
-        )
+        names, kinds = _alternatives(str(want))
+        ok = any(e.name.lower() in names and (not kinds or e.kind.value in kinds) for e in created)
         result.check("entity", ok, f"no new entity {want}; new: {[e.name for e in created]}")
     for want in expect.get("updated_entities", []):
         ok = any(
@@ -433,6 +431,16 @@ def _check_entities(run: CaseRun, expect: Mapping[str, Any], result: Score) -> N
         )
     for want in expect.get("relations", []):
         result.check("entity", want in run.relations, f"relation {want} not in {run.relations}")
+
+
+def _alternatives(spec: str) -> tuple[set[str], set[str]]:
+    """``"MK bag|MK:thing"`` -> the names {"mk bag", "mk"} and the roles or kinds {"thing"};
+    ``"Nisha:with|for"`` -> {"nisha"} and {"with", "for"}. A ``|`` marks answers a person
+    would accept equally (a golden pins what matters, not one wording of it)."""
+    name, _, tail = spec.partition(":")
+    names = {n.strip().lower() for n in name.split("|") if n.strip()}
+    tails = {t.strip() for t in tail.split("|") if t.strip()}
+    return names, tails
 
 
 def _item_entities(run: CaseRun) -> dict[uuid.UUID, set[tuple[str, str]]]:

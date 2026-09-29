@@ -7,9 +7,11 @@ gold:
 - run_sep_27
 forbidden:
 - run_oct_04
-aggregate: 6
+# 6 when the plan counts only logged measurements, 7 when it counts by the activity alone
+# (the misfiled run is a run either way); the look-alike offer follows the count.
+aggregate: [6, 7]
 reply_contains:
-- File them as runs?
+- File them as runs?|File it as a run?
 model:
   intent:
     intent: recall

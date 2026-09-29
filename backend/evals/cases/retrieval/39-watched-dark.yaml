@@ -1,8 +1,14 @@
 id: 39-watched-dark
-title: 'Modality abstain: wanting to watch is not having watched'
+title: 'Modality: wanting to watch is not having watched'
+# Live models answer this better than by abstaining: "You haven't watched Dark yet, it's on
+# your wish list". So the case checks that the wish is what gets cited, and never an episode
+# of watching it. (The abstain slot moved to 51-kabir-colour.)
 question: Have I watched Dark?
 shape: exact
-must_abstain: true
+gold:
+- watch_dark
+forbidden:
+- watched_severance
 model:
   intent:
     intent: recall
@@ -20,7 +26,7 @@ model:
         - episode
   rerank:
   - match: Dark
-    score: 0.15
+    score: 0.8
     state: wanted
   - match: Severance
     score: 0.1

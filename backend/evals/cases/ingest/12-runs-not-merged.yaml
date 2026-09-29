@@ -40,4 +40,6 @@ expect:
       dates: [{clock: occurred, value: "2026-09-23T08:00", precision: datetime}]
       reconcile: new
   counts: {episode: 2}
-  keys_contain: ["Logged run: I ran 5 km in 31 minutes on Wednesday 23 September 2026, in the morning."]
+  # The key carries the run's date, so two runs on different days read differently. (The
+  # wording of "31 minutes" is the model's; the date is code's.)
+  keys_contain: ["Logged run: I ran 5 km in 31", "on Wednesday 23 September 2026, in the morning."]

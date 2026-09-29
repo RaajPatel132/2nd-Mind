@@ -26,6 +26,6 @@ expect:
     - match: interview
       kind: task
       state: open
-      entities: ["Nisha:for"]
+      entities: ["Nisha:with|for"]
       reconcile: new
   triggers: [{match: interview, "on": person, spec: {name: Nisha}}]

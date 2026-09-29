@@ -107,7 +107,7 @@ def _recall(harness: Harness) -> RunRecord:
         suite="recall",
         id_of=lambda c: c.id,
         tags_of=case_tags,
-        stratum_of=lambda c: c.shape[0] if c.shape else "?",
+        stratum_of=lambda c: c.primary_shape,
     )
     if not cases:
         raise BudgetRefusedError("no cases selected")

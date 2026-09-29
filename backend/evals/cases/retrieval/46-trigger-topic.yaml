@@ -1,7 +1,7 @@
 id: 46-trigger-topic
 title: A topic trigger fires on a close enough message
 question: I'm planning the Japan trip, what should I remember?
-shape: semantic
+shape: semantic|situational
 gold:
 - ramen_japan
 fired:

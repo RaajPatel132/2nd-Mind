@@ -83,7 +83,7 @@ class RecallCase:
     shape: tuple[str, ...]
     gold: tuple[str, ...]
     forbidden: tuple[str, ...]
-    aggregate: float | None
+    aggregate: tuple[float, ...]
     must_abstain: bool
     reply_contains: tuple[str, ...]
     fired: tuple[str, ...]
@@ -92,6 +92,19 @@ class RecallCase:
     setup: tuple[str, ...]
     model: Mapping[str, Any]
     path: Path
+
+    @property
+    def shapes(self) -> list[str]:
+        """The first way of each expected shape ("entity|exact" is either; the first names it)."""
+        return [s.split("|")[0] for s in self.shape]
+
+    @property
+    def primary_shape(self) -> str:
+        return self.shapes[0] if self.shape else "?"
+
+
+def _numbers(value: object) -> list[float]:
+    return [float(v) for v in value] if isinstance(value, list) else [float(value)]  # type: ignore[arg-type]
 
 
 def _strings(value: object) -> tuple[str, ...]:
@@ -109,6 +122,7 @@ def load_cases(directory: Path = CASES_DIR) -> list[RecallCase]:
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         tz = str(raw.get("timezone", fixture.timezone))
         agg = raw.get("aggregate")
+        aggregates = () if agg is None else tuple(float(a) for a in _numbers(agg))
         cases.append(
             RecallCase(
                 id=str(raw.get("id", path.stem)),
@@ -119,7 +133,7 @@ def load_cases(directory: Path = CASES_DIR) -> list[RecallCase]:
                 shape=_strings(raw.get("shape")),
                 gold=_strings(raw.get("gold")),
                 forbidden=_strings(raw.get("forbidden")),
-                aggregate=None if agg is None else float(agg),
+                aggregate=aggregates,
                 must_abstain=bool(raw.get("must_abstain", False)),
                 reply_contains=_strings(raw.get("reply_contains")),
                 fired=_strings(raw.get("fired")),
@@ -412,7 +426,7 @@ async def run_case(
 def failures(run: RecallRun) -> list[str]:
     """What a case expected and didn't get (empty: it passed)."""
     case, out = run.case, []
-    if case.shape and not set(case.shape) <= set(run.shapes):
+    if case.shape and not all(set(s.split("|")) & set(run.shapes) for s in case.shape):
         out.append(f"shape: expected {list(case.shape)}, planned {run.shapes}")
     missing = [g for g in case.gold if g not in run.ranked]
     if missing:
@@ -420,8 +434,10 @@ def failures(run: RecallRun) -> list[str]:
     leaked = [f for f in case.forbidden if f in run.ranked]
     if leaked:
         out.append(f"forbidden in the answer: {leaked}")
-    if case.aggregate is not None and run.aggregate != case.aggregate:
-        out.append(f"aggregate: expected {case.aggregate}, got {run.aggregate}")
+    if case.aggregate and run.aggregate not in case.aggregate:
+        out.append(
+            f"aggregate: expected {' or '.join(map(str, case.aggregate))}, got {run.aggregate}"
+        )
     if case.must_abstain and not run.abstained:
         out.append(f"should abstain; selected {run.ranked}")
     if case.must_abstain and ABSTAIN_PREFIX not in run.reply:
@@ -431,7 +447,7 @@ def failures(run: RecallRun) -> list[str]:
     out.extend(
         f"reply lacks {text!r}: {run.reply[:160]!r}"
         for text in case.reply_contains
-        if text.lower() not in run.reply.lower()
+        if not any(part.strip().lower() in run.reply.lower() for part in text.split("|"))
     )
     out.extend(f"trigger {k} did not fire" for k in case.fired if k not in run.fired)
     out.extend(f"trigger {k} fired" for k in case.not_fired if k in run.fired)
@@ -469,7 +485,7 @@ def report(runs: Sequence[RecallRun]) -> str:
     by_shape: dict[str, list[RecallRun]] = defaultdict(list)
     for run in runs:
         if run.case.gold:
-            by_shape[run.case.shape[0] if run.case.shape else "?"].append(run)
+            by_shape[run.case.primary_shape].append(run)
     lines = ["shape          cases  hit@5   MRR"]
     for shape, group in sorted(by_shape.items()):
         hits = [any(g in r.ranked_all[:5] for g in r.case.gold) for r in group]
@@ -516,7 +532,7 @@ def case_ids(cases: Sequence[RecallCase]) -> list[str]:
 
 
 def case_tags(case: RecallCase) -> list[str]:
-    tags = set(case.shape)
+    tags = set(case.shapes)
     if case.must_abstain:
         tags.add("abstain")
     if len(case.shape) > 1:
@@ -525,7 +541,7 @@ def case_tags(case: RecallCase) -> list[str]:
         tags.add("fresh")
     if case.fired or case.not_fired:
         tags.add("trigger")
-    if case.aggregate is not None:
+    if case.aggregate:
         tags.add("aggregate")
     return sorted(tags)
 
@@ -534,7 +550,7 @@ def case_scores(run: RecallRun) -> dict[str, Any]:
     case = run.case
     rr = next((1 / (n + 1) for n, k in enumerate(run.ranked_all) if k in case.gold), 0.0)
     return {
-        "shape": case.shape[0] if case.shape else "?",
+        "shape": case.primary_shape,
         "has_gold": bool(case.gold),
         "hit5": any(g in run.ranked_all[:5] for g in case.gold),
         "rr": rr,

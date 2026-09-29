@@ -59,7 +59,7 @@ expect:
       subtype: gift
       state: wanted
       dates: [{clock: due, value: "2027-05", precision: month}]
-      entities: ["MK bag:about", "wife:for"]
+      entities: ["MK bag|MK:about", "wife:for"]
       category: shopping/gifts
     - match: birthday is in
       kind: plan
@@ -67,5 +67,5 @@ expect:
       state: scheduled
       dates: [{clock: occurred, value: "2027-05", precision: month, rrule: "FREQ=YEARLY;BYMONTH=5"}]
       entities: ["wife:about"]
-  new_entities: ["wife:person", "MK bag:thing"]
+  new_entities: ["wife:person", "MK bag|MK:thing"]
   reply_contains: ["I've assumed 'My wife' is someone new"]

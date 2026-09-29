@@ -18,7 +18,7 @@ model:
         category: health/fitness
         entities: [{entity: e1, role: about}]
         times: [{id: t1, expression: in Feb, clock: due, direction: future}]
-        layer: core
+        layer: quick
         layer_rationale: An active goal.
 expect:
   memories:
@@ -27,5 +27,5 @@ expect:
       state: active
       dates: [{clock: due, value: "2027-02", precision: month}]
       entities: ["Half marathon:about"]
-      layer: core
+      layer: quick
   new_entities: ["Half marathon:project"]

@@ -1,0 +1,22 @@
+id: 51-kabir-colour
+title: No answer about a known person's attribute nobody saved
+question: What's Kabir's favourite colour?
+shape: exact
+must_abstain: true
+model:
+  intent:
+    intent: recall
+    confidence: 0.9
+    reason: asks about saved things
+  plan:
+    sub_queries:
+    - shape: exact
+      question: What's Kabir's favourite colour?
+      topic: Kabir's favourite colour
+      entities:
+      - mention: Kabir
+      filters:
+        predicate: favourite_colour
+  rerank:
+  - match: Kabir
+    score: 0.1
