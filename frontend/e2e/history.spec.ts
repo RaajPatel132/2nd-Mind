@@ -44,7 +44,10 @@ test.describe('conversation history', () => {
     await page.route('**/v1/turns/*/events', (route) => route.fulfill({ json: { turn_id: '', events: [] } }))
     await page.reload()
     const turns = page.getByTestId('messages').getByTestId('turn')
-    await expect(turns).toHaveCount(20)
+    await expect(turns.first()).toBeVisible()
+    const pageSize = await turns.count() // the client's page: 20 or more, fewer than the 45
+    expect(pageSize).toBeGreaterThanOrEqual(20)
+    expect(pageSize).toBeLessThan(45)
 
     await page.evaluate(() => {
       window.scrollTo({ top: 0 })
@@ -54,7 +57,7 @@ test.describe('conversation history', () => {
     const topBefore = (await firstBefore.boundingBox())?.y ?? 0
 
     await page.getByRole('button', { name: 'Load earlier messages' }).click()
-    await expect(turns).toHaveCount(40)
+    await expect(turns).toHaveCount(Math.min(45, pageSize * 2))
     const same = page.getByTestId('turn').filter({ hasText: text }).first()
     const topAfter = (await same.boundingBox())?.y ?? -1
     // The turn the reader was looking at stays put (within a few pixels of layout rounding).

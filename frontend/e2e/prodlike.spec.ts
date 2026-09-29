@@ -8,7 +8,7 @@ import { freshUser, inspect, send } from './helpers.ts'
  * model's wording; the fake-provider run stays the CI gate.
  *
  *   E2E_ACCESS_CODE=… E2E_COMPOSE="-p secondmind-prodlike -f ../compose.yaml -f ../compose.prodlike.yaml …" \
- *     npx playwright test --grep @prodlike --project=desktop
+ *     npx playwright test --grep @prodlike --project=desktop --project=spend
  */
 test.skip(!process.env.E2E_ACCESS_CODE, 'runs against the production-shaped stack only')
 test.describe.configure({ mode: 'serial' })

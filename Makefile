@@ -26,12 +26,14 @@ install: ## Install backend, frontend and repo tooling (git hooks)
 # ------------------------------------------------------------------ local stack
 .PHONY: up
 up: ## Build and start the whole stack, wait until healthy, print URLs
-	$(COMPOSE) up -d --build --wait
+	$(COMPOSE) build api web
+	$(COMPOSE) up -d --wait
 	@scripts/print-urls.sh
 
 .PHONY: up-live
 up-live: ## The stack on real providers (keys from .env; a missing key refuses to start)
-	MODEL_PROVIDER_MODE=live $(COMPOSE) up -d --build --wait
+	$(COMPOSE) build api web
+	MODEL_PROVIDER_MODE=live $(COMPOSE) up -d --wait
 	@scripts/print-urls.sh
 
 .PHONY: down
@@ -226,7 +228,8 @@ scan-images: images ## Trivy scan: fail on fixable CRITICAL vulnerabilities
 
 .PHONY: e2e
 e2e: ## Playwright smoke test against the compose stack in fake-provider mode
-	MODEL_PROVIDER_MODE=fake $(COMPOSE) up -d --build --wait
+	$(COMPOSE) build api web
+	MODEL_PROVIDER_MODE=fake $(COMPOSE) up -d --wait
 	cd frontend && E2E_BASE_URL=$(WEB_URL) npx playwright test
 
 # ------------------------------------------------------------------ codegen and formatting

@@ -16,10 +16,18 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', testIgnore: /motion\.spec/, use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile-360', testIgnore: /motion\.spec/, use: { ...devices['Pixel 5'], viewport: { width: 360, height: 740 } } },
+    { name: 'desktop', testIgnore: /motion\.spec|spend\.spec/, use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
+    { name: 'mobile-360', testIgnore: /motion\.spec|spend\.spec/, use: { ...devices['Pixel 5'], viewport: { width: 360, height: 740 } } },
     // UI.13: the docked inspector and the widest layout.
     { name: 'wide-1440', testMatch: /(layout|a11y)\.spec/, use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // The kill switch is app-wide, so its spec runs alone, after every other project has finished
+    // (a paused app would fail whatever else is sending at the time).
+    {
+      name: 'spend',
+      testMatch: /spend\.spec/,
+      dependencies: ['desktop', 'mobile-360', 'wide-1440', 'reduced-motion'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
     // UI.13: a whole turn with the OS asking for less motion.
     {
       name: 'reduced-motion',
