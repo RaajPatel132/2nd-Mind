@@ -35,3 +35,7 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0028](0028-ink-design-system.md) | Ink design system; the glass box inline as the Trail | accepted |
 | [0029](0029-agent-steps-on-the-stream.md) | Agent steps on the turn stream (amends 0015) | accepted |
 | [0030](0030-model-picker-and-weighted-quota.md) | A model picker and a quota weighted by model price | accepted |
+| [0031](0031-economy-routing-from-measurement.md) | Economy routing from measurement; a tiered picker | accepted |
+| [0032](0032-spend-safety.md) | Spend safety: kill switch, caps, provider credit, dollar quotas, rate limits | accepted |
+| [0033](0033-supported-postgres-features.md) | The Postgres features we rely on, checked against RDS Postgres 16 | accepted |
+| [0034](0034-web-hardening-and-staging-access.md) | Web hardening and staging access | accepted |
