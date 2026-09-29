@@ -75,8 +75,10 @@ export async function getMe(): Promise<Me | null> {
   return data
 }
 
-export async function devLogin(): Promise<Me> {
-  return unwrap(await api.POST('/v1/auth/dev-login'))
+/** Dev sign-in; on staging it needs the access code, and each email is its own person. */
+export async function devLogin(credentials?: { email: string; accessCode: string }): Promise<Me> {
+  const body = credentials ? { email: credentials.email, access_code: credentials.accessCode } : undefined
+  return unwrap(await api.POST('/v1/auth/dev-login', { body }))
 }
 
 export async function logout(): Promise<void> {
@@ -84,7 +86,7 @@ export async function logout(): Promise<void> {
   if (!response.ok) throw toError(response.status, undefined)
 }
 
-/** The signed-in user's quota: tier, limit, used and remaining tokens (read only until S4). */
+/** The signed-in user's quota in dollars, and whether new turns are stopped (ADR-0032). */
 export async function getUsage(): Promise<Usage> {
   return unwrap(await api.GET('/v1/me/usage'))
 }

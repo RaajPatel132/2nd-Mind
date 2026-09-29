@@ -528,8 +528,21 @@
       },
       "DevLoginIn": {
         "additionalProperties": false,
-        "description": "Optional: log in as another dev user (dev auth only), e.g. a fresh one per E2E test.",
+        "description": "Log in as a dev user (dev auth only): optionally another one, e.g. a fresh one per E2E\ntest. On staging the access code is required, and each email is its own user.",
         "properties": {
+          "access_code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "STAGING_ACCESS_CODE (staging only).",
+            "title": "Access Code"
+          },
           "email": {
             "anyOf": [
               {
@@ -2191,6 +2204,12 @@
       },
       "MetaOut": {
         "properties": {
+          "access_code_required": {
+            "default": false,
+            "description": "Signing in needs the staging access code.",
+            "title": "Access Code Required",
+            "type": "boolean"
+          },
           "config_hash": {
             "title": "Config Hash",
             "type": "string"
@@ -4897,7 +4916,7 @@
     },
     "/v1/auth/dev-login": {
       "post": {
-        "description": "Create or reuse the dev user (or the one named in the body) and their private workspace;\nset the session cookie.",
+        "description": "Create or reuse the dev user (or the one named in the body) and their private workspace;\nset the session cookie. On staging the access code is required first (R.11): compared in\nconstant time, attempts per address limited, and each email is its own user, so isolation\nstill applies between the people who hold the code.",
         "operationId": "dev_login",
         "requestBody": {
           "content": {
@@ -4956,6 +4975,24 @@
               }
             },
             "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "summary": "Dev Login",

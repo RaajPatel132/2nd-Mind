@@ -6,7 +6,7 @@ import { Inspector } from './components/Inspector'
 import { ItemContext, type ItemActions, type ItemField } from './components/itemContext'
 import { ItemSheet } from './components/ItemSheet'
 import { UpcomingPage } from './components/UpcomingPage'
-import { BootError, Connecting, SignedOut } from './components/Screens'
+import { AccessGate, BootError, Connecting, SignedOut } from './components/Screens'
 import { TopBar } from './components/TopBar'
 import { useConversation } from './hooks/useConversation'
 import { useHeldActions } from './hooks/useHeldActions'
@@ -21,6 +21,7 @@ export default function App() {
   const state = useSession()
   if (state.status === 'loading') return <Connecting />
   if (state.status === 'signed-out') return <SignedOut onSignIn={state.retry} />
+  if (state.status === 'needs-code') return <AccessGate onSignIn={state.signIn} />
   if (state.status === 'error') return <BootError message={state.message} onRetry={state.retry} />
   return <Workspace key={state.session.workspace.id} session={state.session} />
 }

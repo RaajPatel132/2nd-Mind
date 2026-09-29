@@ -69,6 +69,7 @@ async def meta(services: ServicesDep) -> MetaOut:
         prompts=config.prompts.refs(),
         substitutions=config.routing.substitutions,
         dev_auth=settings.dev_auth,
+        access_code_required=settings.dev_auth and settings.env == "staging",
         tracing_enabled=services.tracer.enabled,
     )
 

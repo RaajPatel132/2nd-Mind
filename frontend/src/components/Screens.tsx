@@ -1,7 +1,7 @@
 import { RotateCcw } from 'lucide-react'
 import { motion } from 'motion/react'
-import type { ReactNode } from 'react'
-import { BrandMark, Button } from '../ui'
+import { useState, type ReactNode, type SubmitEvent } from 'react'
+import { BrandMark, Button, TextField } from '../ui'
 import { motionProps } from '../ui/motion'
 
 function Screen({ children }: { children: ReactNode }) {
@@ -53,6 +53,43 @@ export function SignedOut({ onSignIn }: { onSignIn: () => void }) {
       <Button variant="primary" onClick={onSignIn}>
         Sign in again
       </Button>
+    </Screen>
+  )
+}
+
+/** Staging: the way in is an email and the access code, until real accounts arrive. */
+export function AccessGate({ onSignIn }: { onSignIn: (email: string, accessCode: string) => Promise<string | null> }) {
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [problem, setProblem] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: SubmitEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setProblem(await onSignIn(email.trim(), code))
+    setBusy(false)
+  }
+
+  return (
+    <Screen>
+      <BrandMark size="lg" />
+      <div>
+        <p className="m-0 font-voice text-title-lg text-fg">This is a private preview.</p>
+        <p className="m-0 mt-1 text-label font-normal text-fg-3">Use the access code you were given. Your email keeps your memory apart from everyone else&apos;s.</p>
+      </div>
+      <form onSubmit={(e) => void submit(e)} className="grid w-full max-w-72 gap-3 text-left" data-testid="access-gate">
+        <TextField label="Email" type="email" autoComplete="email" required value={email} onChange={(e) => { setEmail(e.target.value) }} />
+        <TextField label="Access code" type="password" autoComplete="off" required value={code} onChange={(e) => { setCode(e.target.value) }} />
+        {problem && (
+          <p className="m-0 text-label text-bad" role="alert" data-testid="access-problem">
+            {problem}
+          </p>
+        )}
+        <Button variant="primary" type="submit" disabled={busy || !email || !code}>
+          {busy ? 'Checking…' : 'Continue'}
+        </Button>
+      </form>
     </Screen>
   )
 }

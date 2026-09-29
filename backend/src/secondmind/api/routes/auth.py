@@ -1,26 +1,34 @@
 """Dev-only auth (DEV_AUTH=true): a dev user and their private workspace, via a signed cookie.
 Refused at start-up when ENV=production. Real auth replaces this in S4/S6."""
 
-from fastapi import APIRouter, Response
+import hmac
+
+from fastapi import APIRouter, Request, Response
 
 from secondmind.api.deps import SESSION_COOKIE, ServicesDep, UserIdDep
-from secondmind.api.errors import ERROR_RESPONSES
+from secondmind.api.errors import ERROR_RESPONSES, RATE_LIMITED_RESPONSE
 from secondmind.api.routes.turns import usage_for
 from secondmind.api.schemas import DevLoginIn, MeOut, UsageOut
-from secondmind.core import NotFoundError, UnauthenticatedError
+from secondmind.core import NotFoundError, RateLimitedError, UnauthenticatedError
 
 router = APIRouter(prefix="/v1", tags=["auth"])
 
 
-@router.post("/auth/dev-login", response_model=MeOut, responses=ERROR_RESPONSES)
+@router.post(
+    "/auth/dev-login", response_model=MeOut, responses={**ERROR_RESPONSES, **RATE_LIMITED_RESPONSE}
+)
 async def dev_login(
-    services: ServicesDep, response: Response, body: DevLoginIn | None = None
+    request: Request, services: ServicesDep, response: Response, body: DevLoginIn | None = None
 ) -> MeOut:
     """Create or reuse the dev user (or the one named in the body) and their private workspace;
-    set the session cookie."""
+    set the session cookie. On staging the access code is required first (R.11): compared in
+    constant time, attempts per address limited, and each email is its own user, so isolation
+    still applies between the people who hold the code."""
     settings = services.config.settings
     if not settings.dev_auth:
         raise NotFoundError("not found")
+    if settings.env == "staging":
+        await _check_access_code(request, services, body)
     email = body.email if body is not None and body.email else settings.dev_user_email
     user, workspace = await services.identity.ensure_user_with_private_workspace(
         email=email, timezone=settings.default_timezone
@@ -35,6 +43,22 @@ async def dev_login(
         path="/",
     )
     return MeOut.of(user, [workspace])
+
+
+async def _check_access_code(
+    request: Request, services: ServicesDep, body: DevLoginIn | None
+) -> None:
+    settings = services.config.settings
+    caller = request.client.host if request.client else "unknown"
+    wait = await services.gate.rate_limited(f"login:{caller}", settings.login_attempts_per_minute)
+    if wait is not None:
+        raise RateLimitedError("Too many attempts. Wait a moment and try again.", wait)
+    expected = settings.staging_access_code
+    given = (body.access_code if body is not None and body.access_code else "").encode()
+    # Always compare, whatever was sent, so the time taken says nothing about the code.
+    ok = expected is not None and hmac.compare_digest(given, expected.get_secret_value().encode())
+    if not ok:
+        raise UnauthenticatedError("That access code isn't right.")
 
 
 @router.post("/auth/logout", status_code=204)
