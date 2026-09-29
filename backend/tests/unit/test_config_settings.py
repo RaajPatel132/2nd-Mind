@@ -50,6 +50,92 @@ def test_content_logging_is_refused_in_production(base_env: dict[str, str]) -> N
         load_settings(base_env)
 
 
+SECURE_SECRET = "a-long-random-staging-secret-value-0123456789"
+
+
+def deployed(base_env: dict[str, str], env: str = "staging", **changes: str) -> dict[str, str]:
+    """A configuration that satisfies every start-up guard for ``env``, changed as asked."""
+    return (
+        base_env
+        | {
+            "ENV": env,
+            "SESSION_SECRET": SECURE_SECRET,
+            "SESSION_COOKIE_SECURE": "true",
+            "MODEL_PROVIDER_MODE": "live",
+            "ANTHROPIC_API_KEY": "sk-ant-not-a-real-key-for-the-guard-test",
+            "OPENAI_API_KEY": "sk-not-a-real-key-for-the-guard-test-00",
+            "TRACING_ENABLED": "false",
+        }
+        | changes
+    )
+
+
+def test_a_staging_configuration_that_meets_every_guard_loads(base_env: dict[str, str]) -> None:
+    assert load_settings(deployed(base_env)).env == "staging"
+    assert load_settings(deployed(base_env, "production")).env == "production"
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        (
+            {"SESSION_SECRET": "test-secret-test-secret-test-secret-000"},
+            "SESSION_SECRET must not be the example value",
+        ),
+        (
+            {"SESSION_SECRET": "change-me-local-dev-secret-0123456789abcdef"},
+            "SESSION_SECRET must not be the example value",
+        ),
+        ({"SESSION_COOKIE_SECURE": "false"}, "SESSION_COOKIE_SECURE must be true"),
+        ({"MODEL_PROVIDER_MODE": "auto"}, "MODEL_PROVIDER_MODE must be live"),
+        ({"MODEL_PROVIDER_MODE": "fake"}, "MODEL_PROVIDER_MODE must be live"),
+        ({"TRACING_ENABLED": "true"}, "tracing is on but not configured"),
+        ({"LOG_INCLUDE_CONTENT": "true"}, "LOG_INCLUDE_CONTENT must be false"),
+    ],
+)
+@pytest.mark.parametrize("env", ["staging", "production"])
+def test_each_deployed_guard_refuses_start_up(
+    base_env: dict[str, str], env: str, change: dict[str, str], message: str
+) -> None:
+    with pytest.raises(ConfigError, match=message):
+        load_settings(deployed(base_env, env, **change))
+
+
+def test_tracing_may_be_on_when_it_is_configured_or_off_on_purpose(
+    base_env: dict[str, str],
+) -> None:
+    configured = {
+        "TRACING_ENABLED": "true",
+        "LANGFUSE_HOST": "https://cloud.langfuse.example",
+        "LANGFUSE_PUBLIC_KEY": "pk-lf-not-real",
+        "LANGFUSE_SECRET_KEY": "sk-lf-not-real",
+    }
+    assert load_settings(deployed(base_env, **configured)).tracing_configured
+    assert not load_settings(deployed(base_env, TRACING_ENABLED="false")).tracing_configured
+
+
+def test_dev_login_on_staging_needs_the_access_code(base_env: dict[str, str]) -> None:
+    with pytest.raises(ConfigError, match="STAGING_ACCESS_CODE"):
+        load_settings(deployed(base_env, DEV_AUTH="true"))
+    ok = load_settings(deployed(base_env, DEV_AUTH="true", STAGING_ACCESS_CODE="open-sesame-42"))
+    assert ok.staging_access_code is not None
+    assert ok.staging_access_code.get_secret_value() == "open-sesame-42"
+
+
+def test_production_still_refuses_dev_auth_even_with_an_access_code(
+    base_env: dict[str, str],
+) -> None:
+    changes = {"DEV_AUTH": "true", "STAGING_ACCESS_CODE": "open-sesame-42"}
+    with pytest.raises(ConfigError, match="DEV_AUTH must be false when ENV=production"):
+        load_settings(deployed(base_env, "production", **changes))
+
+
+def test_local_and_test_environments_have_no_deployed_guards(base_env: dict[str, str]) -> None:
+    # The defaults a developer starts with still work: the guards are for shared infrastructure.
+    for env in ("development", "test"):
+        assert load_settings(base_env | {"ENV": env}).env == env
+
+
 def test_empty_values_count_as_unset(base_env: dict[str, str]) -> None:
     base_env["ANTHROPIC_API_KEY"] = "   "
     assert load_settings(base_env).anthropic_api_key is None
