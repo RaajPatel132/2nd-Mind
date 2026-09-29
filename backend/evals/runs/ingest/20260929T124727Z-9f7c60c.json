@@ -1,0 +1,460 @@
+{
+ "schema_version": 1,
+ "run_id": "20260929T124727Z-9f7c60c",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "reference",
+ "started_at": "2026-09-29T12:47:27.171343Z",
+ "finished_at": "2026-09-29T12:49:29.538642Z",
+ "git_sha": "9f7c60cdcc12",
+ "git_dirty": true,
+ "config_hash": "cb2a429e906162a91e3d014e0f80be0489bd07bed0ff93077d9e7d29a49c2b17",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@3",
+  "extract": "extract@6",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@3",
+  "rerank": "rerank@3",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "anthropic:claude-sonnet-5",
+  "extract": "anthropic:claude-sonnet-5",
+  "resolve": "anthropic:claude-sonnet-5",
+  "enrich": "anthropic:claude-sonnet-5",
+  "reconcile": "anthropic:claude-sonnet-5",
+  "plan": "anthropic:claude-sonnet-5",
+  "rerank": "anthropic:claude-sonnet-5",
+  "correct": "anthropic:claude-sonnet-5",
+  "answer": "anthropic:claude-sonnet-5",
+  "judge": "anthropic:claude-sonnet-5",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
+  "cases": [
+   "@reference"
+  ]
+ },
+ "batch": "B4",
+ "budget_usd": 0.32,
+ "estimate_usd": 0.20491758,
+ "status": "complete",
+ "note": "B4: Sonnet 5 reference",
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "05-moved-city",
+   "title": "Supersede: a new value for the same subject + predicate keeps the old one as history",
+   "tags": [
+    "setup",
+    "supersede"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'live in pune'",
+    "reply 'Updated: you moved to Pune now (Bengaluru until today). Added to core memory: Lives in Pune.' lacks 'Updated: you live in Pune now (Bengaluru until today).'",
+    "no key contains 'No longer true since 23 September 2026: I lived in Bengaluru. I live in Pune now.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 5,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 16980,
+   "ttft_ms": 16977,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002762, "latency_ms": 3313, "ttft_ms": null, "input_tokens": 1126, "cached_input_tokens": 0, "output_tokens": 51, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.95, "reason": "This is a life update (change of city) that should be saved as new information, not a correction of an error."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.019868, "latency_ms": 5137, "ttft_ms": null, "input_tokens": 4934, "cached_input_tokens": 0, "output_tokens": 1000, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "{\"entities\":[{\"id\":\"e1\",\"mention\":\"Pune\",\"name\":\"Pune\",\"kind\":\"place\",\"label\":null},{\"id\":\"e2\",\"mention\":\"self\",\"name\":null,\"kind\":\"self\",\"label\":null}],\"memories\":[{\"ref\":\"m1\",\"kind\":\"fact\",\"subtype\":null,\"format\":null,\"state\":\"current\",\"title\":\"Lives in Pune\",\"text\":\"I moved to Pune.\",\"summary\":null,\"category\":\"personal/home\",\"tags\":[\"relocation\"],\"attributes\":[],\"subject\":\"self\",\"predicate\":\"lives_in\",\"value\":{\"text\":\"Pune\",\"number\":null,\"unit\":null},\"entities\":[{\"entity\":\"e2\",\"role\":\"about\"},{\"entity\":\"e1\",\"role\":\"at\"}],\"times\":[],\"reminder\":null,\"trigger\":null,\"modality\":\"asserted\",\"sentiment\":null,\"rating\":null,\"sensitivity\":\"personal\",\"importance\":4,\"links\":[],\"layer\":\"core\",\"layer_rationale\":\"Standing fact about where the user lives should always be in context.\",\"rationale\":\"Asserted current living location; supersedes prior Bengaluru fact; predicate lives_in matches workspace vocabulary.\"}],\"relations\":[],\"not_written\":[],\"secret_spans\":[]}"}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0148672, "latency_ms": 4315, "ttft_ms": null, "input_tokens": 4601, "cached_input_tokens": 3626, "output_tokens": 494, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Pune", "name": "Pune", "kind": "place", "label": null}, {"id": "e2", "mention": "self", "name": null, "kind": "self", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Lives in Pune", "text": "I moved to Pune.", "summary": null, "category": "personal/home", "tags": ["relocation"], "attributes": [], "subject": "self", "predicate": "lives_in", "value": {"text": "Pune", "number": null, "unit": null}, "entities": [{"entity": "e2", "role": "about"}, {"entity": "e1", "role": "at"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 4, "links": [], "layer": "core", "layer_rationale": "Standing fact about where the user lives should always be in context.", "rationale": "Asserted current living location; supersedes prior Bengaluru fact; predicate lives_in matches workspace vocabulary."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002618, "latency_ms": 3372, "ttft_ms": null, "input_tokens": 894, "cached_input_tokens": 0, "output_tokens": 83, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["where do I currently live", "what city did I move to", "my current city of residence"], "cues": ["when someone asks where I live", "when updating my address for deliveries", "when planning meetups based on my city"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-06, "latency_ms": 813, "ttft_ms": null, "input_tokens": 110, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0401174,
+   "spent_usd": 0.0401174,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Updated: you moved to Pune now (Bengaluru until today). Added to core memory: Lives in Pune.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "08-hypothetical",
+   "title": "Hypothetical not asserted: 'if I get the offer I'll move' is not a fact",
+   "tags": [
+    "P-MOD-1|model"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 13542,
+   "ttft_ms": 13539,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002716, "latency_ms": 2977, "ttft_ms": null, "input_tokens": 1133, "cached_input_tokens": 0, "output_tokens": 45, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.85, "reason": "This shares a future plan/contingency worth remembering for later reference."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.019868, "latency_ms": 6091, "ttft_ms": null, "input_tokens": 4934, "cached_input_tokens": 0, "output_tokens": 1000, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "{\"entities\":[{\"id\":\"e1\",\"kind\":\"place\",\"label\":null,\"mention\":\"Berlin\",\"name\":\"Berlin\",\"kind_confidence\":null}]}", "memories": [{"ref": "m1", "kind": "fact", "subtype": "relocation", "format": null, "state": null, "title": "Move to Berlin", "text": "If I get the Berlin offer, I will move to Berlin.", "summary": null, "category": "career/relocation", "tags": ["berlin", "relocation", "job offer"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "hypothetical", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "archive", "layer_rationale": "Hypothetical, contingent statement about a future move; not a standing fact, so it does not belong in core context until confirmed.", "rationale": "Conditional statement ('if I get the offer, I'll move') is a hypothetical, not an asserted fact; kept as fact kind since it describes a potential state change contingent on an event, but modality marks it as hypothetical so it's not treated as current truth."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0151662, "latency_ms": 4459, "ttft_ms": null, "input_tokens": 4511, "cached_input_tokens": 3621, "output_tokens": 542, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Berlin", "name": "Berlin", "kind": "place", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": "relocation", "format": null, "state": null, "title": "Move to Berlin", "text": "If I get the Berlin offer, I will move to Berlin.", "summary": null, "category": "career/relocation", "tags": ["berlin", "relocation", "job offer"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "hypothetical", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "archive", "layer_rationale": "Hypothetical, contingent statement about a future move; not a standing fact, so it does not belong in core context until confirmed.", "rationale": "Conditional statement ('if I get the offer, I'll move') is a hypothetical, not an asserted fact; kept as fact kind since it describes a potential state change contingent on an event, but modality marks it as hypothetical so it's not treated as current truth."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.03775046,
+   "spent_usd": 0.0377502,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "I didn't save 'Move to Berlin' as if it were settled: it's hypothetical.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "10-relation",
+   "title": "Relation: 'Rohan is Nisha's husband' is a fact plus an entity_relations row",
+   "tags": [
+    "entities",
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 5,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 5,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 11587,
+   "ttft_ms": 11585,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002692, "latency_ms": 1980, "ttft_ms": null, "input_tokens": 1126, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.95, "reason": "This states a fact about a person's relationship, which is worth saving."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0145162, "latency_ms": 6261, "ttft_ms": null, "input_tokens": 3971, "cached_input_tokens": 3621, "output_tokens": 585, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Rohan", "name": "Rohan", "kind": "person", "label": null}, {"id": "e2", "mention": "Nisha", "name": "Nisha", "kind": "person", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": null, "format": null, "state": "current", "title": "Rohan is Nisha's husband", "text": "Rohan is Nisha's husband.", "summary": null, "category": "people/relationships", "tags": ["family", "relationship"], "attributes": [], "subject": "e1", "predicate": "spouse_of", "value": {"text": "Nisha", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "about"}, {"entity": "e2", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "personal", "importance": 3, "links": [], "layer": "core", "layer_rationale": "Standing relationship fact about key people, useful to always have in context.", "rationale": "Asserted fact about a relationship between two people; not a preference or episode, so kind=fact with no subtype needed."}], "relations": [{"src": "e1", "relation": "spouse_of", "dst": "e2", "evidence": "m1"}, {"src": "e2", "relation": "spouse_of", "dst": "e1", "evidence": "m1"}], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 8, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002888, "latency_ms": 2399, "ttft_ms": null, "input_tokens": 899, "cached_input_tokens": 0, "output_tokens": 109, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["Who is Nisha's husband?", "Nisha married to Rohan", "Rohan's relationship to Nisha"], "cues": ["when trying to recall Nisha's family details", "when planning something involving Nisha and her husband", "when confirming relationships between contacts"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 916, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.02009792,
+   "spent_usd": 0.02009776,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Saved as a fact: Rohan is Nisha's husband. Added to core memory: Rohan is Nisha's husband.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "13-multi-item",
+   "title": "Multi-item: a show to watch and a task to call Nisha, with a reminder",
+   "tags": [
+    "dates",
+    "multi",
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 24406,
+   "ttft_ms": 24404,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0027, "latency_ms": 2288, "ttft_ms": null, "input_tokens": 1135, "cached_input_tokens": 0, "output_tokens": 43, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.9, "reason": "This shares a show title and a task to remember, both worth saving."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.019868, "latency_ms": 8295, "ttft_ms": null, "input_tokens": 4934, "cached_input_tokens": 0, "output_tokens": 1000, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "{\"entities\":[{\"id\":\"e1\",\"mention\":\"Mindhunter\",\"name\":\"Mindhunter\",\"kind\":\"work\",\"label\":null},{\"id\":\"e2\",\"mention\":\"Nisha\",\"name\":\"Nisha\",\"kind\":\"person\",\"label\":null}]}", "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Mindhunter", "text": "I want to watch Mindhunter.", "summary": null, "category": "entertainment/series", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "archive", "layer_rationale": "A wish to watch a show is not urgent or being actively worked on, so it belongs in archive.", "rationale": "Expresses a desire to watch a show; kind intention with subtype watch, category entertainment/series since Mindhunter is a TV series."}, {"ref": "m2", "kind": "task", "subtype": null, "format": null, "state": "open", "title": "Call Nisha", "text": "I need to call Nisha [[t1]].", "summary": null, "category": "personal/communication", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e2", "role": "with"}], "times": [{"id": "t1", "expression": "Sunday", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": "on the day"}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "A task due soon (this coming Sunday) should surface in the quick layer until completed.", "rationale": "An action owed to be done, involving calling a person; kind task with role with for Nisha since the task is to call her; reminder set because user explicitly asked to be reminded, with lead 'on the day' as they intend to do it that day."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0192322, "latency_ms": 9050, "ttft_ms": null, "input_tokens": 4864, "cached_input_tokens": 3621, "output_tokens": 878, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Mindhunter", "name": "Mindhunter", "kind": "work", "label": null}, {"id": "e2", "mention": "Nisha", "name": "Nisha", "kind": "person", "label": null}], "memories": [{"ref": "m1", "kind": "intention", "subtype": "watch", "format": null, "state": "wanted", "title": "Mindhunter", "text": "I want to watch Mindhunter.", "summary": null, "category": "entertainment/series", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "archive", "layer_rationale": "A wish to watch a show is not urgent or being actively worked on, so it belongs in archive.", "rationale": "Expresses a desire to watch a show; kind intention with subtype watch, category entertainment/series since Mindhunter is a TV series."}, {"ref": "m2", "kind": "task", "subtype": null, "format": null, "state": "open", "title": "Call Nisha", "text": "I need to call Nisha [[t1]].", "summary": null, "category": "personal/communication", "tags": [], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e2", "role": "with"}], "times": [{"id": "t1", "expression": "Sunday", "clock": "due", "direction": "future", "recurring": false}], "reminder": {"lead": "on the day"}, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "A task due soon (this coming Sunday) should surface in the quick layer until completed.", "rationale": "An action owed to be done, involving calling a person; kind task with role with for Nisha since the task is to call her; reminder set because user explicitly asked to be reminded, with lead 'on the day' as they intend to do it that day."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1e-07, "latency_ms": 624, "ttft_ms": null, "input_tokens": 5, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.003812, "latency_ms": 3666, "ttft_ms": null, "input_tokens": 961, "cached_input_tokens": 0, "output_tokens": 189, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["what do I want to watch next", "shows on my watchlist", "the Mindhunter series I wanted to see"], "cues": ["when I'm bored on a weekend", "when picking something to watch tonight", "when looking for a new show to start"]}, {"ref": "m2", "alt": ["call reminder for Nisha", "who do I need to call on 27 September 2026", "task about calling Nisha"], "cues": ["when planning my schedule for 27 September 2026", "when reviewing my to-do list", "when checking in with Nisha"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.38e-06, "latency_ms": 433, "ttft_ms": null, "input_tokens": 169, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.04561622,
+   "spent_usd": 0.04561568,
+   "cache_hits": 2,
+   "detail": {
+    "reply": "Added Mindhunter to your watch list. Saved as a task: Call Nisha, due Sun 27 Sep. I'll remind you Sun 27 Sep.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "16-watched-twice",
+   "title": "Watched twice: two episodes on different days, the wish fulfilled only once",
+   "tags": [
+    "dates",
+    "new",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 14461,
+   "ttft_ms": 14459,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002634, "latency_ms": 2709, "ttft_ms": null, "input_tokens": 1122, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.85, "reason": "This shares an event that happened, worth remembering."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.019884, "latency_ms": 4092, "ttft_ms": null, "input_tokens": 4942, "cached_input_tokens": 0, "output_tokens": 1000, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "{\"entities\":[{\"id\":\"e1\",\"mention\":\"Severance\",\"name\":\"Severance\",\"kind\":\"work\",\"label\":null}],\"memories\":[{\"ref\":\"m1\",\"kind\":\"episode\",\"subtype\":\"watch\",\"format\":null,\"state\":\"happened\",\"title\":\"Severance\",\"text\":\"I watched Severance again [[t1]].\",\"summary\":null,\"category\":\"entertainment/series\",\"tags\":[\"rewatch\"],\"attributes\":[],\"subject\":\"self\",\"predicate\":null,\"value\":null,\"entities\":[{\"entity\":\"e1\",\"role\":\"about\"}],\"times\":[{\"id\":\"t1\",\"expression\":\"last night\",\"clock\":\"occurred\",\"direction\":\"past\",\"recurring\":false}],\"reminder\":null,\"trigger\":null,\"modality\":\"asserted\",\"sentiment\":1,\"rating\":null,\"sensitivity\":\"normal\",\"importance\":2,\"links\":[],\"layer\":\"archive\",\"layer_rationale\":\"A past viewing episode, not something needed in ongoing context.\",\"rationale\":\"An experience that already happened (rewatch of a show) is an episode with subtype watch, categorized under entertainment/series.\"}],\"relations\":[],\"not_written\":[],\"secret_spans\":[]}"}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0145782, "latency_ms": 3883, "ttft_ms": null, "input_tokens": 4572, "cached_input_tokens": 3621, "output_tokens": 471, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "Severance", "name": "Severance", "kind": "work", "label": null}], "memories": [{"ref": "m1", "kind": "episode", "subtype": "watch", "format": null, "state": "happened", "title": "Severance", "text": "I watched Severance again [[t1]].", "summary": null, "category": "entertainment/series", "tags": ["rewatch"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "about"}], "times": [{"id": "t1", "expression": "last night", "clock": "occurred", "direction": "past", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": 1, "rating": null, "sensitivity": "normal", "importance": 2, "links": [], "layer": "archive", "layer_rationale": "A past viewing episode, not something needed in ongoing context.", "rationale": "An experience that already happened (rewatch of a show) is an episode with subtype watch, categorized under entertainment/series."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002764, "latency_ms": 2861, "ttft_ms": null, "input_tokens": 902, "cached_input_tokens": 0, "output_tokens": 96, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["when did I watch Severance", "rewatched Severance episode", "Severance viewing on 22 September 2026"], "cues": ["when deciding what to watch next", "when discussing Severance with friends", "when reviewing my watch history"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.84e-06, "latency_ms": 882, "ttft_ms": null, "input_tokens": 92, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.03986204,
+   "spent_usd": 0.03986204,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Logged: Severance, Tue 22 Sep, 9 pm.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "17-dentist-moved",
+   "title": "Plan moved: the new appointment supersedes the old one, with a change key",
+   "tags": [
+    "dates",
+    "setup",
+    "supersede"
+   ],
+   "passed": false,
+   "failures": [
+    "2 october: state moved != scheduled"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 3,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 24075,
+   "ttft_ms": 24073,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002784, "latency_ms": 5560, "ttft_ms": null, "input_tokens": 1137, "cached_input_tokens": 0, "output_tokens": 51, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.9, "reason": "This is a life update replacing prior info, so it's saved as new information rather than a correction."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.019886, "latency_ms": 4351, "ttft_ms": null, "input_tokens": 4943, "cached_input_tokens": 0, "output_tokens": 1000, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "output": {"entities": "{\"entities\":[{\"id\":\"e1\",\"mention\":\"dentist\",\"name\":\"dentist\",\"kind\":\"org\",\"label\":null}],\"memories\":[{\"ref\":\"m1\",\"kind\":\"plan\",\"subtype\":\"appointment\",\"format\":null,\"state\":\"moved\",\"title\":\"Dentist appointment\",\"text\":\"My dentist appointment has been moved to [[t1]].\",\"summary\":null,\"category\":\"health/appointments\",\"tags\":[\"dentist\"],\"attributes\":[],\"subject\":\"self\",\"predicate\":null,\"value\":null,\"entities\":[{\"entity\":\"e1\",\"role\":\"with\"}],\"times\":[{\"id\":\"t1\",\"expression\":\"Friday 2 October, 5 pm\",\"clock\":\"occurred\",\"direction\":\"future\",\"recurring\":false}],\"reminder\":null,\"trigger\":null,\"modality\":\"asserted\",\"sentiment\":null,\"rating\":null,\"sensitivity\":\"normal\",\"importance\":3,\"links\":[],\"layer\":\"quick\",\"layer_rationale\":\"An upcoming appointment happening soon should be surfaced in the near-term view.\",\"rationale\":\"This is a scheduled appointment whose date changed, so it's a plan with subtype appointment, state moved to reflect the reschedule, in the existing health/appointments category.\"}],\"relations\":[],\"not_written\":[],\"secret_spans\":[]}"}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0153082, "latency_ms": 4687, "ttft_ms": null, "input_tokens": 4617, "cached_input_tokens": 3621, "output_tokens": 535, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "dentist", "name": "dentist", "kind": "org", "label": null}], "memories": [{"ref": "m1", "kind": "plan", "subtype": "appointment", "format": null, "state": "moved", "title": "Dentist appointment", "text": "My dentist appointment has been moved to [[t1]].", "summary": null, "category": "health/appointments", "tags": ["dentist"], "attributes": [], "subject": "self", "predicate": null, "value": null, "entities": [{"entity": "e1", "role": "with"}], "times": [{"id": "t1", "expression": "Friday 2 October, 5 pm", "clock": "occurred", "direction": "future", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "normal", "importance": 3, "links": [], "layer": "quick", "layer_rationale": "An upcoming appointment happening soon should be surfaced in the near-term view.", "rationale": "This is a scheduled appointment whose date changed, so it's a plan with subtype appointment, state moved to reflect the reschedule, in the existing health/appointments category."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "reconcile", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.00245, "latency_ms": 3046, "ttft_ms": null, "input_tokens": 965, "cached_input_tokens": 0, "output_tokens": 52, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"decision": "supersede", "candidate": "c1", "reason": "The appointment was rescheduled from Thursday to Friday, replacing the old time."}, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002836, "latency_ms": 5513, "ttft_ms": null, "input_tokens": 913, "cached_input_tokens": 0, "output_tokens": 101, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["when's my dentist appointment now", "rescheduled dentist visit date", "dental appointment time change"], "cues": ["when checking my schedule for October 2026", "when planning Friday 2 October 2026", "when confirming dentist appointment time"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.14e-06, "latency_ms": 881, "ttft_ms": null, "input_tokens": 157, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.04326734,
+   "spent_usd": 0.04326734,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Moved: Dentist appointment is now Fri 2 Oct, 5 pm (was Thu 1 Oct, 5 pm).",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "21-sensitive-held",
+   "title": "Sensitive: saved to the archive, the core write held (P-SENS-1)",
+   "tags": [
+    "dates",
+    "sensitive"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 2,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 2,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 12015,
+   "ttft_ms": 12014,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002652, "latency_ms": 1792, "ttft_ms": null, "input_tokens": 1131, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.95, "reason": "This is new personal information about their life worth remembering."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0150962, "latency_ms": 6246, "ttft_ms": null, "input_tokens": 3976, "cached_input_tokens": 3621, "output_tokens": 642, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "a therapist", "name": null, "kind": "person", "label": "therapist"}, {"id": "e2", "mention": "anxiety", "name": null, "kind": "topic", "label": null}], "memories": [{"ref": "m1", "kind": "fact", "subtype": "health", "format": null, "state": "current", "title": "Seeing a therapist for anxiety", "text": "I've been seeing a therapist for anxiety [[t1]].", "summary": null, "category": "health/mental-health", "tags": ["therapy", "anxiety", "mental-health"], "attributes": [], "subject": "self", "predicate": "sees_therapist_for", "value": {"text": "anxiety", "number": null, "unit": null}, "entities": [{"entity": "e1", "role": "with"}, {"entity": "e2", "role": "about"}], "times": [{"id": "t1", "expression": "since March", "clock": "valid", "direction": "past", "recurring": false}], "reminder": null, "trigger": null, "modality": "asserted", "sentiment": null, "rating": null, "sensitivity": "sensitive", "importance": 4, "links": [], "layer": "core", "layer_rationale": "An ongoing health fact about the user that should always be in context.", "rationale": "States a current, ongoing fact about the user's health (mental health/therapy), with a predicate and value capturing what it's for; category health/mental-health fits; sensitivity sensitive per rule for anything about health, mental health, or therapy."}], "relations": [], "not_written": [], "secret_spans": []}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 400, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002846, "latency_ms": 2945, "ttft_ms": null, "input_tokens": 908, "cached_input_tokens": 0, "output_tokens": 103, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"memories": [{"ref": "m1", "alt": ["my therapy for anxiety in March 2026", "who I see for anxiety treatment", "details about my anxiety therapist"], "cues": ["when discussing my mental health", "when scheduling therapy appointments", "when reflecting on anxiety progress"]}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.44e-06, "latency_ms": 610, "ttft_ms": null, "input_tokens": 72, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0205959,
+   "spent_usd": 0.0205959,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Seeing a therapist for anxiety, since March 2026. Held for your confirmation: Seeing a therapist for anxiety (sensitive, so it goes to core only if you confirm). I've assumed 'a therapist' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "26-labelled-secret",
+   "title": "Model-labelled secret: refused, and the stored turn has the value redacted",
+   "tags": [
+    "P-SECRET-1|model"
+   ],
+   "passed": false,
+   "failures": [
+    "no ∅ entry for P-SECRET-1|model"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 5029,
+   "ttft_ms": 5028,
+   "calls": [
+    {"step": "intent", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.002834, "latency_ms": 2324, "ttft_ms": null, "input_tokens": 1132, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "save", "confidence": 0.9, "reason": "This shares a specific code as information to remember, so it's treated as a save (though such saves may later be refused)."}, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-sonnet-5", "cost_usd": 0.0109682, "latency_ms": 2697, "ttft_ms": null, "input_tokens": 3977, "cached_input_tokens": 3621, "output_tokens": 229, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"entities": [{"id": "e1", "mention": "my gym locker", "name": null, "kind": "thing", "label": null}], "memories": [], "relations": [], "not_written": [{"what": "Gym locker combination", "reason": "This is a secret code that opens a lock; per policy it is not stored in any text field, only recorded in secret_spans."}], "secret_spans": ["17-38-02"]}, "timed": true}
+   ],
+   "cost_usd": 0.0138022,
+   "spent_usd": 0.0138022,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Not saved: Gym locker combination (This is a secret code that opens a lock; per policy it is not stored in any text field, only recorded in secret_spans.).",
+    "status": "completed"
+   }
+  }
+ ]
+}
