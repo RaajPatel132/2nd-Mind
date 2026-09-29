@@ -1,0 +1,1437 @@
+{
+ "schema_version": 1,
+ "run_id": "20260928T173414Z-0902bba",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-28T17:34:14.298750Z",
+ "finished_at": "2026-09-28T17:39:02.462228Z",
+ "git_sha": "0902bba1be50",
+ "git_dirty": false,
+ "config_hash": "8c46c72b447cfae8b79f77ff1a260ae5bf9a909093c3347f6124744f9c1f41b6",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@2",
+  "extract": "extract@3",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@2",
+  "rerank": "rerank@2",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {},
+ "batch": "B3",
+ "budget_usd": 0.3,
+ "estimate_usd": 0.18806218,
+ "status": "complete",
+ "note": null,
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "01-passport-reminder",
+   "title": "§8.1 (a): a task due the 3rd of next month, with the default reminder the day before",
+   "tags": [
+    "dates",
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 13605,
+   "ttft_ms": 13596,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001007, "latency_ms": 2648, "ttft_ms": null, "input_tokens": 557, "cached_input_tokens": 0, "output_tokens": 90, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007358, "latency_ms": 6365, "ttft_ms": null, "input_tokens": 5068, "cached_input_tokens": 0, "output_tokens": 458, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1891, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.68e-05, "latency_ms": 2100, "ttft_ms": null, "input_tokens": 443, "cached_input_tokens": 0, "output_tokens": 105, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.76e-06, "latency_ms": 560, "ttft_ms": null, "input_tokens": 88, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00755758,
+   "spent_usd": 0.00755758,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a task: Renew passport, due Sat 3 Oct. I'll remind you Fri 2 Oct.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "02-mk-bag",
+   "title": "§8.1 (b): a gift idea, a birthday at month precision, a preference for core",
+   "tags": [
+    "dates",
+    "entities",
+    "multi",
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'likes bags'",
+    "no memory written matching 'gift the mk bag'",
+    "no memory written matching 'birthday is in'",
+    "no new entity MK bag:thing; new: ['wife', 'Michael Kors']",
+    "reply \"Saved a gift idea: Gift bag to wife, due May 2027. Saved as a fact: Wife likes Michael Kors bags. Added to core memory: Wife likes Michael Kors bags. I've assumed 'my wife' is someone new; tell me their name and I'll update it.\" lacks \"I've assumed 'My wife' is someone new\""
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 3,
+     "state": 4,
+     "modality": 0,
+     "date": 2,
+     "entity": 5,
+     "category": 1,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 15967,
+   "ttft_ms": 15964,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001103, "latency_ms": 2806, "ttft_ms": null, "input_tokens": 563, "cached_input_tokens": 0, "output_tokens": 108, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.010244, "latency_ms": 7794, "ttft_ms": null, "input_tokens": 5074, "cached_input_tokens": 0, "output_tokens": 1034, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6e-08, "latency_ms": 1621, "ttft_ms": null, "input_tokens": 3, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.6e-07, "latency_ms": 311, "ttft_ms": null, "input_tokens": 23, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.6e-07, "latency_ms": 250, "ttft_ms": null, "input_tokens": 8, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 720, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001086, "latency_ms": 1967, "ttft_ms": null, "input_tokens": 496, "cached_input_tokens": 0, "output_tokens": 118, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.28e-06, "latency_ms": 443, "ttft_ms": null, "input_tokens": 164, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01046744,
+   "spent_usd": 0.01046744,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved a gift idea: Gift bag to wife, due May 2027. Saved as a fact: Wife likes Michael Kors bags. Added to core memory: Wife likes Michael Kors bags. I've assumed 'my wife' is someone new; tell me their name and I'll update it.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "03-mindhunter",
+   "title": "§8.1 (d): a show to watch, category entertainment, to-watch state",
+   "tags": [
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "reply 'Added Watch Mindhunter to your watch list.' lacks 'Added Mindhunter to your watch list.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 1,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 1,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 10589,
+   "ttft_ms": 10587,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.71e-05, "latency_ms": 1579, "ttft_ms": null, "input_tokens": 551, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007254, "latency_ms": 5245, "ttft_ms": null, "input_tokens": 5064, "cached_input_tokens": 0, "output_tokens": 438, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.6e-07, "latency_ms": 893, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.32e-05, "latency_ms": 2288, "ttft_ms": null, "input_tokens": 447, "cached_input_tokens": 0, "output_tokens": 77, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.72e-06, "latency_ms": 556, "ttft_ms": null, "input_tokens": 86, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00741638,
+   "spent_usd": 0.00741638,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Added Watch Mindhunter to your watch list.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "04-trading-idea",
+   "title": "§8.1 (e): an idea, as a note",
+   "tags": [
+    "new"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'trading skill'",
+    "reply 'Saved as a wish: Build an end-to-end skill that can trade for itself.' lacks 'Saved as a note: End-to-end trading skill.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 1,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 10686,
+   "ttft_ms": 10683,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.55e-05, "latency_ms": 1828, "ttft_ms": null, "input_tokens": 555, "cached_input_tokens": 0, "output_tokens": 60, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007522, "latency_ms": 5597, "ttft_ms": null, "input_tokens": 5067, "cached_input_tokens": 0, "output_tokens": 491, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3e-07, "latency_ms": 333, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.77e-05, "latency_ms": 2441, "ttft_ms": null, "input_tokens": 452, "cached_input_tokens": 0, "output_tokens": 105, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.02e-06, "latency_ms": 460, "ttft_ms": null, "input_tokens": 101, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00770752,
+   "spent_usd": 0.00770752,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a wish: Build an end-to-end skill that can trade for itself.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "05-moved-city",
+   "title": "Supersede: a new value for the same subject + predicate keeps the old one as history",
+   "tags": [
+    "setup",
+    "supersede"
+   ],
+   "passed": false,
+   "failures": [
+    "changed 'bengaluru': {'state': 'superseded', 'valid_to': '2026-09-22T18:30:00+00:00'} != {'state': 'superseded', 'valid_to': '2026-09-23T04:30:00+00:00'}"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 4,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 5,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 9006,
+   "ttft_ms": 9004,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.38e-05, "latency_ms": 1454, "ttft_ms": null, "input_tokens": 543, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007931, "latency_ms": 4945, "ttft_ms": null, "input_tokens": 5061, "cached_input_tokens": 0, "output_tokens": 574, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.48e-05, "latency_ms": 2144, "ttft_ms": null, "input_tokens": 433, "cached_input_tokens": 0, "output_tokens": 103, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-06, "latency_ms": 435, "ttft_ms": null, "input_tokens": 110, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0081018,
+   "spent_usd": 0.0081018,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Updated: you live in Pune now (Bengaluru until today). Added to core memory: Live in Pune.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "06-watched-severance",
+   "title": "Fulfil: watching a recommended show marks the wish fulfilled and logs an episode",
+   "tags": [
+    "dates",
+    "fulfil",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 5,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 5,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 9997,
+   "ttft_ms": 9995,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.6e-05, "latency_ms": 2244, "ttft_ms": null, "input_tokens": 555, "cached_input_tokens": 0, "output_tokens": 81, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007995, "latency_ms": 5225, "ttft_ms": null, "input_tokens": 5075, "cached_input_tokens": 0, "output_tokens": 584, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.8e-05, "latency_ms": 1826, "ttft_ms": null, "input_tokens": 455, "cached_input_tokens": 0, "output_tokens": 65, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.76e-06, "latency_ms": 671, "ttft_ms": null, "input_tokens": 138, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00817176,
+   "spent_usd": 0.00817176,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Logged: Watched Severance, Tue 22 Sep, 9 pm. Marked Severance as watched.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "07-secret-refused",
+   "title": "Secret refused: the pre-check skips the model, and the password is stored nowhere",
+   "tags": [
+    "secret"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 3,
+   "ttft_ms": 2,
+   "calls": [],
+   "cost_usd": 0.0,
+   "spent_usd": 0.0,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "I didn't save that: it looks like a password or another secret, and I don't store those. Nothing was written.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "08-hypothetical",
+   "title": "Hypothetical not asserted: 'if I get the offer I'll move' is not a fact",
+   "tags": [
+    "hypothetical"
+   ],
+   "passed": false,
+   "failures": [
+    "no ∅ entry for P-MOD-1",
+    "reply '' lacks \"it's hypothetical\""
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 6986,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.33e-05, "latency_ms": 1820, "ttft_ms": null, "input_tokens": 548, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007473, "latency_ms": 5158, "ttft_ms": null, "input_tokens": 3973, "cached_input_tokens": 0, "output_tokens": 700, "cache_hit": false, "estimated": false, "billed": true, "failed": "invalid_output", "timed": true}
+   ],
+   "cost_usd": 0.0075463,
+   "spent_usd": 0.0075463,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "",
+    "status": "failed"
+   }
+  },
+  {
+   "id": "09-gym-routine",
+   "title": "Routine: 'every Mon/Wed/Fri at 7' becomes a weekly RRULE",
+   "tags": [
+    "dates"
+   ],
+   "passed": false,
+   "failures": [
+    "gym: layer core"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 8959,
+   "ttft_ms": 8958,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.48e-05, "latency_ms": 1814, "ttft_ms": null, "input_tokens": 548, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007155, "latency_ms": 3947, "ttft_ms": null, "input_tokens": 5060, "cached_input_tokens": 0, "output_tokens": 419, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 560, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.87e-05, "latency_ms": 2037, "ttft_ms": null, "input_tokens": 442, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.48e-06, "latency_ms": 571, "ttft_ms": null, "input_tokens": 74, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0073103,
+   "spent_usd": 0.0073103,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a repeating plan: Gym, every Monday, Wednesday and Friday at 7 am. Added to core memory: Gym. I took 'every Mon/Wed/Fri at 7' as Fri 25 Sep, 7 am (not 19:00 instead of 07:00).",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "10-relation",
+   "title": "Relation: 'Rohan is Nisha's husband' is a fact plus an entity_relations row",
+   "tags": [
+    "entities",
+    "new"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 5,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 5,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 11845,
+   "ttft_ms": 11843,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.3e-05, "latency_ms": 1551, "ttft_ms": null, "input_tokens": 545, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007957, "latency_ms": 4828, "ttft_ms": null, "input_tokens": 5057, "cached_input_tokens": 0, "output_tokens": 580, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00735, "latency_ms": 2622, "ttft_ms": null, "input_tokens": 5410, "cached_input_tokens": 0, "output_tokens": 388, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.6e-07, "latency_ms": 406, "ttft_ms": null, "input_tokens": 8, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.15e-05, "latency_ms": 1857, "ttft_ms": null, "input_tokens": 440, "cached_input_tokens": 0, "output_tokens": 95, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.54e-06, "latency_ms": 551, "ttft_ms": null, "input_tokens": 77, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0154732,
+   "spent_usd": 0.0154732,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Rohan and Nisha's relationship. Added to core memory: Rohan and Nisha's relationship.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "11-reported-claim",
+   "title": "Reported: 'Rohan said he's moving to Delhi' is reported, about Rohan, no lives_in",
+   "tags": [],
+   "passed": false,
+   "failures": [
+    "moving to delhi: predicate moving_to != None"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 1,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 9465,
+   "ttft_ms": 9460,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.25e-05, "latency_ms": 1743, "ttft_ms": null, "input_tokens": 545, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007832, "latency_ms": 4700, "ttft_ms": null, "input_tokens": 5057, "cached_input_tokens": 0, "output_tokens": 555, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 333, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.69e-05, "latency_ms": 2344, "ttft_ms": null, "input_tokens": 439, "cached_input_tokens": 0, "output_tokens": 106, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.42e-06, "latency_ms": 308, "ttft_ms": null, "input_tokens": 71, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00800296,
+   "spent_usd": 0.00800296,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Rohan is moving to Delhi.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "12-runs-not-merged",
+   "title": "Episodes not merged: two 5 km runs on different days are two episodes",
+   "tags": [
+    "dates",
+    "new",
+    "setup"
+   ],
+   "passed": false,
+   "failures": [
+    "no key contains 'Logged run: I ran 5 km in 31 minutes on Wednesday 23 September 2026, in the morning.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 8476,
+   "ttft_ms": 8473,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.33e-05, "latency_ms": 1617, "ttft_ms": null, "input_tokens": 548, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007115, "latency_ms": 4244, "ttft_ms": null, "input_tokens": 5060, "cached_input_tokens": 0, "output_tokens": 411, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001069, "latency_ms": 2021, "ttft_ms": null, "input_tokens": 449, "cached_input_tokens": 0, "output_tokens": 124, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.58e-06, "latency_ms": 568, "ttft_ms": null, "input_tokens": 129, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00729778,
+   "spent_usd": 0.00729778,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Logged: 5 km run, Wed 23 Sep, 8 am.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "13-multi-item",
+   "title": "Multi-item: a show to watch and a task to call Nisha, with a reminder",
+   "tags": [
+    "dates",
+    "multi",
+    "new",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "trigger 'call nisha': ['2026-09-26T09:00']"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 5,
+     "state": 1,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 14627,
+   "ttft_ms": 14620,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.84e-05, "latency_ms": 3345, "ttft_ms": null, "input_tokens": 549, "cached_input_tokens": 0, "output_tokens": 67, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.009618, "latency_ms": 7149, "ttft_ms": null, "input_tokens": 5063, "cached_input_tokens": 0, "output_tokens": 911, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 2, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000121, "latency_ms": 3175, "ttft_ms": null, "input_tokens": 490, "cached_input_tokens": 0, "output_tokens": 144, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.98e-06, "latency_ms": 924, "ttft_ms": null, "input_tokens": 149, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00983102,
+   "spent_usd": 0.00983038,
+   "cache_hits": 3,
+   "detail": {
+    "reply": "Added Watch Mindhunter to your watch list. Saved as a task: Call Nisha, due Sun 27 Sep. I'll remind you Sat 26 Sep.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "14-person-alias",
+   "title": "Person alias: 'my wife Kabir' names the existing 'wife' instead of adding a person",
+   "tags": [
+    "entities",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 3,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 3,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 10096,
+   "ttft_ms": 10093,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.82e-05, "latency_ms": 1740, "ttft_ms": null, "input_tokens": 552, "cached_input_tokens": 0, "output_tokens": 86, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007751, "latency_ms": 5069, "ttft_ms": null, "input_tokens": 5066, "cached_input_tokens": 0, "output_tokens": 537, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.8e-07, "latency_ms": 401, "ttft_ms": null, "input_tokens": 9, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.73e-05, "latency_ms": 2546, "ttft_ms": null, "input_tokens": 443, "cached_input_tokens": 0, "output_tokens": 106, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.6e-06, "latency_ms": 317, "ttft_ms": null, "input_tokens": 80, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00794828,
+   "spent_usd": 0.00794828,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Kabir is allergic to lilies. Added to core memory: Kabir is allergic to lilies.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "15-same-show-twice",
+   "title": "Same wish twice: saving Dark again is a no-op, not a second intention",
+   "tags": [
+    "no_op",
+    "setup"
+   ],
+   "passed": false,
+   "failures": [
+    "reply 'Already saved: Watch Dark.' lacks 'Already saved: Dark.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 6242,
+   "ttft_ms": 6240,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.06e-05, "latency_ms": 1357, "ttft_ms": null, "input_tokens": 551, "cached_input_tokens": 0, "output_tokens": 31, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007265, "latency_ms": 4878, "ttft_ms": null, "input_tokens": 5060, "cached_input_tokens": 0, "output_tokens": 441, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0073356,
+   "spent_usd": 0.0073356,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Already saved: Watch Dark.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "16-watched-twice",
+   "title": "Watched twice: two episodes on different days, the wish fulfilled only once",
+   "tags": [
+    "dates",
+    "new",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 3,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 10573,
+   "ttft_ms": 10571,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.6e-05, "latency_ms": 1592, "ttft_ms": null, "input_tokens": 545, "cached_input_tokens": 0, "output_tokens": 43, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007812, "latency_ms": 5704, "ttft_ms": null, "input_tokens": 5067, "cached_input_tokens": 0, "output_tokens": 549, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000103, "latency_ms": 2455, "ttft_ms": null, "input_tokens": 445, "cached_input_tokens": 0, "output_tokens": 117, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.04e-06, "latency_ms": 798, "ttft_ms": null, "input_tokens": 102, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00799304,
+   "spent_usd": 0.00799304,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Logged: Watched Severance, Tue 22 Sep, 9 pm.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "17-dentist-moved",
+   "title": "Plan moved: the new appointment supersedes the old one, with a change key",
+   "tags": [
+    "dates",
+    "setup",
+    "supersede"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 12315,
+   "ttft_ms": 12313,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.71e-05, "latency_ms": 1595, "ttft_ms": null, "input_tokens": 551, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007679, "latency_ms": 5774, "ttft_ms": null, "input_tokens": 5064, "cached_input_tokens": 0, "output_tokens": 523, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "reconcile", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.14e-05, "latency_ms": 2003, "ttft_ms": null, "input_tokens": 499, "cached_input_tokens": 0, "output_tokens": 43, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.7e-05, "latency_ms": 2213, "ttft_ms": null, "input_tokens": 445, "cached_input_tokens": 0, "output_tokens": 65, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-06, "latency_ms": 696, "ttft_ms": null, "input_tokens": 160, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0079077,
+   "spent_usd": 0.0079077,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Moved: Dentist appointment is now Fri 2 Oct, 5 pm (was Thu 1 Oct, 5 pm).",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "18-two-shows",
+   "title": "Two shows, similar descriptions: two intentions, never merged",
+   "tags": [
+    "new",
+    "setup"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 10792,
+   "ttft_ms": 10791,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.1e-05, "latency_ms": 1797, "ttft_ms": null, "input_tokens": 555, "cached_input_tokens": 0, "output_tokens": 71, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007088, "latency_ms": 4723, "ttft_ms": null, "input_tokens": 5073, "cached_input_tokens": 0, "output_tokens": 403, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 340, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001004, "latency_ms": 3356, "ttft_ms": null, "input_tokens": 449, "cached_input_tokens": 0, "output_tokens": 111, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.54e-06, "latency_ms": 554, "ttft_ms": null, "input_tokens": 77, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0072812,
+   "spent_usd": 0.0072812,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Added Watch Dark to your watch list.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "19-birthday",
+   "title": "Birthday: a yearly plan on 14 March linked to Kabir, reminded the day before",
+   "tags": [
+    "dates",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "kabir's birthday: kind fact != plan",
+    "kabir's birthday: occurred ('', 'day') None != {'clock': 'occurred', 'value': '2027-03-14', 'precision': 'day', 'rrule': 'FREQ=YEARLY;BYMONTH=3;BYMONTHDAY=14'}",
+    "trigger \"kabir's birthday\": []"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 2,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 14367,
+   "ttft_ms": 14366,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.21e-05, "latency_ms": 1486, "ttft_ms": null, "input_tokens": 546, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007773, "latency_ms": 5731, "ttft_ms": null, "input_tokens": 5058, "cached_input_tokens": 0, "output_tokens": 543, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007084, "latency_ms": 3136, "ttft_ms": null, "input_tokens": 5384, "cached_input_tokens": 0, "output_tokens": 340, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.4e-07, "latency_ms": 853, "ttft_ms": null, "input_tokens": 22, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001025, "latency_ms": 2534, "ttft_ms": null, "input_tokens": 450, "cached_input_tokens": 0, "output_tokens": 115, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.1e-06, "latency_ms": 595, "ttft_ms": null, "input_tokens": 105, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01503414,
+   "spent_usd": 0.01503414,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Kabir's birthday, since Sun 14 Mar 2027. Added to core memory: Kabir's birthday.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "20-vegetarian",
+   "title": "A standing preference about the user goes to core",
+   "tags": [],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 8901,
+   "ttft_ms": 8899,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.1e-05, "latency_ms": 1707, "ttft_ms": null, "input_tokens": 540, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.006937, "latency_ms": 4493, "ttft_ms": null, "input_tokens": 5052, "cached_input_tokens": 0, "output_tokens": 377, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8e-08, "latency_ms": 353, "ttft_ms": null, "input_tokens": 4, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.21e-05, "latency_ms": 1745, "ttft_ms": null, "input_tokens": 431, "cached_input_tokens": 0, "output_tokens": 58, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 9.4e-07, "latency_ms": 573, "ttft_ms": null, "input_tokens": 47, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00708112,
+   "spent_usd": 0.00708112,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a preference: Vegetarian. Added to core memory: Vegetarian.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "21-sensitive-held",
+   "title": "Sensitive: saved to the archive, the core write held (P-SENS-1)",
+   "tags": [
+    "dates",
+    "sensitive"
+   ],
+   "passed": false,
+   "failures": [
+    "therapist: layer core",
+    "no held entry for P-SENS-1",
+    "reply 'Saved as a fact: Seeing a therapist for anxiety, since March 2026. Added to core memory: Seeing a therapist for anxiety.' lacks 'Held for your confirmation'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 2,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 11777,
+   "ttft_ms": 11775,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.42e-05, "latency_ms": 1511, "ttft_ms": null, "input_tokens": 547, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007369, "latency_ms": 4424, "ttft_ms": null, "input_tokens": 5059, "cached_input_tokens": 0, "output_tokens": 462, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007069, "latency_ms": 2350, "ttft_ms": null, "input_tokens": 5364, "cached_input_tokens": 0, "output_tokens": 341, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.16e-05, "latency_ms": 2247, "ttft_ms": null, "input_tokens": 446, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.28e-06, "latency_ms": 1217, "ttft_ms": null, "input_tokens": 64, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0145854,
+   "spent_usd": 0.01458508,
+   "cache_hits": 1,
+   "detail": {
+    "reply": "Saved as a fact: Seeing a therapist for anxiety, since March 2026. Added to core memory: Seeing a therapist for anxiety.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "22-keys-location",
+   "title": "Where a thing is: a supersedable located_at fact about the keys",
+   "tags": [],
+   "passed": false,
+   "failures": [
+    "spare keys: entity kitchen cabinet:at not in [('spare keys', 'about'), ('spare keys', 'subject')]"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 2,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 12367,
+   "ttft_ms": 12365,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.16e-05, "latency_ms": 2136, "ttft_ms": null, "input_tokens": 546, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007111, "latency_ms": 3794, "ttft_ms": null, "input_tokens": 5056, "cached_input_tokens": 0, "output_tokens": 411, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00709, "latency_ms": 2700, "ttft_ms": null, "input_tokens": 5335, "cached_input_tokens": 0, "output_tokens": 351, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.8e-07, "latency_ms": 970, "ttft_ms": null, "input_tokens": 9, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.97e-05, "latency_ms": 2221, "ttft_ms": null, "input_tokens": 437, "cached_input_tokens": 0, "output_tokens": 72, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.48e-06, "latency_ms": 510, "ttft_ms": null, "input_tokens": 74, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.01435396,
+   "spent_usd": 0.01435396,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a fact: Spare keys location. Added to core memory: Spare keys location.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "23-learn-rust",
+   "title": "An intention to learn, linked to a topic",
+   "tags": [],
+   "passed": false,
+   "failures": [
+    "learn rust: entity Rust:about not in [('me', 'subject')]",
+    "reply 'Added Learn Rust to things to learn.' lacks 'Added Rust to things to learn.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 10192,
+   "ttft_ms": 10190,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 6.92e-05, "latency_ms": 3166, "ttft_ms": null, "input_tokens": 542, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007003, "latency_ms": 4501, "ttft_ms": null, "input_tokens": 5053, "cached_input_tokens": 0, "output_tokens": 390, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 300, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.19e-05, "latency_ms": 1781, "ttft_ms": null, "input_tokens": 434, "cached_input_tokens": 0, "output_tokens": 77, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.5e-06, "latency_ms": 415, "ttft_ms": null, "input_tokens": 75, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00715572,
+   "spent_usd": 0.00715572,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Added Learn Rust to things to learn.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "24-half-marathon",
+   "title": "A goal: a project entity plus an intention with a target month",
+   "tags": [
+    "dates",
+    "entities"
+   ],
+   "passed": false,
+   "failures": [
+    "half marathon: kind plan != intention",
+    "half marathon: state scheduled != active",
+    "half marathon: entity Half marathon:about not in [('me', 'subject')]",
+    "half marathon: layer quick",
+    "no new entity Half marathon:project; new: []"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 2,
+     "category": 0,
+     "layer": 1,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 10284,
+   "ttft_ms": 10282,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.2e-05, "latency_ms": 2828, "ttft_ms": null, "input_tokens": 545, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007285, "latency_ms": 4262, "ttft_ms": null, "input_tokens": 5055, "cached_input_tokens": 0, "output_tokens": 446, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.6e-07, "latency_ms": 403, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.85e-05, "latency_ms": 2145, "ttft_ms": null, "input_tokens": 440, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.28e-06, "latency_ms": 613, "ttft_ms": null, "input_tokens": 64, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00743704,
+   "spent_usd": 0.00743704,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a plan: Half marathon training, due February 2027.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "25-save-and-recall",
+   "title": "Save and recall: the save happens first, then recall runs on the question",
+   "tags": [],
+   "passed": false,
+   "failures": [
+    "reply \"Added Watch Dark to your watch list.\\n\\nI don't have anything saved about watchlist.\" lacks 'Added Dark to your watch list.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 3,
+     "state": 1,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 3,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 12009,
+   "ttft_ms": 9217,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.56e-05, "latency_ms": 1819, "ttft_ms": null, "input_tokens": 551, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007586, "latency_ms": 4736, "ttft_ms": null, "input_tokens": 5061, "cached_input_tokens": 0, "output_tokens": 505, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 379, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.89e-05, "latency_ms": 1701, "ttft_ms": null, "input_tokens": 434, "cached_input_tokens": 0, "output_tokens": 71, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.36e-06, "latency_ms": 554, "ttft_ms": null, "input_tokens": 68, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003479, "latency_ms": 2474, "ttft_ms": null, "input_tokens": 2399, "cached_input_tokens": 0, "output_tokens": 216, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.8e-07, "latency_ms": 304, "ttft_ms": null, "input_tokens": 44, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00809076,
+   "spent_usd": 0.00809076,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Added Watch Dark to your watch list.\n\nI don't have anything saved about watchlist.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "26-labelled-secret",
+   "title": "Model-labelled secret: refused, and the stored turn has the value redacted",
+   "tags": [
+    "secret"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 2,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 5871,
+   "ttft_ms": 5868,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.84e-05, "latency_ms": 1739, "ttft_ms": null, "input_tokens": 549, "cached_input_tokens": 0, "output_tokens": 47, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00732, "latency_ms": 4118, "ttft_ms": null, "input_tokens": 5060, "cached_input_tokens": 0, "output_tokens": 452, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0073984,
+   "spent_usd": 0.0073984,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "I didn't save that: it looks like a password or another secret, and I don't store those. Nothing was written.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "27-person-trigger",
+   "title": "A reminder for when a person comes up: a task for Nisha with an on-person trigger",
+   "tags": [
+    "new",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "interview: entity Nisha:for not in [('Nisha', 'with'), ('me', 'subject')]"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 1,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 8902,
+   "ttft_ms": 8900,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.41e-05, "latency_ms": 1389, "ttft_ms": null, "input_tokens": 551, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007682, "latency_ms": 4788, "ttft_ms": null, "input_tokens": 5062, "cached_input_tokens": 0, "output_tokens": 524, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-07, "latency_ms": 267, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.61e-05, "latency_ms": 2036, "ttft_ms": null, "input_tokens": 441, "cached_input_tokens": 0, "output_tokens": 104, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.42e-06, "latency_ms": 391, "ttft_ms": null, "input_tokens": 71, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00785384,
+   "spent_usd": 0.00785384,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Saved as a task: Ask Nisha about her interview.\n\nBy the way, you wanted to ask Nisha about her interview when we talk next.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "28-topic-trigger",
+   "title": "A reminder for when a topic comes up: the cue is kept as text, hash and key",
+   "tags": [
+    "new",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    },
+    "total": {
+     "kind": 2,
+     "state": 1,
+     "modality": 0,
+     "date": 1,
+     "entity": 1,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 12667,
+   "ttft_ms": 12296,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.66e-05, "latency_ms": 1964, "ttft_ms": null, "input_tokens": 556, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.008955, "latency_ms": 6184, "ttft_ms": null, "input_tokens": 5070, "cached_input_tokens": 0, "output_tokens": 777, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 1019, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6e-07, "latency_ms": 348, "ttft_ms": null, "input_tokens": 30, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.45e-05, "latency_ms": 2133, "ttft_ms": null, "input_tokens": 450, "cached_input_tokens": 0, "output_tokens": 79, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.12e-06, "latency_ms": 596, "ttft_ms": null, "input_tokens": 106, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 366, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00911958,
+   "spent_usd": 0.00911958,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "Added Visit Ichiban Ramen Bar to places to visit.",
+    "status": "completed"
+   }
+  }
+ ]
+}

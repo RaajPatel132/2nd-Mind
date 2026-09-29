@@ -1,0 +1,713 @@
+{
+ "schema_version": 1,
+ "run_id": "20260928T175144Z-0902bba",
+ "suite": "recall",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-28T17:51:44.891914Z",
+ "finished_at": "2026-09-28T17:54:12.368166Z",
+ "git_sha": "0902bba1be50",
+ "git_dirty": true,
+ "config_hash": "8c46c72b447cfae8b79f77ff1a260ae5bf9a909093c3347f6124744f9c1f41b6",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@2",
+  "extract": "extract@3",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@2",
+  "rerank": "rerank@2",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-10-06T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {
+  "only_failed": [
+   "14-last-month-running",
+   "21-runs-september",
+   "25-nisha-husband",
+   "28-gift-partner",
+   "39-watched-dark",
+   "41-therapist-hidden",
+   "44-runs-and-sourdough",
+   "45-trigger-person",
+   "46-trigger-topic",
+   "50-bought-last-month"
+  ]
+ },
+ "batch": "B3",
+ "budget_usd": 0.05,
+ "estimate_usd": 0.02184882,
+ "status": "complete",
+ "note": "triage: re-run B3 failures from the cache to capture outputs",
+ "setup_calls": [
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 39, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null}
+ ],
+ "cases": [
+  {
+   "id": "14-last-month-running",
+   "title": "§8.2 time + semantic: filters on when it happened, not when saved",
+   "tags": [
+    "time_window"
+   ],
+   "passed": false,
+   "failures": [
+    "forbidden in the answer: ['run_oct_04', 'running_shoes']"
+   ],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 22,
+    "soft_only": 2
+   },
+   "latency_ms": 22464,
+   "ttft_ms": 19920,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001067, "latency_ms": 6390, "ttft_ms": null, "input_tokens": 612, "cached_input_tokens": 0, "output_tokens": 91, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.98, "reason": "You’re asking me to recall anything you shared about running last month."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003855, "latency_ms": 3644, "ttft_ms": null, "input_tokens": 2670, "cached_input_tokens": 0, "output_tokens": 237, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "time_window", "question": "What did I save from last month about running?", "topic": "running", "about": "running", "times": [{"expression": "last month", "clock": "mentioned", "direction": "past", "anchor": null}], "entities": [], "filters": {"kinds": [], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.6e-07, "latency_ms": 814, "ttft_ms": null, "input_tokens": 33, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00055, "latency_ms": 7722, "ttft_ms": null, "input_tokens": 2260, "cached_input_tokens": 0, "output_tokens": 648, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "A September run log with distance, time, and location."}, {"id": "c2", "score": 1.0, "reason": "A September run log with distance and time."}, {"id": "c3", "score": 1.0, "reason": "A September run log with distance, time, and location."}, {"id": "c4", "score": 1.0, "reason": "A September run log with distance, time, and location."}, {"id": "c5", "score": 1.0, "reason": "A September run log with distance and time."}, {"id": "c6", "score": 0.0, "reason": "This is a saved Rust book link, unrelated to running."}, {"id": "c7", "score": 1.0, "reason": "A September evening run log with distance, route, and companion."}, {"id": "c8", "score": 1.0, "reason": "A September note about a run, including distance, route, and how your knees felt."}, {"id": "c9", "score": 0.0, "reason": "This saved article is about investing, not running."}, {"id": "c10", "score": 1.0, "reason": "A September run log with distance and location."}, {"id": "c11", "score": 0.0, "reason": "This is a fact about where you live, unrelated to running."}, {"id": "c12", "score": 0.0, "reason": "This records finishing a novel, unrelated to running."}, {"id": "c13", "score": 0.0, "reason": "This is a trading idea, unrelated to running."}, {"id": "c14", "score": 0.0, "reason": "This records a pottery class, unrelated to running."}, {"id": "c15", "score": 0.0, "reason": "This records watching a TV series, unrelated to running."}, {"id": "c16", "score": 0.7, "reason": "This is about running shoes, though the purchase happened in August rather than last month."}, {"id": "c17", "score": 0.0, "reason": "This says a colleague runs a work standup; it is not about your running."}, {"id": "c18", "score": 0.0, "reason": "This is about a TV show, unrelated to running."}, {"id": "c19", "score": 0.0, "reason": "This is a passport-renewal task, unrelated to running."}, {"id": "c20", "score": 0.0, "reason": "This describes a leisure pattern, unrelated to running."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002988, "latency_ms": 3352, "ttft_ms": 1014, "input_tokens": 1838, "cached_input_tokens": 0, "output_tokens": 230, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You saved quite a bit from September! Here's what you ran:\n\n5 km in 31 minutes at Vetal Hill on the morning of Wednesday 2 September [1], then 8 km in 52 minutes at Vetal Hill on Sunday 6 September [3], 5 km in 30 minutes on Wednesday 9 September [2], 10 km in 64 minutes at Vetal Hill on Sunday 13 September [4], and 12 km in 78 minutes on Sunday 20 September [5]. You also had an evening run with Kabir around the lake for 4 km on Wednesday 23 September [7], and a 6 km run on the beach in Goa on Sunday 27 September [10].\n\nYou also noted on Wednesday 16 September that you went for a 6 km run along the river and your knees felt fine [8].\n\nThat's solid progress—looks like you're building up the distance nicely for the half marathon!", "timed": true}
+   ],
+   "cost_usd": 0.00403086,
+   "spent_usd": 0.00403086,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_sep_02",
+     "run_sep_09",
+     "run_sep_06",
+     "run_sep_13",
+     "run_sep_20",
+     "rust_book",
+     "run_misfiled_subtype",
+     "run_misfiled_note",
+     "trading_article",
+     "run_sep_27",
+     "live_pune",
+     "quiet_hours_read",
+     "trading_idea",
+     "pottery_class",
+     "watched_severance",
+     "running_shoes",
+     "meenu_standup",
+     "watch_severance",
+     "renew_passport",
+     "pattern_film",
+     "run_oct_04",
+     "live_bengaluru"
+    ],
+    "ranked": [
+     "run_sep_02",
+     "run_sep_09",
+     "run_sep_06",
+     "run_sep_13",
+     "run_sep_20",
+     "rust_book",
+     "run_misfiled_subtype",
+     "run_misfiled_note",
+     "trading_article",
+     "run_sep_27"
+    ],
+    "aggregate": null,
+    "reply": "You saved quite a bit from September! Here's what you ran:\n\n5 km in 31 minutes at Vetal Hill on the morning of Wednesday 2 September [1], then 8 km in 52 minutes at Vetal Hill on Sunday 6 September [3], 5 km in 30 minutes on Wednesday 9 September [2], 10 km in 64 minutes at Vetal Hill on Sunday 13 September [4], and 12 km in 78 minutes on Sunday 20 September [5]. You also had an evening run with K"
+   }
+  },
+  {
+   "id": "21-runs-september",
+   "title": "Counting with the misfiled runs reported, not counted",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": false,
+   "failures": [
+    "aggregate: expected 6.0, got 7.0",
+    "reply lacks 'File them as runs?': 'You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km (an evening run with Kabir around the lake on 23 September) to 12 km (on 20 Septembe'"
+   ],
+   "scores": {
+    "shape": "count",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 7,
+    "soft_only": 0
+   },
+   "latency_ms": 11897,
+   "ttft_ms": 11055,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.99e-05, "latency_ms": 1585, "ttft_ms": null, "input_tokens": 614, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to retrieve the number of runs you logged in September."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003692, "latency_ms": 2348, "ttft_ms": null, "input_tokens": 2672, "cached_input_tokens": 0, "output_tokens": 204, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "count", "question": "How many runs did I log in September?", "topic": "runs in September", "about": "running", "times": [{"expression": "in September", "clock": "occurred", "direction": "past", "anchor": null}], "entities": [], "filters": {"kinds": ["episode"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": {"key": "activity", "value": "run"}, "role": null, "current_only": false}, "aggregate": {"op": "count", "field": null, "group_by": null}, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 35, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005271, "latency_ms": 5910, "ttft_ms": null, "input_tokens": 2391, "cached_input_tokens": 0, "output_tokens": 576, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "A logged run on 9 September, within September."}, {"id": "c2", "score": 1.0, "reason": "A logged run on 2 September, within September."}, {"id": "c3", "score": 1.0, "reason": "A logged run on 20 September, within September."}, {"id": "c4", "score": 1.0, "reason": "A logged run on 6 September, within September."}, {"id": "c5", "score": 1.0, "reason": "A logged run on 23 September, within September."}, {"id": "c6", "score": 1.0, "reason": "A logged run on 13 September, within September."}, {"id": "c7", "score": 1.0, "reason": "A logged run on 27 September, within September."}, {"id": "c8", "score": 0.0, "reason": "This run was logged in October, not September."}, {"id": "c9", "score": 0.0, "reason": "This records finishing a book, not a run."}, {"id": "c10", "score": 0.0, "reason": "This records watching a series, not a run."}, {"id": "c11", "score": 0.0, "reason": "This records a pottery class, not a run."}, {"id": "c12", "score": 0.0, "reason": "This records buying running shoes in August, not a September run."}, {"id": "c13", "score": 1.0, "reason": "This note records a 6 km run on 16 September."}, {"id": "c14", "score": 0.0, "reason": "This records watching a series, not a run."}, {"id": "c15", "score": 0.0, "reason": "This records a Goa trip, not a run."}, {"id": "c16", "score": 0.0, "reason": "This records a gym membership cancellation, not a September run."}, {"id": "c17", "score": 0.0, "reason": "This records where you live, not a run."}, {"id": "c18", "score": 0.0, "reason": "This is about a colleague's work role, not a run."}, {"id": "c19", "score": 0.0, "reason": "This records brunch, not a run."}, {"id": "c20", "score": 0.0, "reason": "This records a past residence, not a run."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001616, "latency_ms": 1509, "ttft_ms": 826, "input_tokens": 1196, "cached_input_tokens": 0, "output_tokens": 84, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km (an evening run with Kabir around the lake on 23 September) to 12 km (on 20 September), and included a 6 km run on the beach in Goa on 27 September.", "timed": true}
+   ],
+   "cost_usd": 0.0025929,
+   "spent_usd": 0.0025922,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27",
+     "run_oct_04",
+     "quiet_hours_read",
+     "watched_severance"
+    ],
+    "aggregate": 7.0,
+    "reply": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km (an evening run with Kabir around the lake on 23 September) to 12 km (on 20 September), and included a 6 km run on the beach in Goa on 27 September.\n\n1 more mention looks like runs but weren't logged as runs. File it as a run?"
+   }
+  },
+  {
+   "id": "25-nisha-husband",
+   "title": "2-hop: a relation path to the right person",
+   "tags": [
+    "entity"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 11402,
+   "ttft_ms": 11132,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.03e-05, "latency_ms": 1608, "ttft_ms": null, "input_tokens": 613, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking about information that may have been saved about Nisha’s husband."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010906, "latency_ms": 2299, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2656, "output_tokens": 162, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "entity", "question": "What does Nisha's husband like?", "topic": "Nisha's husband's preferences", "about": "preferences", "times": [], "entities": [{"mention": "Nisha", "name": "Nisha", "path": ["spouse_of"]}], "filters": {"kinds": ["preference"], "subtypes": [], "states": ["current"], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004873, "latency_ms": 5586, "ttft_ms": null, "input_tokens": 2083, "cached_input_tokens": 0, "output_tokens": 558, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "Rohan is identified as Nisha’s husband, and this says he loves birdwatching, especially at dawn."}, {"id": "c2", "score": 0.7, "reason": "Rohan is identified as Nisha’s husband, and this says he loves live jazz."}, {"id": "c3", "score": 0.7, "reason": "Identifies Rohan as Nisha’s husband, connecting the preference memories to the person asked about."}, {"id": "c4", "score": 0.0, "reason": "This task about Nisha’s interview does not say what her husband likes."}, {"id": "c5", "score": 0.0, "reason": "This brunch with Nisha says nothing about her husband’s preferences."}, {"id": "c6", "score": 0.0, "reason": "This preference is about Kabir, not Nisha’s husband."}, {"id": "c7", "score": 0.0, "reason": "This is about a book Nisha lent you, not her husband’s preferences."}, {"id": "c8", "score": 0.0, "reason": "Your vegetarian preference is unrelated to what Nisha’s husband likes."}, {"id": "c9", "score": 0.0, "reason": "This records a show recommended by Nisha, not her husband’s preferences."}, {"id": "c10", "score": 0.0, "reason": "Your preference about thrillers is unrelated to Nisha’s husband."}, {"id": "c11", "score": 0.0, "reason": "This dinner plan with Kabir does not concern Nisha’s husband."}, {"id": "c12", "score": 0.0, "reason": "This is about Kabir’s birthday, not Nisha’s husband."}, {"id": "c13", "score": 0.0, "reason": "This trip with Kabir does not concern Nisha’s husband."}, {"id": "c14", "score": 0.0, "reason": "This restaurant wish list item does not concern Nisha’s husband."}, {"id": "c15", "score": 0.0, "reason": "This TV-series wish list item does not concern Nisha’s husband."}, {"id": "c16", "score": 0.0, "reason": "This pottery plan with Kabir does not concern Nisha’s husband."}, {"id": "c17", "score": 0.0, "reason": "This restaurant wish list item does not concern Nisha’s husband."}, {"id": "c18", "score": 0.0, "reason": "This restaurant wish list item does not concern Nisha’s husband."}, {"id": "c19", "score": 0.0, "reason": "This hotel-booking task for the Goa trip does not concern Nisha’s husband."}, {"id": "c20", "score": 0.0, "reason": "This superseded preference is about you, not Nisha’s husband."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000934, "latency_ms": 1306, "ttft_ms": 1291, "input_tokens": 799, "cached_input_tokens": 0, "output_tokens": 27, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Rohan loves birdwatching, especially at dawn [1], and he loves live jazz [2].", "timed": true}
+   ],
+   "cost_usd": 0.00161124,
+   "spent_usd": 0.00161066,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "entity"
+    ],
+    "selected": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband"
+    ],
+    "ranked": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband",
+     "nisha_interview",
+     "brunch_nisha",
+     "kabir_likes_mk",
+     "quiet_hours_read",
+     "vegetarian",
+     "watch_severance",
+     "done_thrillers"
+    ],
+    "aggregate": null,
+    "reply": "Rohan loves birdwatching, especially at dawn [1], and he loves live jazz [2].\n\nBy the way, you wanted to ask Nisha about her interview."
+   }
+  },
+  {
+   "id": "28-gift-partner",
+   "title": "§8.2 person: a gift for my partner, through the relation",
+   "tags": [
+    "entity"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['entity'], planned ['situational', 'list']"
+   ],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 4,
+    "soft_only": 0
+   },
+   "latency_ms": 18852,
+   "ttft_ms": 17811,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.17e-05, "latency_ms": 2067, "ttft_ms": null, "input_tokens": 612, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.92, "reason": "You’re asking for gift suggestions, which may depend on things you’ve shared about your partner."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00026596, "latency_ms": 5842, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2656, "output_tokens": 476, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "situational", "question": "What could I gift my partner?", "topic": "gift ideas for partner", "about": "gift ideas", "times": [], "entities": [{"mention": "my partner", "name": "Kabir", "path": []}], "filters": {"kinds": ["preference", "fact", "intention"], "subtypes": [], "states": ["current", "wanted", "active"], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.8e-07, "latency_ms": 318, "ttft_ms": null, "input_tokens": 34, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.96e-05, "latency_ms": 2285, "ttft_ms": null, "input_tokens": 726, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "A saved Rust resource that you have not opened yet; no saved resources for Japan trip or fingerstyle guitar appear in the candidates."}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0006121, "latency_ms": 8241, "ttft_ms": null, "input_tokens": 2061, "cached_input_tokens": 0, "output_tokens": 812, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Kabir is your partner and likes MK bags, so an MK bag is a gift idea tailored to them."}, {"id": "c2", "score": 0.4, "reason": "The serial number identifies an MK bag connected to Kabir, but doesn’t say whether it’s a gift candidate or what they’d want."}, {"id": "c3", "score": 0.0, "reason": "This is your TV watchlist, not a gift preference for your partner."}, {"id": "c4", "score": 0.4, "reason": "Kabir’s birthday is a possible gift occasion, but this memory gives no gift idea."}, {"id": "c5", "score": 0.4, "reason": "You have dinner planned with Kabir, but the plan doesn’t indicate a gift preference."}, {"id": "c6", "score": 0.4, "reason": "A past trip with Kabir suggests a shared experience, but doesn’t identify a gift they’d like."}, {"id": "c7", "score": 0.4, "reason": "A pottery workshop is a shared activity with Kabir and could inspire an experience gift, though it is already planned."}, {"id": "c8", "score": 0.4, "reason": "A shared run is some context for an activity gift, but doesn’t state Kabir’s gift preferences."}, {"id": "c9", "score": 0.4, "reason": "A restaurant on your wish list could inspire a dinner gift, but it isn’t stated as Kabir’s preference."}, {"id": "c10", "score": 0.0, "reason": "This is your half-marathon training goal, not a gift preference for Kabir."}, {"id": "c11", "score": 0.0, "reason": "This is your restaurant wish list, with no connection to Kabir’s gift preferences."}, {"id": "c12", "score": 0.0, "reason": "This is your guitar-learning wish list, not a gift preference for Kabir."}, {"id": "c13", "score": 0.0, "reason": "These are places you want to visit, not gift preferences for Kabir."}, {"id": "c14", "score": 0.0, "reason": "This is your TV watchlist, not a gift preference for Kabir."}, {"id": "c15", "score": 0.0, "reason": "This is your restaurant wish list, with no connection to Kabir’s gift preferences."}, {"id": "c16", "score": 0.0, "reason": "This is your Rust-learning wish list, not a gift preference for Kabir."}, {"id": "c17", "score": 0.0, "reason": "This preference is about Rohan, not your partner Kabir."}, {"id": "c18", "score": 0.0, "reason": "This memory is about Rohan and Nisha, not your partner Kabir."}, {"id": "c19", "score": 0.0, "reason": "This preference is about Rohan, not your partner Kabir."}, {"id": "c20", "score": 0.0, "reason": "This trading idea is unrelated to a gift for your partner."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00134, "latency_ms": 1847, "ttft_ms": 964, "input_tokens": 905, "cached_input_tokens": 0, "output_tokens": 87, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Kabir likes MK bags [1], so that could be a great gift idea. You two also have a shared interest in watching Dark together [3], so if he's into that kind of show, you could consider something related to his other interests once you know more about them.\n\nWould you like to tell me more about what else Kabir enjoys? That might help me suggest other gift ideas.", "timed": true}
+   ],
+   "cost_usd": 0.00240004,
+   "spent_usd": 0.00240004,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "situational",
+     "list"
+    ],
+    "selected": [
+     "kabir_likes_mk",
+     "mk_bag",
+     "watch_dark",
+     "rust_book"
+    ],
+    "ranked": [
+     "kabir_likes_mk",
+     "mk_bag",
+     "watch_dark",
+     "kabir_birthday",
+     "dinner_tonight",
+     "goa_trip",
+     "saturday_workshop",
+     "run_misfiled_subtype",
+     "try_saffron",
+     "half_marathon_goal"
+    ],
+    "aggregate": null,
+    "reply": "Kabir likes MK bags [1], so that could be a great gift idea. You two also have a shared interest in watching Dark together [3], so if he's into that kind of show, you could consider something related to his other interests once you know more about them.\n\nWould you like to tell me more about what else Kabir enjoys? That might help me suggest other gift ideas."
+   }
+  },
+  {
+   "id": "39-watched-dark",
+   "title": "Modality abstain: wanting to watch is not having watched",
+   "tags": [
+    "abstain",
+    "exact"
+   ],
+   "passed": false,
+   "failures": [
+    "should abstain; selected ['watch_dark']",
+    "abstention reply missing: 'Not yet—Dark is still on your watch list [1]. You noted 2 weeks ago that you want to watch it with Kabir [1].\\n\\nWould you'"
+   ],
+   "scores": {
+    "shape": "exact",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 12020,
+   "ttft_ms": 11105,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.9e-05, "latency_ms": 2012, "ttft_ms": null, "input_tokens": 610, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking whether you’ve watched something you may have mentioned before."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014376, "latency_ms": 3301, "ttft_ms": null, "input_tokens": 12, "cached_input_tokens": 2656, "output_tokens": 232, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "exact", "question": "Have I watched Dark?", "topic": "whether Dark has been watched", "about": "watching Dark", "times": [], "entities": [{"mention": "Dark", "name": "Dark", "path": []}], "filters": {"kinds": ["episode"], "subtypes": ["watch"], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.4e-07, "latency_ms": 476, "ttft_ms": null, "input_tokens": 22, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004782, "latency_ms": 4141, "ttft_ms": null, "input_tokens": 2352, "cached_input_tokens": 0, "output_tokens": 486, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c2", "score": 0.0, "reason": "This says you watched Severance, not Dark."}, {"id": "c3", "score": 0.0, "reason": "This records finishing a novel, not watching Dark."}, {"id": "c4", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c5", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c6", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c7", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c8", "score": 0.0, "reason": "This records a pottery class, not whether you watched Dark."}, {"id": "c9", "score": 0.0, "reason": "This records brunch, not whether you watched Dark."}, {"id": "c10", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c11", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c12", "score": 0.0, "reason": "This records buying running shoes, not whether you watched Dark."}, {"id": "c13", "score": 0.0, "reason": "This records a run, not whether you watched Dark."}, {"id": "c14", "score": 0.0, "reason": "This records cancelling a gym membership, not whether you watched Dark."}, {"id": "c15", "score": 1.0, "reason": "This directly says Dark is on your to-watch list and has not been watched yet."}, {"id": "c16", "score": 0.0, "reason": "This is about Mindhunter, not Dark."}, {"id": "c17", "score": 0.0, "reason": "This records watching Severance, not Dark."}, {"id": "c18", "score": 0.4, "reason": "This is a general preference about shows, but doesn't say whether you watched Dark."}, {"id": "c19", "score": 0.0, "reason": "This is about The Crown, not Dark."}, {"id": "c20", "score": 0.0, "reason": "This is an outdated preference about thrillers, not whether you watched Dark."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001003, "latency_ms": 1517, "ttft_ms": 774, "input_tokens": 733, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Not yet—Dark is still on your watch list [1]. You noted 2 weeks ago that you want to watch it with Kabir [1].\n\nWould you like me to update that to \"watched\" once you've seen it?", "timed": true}
+   ],
+   "cost_usd": 0.0017044,
+   "spent_usd": 0.0017044,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "watch_dark"
+    ],
+    "ranked": [
+     "run_oct_04",
+     "watched_severance",
+     "quiet_hours_read",
+     "run_misfiled_subtype",
+     "run_sep_20",
+     "run_sep_09",
+     "run_sep_27",
+     "pottery_class",
+     "brunch_nisha",
+     "run_sep_13"
+    ],
+    "aggregate": null,
+    "reply": "Not yet—Dark is still on your watch list [1]. You noted 2 weeks ago that you want to watch it with Kabir [1].\n\nWould you like me to update that to \"watched\" once you've seen it?"
+   }
+  },
+  {
+   "id": "41-therapist-hidden",
+   "title": "Sensitive stays out unless asked about",
+   "tags": [
+    "abstain",
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 11214,
+   "ttft_ms": 11118,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.98e-05, "latency_ms": 1655, "ttft_ms": null, "input_tokens": 613, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to retrieve a routine or activity you may have shared."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014256, "latency_ms": 3136, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2656, "output_tokens": 229, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "semantic", "question": "What do I do on Thursday evenings?", "topic": "activities on Thursday evenings", "about": null, "times": [{"expression": "Thursday evenings", "clock": "occurred", "direction": "any", "anchor": null}], "entities": [], "filters": {"kinds": ["pattern"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 486, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004756, "latency_ms": 5481, "ttft_ms": null, "input_tokens": 2176, "cached_input_tokens": 0, "output_tokens": 516, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.4, "reason": "Mentions unwinding with a film, but after a weekend study session—not on Thursday evenings."}, {"id": "c2", "score": 0.4, "reason": "A Thursday work standup is mentioned, but no time or indication it is in the evening."}, {"id": "c3", "score": 0.0, "reason": "This was a Wednesday evening run, not a Thursday activity."}, {"id": "c4", "score": 0.0, "reason": "A trading idea with no connection to Thursday evenings."}, {"id": "c5", "score": 0.0, "reason": "About Kabir’s bag preference, unrelated to Thursday evenings."}, {"id": "c6", "score": 0.0, "reason": "A bag serial number, unrelated to Thursday evenings."}, {"id": "c7", "score": 0.0, "reason": "A scheduled Saturday pottery workshop, not a Thursday evening activity."}, {"id": "c8", "score": 0.0, "reason": "The gym routine is on Monday, Wednesday, and Friday mornings."}, {"id": "c9", "score": 0.0, "reason": "A past Saturday afternoon pottery class, not a Thursday evening activity."}, {"id": "c10", "score": 0.0, "reason": "A Tuesday dinner plan, not Thursday evening."}, {"id": "c11", "score": 0.0, "reason": "A preference about lighter shows, with no Thursday-evening routine specified."}, {"id": "c12", "score": 0.0, "reason": "A passport-renewal task, unrelated to Thursday evenings."}, {"id": "c13", "score": 0.0, "reason": "A restaurant wish-list item, with no Thursday-evening connection."}, {"id": "c14", "score": 0.0, "reason": "A guitar-learning intention, with no Thursday-evening timing."}, {"id": "c15", "score": 0.0, "reason": "A past Saturday dentist appointment, unrelated to Thursday evenings."}, {"id": "c16", "score": 0.0, "reason": "Half-marathon training intention, with no Thursday-evening schedule."}, {"id": "c17", "score": 0.0, "reason": "A past running-shoes purchase, unrelated to Thursday evenings."}, {"id": "c18", "score": 0.0, "reason": "A note about a gym’s location, not a Thursday-evening activity."}, {"id": "c19", "score": 0.0, "reason": "A past Wednesday morning run, not a Thursday evening activity."}, {"id": "c20", "score": 0.0, "reason": "A past TV viewing, but it was on Friday night, not Thursday."}]}, "timed": true}
+   ],
+   "cost_usd": 0.0006983,
+   "spent_usd": 0.0006983,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [],
+    "ranked": [
+     "pattern_film",
+     "meenu_standup",
+     "run_misfiled_subtype",
+     "trading_idea",
+     "kabir_likes_mk",
+     "mk_bag",
+     "saturday_workshop",
+     "gym_routine",
+     "pottery_class",
+     "dinner_tonight"
+    ],
+    "aggregate": null,
+    "reply": "I don't have anything saved about activities on Thursday evenings."
+   }
+  },
+  {
+   "id": "44-runs-and-sourdough",
+   "title": "Multi-part: one part found, one says it has nothing",
+   "tags": [
+    "aggregate",
+    "count",
+    "multi",
+    "semantic"
+   ],
+   "passed": false,
+   "failures": [
+    "aggregate: expected 6.0, got 7.0"
+   ],
+   "scores": {
+    "shape": "count",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 7,
+    "soft_only": 0
+   },
+   "latency_ms": 13794,
+   "ttft_ms": 12753,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.94e-05, "latency_ms": 1764, "ttft_ms": null, "input_tokens": 624, "cached_input_tokens": 0, "output_tokens": 74, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to retrieve how many runs you logged in September and what you saved about sourdough."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00018916, "latency_ms": 3220, "ttft_ms": null, "input_tokens": 26, "cached_input_tokens": 2656, "output_tokens": 320, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "count", "question": "How many runs did I log in September?", "topic": "runs in September", "about": "running", "times": [{"expression": "in September", "clock": "occurred", "direction": "past", "anchor": null}], "entities": [], "filters": {"kinds": ["episode"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": {"key": "activity", "value": "run"}, "role": null, "current_only": false}, "aggregate": {"op": "count", "field": null, "group_by": null}, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}, {"shape": "semantic", "question": "What did I save about sourdough?", "topic": "saved information about sourdough", "about": "sourdough", "times": [], "entities": [{"mention": "sourdough", "name": null, "path": []}], "filters": {"kinds": ["resource"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 70, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005271, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2391, "cached_input_tokens": 0, "output_tokens": 576, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "reason": "A logged run on 9 September, within September.", "score": 1.0}, {"id": "c2", "reason": "A logged run on 2 September, within September.", "score": 1.0}, {"id": "c3", "reason": "A logged run on 20 September, within September.", "score": 1.0}, {"id": "c4", "reason": "A logged run on 6 September, within September.", "score": 1.0}, {"id": "c5", "reason": "A logged run on 23 September, within September.", "score": 1.0}, {"id": "c6", "reason": "A logged run on 13 September, within September.", "score": 1.0}, {"id": "c7", "reason": "A logged run on 27 September, within September.", "score": 1.0}, {"id": "c8", "reason": "This run was logged in October, not September.", "score": 0.0}, {"id": "c9", "reason": "This records finishing a book, not a run.", "score": 0.0}, {"id": "c10", "reason": "This records watching a series, not a run.", "score": 0.0}, {"id": "c11", "reason": "This records a pottery class, not a run.", "score": 0.0}, {"id": "c12", "reason": "This records buying running shoes in August, not a September run.", "score": 0.0}, {"id": "c13", "reason": "This note records a 6 km run on 16 September.", "score": 1.0}, {"id": "c14", "reason": "This records watching a series, not a run.", "score": 0.0}, {"id": "c15", "reason": "This records a Goa trip, not a run.", "score": 0.0}, {"id": "c16", "reason": "This records a gym membership cancellation, not a September run.", "score": 0.0}, {"id": "c17", "reason": "This records where you live, not a run.", "score": 0.0}, {"id": "c18", "reason": "This is about a colleague's work role, not a run.", "score": 0.0}, {"id": "c19", "reason": "This records brunch, not a run.", "score": 0.0}, {"id": "c20", "reason": "This records a past residence, not a run.", "score": 0.0}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004922, "latency_ms": 6465, "ttft_ms": null, "input_tokens": 2102, "cached_input_tokens": 0, "output_tokens": 564, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.0, "reason": "This saved resource is about Rust, not sourdough."}, {"id": "c2", "score": 0.0, "reason": "This saved article is about momentum strategies, not sourdough."}, {"id": "c3", "score": 0.0, "reason": "This is a restaurant wish list item, not a sourdough resource."}, {"id": "c4", "score": 0.0, "reason": "This is a restaurant wish list item, not a sourdough resource."}, {"id": "c5", "score": 0.0, "reason": "Backing up phone photos is unrelated to sourdough."}, {"id": "c6", "score": 0.0, "reason": "This records a brunch, not anything saved about sourdough."}, {"id": "c7", "score": 0.0, "reason": "This is a dinner plan, not about sourdough."}, {"id": "c8", "score": 0.0, "reason": "This records a pottery class, not anything saved about sourdough."}, {"id": "c9", "score": 0.0, "reason": "A vegetarian preference does not answer what was saved about sourdough."}, {"id": "c10", "score": 0.0, "reason": "This records finishing a novel, not a sourdough resource."}, {"id": "c11", "score": 0.0, "reason": "This is a restaurant wish list item, not a sourdough resource."}, {"id": "c12", "score": 0.0, "reason": "This is an intention to learn Rust, not sourdough."}, {"id": "c13", "score": 0.0, "reason": "This is a pottery workshop plan, not about sourdough."}, {"id": "c14", "score": 0.0, "reason": "This running note is unrelated to sourdough."}, {"id": "c15", "score": 0.0, "reason": "This is an intention to learn guitar, not sourdough."}, {"id": "c16", "score": 0.0, "reason": "This records buying running shoes, not anything saved about sourdough."}, {"id": "c17", "score": 0.0, "reason": "This pattern about unwinding with a film does not relate to sourdough."}, {"id": "c18", "score": 0.0, "reason": "This records watching a series, not a sourdough resource."}, {"id": "c19", "score": 0.0, "reason": "Fixing the kitchen tap is unrelated to sourdough."}, {"id": "c20", "score": 0.0, "reason": "This records a run, not anything saved about sourdough."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001696, "latency_ms": 1784, "ttft_ms": 917, "input_tokens": 1246, "cached_input_tokens": 0, "output_tokens": 90, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km to 12 km, mostly at Vetal Hill, with one evening run around the lake with Kabir on 23 September and one on the beach in Goa on 27 September.\n\nI don't have anything saved about sourdough.", "timed": true}
+   ],
+   "cost_usd": 0.00300526,
+   "spent_usd": 0.00247676,
+   "cache_hits": 2,
+   "detail": {
+    "planned": [
+     "count",
+     "semantic"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27",
+     "run_oct_04",
+     "quiet_hours_read",
+     "watched_severance"
+    ],
+    "aggregate": 7.0,
+    "reply": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km to 12 km, mostly at Vetal Hill, with one evening run around the lake with Kabir on 23 September and one on the beach in Goa on 27 September.\n\nI don't have anything saved about sourdough.\n\nI don't have anything saved about saved information about sourdough.\n\n1 more mention looks like runs but weren't logged as runs. File it"
+   }
+  },
+  {
+   "id": "45-trigger-person",
+   "title": "A person trigger fires when she comes up",
+   "tags": [
+    "entity",
+    "fresh",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['entity'], planned ['exact']"
+   ],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 11519,
+   "ttft_ms": 10979,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 38, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.08e-05, "latency_ms": 1387, "ttft_ms": null, "input_tokens": 623, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to retrieve something you may have previously shared about Nisha."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003806, "latency_ms": 3239, "ttft_ms": null, "input_tokens": 2681, "cached_input_tokens": 0, "output_tokens": 225, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "exact", "question": "What did Nisha lend me?", "topic": "things Nisha lent me", "about": "lending", "times": [], "entities": [{"mention": "Nisha", "name": "Nisha", "path": []}], "filters": {"kinds": ["episode"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 30, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005222, "latency_ms": 5207, "ttft_ms": null, "input_tokens": 2392, "cached_input_tokens": 0, "output_tokens": 566, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.0, "reason": "This records brunch with Nisha but says nothing about her lending you anything."}, {"id": "c2", "score": 1.0, "reason": "It directly says Nisha lent you the novel *The Quiet Hours*."}, {"id": "c3", "score": 0.4, "reason": "This is about a task involving Nisha, not what she lent you."}, {"id": "c4", "score": 0.0, "reason": "This is about Nisha’s husband, not something she lent you."}, {"id": "c5", "score": 0.4, "reason": "Nisha recommended a show, but the memory does not say she lent it to you."}, {"id": "c6", "score": 0.0, "reason": "This records your running-shoe purchase and is unrelated to Nisha lending you something."}, {"id": "c7", "score": 0.0, "reason": "This records a run with Kabir and is unrelated to Nisha lending you something."}, {"id": "c8", "score": 0.0, "reason": "This records your run and is unrelated to Nisha lending you something."}, {"id": "c9", "score": 0.0, "reason": "This records a cancelled gym membership and is unrelated to Nisha lending you something."}, {"id": "c10", "score": 0.0, "reason": "This records a pottery class and is unrelated to Nisha lending you something."}, {"id": "c11", "score": 0.0, "reason": "This records watching a show and does not concern anything Nisha lent you."}, {"id": "c12", "score": 0.0, "reason": "This records a run and is unrelated to Nisha lending you something."}, {"id": "c13", "score": 0.0, "reason": "This records a run in Goa and is unrelated to Nisha lending you something."}, {"id": "c14", "score": 0.0, "reason": "This records a run and is unrelated to Nisha lending you something."}, {"id": "c15", "score": 0.0, "reason": "This records a run and is unrelated to Nisha lending you something."}, {"id": "c16", "score": 0.0, "reason": "This records a run and is unrelated to Nisha lending you something."}, {"id": "c17", "score": 0.0, "reason": "This records a run and is unrelated to Nisha lending you something."}, {"id": "c18", "score": 0.0, "reason": "This is a dinner plan with Kabir and is unrelated to Nisha lending you something."}, {"id": "c19", "score": 0.0, "reason": "This records Kabir’s preference and is unrelated to Nisha lending you something."}, {"id": "c20", "score": 0.0, "reason": "This is a note about a colleague and is unrelated to Nisha lending you something."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000917, "latency_ms": 1139, "ttft_ms": 860, "input_tokens": 742, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Nisha lent you a novel called The Quiet Hours, which you finished reading 2 weeks ago on Monday 21 September [1].", "timed": true}
+   ],
+   "cost_usd": 0.00196154,
+   "spent_usd": 0.0019106,
+   "cache_hits": 5,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "quiet_hours_read"
+    ],
+    "ranked": [
+     "brunch_nisha",
+     "quiet_hours_read",
+     "nisha_interview",
+     "rohan_husband",
+     "watch_severance",
+     "running_shoes",
+     "run_misfiled_subtype",
+     "run_sep_20",
+     "gym_cancel",
+     "pottery_class"
+    ],
+    "aggregate": null,
+    "reply": "Nisha lent you a novel called The Quiet Hours, which you finished reading 2 weeks ago on Monday 21 September [1].\n\nBy the way, you wanted to ask Nisha about her interview."
+   }
+  },
+  {
+   "id": "46-trigger-topic",
+   "title": "A topic trigger fires on a close enough message",
+   "tags": [
+    "fresh",
+    "semantic",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['semantic'], planned ['situational', 'list']"
+   ],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 1
+   },
+   "latency_ms": 13619,
+   "ttft_ms": 12721,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 41, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.67e-05, "latency_ms": 1722, "ttft_ms": null, "input_tokens": 622, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.98, "reason": "You’re asking me to bring up anything you may have saved that’s relevant to planning a Japan trip."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000475, "latency_ms": 4678, "ttft_ms": null, "input_tokens": 2680, "cached_input_tokens": 0, "output_tokens": 414, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "situational", "question": "I'm planning the Japan trip; what should I remember?", "topic": "Japan trip planning", "about": "Japan trip", "times": [], "entities": [{"mention": "Japan trip", "name": "Japan trip", "path": []}], "filters": {"kinds": ["fact", "preference", "plan", "task", "intention", "note", "rule", "pattern"], "subtypes": [], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.06e-06, "latency_ms": 420, "ttft_ms": null, "input_tokens": 53, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001002, "latency_ms": 1999, "ttft_ms": null, "input_tokens": 732, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.7, "reason": "This saved, unread Rust resource directly answers part of the question, but it does not cover Fingerstyle guitar or the Japan trip."}]}, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004445, "latency_ms": 4354, "ttft_ms": null, "input_tokens": 1960, "cached_input_tokens": 0, "output_tokens": 497, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 1.0, "reason": "Directly records your wanted Japan trip, so it’s the key reminder."}, {"id": "c2", "score": 0.0, "reason": "Your Pune half-marathon training goal is unrelated to planning the Japan trip."}, {"id": "c3", "score": 0.7, "reason": "Your vegetarian preference is useful context to remember when planning meals in Japan."}, {"id": "c4", "score": 0.0, "reason": "Learning Rust is unrelated to the Japan trip."}, {"id": "c5", "score": 0.0, "reason": "Your river run and knee note are unrelated to the trip."}, {"id": "c6", "score": 0.0, "reason": "Your Mindhunter watchlist item is unrelated to the trip."}, {"id": "c7", "score": 0.0, "reason": "Trying Blue Lotus Kitchen is unrelated to the Japan trip."}, {"id": "c8", "score": 0.0, "reason": "Learning fingerstyle guitar is unrelated to the trip."}, {"id": "c9", "score": 0.0, "reason": "Trying Saffron Street is unrelated to the trip."}, {"id": "c10", "score": 0.0, "reason": "Trying The Tin Spoon is unrelated to the trip."}, {"id": "c11", "score": 0.0, "reason": "Rohan’s live-jazz preference is unrelated to the trip."}, {"id": "c12", "score": 0.0, "reason": "Your Dark watchlist item is unrelated to the trip."}, {"id": "c13", "score": 0.0, "reason": "The completed hotel-booking task was for Goa, not Japan."}, {"id": "c14", "score": 0.0, "reason": "This is a past Goa trip, not the Japan trip."}, {"id": "c15", "score": 0.0, "reason": "Your preference for lighter shows is unrelated to Japan trip planning."}, {"id": "c16", "score": 0.0, "reason": "The work standup note is unrelated to the trip."}, {"id": "c17", "score": 0.0, "reason": "The trading idea is unrelated to the trip."}, {"id": "c18", "score": 0.0, "reason": "Kabir’s preference for MK bags is unrelated to Japan trip planning."}, {"id": "c19", "score": 0.0, "reason": "Living in Pune does not provide a useful detail about planning the Japan trip."}, {"id": "c20", "score": 0.0, "reason": "The dropped Crown watchlist item is unrelated to the trip."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001188, "latency_ms": 1795, "ttft_ms": 1182, "input_tokens": 873, "cached_input_tokens": 0, "output_tokens": 63, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "Remember to check out Ichiban Ramen Bar in Osaka for the Japan trip [1]. And since you're vegetarian [2], you'll want to scout out vegetarian options ahead of time—ramen bars often have veggie broths, but it's good to confirm.", "timed": true}
+   ],
+   "cost_usd": 0.0023558,
+   "spent_usd": 0.00230546,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "situational",
+     "list"
+    ],
+    "selected": [
+     "ramen_japan",
+     "vegetarian",
+     "rust_book"
+    ],
+    "ranked": [
+     "ramen_japan",
+     "half_marathon_goal",
+     "vegetarian",
+     "learn_rust",
+     "run_misfiled_note",
+     "watch_mindhunter",
+     "try_blue_lotus",
+     "learn_guitar",
+     "try_saffron",
+     "try_tin_spoon"
+    ],
+    "aggregate": null,
+    "reply": "Remember to check out Ichiban Ramen Bar in Osaka for the Japan trip [1]. And since you're vegetarian [2], you'll want to scout out vegetarian options ahead of time—ramen bars often have veggie broths, but it's good to confirm.\n\nBy the way, you asked me to remind you: Ichiban Ramen Bar in Osaka for the Japan trip."
+   }
+  },
+  {
+   "id": "50-bought-last-month",
+   "title": "Filter miss: bought in August, mentioned in September",
+   "tags": [
+    "time_window"
+   ],
+   "passed": false,
+   "failures": [
+    "gold not in the answer: ['running_shoes'] (selected ['run_sep_02', 'run_sep_09', 'quiet_hours_read', 'run_sep_06', 'run_sep_20', 'run_sep_13', 'watched_severance', 'pottery_class', 'run_sep_27', 'run_misfiled_subtype', 'brunch_nisha', 'trading_article'])"
+   ],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.08333333333333333,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 12,
+    "soft_only": 1
+   },
+   "latency_ms": 13102,
+   "ttft_ms": 11906,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.12e-05, "latency_ms": 1673, "ttft_ms": null, "input_tokens": 612, "cached_input_tokens": 0, "output_tokens": 60, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"intent": "recall", "confidence": 0.99, "reason": "You’re asking me to retrieve something you may have previously shared about a purchase."}, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00013596, "latency_ms": 3111, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2656, "output_tokens": 216, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"sub_queries": [{"shape": "time_window", "question": "What did I buy last month?", "topic": "purchases", "about": "purchases", "times": [{"expression": "last month", "clock": "occurred", "direction": "past", "anchor": null}], "entities": [], "filters": {"kinds": ["episode"], "subtypes": ["purchase"], "states": [], "category": null, "predicate": null, "attribute": null, "role": null, "current_only": false}, "aggregate": null, "set": null, "role": null, "about_sensitive": false, "expanded_from": null}]}, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 495, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005151, "latency_ms": 5284, "ttft_ms": null, "input_tokens": 2376, "cached_input_tokens": 0, "output_tokens": 555, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": {"scores": [{"id": "c1", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c2", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c3", "score": 0.0, "reason": "Finishing a borrowed novel is not buying something."}, {"id": "c4", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c5", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c6", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c7", "score": 0.0, "reason": "Watching a show is not a purchase."}, {"id": "c8", "score": 0.0, "reason": "A pottery class is not a purchase."}, {"id": "c9", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c10", "score": 0.0, "reason": "A September run, not a purchase."}, {"id": "c11", "score": 0.0, "reason": "A brunch outing, not a purchase."}, {"id": "c12", "score": 0.3, "reason": "It records buying running shoes, but the purchase was in August, not last month (September)."}, {"id": "c13", "score": 0.0, "reason": "A trading idea, not a purchase."}, {"id": "c14", "score": 0.0, "reason": "A saved link to a free book, not something bought."}, {"id": "c15", "score": 0.0, "reason": "A gym membership cancellation, not a purchase."}, {"id": "c16", "score": 0.0, "reason": "A dentist appointment, not a purchase."}, {"id": "c17", "score": 0.0, "reason": "Watching a show, not a purchase."}, {"id": "c18", "score": 0.0, "reason": "A wish list, not a purchase."}, {"id": "c19", "score": 0.0, "reason": "A fact about where you live, not a purchase."}, {"id": "c20", "score": 0.0, "reason": "An October run, not a purchase."}]}, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001783, "latency_ms": 1989, "ttft_ms": 955, "input_tokens": 1383, "cached_input_tokens": 0, "output_tokens": 80, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "output": "I looked for purchases from September 1–October 1, but the evidence I found [1–12] doesn't include any purchases or shopping trips—it's mostly about your runs, watching Severance, a pottery class, and time with Nisha and Kabir.\n\nWould you like to tell me what you bought? I can save it for you.", "timed": true}
+   ],
+   "cost_usd": 0.00252584,
+   "spent_usd": 0.00252584,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_sep_02",
+     "run_sep_09",
+     "quiet_hours_read",
+     "run_sep_06",
+     "run_sep_20",
+     "run_sep_13",
+     "watched_severance",
+     "pottery_class",
+     "run_sep_27",
+     "run_misfiled_subtype",
+     "brunch_nisha",
+     "trading_article"
+    ],
+    "ranked": [
+     "run_sep_02",
+     "run_sep_09",
+     "quiet_hours_read",
+     "run_sep_06",
+     "run_sep_20",
+     "run_sep_13",
+     "watched_severance",
+     "pottery_class",
+     "run_sep_27",
+     "run_misfiled_subtype"
+    ],
+    "aggregate": null,
+    "reply": "I looked for purchases from September 1–October 1, but the evidence I found [1–12] doesn't include any purchases or shopping trips—it's mostly about your runs, watching Severance, a pottery class, and time with Nisha and Kabir.\n\nWould you like to tell me what you bought? I can save it for you."
+   }
+  }
+ ]
+}

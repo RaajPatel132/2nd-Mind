@@ -1,0 +1,2985 @@
+{
+ "schema_version": 1,
+ "run_id": "20260928T173941Z-0902bba",
+ "suite": "recall",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-28T17:39:41.170408Z",
+ "finished_at": "2026-09-28T17:50:17.716790Z",
+ "git_sha": "0902bba1be50",
+ "git_dirty": false,
+ "config_hash": "8c46c72b447cfae8b79f77ff1a260ae5bf9a909093c3347f6124744f9c1f41b6",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@2",
+  "extract": "extract@3",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@2",
+  "rerank": "rerank@2",
+  "correct": "correct@2",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {
+  "now": "2026-10-06T10:00",
+  "timezone": "Asia/Kolkata"
+ },
+ "selection": {},
+ "batch": "B3",
+ "budget_usd": 0.3,
+ "estimate_usd": 0.11470974,
+ "status": "complete",
+ "note": null,
+ "setup_calls": [
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null},
+  {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 39, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null}
+ ],
+ "cases": [
+  {
+   "id": "01-where-live",
+   "title": "Knowledge update: the current home wins, the old one is left out",
+   "tags": [
+    "latest"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 12109,
+   "ttft_ms": 11998,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.68e-05, "latency_ms": 2487, "ttft_ms": null, "input_tokens": 618, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003266, "latency_ms": 2294, "ttft_ms": null, "input_tokens": 2676, "cached_input_tokens": 0, "output_tokens": 118, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005313, "latency_ms": 5731, "ttft_ms": null, "input_tokens": 2178, "cached_input_tokens": 0, "output_tokens": 627, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000759, "latency_ms": 1248, "ttft_ms": 1241, "input_tokens": 704, "cached_input_tokens": 0, "output_tokens": 11, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00169392,
+   "spent_usd": 0.0016937,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "latest"
+    ],
+    "selected": [
+     "live_pune"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "rohan_jazz",
+     "rohan_husband",
+     "mk_bag",
+     "gym_reason",
+     "vegetarian",
+     "done_thrillers",
+     "run_sep_02",
+     "renew_passport"
+    ],
+    "aggregate": null,
+    "reply": "You live in Pune [1]."
+   }
+  },
+  {
+   "id": "02-serial-number",
+   "title": "§8.2 attribute: the bag's serial number",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 9885,
+   "ttft_ms": 9259,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.06e-05, "latency_ms": 1433, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.964e-05, "latency_ms": 2423, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 143, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004519, "latency_ms": 4175, "ttft_ms": null, "input_tokens": 2189, "cached_input_tokens": 0, "output_tokens": 466, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000928, "latency_ms": 1295, "ttft_ms": 855, "input_tokens": 728, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00156056,
+   "spent_usd": 0.00156014,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "mk_bag"
+    ],
+    "ranked": [
+     "mk_bag",
+     "kabir_likes_mk",
+     "live_pune",
+     "rohan_husband",
+     "running_shoes",
+     "kabir_birthday",
+     "saturday_workshop",
+     "dinner_tonight",
+     "pattern_film",
+     "goa_trip"
+    ],
+    "aggregate": null,
+    "reply": "The MK bag's serial number is 123ABC [1]. Though I should note—that's Kabir's bag, not yours. Did you need this for something?"
+   }
+  },
+  {
+   "id": "03-kabir-birthday",
+   "title": "A recurring date by person",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 12451,
+   "ttft_ms": 12267,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.95e-05, "latency_ms": 1399, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011004, "latency_ms": 3945, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 164, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 994, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004818, "latency_ms": 4456, "ttft_ms": null, "input_tokens": 2168, "cached_input_tokens": 0, "output_tokens": 530, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000812, "latency_ms": 1145, "ttft_ms": 1096, "input_tokens": 727, "cached_input_tokens": 0, "output_tokens": 17, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00148376,
+   "spent_usd": 0.00148376,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "kabir_birthday"
+    ],
+    "ranked": [
+     "kabir_birthday",
+     "kabir_likes_mk",
+     "dinner_tonight",
+     "mk_bag",
+     "goa_trip",
+     "run_misfiled_subtype",
+     "saturday_workshop",
+     "live_pune",
+     "watch_dark",
+     "rohan_husband"
+    ],
+    "aggregate": null,
+    "reply": "Kabir's birthday is on 14 March [1]."
+   }
+  },
+  {
+   "id": "04-show-taste-now",
+   "title": "Evolved preference: what I'm into now, not the old taste",
+   "tags": [
+    "latest"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 12420,
+   "ttft_ms": 12018,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.88e-05, "latency_ms": 1436, "ttft_ms": null, "input_tokens": 623, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00013134, "latency_ms": 3532, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2664, "output_tokens": 206, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.2e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 41, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005477, "latency_ms": 5928, "ttft_ms": null, "input_tokens": 2247, "cached_input_tokens": 0, "output_tokens": 646, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00091, "latency_ms": 1094, "ttft_ms": 801, "input_tokens": 755, "cached_input_tokens": 0, "output_tokens": 31, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00166866,
+   "spent_usd": 0.00166784,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "latest"
+    ],
+    "selected": [
+     "done_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "dentist_new",
+     "watched_severance",
+     "likes_thrillers",
+     "watch_severance",
+     "dinner_tonight",
+     "quiet_hours_read",
+     "run_sep_09",
+     "saturday_workshop",
+     "run_sep_20"
+    ],
+    "aggregate": null,
+    "reply": "You're into lighter shows these days [1]. You mentioned you're done with thrillers and want something more uplifting now."
+   }
+  },
+  {
+   "id": "05-lived-before",
+   "title": "History: where I lived before Pune",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 11191,
+   "ttft_ms": 10853,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.55e-05, "latency_ms": 1687, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 47, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012404, "latency_ms": 2911, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 192, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5e-07, "latency_ms": 269, "ttft_ms": null, "input_tokens": 25, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004789, "latency_ms": 4516, "ttft_ms": null, "input_tokens": 2189, "cached_input_tokens": 0, "output_tokens": 520, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000845, "latency_ms": 1225, "ttft_ms": 1010, "input_tokens": 730, "cached_input_tokens": 0, "output_tokens": 23, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00153394,
+   "spent_usd": 0.00153394,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "live_bengaluru"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "half_marathon_goal",
+     "rohan_husband",
+     "rohan_jazz",
+     "mk_bag",
+     "run_sep_27",
+     "goa_trip",
+     "gym_reason",
+     "run_sep_02"
+    ],
+    "aggregate": null,
+    "reply": "You lived in Bengaluru before moving to Pune on 12 September [1]."
+   }
+  },
+  {
+   "id": "06-taste-history",
+   "title": "History of a preference",
+   "tags": [
+    "history"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "history",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 11971,
+   "ttft_ms": 11189,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001066, "latency_ms": 1960, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 89, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010964, "latency_ms": 2787, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 163, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.4e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 27, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004797, "latency_ms": 5257, "ttft_ms": null, "input_tokens": 2037, "cached_input_tokens": 0, "output_tokens": 552, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001019, "latency_ms": 1572, "ttft_ms": 925, "input_tokens": 759, "cached_input_tokens": 0, "output_tokens": 52, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00171548,
+   "spent_usd": 0.00171494,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "history"
+    ],
+    "selected": [
+     "done_thrillers",
+     "likes_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "likes_thrillers",
+     "live_pune",
+     "vegetarian",
+     "rohan_jazz",
+     "rohan_birds",
+     "kabir_likes_mk",
+     "dentist_new",
+     "watch_mindhunter",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "You've shifted away from thrillers. Until mid-September, you liked them [2], but two weeks ago on Sunday 20 September you told me you're done with thrillers and want lighter shows now instead [1]."
+   }
+  },
+  {
+   "id": "07-diet",
+   "title": "A core preference by exact lookup",
+   "tags": [
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 11418,
+   "ttft_ms": 11189,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.82e-05, "latency_ms": 1407, "ttft_ms": null, "input_tokens": 617, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010124, "latency_ms": 3087, "ttft_ms": null, "input_tokens": 11, "cached_input_tokens": 2664, "output_tokens": 147, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.8e-07, "latency_ms": 582, "ttft_ms": null, "input_tokens": 9, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004622, "latency_ms": 4801, "ttft_ms": null, "input_tokens": 2057, "cached_input_tokens": 0, "output_tokens": 513, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000759, "latency_ms": 970, "ttft_ms": 939, "input_tokens": 699, "cached_input_tokens": 0, "output_tokens": 12, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00140082,
+   "spent_usd": 0.00140082,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "vegetarian"
+    ],
+    "ranked": [
+     "vegetarian",
+     "done_thrillers",
+     "rohan_birds",
+     "kabir_likes_mk",
+     "rohan_jazz",
+     "try_blue_lotus",
+     "try_saffron",
+     "try_tin_spoon",
+     "live_pune",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "Yes, you're vegetarian [1]."
+   }
+  },
+  {
+   "id": "08-watch-list",
+   "title": "List: wanted shows only (not watched, not dropped)",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 13625,
+   "ttft_ms": 12860,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.09e-05, "latency_ms": 1788, "ttft_ms": null, "input_tokens": 619, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.794e-05, "latency_ms": 2598, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2664, "output_tokens": 140, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.6e-07, "latency_ms": 562, "ttft_ms": null, "input_tokens": 28, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005749, "latency_ms": 6813, "ttft_ms": null, "input_tokens": 2079, "cached_input_tokens": 0, "output_tokens": 734, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001045, "latency_ms": 1334, "ttft_ms": 727, "input_tokens": 775, "cached_input_tokens": 0, "output_tokens": 54, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0017993,
+   "spent_usd": 0.0017993,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "watch_severance",
+     "learn_rust",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "try_saffron",
+     "watched_severance",
+     "learn_guitar",
+     "ramen_japan"
+    ],
+    "aggregate": null,
+    "reply": "You have two shows on your watch list:\n\nDark, which you want to watch with Kabir [1]. You noted this 2 weeks ago.\n\nMindhunter [2], which you added 5 weeks ago."
+   }
+  },
+  {
+   "id": "09-shows-queued",
+   "title": "§8.2 category: shows queued",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 13517,
+   "ttft_ms": 12008,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001155, "latency_ms": 2249, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 107, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.104e-05, "latency_ms": 1904, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 106, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.8e-07, "latency_ms": 556, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005342, "latency_ms": 6222, "ttft_ms": null, "input_tokens": 2062, "cached_input_tokens": 0, "output_tokens": 656, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001371, "latency_ms": 2101, "ttft_ms": 768, "input_tokens": 776, "cached_input_tokens": 0, "output_tokens": 119, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00210212,
+   "spent_usd": 0.00210212,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "watch_severance",
+     "learn_rust",
+     "try_saffron",
+     "watched_severance",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "You have two shows queued:\n\n**Dark** – you want to watch this with Kabir [1]. You added this to your list 2 weeks ago.\n\n**Mindhunter** – you want to watch this [2]. You added it 5 weeks ago.\n\nGiven that you're done with thrillers now, I'm curious whether Mindhunter is still something you want to prioritize, or if Dark (which is also a thriller) feels different to you since you're watching it with "
+   }
+  },
+  {
+   "id": "10-open-tasks",
+   "title": "List: open tasks, not the done one",
+   "tags": [
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 4,
+    "soft_only": 0
+   },
+   "latency_ms": 11508,
+   "ttft_ms": 10614,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.04e-05, "latency_ms": 2153, "ttft_ms": null, "input_tokens": 619, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.044e-05, "latency_ms": 2617, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2664, "output_tokens": 125, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.8e-07, "latency_ms": 387, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004319, "latency_ms": 4182, "ttft_ms": null, "input_tokens": 2064, "cached_input_tokens": 0, "output_tokens": 451, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001281, "latency_ms": 1559, "ttft_ms": 861, "input_tokens": 811, "cached_input_tokens": 0, "output_tokens": 94, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00189402,
+   "spent_usd": 0.00189402,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "renew_passport",
+     "fix_tap",
+     "backup_photos",
+     "nisha_interview"
+    ],
+    "ranked": [
+     "renew_passport",
+     "fix_tap",
+     "backup_photos",
+     "nisha_interview",
+     "rust_book",
+     "learn_rust",
+     "half_marathon_goal",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan"
+    ],
+    "aggregate": null,
+    "reply": "You have 4 open tasks:\n\n1. Renew your passport — due in 2 weeks (Tuesday 20 October) [1]\n2. Get the kitchen tap fixed — noted 8 days ago [2]\n3. Back up the photos on your phone — noted 7 days ago [3]\n4. Ask Nisha about her interview — noted 5 days ago [4]"
+   }
+  },
+  {
+   "id": "11-not-tried",
+   "title": "Set: want-to-try places with no visit",
+   "tags": [
+    "set"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "set",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 14168,
+   "ttft_ms": 13797,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001175, "latency_ms": 2050, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 111, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012904, "latency_ms": 3710, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 202, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.2e-07, "latency_ms": 396, "ttft_ms": null, "input_tokens": 31, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005386, "latency_ms": 6448, "ttft_ms": null, "input_tokens": 1986, "cached_input_tokens": 0, "output_tokens": 680, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000915, "latency_ms": 1022, "ttft_ms": 854, "input_tokens": 770, "cached_input_tokens": 0, "output_tokens": 29, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00170076,
+   "spent_usd": 0.00170076,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "set"
+    ],
+    "selected": [
+     "try_saffron",
+     "try_blue_lotus"
+    ],
+    "ranked": [
+     "try_saffron",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan",
+     "learn_rust",
+     "watch_mindhunter",
+     "watch_dark",
+     "learn_guitar",
+     "dinner_tonight",
+     "half_marathon_goal"
+    ],
+    "aggregate": null,
+    "reply": "You have two restaurants on your list to try: Saffron Street [1] and Blue Lotus Kitchen [2]."
+   }
+  },
+  {
+   "id": "12-shared-shows",
+   "title": "Set: shows Kabir and I both want to watch",
+   "tags": [
+    "set"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "set",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 11281,
+   "ttft_ms": 10969,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.2e-05, "latency_ms": 1227, "ttft_ms": null, "input_tokens": 625, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012754, "latency_ms": 2797, "ttft_ms": null, "input_tokens": 19, "cached_input_tokens": 2664, "output_tokens": 198, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 9.6e-07, "latency_ms": 375, "ttft_ms": null, "input_tokens": 48, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004962, "latency_ms": 5159, "ttft_ms": null, "input_tokens": 2127, "cached_input_tokens": 0, "output_tokens": 567, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000867, "latency_ms": 1110, "ttft_ms": 1061, "input_tokens": 737, "cached_input_tokens": 0, "output_tokens": 26, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0015737,
+   "spent_usd": 0.0015737,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "set"
+    ],
+    "selected": [
+     "watch_dark"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "kabir_likes_mk",
+     "dinner_tonight",
+     "kabir_birthday",
+     "goa_trip",
+     "watch_severance",
+     "run_misfiled_subtype",
+     "done_thrillers",
+     "saturday_workshop"
+    ],
+    "aggregate": null,
+    "reply": "You both want to watch Dark [1]. You noted that 2 weeks ago on 22 September."
+   }
+  },
+  {
+   "id": "13-this-week",
+   "title": "§8.2 time: what's coming up this week, routine occurrences included",
+   "tags": [
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 11996,
+   "ttft_ms": 11347,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.09e-05, "latency_ms": 2018, "ttft_ms": null, "input_tokens": 619, "cached_input_tokens": 0, "output_tokens": 58, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00013244, "latency_ms": 3135, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2664, "output_tokens": 209, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.42e-06, "latency_ms": 404, "ttft_ms": null, "input_tokens": 71, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004815, "latency_ms": 4631, "ttft_ms": null, "input_tokens": 2290, "cached_input_tokens": 0, "output_tokens": 505, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00127, "latency_ms": 1286, "ttft_ms": 754, "input_tokens": 925, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00197626,
+   "spent_usd": 0.00197626,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "gym_routine"
+    ],
+    "ranked": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "gym_routine",
+     "dentist_new",
+     "run_oct_04",
+     "renew_passport",
+     "try_saffron",
+     "run_sep_06",
+     "try_blue_lotus",
+     "run_sep_09"
+    ],
+    "aggregate": null,
+    "reply": "You've got a dinner at Saffron Street with Kabir tonight [1], and a pottery wheel workshop with Kabir at Clay and Kiln Studio on Saturday morning [2]. You're also hitting the gym at Iron Temple Gym tomorrow (Wednesday) and Friday at 7 am [3]."
+   }
+  },
+  {
+   "id": "14-last-month-running",
+   "title": "§8.2 time + semantic: filters on when it happened, not when saved",
+   "tags": [
+    "time_window"
+   ],
+   "passed": false,
+   "failures": [
+    "forbidden in the answer: ['run_oct_04', 'running_shoes']"
+   ],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 22,
+    "soft_only": 2
+   },
+   "latency_ms": 15292,
+   "ttft_ms": 13447,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000115, "latency_ms": 2166, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 106, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012054, "latency_ms": 2650, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 185, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 287, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0006015, "latency_ms": 7088, "ttft_ms": null, "input_tokens": 2285, "cached_input_tokens": 0, "output_tokens": 746, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002772, "latency_ms": 2539, "ttft_ms": 897, "input_tokens": 1862, "cached_input_tokens": 0, "output_tokens": 182, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00360962,
+   "spent_usd": 0.00360962,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_13",
+     "run_sep_06",
+     "run_sep_20",
+     "rust_book",
+     "run_misfiled_subtype",
+     "run_misfiled_note",
+     "trading_article",
+     "run_sep_27",
+     "live_pune",
+     "running_shoes",
+     "quiet_hours_read",
+     "trading_idea",
+     "watched_severance",
+     "meenu_standup",
+     "try_tin_spoon",
+     "watch_severance",
+     "pottery_class",
+     "done_thrillers",
+     "run_oct_04",
+     "gym_cancel"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_13",
+     "run_sep_06",
+     "run_sep_20",
+     "rust_book",
+     "run_misfiled_subtype",
+     "run_misfiled_note",
+     "trading_article",
+     "run_sep_27"
+    ],
+    "aggregate": null,
+    "reply": "Last month you logged quite a few runs [1][2][3][4][5]. You ran 5 km in 30 minutes on 9 September [1], then 8 km in 52 minutes at Vetal Hill on 6 September [4], 10 km in 64 minutes at Vetal Hill on 13 September [3], and 12 km in 78 minutes on 20 September [5]. You also did an evening run with Kabir, 4 km around the lake, on 23 September [7], and a 6 km run on the beach in Goa on 27 September [10]."
+   }
+  },
+  {
+   "id": "15-last-weekend",
+   "title": "Temporal: last weekend",
+   "tags": [
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 1
+   },
+   "latency_ms": 11344,
+   "ttft_ms": 10677,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.05e-05, "latency_ms": 1482, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.904e-05, "latency_ms": 2037, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 122, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.8e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 34, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005668, "latency_ms": 5799, "ttft_ms": null, "input_tokens": 2418, "cached_input_tokens": 0, "output_tokens": 650, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001048, "latency_ms": 1508, "ttft_ms": 915, "input_tokens": 803, "cached_input_tokens": 0, "output_tokens": 49, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00178502,
+   "spent_usd": 0.00178434,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_oct_04",
+     "dentist_new"
+    ],
+    "ranked": [
+     "run_oct_04",
+     "dentist_new",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_27",
+     "run_sep_06",
+     "saturday_workshop",
+     "pottery_class",
+     "run_sep_09",
+     "run_sep_02"
+    ],
+    "aggregate": null,
+    "reply": "Last weekend you had a dentist appointment on Saturday evening [2], and on Sunday morning you ran 7 km in 44 minutes at Vetal Hill [1]. That's solid training for the half marathon!"
+   }
+  },
+  {
+   "id": "16-weekend-before-goa",
+   "title": "Temporal reasoning: the weekend before an anchored event",
+   "tags": [
+    "order"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "order",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 3,
+    "soft_only": 3
+   },
+   "latency_ms": 11982,
+   "ttft_ms": 11069,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.02e-05, "latency_ms": 1485, "ttft_ms": null, "input_tokens": 622, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012124, "latency_ms": 2554, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 2664, "output_tokens": 186, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7.8e-07, "latency_ms": 542, "ttft_ms": null, "input_tokens": 39, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005336, "latency_ms": 5081, "ttft_ms": null, "input_tokens": 2416, "cached_input_tokens": 0, "output_tokens": 584, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001551, "latency_ms": 1838, "ttft_ms": 1039, "input_tokens": 1026, "cached_input_tokens": 0, "output_tokens": 105, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00228682,
+   "spent_usd": 0.00228682,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "order"
+    ],
+    "selected": [
+     "run_sep_20",
+     "brunch_nisha",
+     "pottery_class"
+    ],
+    "ranked": [
+     "run_sep_27",
+     "run_sep_20",
+     "goa_trip",
+     "run_sep_13",
+     "run_sep_06",
+     "run_sep_09",
+     "brunch_nisha",
+     "run_oct_04",
+     "run_sep_02",
+     "pottery_class"
+    ],
+    "aggregate": null,
+    "reply": "The weekend before your Goa trip with Kabir, you had a full one!\n\nOn Saturday 19 September, you did a pottery class at Clay and Kiln Studio and made a lopsided mug [3]. The next morning (Sunday 20 September), you ran 12 km in 78 minutes [1], and then had brunch with your sister Nisha at The Tin Spoon where you enjoyed the shakshuka [2]."
+   }
+  },
+  {
+   "id": "17-since-last-run",
+   "title": "Order: how long since my last run (duration computed in code)",
+   "tags": [
+    "order"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "order",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.14285714285714285,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 8,
+    "soft_only": 0
+   },
+   "latency_ms": 11373,
+   "ttft_ms": 10920,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.2e-05, "latency_ms": 1341, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.304e-05, "latency_ms": 2014, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 110, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5e-07, "latency_ms": 318, "ttft_ms": null, "input_tokens": 25, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005815, "latency_ms": 6076, "ttft_ms": null, "input_tokens": 2360, "cached_input_tokens": 0, "output_tokens": 691, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001311, "latency_ms": 1105, "ttft_ms": 864, "input_tokens": 1116, "cached_input_tokens": 0, "output_tokens": 39, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00205804,
+   "spent_usd": 0.00205804,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "order"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_oct_04",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_oct_04",
+     "run_sep_27",
+     "running_shoes",
+     "gym_cancel"
+    ],
+    "aggregate": null,
+    "reply": "Your last run was 2 days ago on Sunday 4 October, when you ran 7 km in 44 minutes at Vetal Hill [1]."
+   }
+  },
+  {
+   "id": "18-next-with-kabir",
+   "title": "Order: the next plan with Kabir",
+   "tags": [
+    "order"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "order",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 14114,
+   "ttft_ms": 13495,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001044, "latency_ms": 1960, "ttft_ms": null, "input_tokens": 619, "cached_input_tokens": 0, "output_tokens": 85, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014394, "latency_ms": 3169, "ttft_ms": null, "input_tokens": 13, "cached_input_tokens": 2664, "output_tokens": 232, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.4e-07, "latency_ms": 456, "ttft_ms": null, "input_tokens": 32, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005681, "latency_ms": 6731, "ttft_ms": null, "input_tokens": 2136, "cached_input_tokens": 0, "output_tokens": 709, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00102, "latency_ms": 1184, "ttft_ms": 758, "input_tokens": 795, "cached_input_tokens": 0, "output_tokens": 45, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00183708,
+   "spent_usd": 0.00183708,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "order"
+    ],
+    "selected": [
+     "dinner_tonight",
+     "saturday_workshop"
+    ],
+    "ranked": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "kabir_likes_mk",
+     "kabir_birthday",
+     "goa_trip",
+     "run_misfiled_subtype",
+     "watch_dark",
+     "mk_bag",
+     "ramen_japan",
+     "nisha_interview"
+    ],
+    "aggregate": null,
+    "reply": "Your next plan with Kabir is dinner at Saffron Street tonight [1]. After that, you have a pottery wheel workshop together at Clay and Kiln Studio on Saturday morning [2]."
+   }
+  },
+  {
+   "id": "19-pottery-august",
+   "title": "Filter miss: nothing in August, the closest match found by widening",
+   "tags": [
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 11959,
+   "ttft_ms": 10994,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.09e-05, "latency_ms": 1744, "ttft_ms": null, "input_tokens": 624, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014794, "latency_ms": 3108, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 2664, "output_tokens": 239, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 9.8e-07, "latency_ms": 424, "ttft_ms": null, "input_tokens": 49, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004691, "latency_ms": 4049, "ttft_ms": null, "input_tokens": 2446, "cached_input_tokens": 0, "output_tokens": 449, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001229, "latency_ms": 1905, "ttft_ms": 1139, "input_tokens": 814, "cached_input_tokens": 0, "output_tokens": 83, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00193792,
+   "spent_usd": 0.00193792,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "pottery_class"
+    ],
+    "ranked": [
+     "pottery_class",
+     "saturday_workshop",
+     "run_sep_09",
+     "run_sep_20",
+     "running_shoes",
+     "run_sep_02",
+     "run_sep_06",
+     "run_sep_27",
+     "quiet_hours_read",
+     "run_misfiled_subtype"
+    ],
+    "aggregate": null,
+    "reply": "I looked for what you did at the pottery studio in August, but I didn't find anything from that month. The closest I have is from September: you did a pottery class at Clay and Kiln Studio on Saturday 19 September and made a lopsided mug [1].\n\nWould you like to tell me about an August pottery session? I can save that for you."
+   }
+  },
+  {
+   "id": "20-passport-due",
+   "title": "Due clock: what's due this month",
+   "tags": [
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 13352,
+   "ttft_ms": 12969,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.63e-05, "latency_ms": 1842, "ttft_ms": null, "input_tokens": 618, "cached_input_tokens": 0, "output_tokens": 69, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.934e-05, "latency_ms": 2431, "ttft_ms": null, "input_tokens": 12, "cached_input_tokens": 2664, "output_tokens": 123, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.8e-07, "latency_ms": 407, "ttft_ms": null, "input_tokens": 24, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005858, "latency_ms": 7124, "ttft_ms": null, "input_tokens": 2373, "cached_input_tokens": 0, "output_tokens": 697, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000878, "latency_ms": 952, "ttft_ms": 736, "input_tokens": 738, "cached_input_tokens": 0, "output_tokens": 28, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00164992,
+   "spent_usd": 0.00164992,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "renew_passport"
+    ],
+    "ranked": [
+     "renew_passport",
+     "dentist_new",
+     "dinner_tonight",
+     "run_sep_09",
+     "saturday_workshop",
+     "run_oct_04",
+     "run_sep_20",
+     "running_shoes",
+     "trading_idea",
+     "quiet_hours_read"
+    ],
+    "aggregate": null,
+    "reply": "You need to renew your passport—it's due Tuesday 20 October, in 2 weeks [1]."
+   }
+  },
+  {
+   "id": "21-runs-september",
+   "title": "Counting with the misfiled runs reported, not counted",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": false,
+   "failures": [
+    "aggregate: expected 6.0, got 7.0",
+    "reply lacks 'File them as runs?': 'You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km to 12 km, mostly at Vetal Hill, with one evening run with Kabir around the lake on 2'"
+   ],
+   "scores": {
+    "shape": "count",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.5,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 7,
+    "soft_only": 0
+   },
+   "latency_ms": 13233,
+   "ttft_ms": 11737,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.07e-05, "latency_ms": 1457, "ttft_ms": null, "input_tokens": 622, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.874e-05, "latency_ms": 2059, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 2664, "output_tokens": 141, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 35, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005925, "latency_ms": 6896, "ttft_ms": null, "input_tokens": 2385, "cached_input_tokens": 0, "output_tokens": 708, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.00183, "latency_ms": 2181, "ttft_ms": 932, "input_tokens": 1205, "cached_input_tokens": 0, "output_tokens": 125, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00260264,
+   "spent_usd": 0.00260194,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27",
+     "quiet_hours_read",
+     "run_oct_04",
+     "running_shoes"
+    ],
+    "aggregate": 7.0,
+    "reply": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km to 12 km, mostly at Vetal Hill, with one evening run with Kabir around the lake on 23 September and one on the beach in Goa on 27 September.\n\n(I also found a note from 16 September about a 6 km run along the river where your knees felt fine—that wasn't logged as a run, but I can save it if you'd like.)\n\n1 more mention look"
+   }
+  },
+  {
+   "id": "22-distance-september",
+   "title": "Sum of logged values",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "count",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 6,
+    "soft_only": 0
+   },
+   "latency_ms": 12792,
+   "ttft_ms": 11099,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.98e-05, "latency_ms": 1810, "ttft_ms": null, "input_tokens": 623, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.984e-05, "latency_ms": 1810, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2664, "output_tokens": 143, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7.6e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 38, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005604, "latency_ms": 6212, "ttft_ms": null, "input_tokens": 2404, "cached_input_tokens": 0, "output_tokens": 640, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002062, "latency_ms": 2428, "ttft_ms": 928, "input_tokens": 1222, "cached_input_tokens": 0, "output_tokens": 168, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0028028,
+   "spent_usd": 0.00280204,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_sep_13",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_sep_13",
+     "run_sep_27",
+     "run_misfiled_subtype",
+     "quiet_hours_read",
+     "run_oct_04",
+     "running_shoes"
+    ],
+    "aggregate": 46.0,
+    "reply": "You ran 46 km in total in September [1][2][3][4][5][6].\n\nThat breaks down to: 5 km on 2 Sep, 8 km on 6 Sep, 5 km on 9 Sep, 10 km on 13 Sep, 12 km on 20 Sep, and 6 km on 27 Sep at Goa.\n\nI also have two other mentions that look like runs but weren't logged as counted runs: a 4 km evening run with Kabir around the lake on 23 Sep, and a 6 km run along the river on 16 Sep when your knees felt fine. Wou"
+   }
+  },
+  {
+   "id": "23-count-watch",
+   "title": "Count of wanted shows",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "count",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 11135,
+   "ttft_ms": 10801,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.92e-05, "latency_ms": 1565, "ttft_ms": null, "input_tokens": 622, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010724, "latency_ms": 2328, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 2664, "output_tokens": 158, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.8e-07, "latency_ms": 393, "ttft_ms": null, "input_tokens": 34, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005207, "latency_ms": 5277, "ttft_ms": null, "input_tokens": 2012, "cached_input_tokens": 0, "output_tokens": 639, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000968, "latency_ms": 1058, "ttft_ms": 913, "input_tokens": 803, "cached_input_tokens": 0, "output_tokens": 33, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00167582,
+   "spent_usd": 0.00167582,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "watch_mindhunter",
+     "watch_dark"
+    ],
+    "ranked": [
+     "watch_mindhunter",
+     "watch_dark",
+     "done_thrillers",
+     "watch_severance",
+     "learn_rust",
+     "watched_severance",
+     "try_blue_lotus",
+     "try_tin_spoon",
+     "ramen_japan",
+     "try_saffron"
+    ],
+    "aggregate": 2.0,
+    "reply": "You want to watch 2 shows [1][2]: Mindhunter [1] and Dark with Kabir [2]."
+   }
+  },
+  {
+   "id": "24-longest-run",
+   "title": "Max of logged values",
+   "tags": [
+    "aggregate",
+    "count"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "count",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 7,
+    "soft_only": 0
+   },
+   "latency_ms": 10874,
+   "ttft_ms": 10268,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8e-05, "latency_ms": 1254, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012154, "latency_ms": 2554, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 187, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.2e-07, "latency_ms": 397, "ttft_ms": null, "input_tokens": 31, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005036, "latency_ms": 4813, "ttft_ms": null, "input_tokens": 2386, "cached_input_tokens": 0, "output_tokens": 530, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001435, "latency_ms": 1301, "ttft_ms": 868, "input_tokens": 1250, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00214076,
+   "spent_usd": 0.00214076,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "count"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_06",
+     "run_oct_04",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_06",
+     "run_oct_04",
+     "run_sep_27",
+     "run_misfiled_subtype",
+     "running_shoes",
+     "quiet_hours_read"
+    ],
+    "aggregate": 12.0,
+    "reply": "Your longest logged run is 12 km in 78 minutes, which you did on Sunday 20 September [5]—2 weeks ago now.\n\n2 more mentions look like runs but weren't logged as runs. File them as runs?"
+   }
+  },
+  {
+   "id": "25-nisha-husband",
+   "title": "2-hop: a relation path to the right person",
+   "tags": [
+    "entity"
+   ],
+   "passed": false,
+   "failures": [
+    "gold not in the answer: ['rohan_birds'] (selected ['rohan_jazz', 'rohan_husband'])"
+   ],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 11729,
+   "ttft_ms": 11409,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.21e-05, "latency_ms": 1349, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012814, "latency_ms": 3318, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 200, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 395, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004816, "latency_ms": 4894, "ttft_ms": null, "input_tokens": 2091, "cached_input_tokens": 0, "output_tokens": 545, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000833, "latency_ms": 1114, "ttft_ms": 1087, "input_tokens": 763, "cached_input_tokens": 0, "output_tokens": 14, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00152542,
+   "spent_usd": 0.00152542,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "entity"
+    ],
+    "selected": [
+     "rohan_jazz",
+     "rohan_husband"
+    ],
+    "ranked": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband",
+     "brunch_nisha",
+     "nisha_interview",
+     "kabir_likes_mk",
+     "quiet_hours_read",
+     "vegetarian",
+     "done_thrillers",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "Rohan loves live jazz [1][2].\n\nBy the way, you wanted to ask Nisha about her interview."
+   }
+  },
+  {
+   "id": "26-sister-husband",
+   "title": "2-hop through a label: my sister's husband",
+   "tags": [
+    "entity"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 11693,
+   "ttft_ms": 11195,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.11e-05, "latency_ms": 1528, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.114e-05, "latency_ms": 2244, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 126, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 452, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005148, "latency_ms": 5801, "ttft_ms": null, "input_tokens": 2103, "cached_input_tokens": 0, "output_tokens": 609, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000986, "latency_ms": 1125, "ttft_ms": 834, "input_tokens": 806, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00167362,
+   "spent_usd": 0.00167362,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "entity"
+    ],
+    "selected": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband"
+    ],
+    "ranked": [
+     "rohan_birds",
+     "rohan_jazz",
+     "rohan_husband",
+     "kabir_likes_mk",
+     "nisha_interview",
+     "brunch_nisha",
+     "vegetarian",
+     "done_thrillers",
+     "watch_severance",
+     "dinner_tonight"
+    ],
+    "aggregate": null,
+    "reply": "Rohan, your sister Nisha's husband, loves birdwatching, especially at dawn [1], and he loves live jazz [2]."
+   }
+  },
+  {
+   "id": "27-meenu",
+   "title": "An alias finds the person",
+   "tags": [
+    "entity"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 14277,
+   "ttft_ms": 13934,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.01e-05, "latency_ms": 1579, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00010964, "latency_ms": 6274, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 163, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.2e-07, "latency_ms": 273, "ttft_ms": null, "input_tokens": 26, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004774, "latency_ms": 4604, "ttft_ms": null, "input_tokens": 2214, "cached_input_tokens": 0, "output_tokens": 512, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000936, "latency_ms": 1095, "ttft_ms": 820, "input_tokens": 736, "cached_input_tokens": 0, "output_tokens": 40, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00160366,
+   "spent_usd": 0.00160366,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "entity"
+    ],
+    "selected": [
+     "meenu_standup"
+    ],
+    "ranked": [
+     "meenu_standup",
+     "nisha_interview",
+     "live_pune",
+     "kabir_likes_mk",
+     "vegetarian",
+     "rohan_husband",
+     "dinner_tonight",
+     "quiet_hours_read",
+     "goa_trip",
+     "brunch_nisha"
+    ],
+    "aggregate": null,
+    "reply": "You told me that Meenu (Meenakshi Iyer) runs the Thursday standup at work [1]. That's what I have about her so far."
+   }
+  },
+  {
+   "id": "28-gift-partner",
+   "title": "§8.2 person: a gift for my partner, through the relation",
+   "tags": [
+    "entity"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['entity'], planned []",
+    "gold not in the answer: ['kabir_likes_mk', 'mk_bag'] (selected [])",
+    "abstained but gold exists"
+   ],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 5858,
+   "ttft_ms": 4164,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000175, "latency_ms": 3412, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 226, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001281, "latency_ms": 1987, "ttft_ms": 673, "input_tokens": 666, "cached_input_tokens": 0, "output_tokens": 123, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-07, "latency_ms": 248, "ttft_ms": null, "input_tokens": 7, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00145614,
+   "spent_usd": 0.00145614,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [],
+    "selected": [],
+    "ranked": [],
+    "aggregate": null,
+    "reply": "I don't have any information saved about your partner yet—not their interests, preferences, or what they already have. That would really help me suggest something thoughtful!\n\nCould you tell me a bit about them? For example:\n- What do they enjoy doing in their free time?\n- Are there any hobbies or interests they're passionate about?\n- What's the occasion for the gift?\n\nOnce you fill me in, I can r"
+   }
+  },
+  {
+   "id": "29-trading",
+   "title": "§8.2 semantic: the trading idea and the related article",
+   "tags": [
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 12987,
+   "ttft_ms": 12429,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.95e-05, "latency_ms": 3710, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.754e-05, "latency_ms": 2608, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 119, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.2e-07, "latency_ms": 277, "ttft_ms": null, "input_tokens": 26, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004426, "latency_ms": 4562, "ttft_ms": null, "input_tokens": 1971, "cached_input_tokens": 0, "output_tokens": 491, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000988, "latency_ms": 1278, "ttft_ms": 881, "input_tokens": 768, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00159816,
+   "spent_usd": 0.00159816,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [
+     "trading_idea",
+     "trading_article"
+    ],
+    "ranked": [
+     "trading_idea",
+     "trading_article",
+     "rust_book",
+     "run_misfiled_note",
+     "vegetarian",
+     "kabir_likes_mk",
+     "meenu_standup",
+     "mk_bag",
+     "rohan_birds",
+     "gym_reason"
+    ],
+    "aggregate": null,
+    "reply": "You saved a momentum trading idea on index funds with monthly rebalancing [1], and an article about why most momentum strategies fail once you count costs [2]. You haven't read the article yet."
+   }
+  },
+  {
+   "id": "30-sleep-tips",
+   "title": "Semantic: a paraphrase finds the note",
+   "tags": [
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.3333333333333333,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 11077,
+   "ttft_ms": 10536,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.96e-05, "latency_ms": 1871, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011564, "latency_ms": 2927, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 175, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6e-07, "latency_ms": 296, "ttft_ms": null, "input_tokens": 30, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004489, "latency_ms": 4312, "ttft_ms": null, "input_tokens": 2114, "cached_input_tokens": 0, "output_tokens": 475, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000957, "latency_ms": 1138, "ttft_ms": 751, "input_tokens": 747, "cached_input_tokens": 0, "output_tokens": 42, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00160174,
+   "spent_usd": 0.00160174,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [
+     "sleep_article"
+    ],
+    "ranked": [
+     "rust_book",
+     "trading_article",
+     "sleep_article",
+     "backup_photos",
+     "running_shoes",
+     "pattern_film",
+     "try_saffron",
+     "learn_rust",
+     "run_oct_04",
+     "run_sep_20"
+    ],
+    "aggregate": null,
+    "reply": "You saved two tips from an article on sleep [1]: keep screens out of the bedroom, and no caffeine after 2 pm. You noted that on Saturday 26 September."
+   }
+  },
+  {
+   "id": "31-why-gym",
+   "title": "Why: the reason linked to the cancellation",
+   "tags": [
+    "why"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "why",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.2,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 2
+   },
+   "latency_ms": 12443,
+   "ttft_ms": 12096,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.9e-05, "latency_ms": 2069, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00012204, "latency_ms": 2955, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 188, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 456, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005141, "latency_ms": 5469, "ttft_ms": null, "input_tokens": 2311, "cached_input_tokens": 0, "output_tokens": 566, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000955, "latency_ms": 946, "ttft_ms": 777, "input_tokens": 785, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00167046,
+   "spent_usd": 0.00167046,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "why"
+    ],
+    "selected": [
+     "gym_cancel",
+     "gym_reason"
+    ],
+    "ranked": [
+     "gym_cancel",
+     "gym_routine",
+     "saturday_workshop",
+     "dinner_tonight",
+     "gym_reason",
+     "run_sep_09",
+     "run_sep_20",
+     "run_sep_27",
+     "run_sep_02",
+     "run_sep_06"
+    ],
+    "aggregate": null,
+    "reply": "You cancelled your FitZone gym membership because it moved to the far side of the city, forty minutes from home each way [1][2]."
+   }
+  },
+  {
+   "id": "32-why-no-thrillers",
+   "title": "Why: the preference that replaced the old one",
+   "tags": [
+    "why"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "why",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 0
+   },
+   "latency_ms": 13059,
+   "ttft_ms": 12388,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.51e-05, "latency_ms": 2395, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 66, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.414e-05, "latency_ms": 1860, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 112, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.4e-07, "latency_ms": 372, "ttft_ms": null, "input_tokens": 32, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005526, "latency_ms": 6552, "ttft_ms": null, "input_tokens": 2006, "cached_input_tokens": 0, "output_tokens": 704, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001048, "latency_ms": 1396, "ttft_ms": 884, "input_tokens": 763, "cached_input_tokens": 0, "output_tokens": 57, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00178048,
+   "spent_usd": 0.00178048,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "why"
+    ],
+    "selected": [
+     "done_thrillers",
+     "likes_thrillers"
+    ],
+    "ranked": [
+     "done_thrillers",
+     "likes_thrillers",
+     "watch_mindhunter",
+     "watched_severance",
+     "watch_dark",
+     "watch_severance",
+     "watch_crown",
+     "kabir_likes_mk",
+     "vegetarian",
+     "rohan_birds"
+    ],
+    "aggregate": null,
+    "reply": "You've moved on from thrillers—you told me on Sunday 20 September that you're done with them and want lighter shows now [1]. Before that, you used to enjoy thrillers [2], but that changed a couple of weeks ago."
+   }
+  },
+  {
+   "id": "33-free-weekend-learn",
+   "title": "Situational: goals, open intentions and their resources",
+   "tags": [
+    "situational"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "situational",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.16666666666666666,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 22,
+    "soft_only": 8
+   },
+   "latency_ms": 20794,
+   "ttft_ms": 18625,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001943, "latency_ms": 4067, "ttft_ms": null, "input_tokens": 623, "cached_input_tokens": 0, "output_tokens": 264, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00032784, "latency_ms": 6417, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2664, "output_tokens": 599, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.02e-06, "latency_ms": 570, "ttft_ms": null, "input_tokens": 151, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.54e-05, "latency_ms": 2282, "ttft_ms": null, "input_tokens": 734, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005205, "latency_ms": 5822, "ttft_ms": null, "input_tokens": 2330, "cached_input_tokens": 0, "output_tokens": 575, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005128, "latency_ms": 5945, "ttft_ms": null, "input_tokens": 2298, "cached_input_tokens": 0, "output_tokens": 566, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005043, "latency_ms": 6009, "ttft_ms": null, "input_tokens": 1993, "cached_input_tokens": 0, "output_tokens": 610, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005265, "latency_ms": 6083, "ttft_ms": null, "input_tokens": 2300, "cached_input_tokens": 0, "output_tokens": 593, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.003275, "latency_ms": 2971, "ttft_ms": 958, "input_tokens": 2555, "cached_input_tokens": 0, "output_tokens": 144, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00595966,
+   "spent_usd": 0.00595966,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "situational",
+     "list",
+     "semantic",
+     "time_window",
+     "list"
+    ],
+    "selected": [
+     "saturday_workshop",
+     "half_marathon_goal",
+     "dinner_tonight",
+     "renew_passport",
+     "pattern_film",
+     "learn_rust",
+     "learn_guitar",
+     "dentist_new",
+     "run_oct_04",
+     "done_thrillers",
+     "live_pune",
+     "rust_book",
+     "run_sep_20",
+     "run_sep_13",
+     "run_sep_27",
+     "pottery_class",
+     "brunch_nisha",
+     "run_sep_06",
+     "run_sep_09",
+     "kabir_birthday",
+     "run_sep_02",
+     "run_misfiled_subtype"
+    ],
+    "ranked": [
+     "saturday_workshop",
+     "half_marathon_goal",
+     "dinner_tonight",
+     "renew_passport",
+     "pattern_film",
+     "learn_rust",
+     "learn_guitar",
+     "dentist_new",
+     "run_oct_04",
+     "done_thrillers"
+    ],
+    "aggregate": null,
+    "reply": "You've got a pottery wheel workshop with Kabir at Clay and Kiln Studio on Saturday morning [1], so that's already on your calendar! Beyond that, you're interested in learning Rust [6] and fingerstyle guitar [7]—either could work if you have time after the workshop. You have The Rust Programming Language book (chapters 4 to 6) saved and ready to go [12].\n\nSince you tend to unwind with a film after "
+   }
+  },
+  {
+   "id": "34-after-study-film",
+   "title": "Situational with a core pattern: a film after studying",
+   "tags": [
+    "situational"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "situational",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.038461538461538464,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 23,
+    "soft_only": 0
+   },
+   "latency_ms": 17996,
+   "ttft_ms": 15811,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.59e-05, "latency_ms": 2180, "ttft_ms": null, "input_tokens": 624, "cached_input_tokens": 0, "output_tokens": 47, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00024444, "latency_ms": 5106, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 2664, "output_tokens": 432, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 2.38e-06, "latency_ms": 608, "ttft_ms": null, "input_tokens": 119, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005205, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2330, "cached_input_tokens": 0, "output_tokens": 575, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.54e-05, "latency_ms": 1, "ttft_ms": null, "input_tokens": 734, "cached_input_tokens": 0, "output_tokens": 44, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004936, "latency_ms": 4542, "ttft_ms": null, "input_tokens": 2361, "cached_input_tokens": 0, "output_tokens": 515, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005597, "latency_ms": 6609, "ttft_ms": null, "input_tokens": 1987, "cached_input_tokens": 0, "output_tokens": 722, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002751, "latency_ms": 2846, "ttft_ms": 853, "input_tokens": 2076, "cached_input_tokens": 0, "output_tokens": 135, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00475292,
+   "spent_usd": 0.00413702,
+   "cache_hits": 2,
+   "detail": {
+    "planned": [
+     "situational",
+     "list",
+     "time_window",
+     "list"
+    ],
+    "selected": [
+     "saturday_workshop",
+     "pattern_film",
+     "dinner_tonight",
+     "renew_passport",
+     "half_marathon_goal",
+     "sleep_article",
+     "done_thrillers",
+     "dentist_new",
+     "run_oct_04",
+     "quiet_hours_read",
+     "run_sep_27",
+     "run_sep_20",
+     "run_sep_13",
+     "pottery_class",
+     "run_sep_06",
+     "watch_severance",
+     "goa_trip",
+     "brunch_nisha",
+     "run_sep_09",
+     "kabir_birthday",
+     "watch_dark",
+     "watch_mindhunter",
+     "rust_book"
+    ],
+    "ranked": [
+     "saturday_workshop",
+     "pattern_film",
+     "dinner_tonight",
+     "renew_passport",
+     "half_marathon_goal",
+     "sleep_article",
+     "done_thrillers",
+     "dentist_new",
+     "run_oct_04",
+     "quiet_hours_read"
+    ],
+    "aggregate": null,
+    "reply": "You've got a pottery wheel workshop with Kabir at Clay and Kiln Studio on Saturday morning [1], which sounds like a nice creative way to spend part of the weekend. And after your study session, you could unwind with a film—that's how you typically decompress [2]. Since you're done with thrillers now and want lighter shows [7], you might enjoy watching Dark with Kabir [21], or Mindhunter if you're "
+   }
+  },
+  {
+   "id": "35-books-suggested",
+   "title": "Conversation: what the assistant suggested",
+   "tags": [
+    "conversation"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "conversation",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 11570,
+   "ttft_ms": 10824,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.03e-05, "latency_ms": 1663, "ttft_ms": null, "input_tokens": 623, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.134e-05, "latency_ms": 2062, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 2664, "output_tokens": 126, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.2e-07, "latency_ms": 1076, "ttft_ms": null, "input_tokens": 21, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004714, "latency_ms": 4677, "ttft_ms": null, "input_tokens": 2249, "cached_input_tokens": 0, "output_tokens": 493, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001424, "latency_ms": 1569, "ttft_ms": 941, "input_tokens": 934, "cached_input_tokens": 0, "output_tokens": 98, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00206746,
+   "spent_usd": 0.00206746,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "conversation"
+    ],
+    "selected": [],
+    "ranked": [
+     "rust_book",
+     "pattern_film",
+     "run_sep_20",
+     "book_hotel",
+     "brunch_nisha",
+     "saturday_workshop",
+     "run_sep_13",
+     "pottery_class",
+     "run_sep_06",
+     "run_sep_27"
+    ],
+    "aggregate": null,
+    "reply": "I suggested three light reads on Tuesday 29 September [1]:\n\n1. Tea by the Window by Arun Mehra — gentle short stories set in a hill town\n2. The Map of Small Things by Clara Voss — a warm travel memoir about noticing little details\n3. Seven Easy Mornings by Tomas Reed — short essays on building calm routines\n\nWould you like me to save these as a recommendation for you?\n\nWant me to save what I sugge"
+   }
+  },
+  {
+   "id": "36-told-berlin",
+   "title": "Conversation: what I said, never saved",
+   "tags": [
+    "conversation"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "conversation",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 11834,
+   "ttft_ms": 11278,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.01e-05, "latency_ms": 2925, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 36, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011264, "latency_ms": 2826, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 169, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 17, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004639, "latency_ms": 4289, "ttft_ms": null, "input_tokens": 2229, "cached_input_tokens": 0, "output_tokens": 482, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001043, "latency_ms": 1307, "ttft_ms": 879, "input_tokens": 813, "cached_input_tokens": 0, "output_tokens": 46, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00169998,
+   "spent_usd": 0.00169964,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "conversation"
+    ],
+    "selected": [],
+    "ranked": [
+     "nisha_interview",
+     "goa_trip",
+     "kabir_likes_mk",
+     "live_pune",
+     "run_sep_27",
+     "run_sep_09",
+     "mk_bag",
+     "watched_severance",
+     "watch_dark",
+     "ramen_japan"
+    ],
+    "aggregate": null,
+    "reply": "You told me on Thursday 24 September (12 days ago) that if you get the Berlin offer, you'll move [1].\n\nWould you like me to save this as a goal or plan?"
+   }
+  },
+  {
+   "id": "37-shoe-size",
+   "title": "§8.2 no-answer: never saved, no guess",
+   "tags": [
+    "abstain",
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 8843,
+   "ttft_ms": 8730,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9e-05, "latency_ms": 1675, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 56, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.154e-05, "latency_ms": 2332, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 127, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.4e-07, "latency_ms": 2, "ttft_ms": null, "input_tokens": 22, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004811, "latency_ms": 4367, "ttft_ms": null, "input_tokens": 2171, "cached_input_tokens": 0, "output_tokens": 528, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00066308,
+   "spent_usd": 0.00066264,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [],
+    "ranked": [
+     "mk_bag",
+     "kabir_likes_mk",
+     "dinner_tonight",
+     "kabir_birthday",
+     "run_misfiled_subtype",
+     "goa_trip",
+     "saturday_workshop",
+     "watch_dark",
+     "rohan_husband",
+     "running_shoes"
+    ],
+    "aggregate": null,
+    "reply": "I don't have anything saved about Kabir's shoe size."
+   }
+  },
+  {
+   "id": "38-sourdough",
+   "title": "No answer by meaning",
+   "tags": [
+    "abstain",
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 9133,
+   "ttft_ms": 9042,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.32e-05, "latency_ms": 1982, "ttft_ms": null, "input_tokens": 622, "cached_input_tokens": 0, "output_tokens": 62, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.124e-05, "latency_ms": 1978, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 2664, "output_tokens": 106, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.8e-07, "latency_ms": 297, "ttft_ms": null, "input_tokens": 34, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000477, "latency_ms": 4512, "ttft_ms": null, "input_tokens": 2110, "cached_input_tokens": 0, "output_tokens": 532, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00065212,
+   "spent_usd": 0.00065212,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [],
+    "ranked": [
+     "rust_book",
+     "trading_article",
+     "try_saffron",
+     "try_tin_spoon",
+     "backup_photos",
+     "brunch_nisha",
+     "dinner_tonight",
+     "pottery_class",
+     "vegetarian",
+     "quiet_hours_read"
+    ],
+    "aggregate": null,
+    "reply": "I don't have anything saved about sourdough."
+   }
+  },
+  {
+   "id": "39-watched-dark",
+   "title": "Modality abstain: wanting to watch is not having watched",
+   "tags": [
+    "abstain",
+    "exact"
+   ],
+   "passed": false,
+   "failures": [
+    "should abstain; selected ['watch_dark']",
+    "abstention reply missing: \"You haven't watched Dark yet—it's still on your wish list [1]. You noted on Tuesday 22 September (2 weeks ago) that you \""
+   ],
+   "scores": {
+    "shape": "exact",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 13801,
+   "ttft_ms": 12946,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.88e-05, "latency_ms": 2660, "ttft_ms": null, "input_tokens": 618, "cached_input_tokens": 0, "output_tokens": 34, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011034, "latency_ms": 3149, "ttft_ms": null, "input_tokens": 12, "cached_input_tokens": 2664, "output_tokens": 165, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 306, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000534, "latency_ms": 5633, "ttft_ms": null, "input_tokens": 2360, "cached_input_tokens": 0, "output_tokens": 596, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001047, "latency_ms": 1563, "ttft_ms": 863, "input_tokens": 742, "cached_input_tokens": 0, "output_tokens": 61, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00177054,
+   "spent_usd": 0.00177054,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "watch_dark"
+    ],
+    "ranked": [
+     "watched_severance",
+     "run_misfiled_subtype",
+     "run_sep_20",
+     "run_oct_04",
+     "quiet_hours_read",
+     "run_sep_27",
+     "run_sep_09",
+     "pottery_class",
+     "brunch_nisha",
+     "running_shoes"
+    ],
+    "aggregate": null,
+    "reply": "You haven't watched Dark yet—it's still on your wish list [1]. You noted on Tuesday 22 September (2 weeks ago) that you want to watch it with Kabir [1]. Would you like me to save an update if you've started it?"
+   }
+  },
+  {
+   "id": "40-rohan-phone",
+   "title": "No answer about a known person",
+   "tags": [
+    "abstain",
+    "exact"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "exact",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": true,
+    "relaxed": false,
+    "selected": 0,
+    "soft_only": 0
+   },
+   "latency_ms": 9761,
+   "ttft_ms": 9639,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.3e-05, "latency_ms": 2169, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 62, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011104, "latency_ms": 2789, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 166, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5.8e-07, "latency_ms": 3, "ttft_ms": null, "input_tokens": 29, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004611, "latency_ms": 4287, "ttft_ms": null, "input_tokens": 2046, "cached_input_tokens": 0, "output_tokens": 513, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00066572,
+   "spent_usd": 0.00066514,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [],
+    "ranked": [
+     "rohan_husband",
+     "rohan_jazz",
+     "mk_bag",
+     "rohan_birds",
+     "live_pune",
+     "backup_photos",
+     "dinner_tonight",
+     "try_saffron",
+     "kabir_birthday",
+     "nisha_interview"
+    ],
+    "aggregate": null,
+    "reply": "I don't have anything saved about Rohan's phone number."
+   }
+  },
+  {
+   "id": "41-therapist-hidden",
+   "title": "Sensitive stays out unless asked about",
+   "tags": [
+    "abstain",
+    "semantic"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['semantic'], planned ['time_window']",
+    "should abstain; selected ['dinner_tonight', 'saturday_workshop', 'run_misfiled_subtype', 'pattern_film', 'gym_routine', 'pottery_class', 'run_sep_09', 'run_sep_20', 'quiet_hours_read', 'run_sep_02', 'brunch_nisha', 'run_sep_13', 'run_sep_06', 'run_oct_04', 'running_shoes', 'watched_severance', 'dentist_new', 'kabir_likes_mk', 'kabir_birthday', 'mk_bag', 'goa_trip']",
+    "abstention reply missing: \"I don't have information about what you do on Thursday evenings. The evidence I looked up shows your gym routine on Mond\""
+   ],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": true,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 21,
+    "soft_only": 2
+   },
+   "latency_ms": 11385,
+   "ttft_ms": 9964,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.06e-05, "latency_ms": 1892, "ttft_ms": null, "input_tokens": 621, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.214e-05, "latency_ms": 2137, "ttft_ms": null, "input_tokens": 15, "cached_input_tokens": 2664, "output_tokens": 128, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 285, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004784, "latency_ms": 4444, "ttft_ms": null, "input_tokens": 2419, "cached_input_tokens": 0, "output_tokens": 473, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.002389, "latency_ms": 2093, "ttft_ms": 834, "input_tokens": 1919, "cached_input_tokens": 0, "output_tokens": 94, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00304054,
+   "spent_usd": 0.00304054,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "run_misfiled_subtype",
+     "pattern_film",
+     "gym_routine",
+     "pottery_class",
+     "run_sep_09",
+     "run_sep_20",
+     "quiet_hours_read",
+     "run_sep_02",
+     "brunch_nisha",
+     "run_sep_13",
+     "run_sep_06",
+     "run_oct_04",
+     "running_shoes",
+     "watched_severance",
+     "dentist_new",
+     "kabir_likes_mk",
+     "kabir_birthday",
+     "mk_bag",
+     "goa_trip"
+    ],
+    "ranked": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "run_misfiled_subtype",
+     "pattern_film",
+     "gym_routine",
+     "pottery_class",
+     "run_sep_09",
+     "run_sep_20",
+     "quiet_hours_read",
+     "run_sep_02"
+    ],
+    "aggregate": null,
+    "reply": "I don't have information about what you do on Thursday evenings. The evidence I looked up shows your gym routine on Monday, Wednesday, and Friday mornings [5], and upcoming plans like dinner at Saffron Street tonight (Tuesday) [1] and a pottery workshop on Saturday morning [2], but nothing about Thursday evenings specifically.\n\nWould you like to tell me about your Thursday routine? I can save it f"
+   }
+  },
+  {
+   "id": "42-home-and-watch",
+   "title": "Multi-part: two answers, each cited",
+   "tags": [
+    "latest",
+    "list",
+    "multi"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "latest",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 0
+   },
+   "latency_ms": 11823,
+   "ttft_ms": 11368,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001029, "latency_ms": 2092, "ttft_ms": null, "input_tokens": 624, "cached_input_tokens": 0, "output_tokens": 81, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00014394, "latency_ms": 2929, "ttft_ms": null, "input_tokens": 18, "cached_input_tokens": 2664, "output_tokens": 231, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.4e-07, "latency_ms": 4, "ttft_ms": null, "input_tokens": 42, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005313, "latency_ms": 2, "ttft_ms": null, "input_tokens": 2178, "cached_input_tokens": 0, "output_tokens": 627, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004865, "latency_ms": 5192, "ttft_ms": null, "input_tokens": 2015, "cached_input_tokens": 0, "output_tokens": 570, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001021, "latency_ms": 1092, "ttft_ms": 796, "input_tokens": 831, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00228648,
+   "spent_usd": 0.00175434,
+   "cache_hits": 2,
+   "detail": {
+    "planned": [
+     "latest",
+     "list"
+    ],
+    "selected": [
+     "live_pune",
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "live_pune",
+     "live_bengaluru",
+     "rohan_jazz",
+     "rohan_husband",
+     "mk_bag",
+     "gym_reason",
+     "vegetarian",
+     "done_thrillers",
+     "run_sep_02",
+     "renew_passport"
+    ],
+    "aggregate": null,
+    "reply": "You live in Pune [1].\n\nOn your watch list, you want to watch Dark with Kabir [2] and Mindhunter [3]."
+   }
+  },
+  {
+   "id": "43-week-and-trading",
+   "title": "Multi-part: time plus semantic",
+   "tags": [
+    "multi",
+    "semantic",
+    "time_window"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 5,
+    "soft_only": 0
+   },
+   "latency_ms": 13147,
+   "ttft_ms": 11595,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.61e-05, "latency_ms": 1611, "ttft_ms": null, "input_tokens": 626, "cached_input_tokens": 0, "output_tokens": 67, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00018014, "latency_ms": 4162, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 2664, "output_tokens": 303, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.9e-06, "latency_ms": 435, "ttft_ms": null, "input_tokens": 95, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004815, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2290, "cached_input_tokens": 0, "output_tokens": 505, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004517, "latency_ms": 4143, "ttft_ms": null, "input_tokens": 2092, "cached_input_tokens": 0, "output_tokens": 485, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001816, "latency_ms": 2283, "ttft_ms": 904, "input_tokens": 1046, "cached_input_tokens": 0, "output_tokens": 154, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00302734,
+   "spent_usd": 0.00254584,
+   "cache_hits": 1,
+   "detail": {
+    "planned": [
+     "time_window",
+     "semantic"
+    ],
+    "selected": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "gym_routine",
+     "trading_idea",
+     "trading_article"
+    ],
+    "ranked": [
+     "dinner_tonight",
+     "saturday_workshop",
+     "gym_routine",
+     "dentist_new",
+     "run_oct_04",
+     "renew_passport",
+     "try_saffron",
+     "run_sep_06",
+     "try_blue_lotus",
+     "run_sep_09"
+    ],
+    "aggregate": null,
+    "reply": "**This week:**\n\nYou have dinner at Saffron Street with Kabir today in the evening [1]. On Saturday morning, you're doing a pottery wheel workshop with Kabir at Clay and Kiln Studio [2]. You also have gym sessions at Iron Temple Gym tomorrow (Wednesday) and Friday, both at 7 am [3].\n\n**On trading:**\n\nYes, you saved a couple of things. You noted a trading idea about a momentum strategy on index fund"
+   }
+  },
+  {
+   "id": "44-runs-and-sourdough",
+   "title": "Multi-part: one part found, one says it has nothing",
+   "tags": [
+    "aggregate",
+    "count",
+    "multi",
+    "semantic"
+   ],
+   "passed": false,
+   "failures": [
+    "aggregate: expected 6.0, got 7.0"
+   ],
+   "scores": {
+    "shape": "count",
+    "has_gold": false,
+    "hit5": false,
+    "rr": 0.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 7,
+    "soft_only": 0
+   },
+   "latency_ms": 8705,
+   "ttft_ms": 7660,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0001002, "latency_ms": 1701, "ttft_ms": null, "input_tokens": 632, "cached_input_tokens": 0, "output_tokens": 74, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00020424, "latency_ms": 4165, "ttft_ms": null, "input_tokens": 26, "cached_input_tokens": 2664, "output_tokens": 350, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.4e-06, "latency_ms": 571, "ttft_ms": null, "input_tokens": 70, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005925, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2385, "cached_input_tokens": 0, "output_tokens": 708, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.000477, "latency_ms": 1, "ttft_ms": null, "input_tokens": 2110, "cached_input_tokens": 0, "output_tokens": 532, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001744, "latency_ms": 1745, "ttft_ms": 877, "input_tokens": 1254, "cached_input_tokens": 0, "output_tokens": 98, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00311934,
+   "spent_usd": 0.00204984,
+   "cache_hits": 2,
+   "detail": {
+    "planned": [
+     "count",
+     "semantic"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "run_misfiled_subtype",
+     "run_sep_13",
+     "run_sep_27",
+     "quiet_hours_read",
+     "run_oct_04",
+     "running_shoes"
+    ],
+    "aggregate": 7.0,
+    "reply": "You logged 7 runs in September [1][2][3][4][5][6][7]. They ranged from 4 km (an evening run with Kabir around the lake on 23 September) to 12 km (on 20 September), with a couple at Vetal Hill and one on the beach in Goa on 27 September.\n\nI don't have anything saved about sourdough.\n\nI don't have anything saved about saved information about sourdough.\n\n1 more mention looks like runs but weren't log"
+   }
+  },
+  {
+   "id": "45-trigger-person",
+   "title": "A person trigger fires when she comes up",
+   "tags": [
+    "entity",
+    "fresh",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['entity'], planned ['exact']"
+   ],
+   "scores": {
+    "shape": "entity",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 11313,
+   "ttft_ms": 10782,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 40, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.97e-05, "latency_ms": 1676, "ttft_ms": null, "input_tokens": 612, "cached_input_tokens": 0, "output_tokens": 37, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003595, "latency_ms": 2720, "ttft_ms": null, "input_tokens": 2670, "cached_input_tokens": 0, "output_tokens": 185, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6e-07, "latency_ms": 283, "ttft_ms": null, "input_tokens": 30, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005016, "latency_ms": 4756, "ttft_ms": null, "input_tokens": 2381, "cached_input_tokens": 0, "output_tokens": 527, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000884, "latency_ms": 1259, "ttft_ms": 988, "input_tokens": 729, "cached_input_tokens": 0, "output_tokens": 31, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00187574,
+   "spent_usd": 0.0018254,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "exact"
+    ],
+    "selected": [
+     "quiet_hours_read"
+    ],
+    "ranked": [
+     "quiet_hours_read",
+     "nisha_interview",
+     "brunch_nisha",
+     "rohan_husband",
+     "watch_severance",
+     "run_misfiled_subtype",
+     "running_shoes",
+     "run_sep_27",
+     "pottery_class",
+     "watched_severance"
+    ],
+    "aggregate": null,
+    "reply": "Nisha lent you *The Quiet Hours*, a novel. You finished reading it on Monday 21 September [1].\n\nBy the way, you wanted to ask Nisha about her interview."
+   }
+  },
+  {
+   "id": "46-trigger-topic",
+   "title": "A topic trigger fires on a close enough message",
+   "tags": [
+    "fresh",
+    "semantic",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "shape: expected ['semantic'], planned ['situational', 'list']"
+   ],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 3,
+    "soft_only": 1
+   },
+   "latency_ms": 13392,
+   "ttft_ms": 12219,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 42, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.07e-05, "latency_ms": 1818, "ttft_ms": null, "input_tokens": 617, "cached_input_tokens": 0, "output_tokens": 58, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004035, "latency_ms": 3467, "ttft_ms": null, "input_tokens": 2675, "cached_input_tokens": 0, "output_tokens": 272, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 7.6e-07, "latency_ms": 450, "ttft_ms": null, "input_tokens": 38, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.83e-05, "latency_ms": 2237, "ttft_ms": null, "input_tokens": 723, "cached_input_tokens": 0, "output_tokens": 52, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004649, "latency_ms": 5278, "ttft_ms": null, "input_tokens": 2084, "cached_input_tokens": 0, "output_tokens": 513, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001254, "latency_ms": 1828, "ttft_ms": 909, "input_tokens": 864, "cached_input_tokens": 0, "output_tokens": 78, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0023625,
+   "spent_usd": 0.00231216,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "situational",
+     "list"
+    ],
+    "selected": [
+     "ramen_japan",
+     "renew_passport",
+     "rust_book"
+    ],
+    "ranked": [
+     "ramen_japan",
+     "book_hotel",
+     "goa_trip",
+     "renew_passport",
+     "half_marathon_goal",
+     "try_blue_lotus",
+     "try_saffron",
+     "try_tin_spoon",
+     "nisha_interview",
+     "trading_idea"
+    ],
+    "aggregate": null,
+    "reply": "You want to remember **Ichiban Ramen Bar in Osaka** for the Japan trip [1]—that's on your list from 3 weeks ago.\n\nAlso, you have an open task to **renew your passport**, which is due in 2 weeks (20 October) [2]. That'll be important before you go.\n\nBy the way, you asked me to remind you: Ichiban Ramen Bar in Osaka for the Japan trip."
+   }
+  },
+  {
+   "id": "47-trigger-quiet",
+   "title": "No trigger fires on an unrelated turn",
+   "tags": [
+    "fresh",
+    "semantic",
+    "trigger"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 1,
+    "soft_only": 0
+   },
+   "latency_ms": 13254,
+   "ttft_ms": 12546,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 3, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 46, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.93e-05, "latency_ms": 1978, "ttft_ms": null, "input_tokens": 618, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003521, "latency_ms": 2962, "ttft_ms": null, "input_tokens": 2676, "cached_input_tokens": 0, "output_tokens": 169, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 6.6e-07, "latency_ms": 952, "ttft_ms": null, "input_tokens": 33, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004241, "latency_ms": 5536, "ttft_ms": null, "input_tokens": 2051, "cached_input_tokens": 0, "output_tokens": 438, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000994, "latency_ms": 1358, "ttft_ms": 806, "input_tokens": 734, "cached_input_tokens": 0, "output_tokens": 52, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0019005,
+   "spent_usd": 0.00185016,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [
+     "rust_book"
+    ],
+    "ranked": [
+     "rust_book",
+     "trading_article",
+     "learn_rust",
+     "book_hotel",
+     "quiet_hours_read",
+     "try_tin_spoon",
+     "backup_photos",
+     "try_saffron",
+     "watched_severance",
+     "learn_guitar"
+    ],
+    "aggregate": null,
+    "reply": "You saved a link to \"The Rust Programming Language book, chapters 4 to 6 on ownership and borrowing\" on Monday 14 September (3 weeks ago), and marked it as not read yet [1]."
+   }
+  },
+  {
+   "id": "48-save-and-recall",
+   "title": "Save and recall: the new show is on the list the question reads",
+   "tags": [
+    "fresh",
+    "list"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "list",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 1.0,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": false,
+    "selected": 2,
+    "soft_only": 2
+   },
+   "latency_ms": 23269,
+   "ttft_ms": 10950,
+   "calls": [
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.56e-06, "latency_ms": 2, "ttft_ms": null, "input_tokens": 78, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 3.2e-07, "latency_ms": 1, "ttft_ms": null, "input_tokens": 16, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4.76e-05, "latency_ms": 41, "ttft_ms": null, "input_tokens": 2380, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": true, "estimated": false, "billed": true, "failed": null, "timed": false},
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.3e-05, "latency_ms": 2210, "ttft_ms": null, "input_tokens": 625, "cached_input_tokens": 0, "output_tokens": 41, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.007865, "latency_ms": 4962, "ttft_ms": null, "input_tokens": 5515, "cached_input_tokens": 0, "output_tokens": 470, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.2e-07, "latency_ms": 641, "ttft_ms": null, "input_tokens": 6, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "enrich", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 8.43e-05, "latency_ms": 1988, "ttft_ms": null, "input_tokens": 508, "cached_input_tokens": 0, "output_tokens": 67, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 1.28e-06, "latency_ms": 606, "ttft_ms": null, "input_tokens": 64, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0003954, "latency_ms": 4296, "ttft_ms": null, "input_tokens": 2704, "cached_input_tokens": 0, "output_tokens": 250, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 8.6e-07, "latency_ms": 278, "ttft_ms": null, "input_tokens": 43, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004798, "latency_ms": 5413, "ttft_ms": null, "input_tokens": 2023, "cached_input_tokens": 0, "output_tokens": 555, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001362, "latency_ms": 1902, "ttft_ms": 808, "input_tokens": 842, "cached_input_tokens": 0, "output_tokens": 104, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.0103221,
+   "spent_usd": 0.01027176,
+   "cache_hits": 4,
+   "detail": {
+    "planned": [
+     "list"
+    ],
+    "selected": [
+     "watch_dark",
+     "watch_mindhunter"
+    ],
+    "ranked": [
+     "watch_dark",
+     "watch_mindhunter",
+     "learn_rust",
+     "watch_severance",
+     "ramen_japan",
+     "try_tin_spoon",
+     "learn_guitar",
+     "half_marathon_goal",
+     "try_saffron",
+     "watched_severance"
+    ],
+    "aggregate": null,
+    "reply": "Added Watch Fallout to your watch list.\n\nYou told me today that you want to watch Fallout, so I'm adding that now.\n\nYour watchlist also has Dark with Kabir [2] (noted 2 weeks ago) and Mindhunter [3] (noted 5 weeks ago). Though I should mention—you said you're done with thrillers and want lighter shows now. Mindhunter is a thriller, so that one might not fit what you're looking for anymore."
+   }
+  },
+  {
+   "id": "49-sleep-read",
+   "title": "Filter miss: the sleep article was saved as a note, found by the soft channel only",
+   "tags": [
+    "semantic"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "shape": "semantic",
+    "has_gold": true,
+    "hit5": true,
+    "rr": 0.3333333333333333,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 1,
+    "soft_only": 1
+   },
+   "latency_ms": 11278,
+   "ttft_ms": 10650,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.95e-05, "latency_ms": 1365, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 35, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00011204, "latency_ms": 2696, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 168, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 5e-07, "latency_ms": 471, "ttft_ms": null, "input_tokens": 25, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0004793, "latency_ms": 4859, "ttft_ms": null, "input_tokens": 2203, "cached_input_tokens": 0, "output_tokens": 518, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.000894, "latency_ms": 1401, "ttft_ms": 894, "input_tokens": 744, "cached_input_tokens": 0, "output_tokens": 30, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00156534,
+   "spent_usd": 0.00156534,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "semantic"
+    ],
+    "selected": [
+     "sleep_article"
+    ],
+    "ranked": [
+     "trading_article",
+     "rust_book",
+     "sleep_article",
+     "quiet_hours_read",
+     "pattern_film",
+     "run_sep_20",
+     "run_sep_09",
+     "run_oct_04",
+     "backup_photos",
+     "watch_severance"
+    ],
+    "aggregate": null,
+    "reply": "You read an article on sleep that said to keep screens out of the bedroom and no caffeine after 2 pm [1]."
+   }
+  },
+  {
+   "id": "50-bought-last-month",
+   "title": "Filter miss: bought in August, mentioned in September",
+   "tags": [
+    "time_window"
+   ],
+   "passed": false,
+   "failures": [
+    "gold not in the answer: ['running_shoes'] (selected ['run_sep_09', 'run_sep_02', 'run_sep_20', 'run_sep_06', 'quiet_hours_read', 'run_sep_13', 'run_sep_27', 'watched_severance', 'pottery_class', 'run_misfiled_subtype', 'brunch_nisha', 'ramen_japan'])"
+   ],
+   "scores": {
+    "shape": "time_window",
+    "has_gold": true,
+    "hit5": false,
+    "rr": 0.08333333333333333,
+    "must_abstain": false,
+    "abstained": false,
+    "relaxed": true,
+    "selected": 12,
+    "soft_only": 1
+   },
+   "latency_ms": 12290,
+   "ttft_ms": 11076,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 7.8e-05, "latency_ms": 1693, "ttft_ms": null, "input_tokens": 620, "cached_input_tokens": 0, "output_tokens": 32, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "plan", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.00013254, "latency_ms": 2977, "ttft_ms": null, "input_tokens": 14, "cached_input_tokens": 2664, "output_tokens": 209, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "embed", "provider": "openai", "model": "text-embedding-3-small", "cost_usd": 4e-07, "latency_ms": 286, "ttft_ms": null, "input_tokens": 20, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "rerank", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 0.0005138, "latency_ms": 4882, "ttft_ms": null, "input_tokens": 2398, "cached_input_tokens": 0, "output_tokens": 548, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "answer", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.001765, "latency_ms": 1950, "ttft_ms": 865, "input_tokens": 1405, "cached_input_tokens": 0, "output_tokens": 72, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true}
+   ],
+   "cost_usd": 0.00248974,
+   "spent_usd": 0.00248974,
+   "cache_hits": 0,
+   "detail": {
+    "planned": [
+     "time_window"
+    ],
+    "selected": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "quiet_hours_read",
+     "run_sep_13",
+     "run_sep_27",
+     "watched_severance",
+     "pottery_class",
+     "run_misfiled_subtype",
+     "brunch_nisha",
+     "ramen_japan"
+    ],
+    "ranked": [
+     "run_sep_09",
+     "run_sep_02",
+     "run_sep_20",
+     "run_sep_06",
+     "quiet_hours_read",
+     "run_sep_13",
+     "run_sep_27",
+     "watched_severance",
+     "pottery_class",
+     "run_misfiled_subtype"
+    ],
+    "aggregate": null,
+    "reply": "I looked for purchases from September 1–October 1, but the search found running records, a book you finished, a pottery class, meals out, and a show you watched—nothing marked as a purchase or buy. \n\nCould you tell me what you bought? I'm happy to save it so I have it next time."
+   }
+  }
+ ]
+}
