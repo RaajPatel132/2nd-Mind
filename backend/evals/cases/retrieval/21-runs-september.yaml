@@ -15,26 +15,27 @@ reply_contains:
 model:
   intent:
     intent: recall
-    confidence: 0.99
-    reason: You’re asking me to retrieve a detail about your logged runs.
+    confidence: 0.9
+    reason: asks about saved things
   plan:
     sub_queries:
     - shape: count
       question: How many runs did I log in September?
       topic: runs in September
-      about: running
-      times:
-      - expression: in September
-        clock: occurred
-        direction: past
       filters:
         kinds:
         - episode
+        subtypes:
+        - measurement
         attribute:
           key: activity
           value: run
       aggregate:
         op: count
+      times:
+      - expression: in September
+        clock: occurred
+        direction: past
   rerank:
   - match: along the river
     score: 0.8

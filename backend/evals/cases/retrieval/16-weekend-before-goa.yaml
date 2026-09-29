@@ -11,26 +11,18 @@ forbidden:
 model:
   intent:
     intent: recall
-    confidence: 0.82
-    reason: You’re asking me to recall a past activity, but I don’t have a saved memory about the weekend
-      before Goa.
+    confidence: 0.9
+    reason: asks about saved things
   plan:
     sub_queries:
     - shape: order
       question: What did I do the weekend before Goa?
-      topic: activities the weekend before Goa
-      about: activities
+      topic: the weekend before Goa
       times:
       - expression: the weekend before
         clock: occurred
         direction: past
         anchor: Goa
-      entities:
-      - mention: Goa
-        name: Goa
-      filters:
-        kinds:
-        - episode
   rerank:
   - match: pottery class
     score: 0.9
