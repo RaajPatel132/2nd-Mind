@@ -173,7 +173,8 @@ class _Where:
 
 _ORDER_LIVE = (
     "CASE WHEN {a}.valid_to IS NULL AND {a}.state = ANY(:live) THEN 0 ELSE 1 END, "
-    "coalesce({a}.occurred_start, {a}.due_at, {a}.valid_from, {a}.mentioned_at) DESC, {a}.id"
+    "coalesce({a}.occurred_start, {a}.due_at, {a}.valid_from, {a}.mentioned_at) DESC, "
+    "lower({a}.title), {a}.id"
 )
 
 

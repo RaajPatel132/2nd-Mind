@@ -106,7 +106,13 @@ def fuse(
             cand.demoted = True
     return sorted(
         by_id.values(),
-        key=lambda c: (-c.fused, -_when(items[c.item_id]), str(c.item_id)),
+        # Ties break on the words before the id, so the same memory always ranks the same.
+        key=lambda c: (
+            -c.fused,
+            -_when(items[c.item_id]),
+            items[c.item_id].title.lower(),
+            str(c.item_id),
+        ),
     )
 
 

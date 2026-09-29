@@ -62,7 +62,9 @@ def render_core(
     patterns: list[str] = []
     rules: list[str] = []
     ids: list[uuid.UUID] = []
-    for item in sorted(visible, key=lambda i: (i.created_at, i.id)):
+    # Ties (items saved in one turn) break on the words, not on the id: the same memory renders
+    # the same prefix (prompt caching, and a response cache that can recognise it).
+    for item in sorted(visible, key=lambda i: (i.created_at, i.title.lower(), i.id)):
         ids.append(item.id)
         line = core_line(item)
         person = _key_person(item, entities, item_entities)
@@ -133,5 +135,5 @@ def _intentions_summary(open_intentions: Sequence[ItemRecord]) -> list[str]:
         return []
     counts = Counter(i.subtype or "other" for i in live)
     summary = ", ".join(f"{n} to {subtype}" for subtype, n in sorted(counts.items()))
-    recent = sorted(live, key=lambda i: i.created_at, reverse=True)[:3]
+    recent = sorted(live, key=lambda i: (i.created_at, i.title.lower()), reverse=True)[:3]
     return [f"- {summary}", "- Most recent: " + "; ".join(i.title for i in recent)]
