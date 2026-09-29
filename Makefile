@@ -38,6 +38,26 @@ up-live: ## The stack on real providers (keys from .env; a missing key refuses t
 down: ## Stop the stack (keeps volumes; `make clean-volumes` drops them)
 	$(COMPOSE) down
 
+# The production-shaped rehearsal (R.13): its own project and volumes, images tagged by SHA.
+PRODLIKE_TAG ?= $(shell git rev-parse --short=12 HEAD)
+PRODLIKE     := IMAGE_TAG=$(PRODLIKE_TAG) $(COMPOSE) -p secondmind-prodlike \
+	-f compose.yaml -f compose.prodlike.yaml $(if $(wildcard .env),--env-file .env) --env-file .prodlike.env
+
+.prodlike.env:
+	@umask 077; { echo "PRODLIKE_SESSION_SECRET=$$(openssl rand -hex 32)"; \
+		echo "PRODLIKE_ACCESS_CODE=$$(openssl rand -hex 6)"; } > $@
+	@echo "wrote $@ (gitignored): the rehearsal's session secret and staging access code"
+
+.PHONY: up-prodlike
+up-prodlike: .prodlike.env ## The stack as staging runs it: live models, access code, read-only images (stop `make up` first)
+	$(PRODLIKE) up -d --build --wait
+	@scripts/print-urls.sh
+	@echo "    Access code  $$(sed -n 's/^PRODLIKE_ACCESS_CODE=//p' .prodlike.env)"
+
+.PHONY: down-prodlike
+down-prodlike: ## Stop the rehearsal stack (keeps its volumes)
+	$(PRODLIKE) down
+
 .PHONY: clean-volumes
 clean-volumes: ## Stop the stack and delete its data volumes
 	$(COMPOSE) down -v
@@ -144,6 +164,23 @@ bench-vectors-live: ## The vector bench on real embeddings (key from .env; ~$0.0
 seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
 	$(COMPOSE) exec api python -m secondmind.evals seed-dev --web-url $(WEB_URL)
 
+# Spend safety (R.10, ADR-0032): operate the running stack without a deploy.
+ADMIN := python -m secondmind.api.admin
+
+.PHONY: kill-switch on off
+kill-switch: ## make kill-switch on|off (or STATE=status): stop or resume every model call, no restart
+	@$(COMPOSE) exec -T api $(ADMIN) kill-switch $(or $(STATE),$(filter on off,$(MAKECMDGOALS)),status)
+on off: ; @:
+
+.PHONY: set-tier
+set-tier: ## make set-tier EMAIL=… TIER=guest|standard|premium: change a person's tier (audited)
+	@test -n "$(EMAIL)" -a -n "$(TIER)" || { echo "usage: make set-tier EMAIL=a@b.c TIER=premium"; exit 2; }
+	@$(COMPOSE) exec -T api $(ADMIN) set-tier "$(EMAIL)" "$(TIER)"
+
+.PHONY: spend-now
+spend-now: ## Today's, this month's and each provider's spend counters (the running stack)
+	@$(COMPOSE) exec -T api $(ADMIN) spend
+
 .PHONY: backfill-conversation
 backfill-conversation: ## Index past chat turns for "what did you tell me" questions (runs in the worker)
 	$(COMPOSE) exec worker python -m secondmind.jobs.adapters.enqueue backfill_conversation
@@ -172,7 +209,7 @@ images: ## Build the api/worker and web images
 
 .PHONY: scan-images
 scan-images: images ## Trivy scan: fail on fixable CRITICAL vulnerabilities
-	scripts/trivy-scan.sh secondmind-api:local secondmind-web:local
+	scripts/trivy-scan.sh secondmind-api:$${IMAGE_TAG:-local} secondmind-web:$${IMAGE_TAG:-local}
 
 .PHONY: e2e
 e2e: ## Playwright smoke test against the compose stack in fake-provider mode
