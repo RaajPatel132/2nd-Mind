@@ -1,270 +1,210 @@
 {
-  "schema_version": 1,
-  "run_id": "20260928T165708Z-b1a5966",
-  "suite": "ingest",
-  "mode": "live",
-  "routing": "economy-b",
-  "started_at": "2026-09-28T16:57:08.142077Z",
-  "finished_at": "2026-09-28T16:57:14.266777Z",
-  "git_sha": "b1a5966e588c",
-  "git_dirty": true,
-  "config_hash": "234cbd5656b8e09adb1daee30ecd1427c767d09779ae688db777757fd2ce7399",
-  "price_version": "2026-09-25",
-  "prompt_versions": {
-    "intent": "intent@1",
-    "extract": "extract@2",
-    "resolve": "resolve@1",
-    "enrich": "enrich@1",
-    "reconcile": "reconcile@1",
-    "plan": "plan@1",
-    "rerank": "rerank@1",
-    "correct": "correct@1",
-    "answer": "answer@3",
-    "judge": null,
-    "embed": null
-  },
-  "models": {
-    "intent": "openai:gpt-6-luna",
-    "extract": "anthropic:claude-haiku-4-5",
-    "resolve": "openai:gpt-6-luna",
-    "enrich": "openai:gpt-6-luna",
-    "reconcile": "openai:gpt-6-luna",
-    "plan": "openai:gpt-6-luna",
-    "rerank": "openai:gpt-6-luna",
-    "correct": "openai:gpt-6-luna",
-    "answer": "anthropic:claude-haiku-4-5",
-    "judge": "openai:gpt-6-luna",
-    "embed": "openai:text-embedding-3-small"
-  },
-  "fallbacks": {
-    "intent": null,
-    "extract": null,
-    "resolve": null,
-    "enrich": null,
-    "reconcile": null,
-    "plan": null,
-    "rerank": null,
-    "correct": null,
-    "answer": null,
-    "judge": null,
-    "embed": null
-  },
-  "fixture": {},
-  "selection": {
-    "cases": [
-      "@smoke"
-    ]
-  },
-  "batch": "B1",
-  "budget_usd": 0.04,
-  "estimate_usd": 0.01528246,
-  "status": "complete",
-  "note": null,
-  "setup_calls": [],
+ "schema_version": 1,
+ "run_id": "20260928T165708Z-b1a5966",
+ "suite": "ingest",
+ "mode": "live",
+ "routing": "economy-b",
+ "started_at": "2026-09-28T16:57:08.142077Z",
+ "finished_at": "2026-09-28T16:57:14.266777Z",
+ "git_sha": "b1a5966e588c",
+ "git_dirty": true,
+ "config_hash": "234cbd5656b8e09adb1daee30ecd1427c767d09779ae688db777757fd2ce7399",
+ "price_version": "2026-09-25",
+ "prompt_versions": {
+  "intent": "intent@1",
+  "extract": "extract@2",
+  "resolve": "resolve@1",
+  "enrich": "enrich@1",
+  "reconcile": "reconcile@1",
+  "plan": "plan@1",
+  "rerank": "rerank@1",
+  "correct": "correct@1",
+  "answer": "answer@3",
+  "judge": null,
+  "embed": null
+ },
+ "models": {
+  "intent": "openai:gpt-6-luna",
+  "extract": "anthropic:claude-haiku-4-5",
+  "resolve": "openai:gpt-6-luna",
+  "enrich": "openai:gpt-6-luna",
+  "reconcile": "openai:gpt-6-luna",
+  "plan": "openai:gpt-6-luna",
+  "rerank": "openai:gpt-6-luna",
+  "correct": "openai:gpt-6-luna",
+  "answer": "anthropic:claude-haiku-4-5",
+  "judge": "openai:gpt-6-luna",
+  "embed": "openai:text-embedding-3-small"
+ },
+ "fallbacks": {
+  "intent": null,
+  "extract": null,
+  "resolve": null,
+  "enrich": null,
+  "reconcile": null,
+  "plan": null,
+  "rerank": null,
+  "correct": null,
+  "answer": null,
+  "judge": null,
+  "embed": null
+ },
+ "fixture": {},
+ "selection": {
   "cases": [
-    {
-      "id": "01-passport-reminder",
-      "title": "§8.1 (a): a plan on the 3rd of next month, with the default reminder the day before",
-      "tags": [
-        "dates",
-        "new",
-        "trigger"
-      ],
-      "passed": false,
-      "failures": [
-        "no memory written matching 'passport'",
-        "trigger 'passport': []",
-        "reply '' lacks 'Sat 3 Oct'",
-        "reply '' lacks \"I'll remind you Fri 2 Oct\"",
-        "no key contains 'Saturday 3 October 2026'"
-      ],
-      "scores": {
-        "passed": {
-          "kind": 0,
-          "state": 0,
-          "modality": 0,
-          "date": 0,
-          "entity": 0,
-          "category": 0,
-          "layer": 0,
-          "reconcile": 0
-        },
-        "total": {
-          "kind": 1,
-          "state": 4,
-          "modality": 1,
-          "date": 2,
-          "entity": 1,
-          "category": 1,
-          "layer": 1,
-          "reconcile": 1
-        }
-      },
-      "latency_ms": 3816,
-      "ttft_ms": null,
-      "calls": [
-        {
-          "step": "intent",
-          "provider": "openai",
-          "model": "gpt-6-luna",
-          "cost_usd": 0.0000951,
-          "latency_ms": 3001,
-          "ttft_ms": null,
-          "input_tokens": 466,
-          "cached_input_tokens": 0,
-          "output_tokens": 97,
-          "cache_hit": false,
-          "estimated": false,
-          "billed": true,
-          "failed": null,
-          "timed": true
-        },
-        {
-          "step": "extract",
-          "provider": "anthropic",
-          "model": "claude-haiku-4-5",
-          "cost_usd": 0.0,
-          "latency_ms": 803,
-          "ttft_ms": null,
-          "input_tokens": 0,
-          "cached_input_tokens": 0,
-          "output_tokens": 0,
-          "cache_hit": false,
-          "estimated": false,
-          "billed": true,
-          "failed": "bad_request",
-          "timed": true
-        }
-      ],
-      "cost_usd": 0.0000951,
-      "spent_usd": 0.0000951,
-      "cache_hits": 0,
-      "detail": {
-        "reply": "",
-        "status": "failed"
-      }
-    },
-    {
-      "id": "07-secret-refused",
-      "title": "Secret refused: the pre-check skips the model, and the password is stored nowhere",
-      "tags": [
-        "secret"
-      ],
-      "passed": true,
-      "failures": [],
-      "scores": {
-        "passed": {
-          "kind": 2,
-          "state": 3,
-          "modality": 0,
-          "date": 0,
-          "entity": 0,
-          "category": 0,
-          "layer": 0,
-          "reconcile": 0
-        },
-        "total": {
-          "kind": 2,
-          "state": 3,
-          "modality": 0,
-          "date": 0,
-          "entity": 0,
-          "category": 0,
-          "layer": 0,
-          "reconcile": 0
-        }
-      },
-      "latency_ms": 4,
-      "ttft_ms": 3,
-      "calls": [],
-      "cost_usd": 0.0,
-      "spent_usd": 0.0,
-      "cache_hits": 0,
-      "detail": {
-        "reply": "I didn't save that: it looks like a password or another secret, and I don't store those. Nothing was written.",
-        "status": "completed"
-      }
-    },
-    {
-      "id": "17-dentist-moved",
-      "title": "Plan moved: the new appointment supersedes the old one, with a change key",
-      "tags": [
-        "dates",
-        "setup",
-        "supersede"
-      ],
-      "passed": false,
-      "failures": [
-        "no memory written matching '2 october'",
-        "changed '1 october': None != {'state': 'moved'}",
-        "reply '' lacks 'Moved: Dentist appointment is now Fri 2 Oct, 5 pm (was Thu 1 Oct, 5 pm).'",
-        "no key contains 'Changed on 23 September 2026: dentist appointment moved from Thursday 1 October to Friday 2 October 2026, 5 pm.'"
-      ],
-      "scores": {
-        "passed": {
-          "kind": 0,
-          "state": 0,
-          "modality": 0,
-          "date": 0,
-          "entity": 0,
-          "category": 0,
-          "layer": 0,
-          "reconcile": 0
-        },
-        "total": {
-          "kind": 1,
-          "state": 4,
-          "modality": 0,
-          "date": 1,
-          "entity": 0,
-          "category": 0,
-          "layer": 0,
-          "reconcile": 1
-        }
-      },
-      "latency_ms": 2201,
-      "ttft_ms": null,
-      "calls": [
-        {
-          "step": "intent",
-          "provider": "openai",
-          "model": "gpt-6-luna",
-          "cost_usd": 0.000065,
-          "latency_ms": 1577,
-          "ttft_ms": null,
-          "input_tokens": 460,
-          "cached_input_tokens": 0,
-          "output_tokens": 38,
-          "cache_hit": false,
-          "estimated": false,
-          "billed": true,
-          "failed": null,
-          "timed": true
-        },
-        {
-          "step": "extract",
-          "provider": "anthropic",
-          "model": "claude-haiku-4-5",
-          "cost_usd": 0.0,
-          "latency_ms": 617,
-          "ttft_ms": null,
-          "input_tokens": 0,
-          "cached_input_tokens": 0,
-          "output_tokens": 0,
-          "cache_hit": false,
-          "estimated": false,
-          "billed": true,
-          "failed": "bad_request",
-          "timed": true
-        }
-      ],
-      "cost_usd": 0.000065,
-      "spent_usd": 0.000065,
-      "cache_hits": 0,
-      "detail": {
-        "reply": "",
-        "status": "failed"
-      }
-    }
+   "@smoke"
   ]
+ },
+ "batch": "B1",
+ "budget_usd": 0.04,
+ "estimate_usd": 0.01528246,
+ "status": "complete",
+ "note": null,
+ "setup_calls": [],
+ "cases": [
+  {
+   "id": "01-passport-reminder",
+   "title": "§8.1 (a): a plan on the 3rd of next month, with the default reminder the day before",
+   "tags": [
+    "dates",
+    "new",
+    "trigger"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching 'passport'",
+    "trigger 'passport': []",
+    "reply '' lacks 'Sat 3 Oct'",
+    "reply '' lacks \"I'll remind you Fri 2 Oct\"",
+    "no key contains 'Saturday 3 October 2026'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 1,
+     "date": 2,
+     "entity": 1,
+     "category": 1,
+     "layer": 1,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 3816,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 9.51e-05, "latency_ms": 3001, "ttft_ms": null, "input_tokens": 466, "cached_input_tokens": 0, "output_tokens": 97, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.0, "latency_ms": 803, "ttft_ms": null, "input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": "bad_request", "timed": true}
+   ],
+   "cost_usd": 9.51e-05,
+   "spent_usd": 9.51e-05,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "",
+    "status": "failed"
+   }
+  },
+  {
+   "id": "07-secret-refused",
+   "title": "Secret refused: the pre-check skips the model, and the password is stored nowhere",
+   "tags": [
+    "secret"
+   ],
+   "passed": true,
+   "failures": [],
+   "scores": {
+    "passed": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 2,
+     "state": 3,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    }
+   },
+   "latency_ms": 4,
+   "ttft_ms": 3,
+   "calls": [],
+   "cost_usd": 0.0,
+   "spent_usd": 0.0,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "I didn't save that: it looks like a password or another secret, and I don't store those. Nothing was written.",
+    "status": "completed"
+   }
+  },
+  {
+   "id": "17-dentist-moved",
+   "title": "Plan moved: the new appointment supersedes the old one, with a change key",
+   "tags": [
+    "dates",
+    "setup",
+    "supersede"
+   ],
+   "passed": false,
+   "failures": [
+    "no memory written matching '2 october'",
+    "changed '1 october': None != {'state': 'moved'}",
+    "reply '' lacks 'Moved: Dentist appointment is now Fri 2 Oct, 5 pm (was Thu 1 Oct, 5 pm).'",
+    "no key contains 'Changed on 23 September 2026: dentist appointment moved from Thursday 1 October to Friday 2 October 2026, 5 pm.'"
+   ],
+   "scores": {
+    "passed": {
+     "kind": 0,
+     "state": 0,
+     "modality": 0,
+     "date": 0,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 0
+    },
+    "total": {
+     "kind": 1,
+     "state": 4,
+     "modality": 0,
+     "date": 1,
+     "entity": 0,
+     "category": 0,
+     "layer": 0,
+     "reconcile": 1
+    }
+   },
+   "latency_ms": 2201,
+   "ttft_ms": null,
+   "calls": [
+    {"step": "intent", "provider": "openai", "model": "gpt-6-luna", "cost_usd": 6.5e-05, "latency_ms": 1577, "ttft_ms": null, "input_tokens": 460, "cached_input_tokens": 0, "output_tokens": 38, "cache_hit": false, "estimated": false, "billed": true, "failed": null, "timed": true},
+    {"step": "extract", "provider": "anthropic", "model": "claude-haiku-4-5", "cost_usd": 0.0, "latency_ms": 617, "ttft_ms": null, "input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "cache_hit": false, "estimated": false, "billed": true, "failed": "bad_request", "timed": true}
+   ],
+   "cost_usd": 6.5e-05,
+   "spent_usd": 6.5e-05,
+   "cache_hits": 0,
+   "detail": {
+    "reply": "",
+    "status": "failed"
+   }
+  }
+ ]
 }

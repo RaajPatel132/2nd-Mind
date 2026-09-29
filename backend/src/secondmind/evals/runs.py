@@ -159,8 +159,25 @@ def run_path(run: RunRecord, root: Path = RUNS_DIR) -> Path:
     return root / run.suite / f"{run.run_id}{suffix}"
 
 
+def dump_run(run: RunRecord) -> str:
+    """The run as JSON, indented down to the cases with each model call on one line, so a full
+    run with its recorded outputs stays a readable diff and well under the repo's file limit."""
+    data = run.model_dump(mode="json")
+    lines: list[str] = []
+
+    def one_line(call: object) -> str:
+        lines.append(json.dumps(call, ensure_ascii=False))
+        return f"@@{len(lines) - 1}@@"
+
+    data["setup_calls"] = [one_line(c) for c in data["setup_calls"]]
+    for case in data["cases"]:
+        case["calls"] = [one_line(c) for c in case["calls"]]
+    text = json.dumps(data, indent=1, ensure_ascii=False)
+    return re.sub(r'"@@(\d+)@@"', lambda m: lines[int(m.group(1))], text)
+
+
 def write_run(run: RunRecord, root: Path = RUNS_DIR) -> Path:
-    body = run.model_dump_json(indent=2)
+    body = dump_run(run)
     leaked = looks_like_secret(body)
     if leaked:
         raise ValueError(f"refusing to write a run file with something like a key in it ({leaked})")

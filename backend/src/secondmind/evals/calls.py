@@ -87,6 +87,9 @@ class CallRecord:
     estimated: bool = False
     billed: bool = False
     failed: str | None = None
+    # What the model returned: a structured value, or the text of a chat reply (for triage and
+    # for recording replays, R.5). Never set for embeddings.
+    output: Any = None
 
     @property
     def spent_usd(self) -> Decimal:
@@ -108,6 +111,7 @@ class CallRecord:
             "estimated": self.estimated,
             "billed": self.billed,
             "failed": self.failed,
+            **({"output": self.output} if self.output is not None else {}),
         }
 
 
@@ -336,6 +340,7 @@ class MeteredAdapter:
         hit: bool = False,
         cost: Decimal | None = None,
         failed: str | None = None,
+        output: Any = None,
     ) -> None:
         now = time.perf_counter()
         self._log.add(
@@ -360,6 +365,7 @@ class MeteredAdapter:
                 estimated=self._dry,
                 billed=self._billed,
                 failed=failed,
+                output=output,
             )
         )
 
@@ -405,7 +411,9 @@ class MeteredAdapter:
         cached = self._lookup(key)
         if cached is not None:
             reply = _reply_of(cached)
-            self._record(request.step, ref, reply.usage, started, ttft=started, hit=True)
+            self._record(
+                request.step, ref, reply.usage, started, ttft=started, hit=True, output=reply.text
+            )
             if reply.text:
                 yield TextDelta(reply.text)
             yield StreamEnd(reply)
@@ -424,7 +432,7 @@ class MeteredAdapter:
             raise
         if final is not None:
             usage, cost = self._cost(request, ref, final.usage)
-            self._record(request.step, ref, usage, started, ttft=ttft, cost=cost)
+            self._record(request.step, ref, usage, started, ttft=ttft, cost=cost, output=final.text)
             self._store(key, _reply_json(final, request, ref))
 
     async def chat(self, request: AdapterRequest) -> AdapterReply:
@@ -434,7 +442,7 @@ class MeteredAdapter:
         cached = self._lookup(key)
         if cached is not None:
             reply = _reply_of(cached)
-            self._record(request.step, ref, reply.usage, started, hit=True)
+            self._record(request.step, ref, reply.usage, started, hit=True, output=reply.text)
             return reply
         try:
             reply = await self._inner.chat(request)
@@ -442,7 +450,7 @@ class MeteredAdapter:
             self._failed(request, err, started)
             raise
         usage, cost = self._cost(request, ref, reply.usage)
-        self._record(request.step, ref, usage, started, cost=cost)
+        self._record(request.step, ref, usage, started, cost=cost, output=reply.text)
         self._store(key, _reply_json(reply, request, ref))
         return reply
 
@@ -461,7 +469,7 @@ class MeteredAdapter:
         if cached is not None:
             value = schema.model_validate(cached["value"])
             usage = _usage_of(cached["usage"])
-            self._record(request.step, ref, usage, started, hit=True)
+            self._record(request.step, ref, usage, started, hit=True, output=cached["value"])
             return AdapterStructured(value=value, usage=usage)
         try:
             result = await self._inner.structured(request, schema)
@@ -469,7 +477,8 @@ class MeteredAdapter:
             self._failed(request, err, started, schema)
             raise
         usage, cost = self._cost(request, ref, result.usage, schema)
-        self._record(request.step, ref, usage, started, cost=cost)
+        dumped = result.value.model_dump(mode="json")
+        self._record(request.step, ref, usage, started, cost=cost, output=dumped)
         self._store(
             key,
             {
