@@ -6,13 +6,14 @@
 # runs found prompt gaps, and each fix (extract@4 and @5, plan@3, rerank@3, intent@3) was re-run
 # on its own cases. The three together keep the planned $1.15. B3 then took another $0.20 from the
 # reserve for the last passes (extract@6, intent@3 and the final recall run); the sprint total
-# is unchanged.
+# is unchanged. B5 took $0.10 from the reserve as well: the latency comparisons and both
+# fallback runs each needed the full ten cases.
 batches:
   B1: {allowance_usd: 0.05, what: "smoke: live-check, contract tests, 5 intent + 3 ingest + 3 recall on candidate B"}
   B2: {allowance_usd: 0.10, what: "probe: a stratified ~25% sample on candidates A and B"}
   B3: {allowance_usd: 1.20, what: "full suites on the lead candidate, and the re-runs after each triage fix"}
   B4: {allowance_usd: 0.60, what: "the Sonnet 5 reference subset (8 ingest + 10 recall)"}
-  B5: {allowance_usd: 0.30, what: "step-ups on their own cases; the fallback path on 10 cases"}
+  B5: {allowance_usd: 0.45, what: "step-ups on their own cases; the fallback path on 10 cases"}
   B6: {allowance_usd: 0.50, what: "one full run of the chosen routing; the vector bench on real embeddings"}
   B7: {allowance_usd: 0.50, what: "smoke-live, the walkthrough, the rehearsal stack"}
-  R: {allowance_usd: 0.40, what: "reserve: only for a surprise, each use explained in the report"}
+  R: {allowance_usd: 0.25, what: "reserve: only for a surprise, each use explained in the report"}
