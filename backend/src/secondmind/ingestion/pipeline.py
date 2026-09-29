@@ -901,7 +901,7 @@ def _resolve_times(ctx: IngestContext, m: ProposedMemory, notes: _Notes) -> dict
             notes.unresolved.append(t.expression)
             continue
         resolved[t.id] = r
-        notes.times.append(_time_event(r, ctx.now, m.ref))
+        notes.times.append(_time_event(r, ctx.now, m.title))
     return resolved
 
 
@@ -1037,7 +1037,7 @@ def _fill_dates(text: str, m: ProposedMemory, resolved: dict[str, Resolved], tz:
     return " ".join(filled.split())
 
 
-def _time_event(r: Resolved, now: TurnNow, ref: str) -> TimeResolution:
+def _time_event(r: Resolved, now: TurnNow, memory: str) -> TimeResolution:
     local = r.start.astimezone(now.local.tzinfo)
     if r.precision is TimePrecision.DATETIME:
         value = local.strftime("%Y-%m-%dT%H:%M")
@@ -1062,7 +1062,7 @@ def _time_event(r: Resolved, now: TurnNow, ref: str) -> TimeResolution:
         rule=r.rule,
         assumed=r.assumed,
         alternative=r.alternative,
-        memory=ref,
+        memory=memory,
     )
 
 
