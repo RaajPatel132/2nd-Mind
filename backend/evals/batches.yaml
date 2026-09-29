@@ -16,6 +16,11 @@
 # "moved" itself), so extract@7 exists and the ingest suite ran again on it. A fresh extract call
 # costs $0.01, so the two halves of that run (21 cases, then the other 9) and the full recall run
 # (estimated at $0.28 because the estimate ignores the cache) needed the room.
+#
+# B7 took $0.15 from the reserve R: the smoke-live script needed four runs on the stack while
+# its checks were being made right ($0.09 each), and the E2E subset, the runbook trials, the
+# recall fixture seed and the walkthrough on real models added $0.18 more. The reserve is
+# explained in the sprint report.
 batches:
   B1: {allowance_usd: 0.05, what: "smoke: live-check, contract tests, 5 intent + 3 ingest + 3 recall on candidate B"}
   B2: {allowance_usd: 0.10, what: "probe: a stratified ~25% sample on candidates A and B"}
@@ -23,5 +28,5 @@ batches:
   B4: {allowance_usd: 0.60, what: "the Sonnet 5 reference subset (8 ingest + 10 recall)"}
   B5: {allowance_usd: 0.45, what: "step-ups on their own cases; the fallback path on 10 cases"}
   B6: {allowance_usd: 0.95, what: "one full run of the chosen routing; the vector bench on real embeddings"}
-  B7: {allowance_usd: 0.40, what: "smoke-live, the walkthrough, the rehearsal stack"}
-  R: {allowance_usd: 0.25, what: "reserve: only for a surprise, each use explained in the report"}
+  B7: {allowance_usd: 0.55, what: "smoke-live, the walkthrough, the rehearsal stack"}
+  R: {allowance_usd: 0.10, what: "reserve: only for a surprise, each use explained in the report"}
