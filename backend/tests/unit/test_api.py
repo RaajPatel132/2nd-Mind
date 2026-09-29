@@ -469,3 +469,22 @@ async def test_held_writes_can_be_listed_confirmed_once_and_are_private(
         assert (await c.get(f"/v1/items/{item_id}")).status_code == 404
         assert (await c.post(f"/v1/held-writes/{held['id']}/confirm")).status_code == 404
         assert (await c.post(f"/v1/turns/{saved}/undo")).status_code == 404
+
+
+async def test_a_redis_outage_fails_readiness_and_not_liveness(base_env: dict[str, str]) -> None:
+    """Liveness is the process alone: restarting the api cannot fix Redis, so the load balancer
+    must stop sending traffic (readiness) without the orchestrator killing the task (R.12)."""
+    services = _services(base_env)
+
+    async def down() -> CheckResult:
+        raise ConnectionError("redis down")
+
+    services.checks = {"database": services.checks["database"], "redis": down}
+    app = create_app(services=services)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        assert (await c.get("/healthz")).status_code == 200
+        ready = await c.get("/readyz")
+    assert ready.status_code == 503
+    checks = ready.json()["checks"]
+    assert checks["redis"]["ok"] is False
+    assert checks["database"]["ok"] is True

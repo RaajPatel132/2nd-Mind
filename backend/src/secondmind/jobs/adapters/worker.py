@@ -115,3 +115,7 @@ class WorkerSettings:
     health_check_interval = 10
     job_timeout = 300
     max_tries = 3
+    # SIGTERM: stop taking jobs, give running ones SHUTDOWN_GRACE_S to finish, then cancel them;
+    # a cancelled job is re-queued (arq's retry_jobs) and runs again on the next worker.
+    job_completion_wait = round(_settings.shutdown_grace_s)
+    retry_jobs = True

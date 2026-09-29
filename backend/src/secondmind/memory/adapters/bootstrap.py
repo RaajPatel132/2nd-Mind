@@ -11,11 +11,16 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from secondmind.memory import APP_GROUP_ROLE
 
+# One advisory lock for "changing the schema or its roles": two migrate jobs started together
+# (two deploys, an ECS task retried) queue on it instead of racing on CREATE ROLE or the DDL.
+MIGRATION_LOCK_KEY = 7_331_001
+
 
 async def ensure_app_role(owner_url: str, app_role: str, app_password: str) -> None:
     engine = create_async_engine(owner_url)
     try:
         async with engine.begin() as conn:
+            await conn.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": MIGRATION_LOCK_KEY})
             exists = (
                 await conn.execute(
                     text("SELECT 1 FROM pg_roles WHERE rolname = :r"), {"r": app_role}

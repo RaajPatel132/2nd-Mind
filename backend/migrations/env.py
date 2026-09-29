@@ -6,6 +6,7 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql.base import ischema_names
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -15,6 +16,7 @@ import secondmind.auth.adapters
 import secondmind.metering.adapters
 import secondmind.retrieval.adapters  # noqa: F401 - register tables on the metadata
 from secondmind.memory.adapters import Base, Vector
+from secondmind.memory.adapters.bootstrap import MIGRATION_LOCK_KEY
 
 # Let reflection read pgvector columns, so autogenerate compares them instead of warning.
 ischema_names["vector"] = Vector
@@ -47,14 +49,21 @@ def run_migrations_offline() -> None:
 
 
 def _run(connection: Connection) -> None:
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        include_object=_include_object,
-        compare_type=True,
-    )
-    with context.begin_transaction():
-        context.run_migrations()
+    # A second migrate started at the same time waits here until the first one is done.
+    connection.execute(text("SELECT pg_advisory_lock(:k)"), {"k": MIGRATION_LOCK_KEY})
+    connection.commit()
+    try:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=_include_object,
+            compare_type=True,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+    finally:
+        connection.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": MIGRATION_LOCK_KEY})
+        connection.commit()
 
 
 async def run_migrations_online() -> None:

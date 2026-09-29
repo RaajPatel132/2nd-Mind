@@ -228,3 +228,43 @@ async def test_logs_carry_turn_id_but_never_message_content(
     finished = [line for line in lines if line["event"] == "turn.finished"]
     assert finished
     assert finished[0]["turn_id"] == str(events[-1].turn.id)
+
+
+async def test_shutdown_lets_a_turn_finish_within_the_grace_and_fails_one_that_cannot() -> None:
+    """SIGTERM (R.12): the runner waits the grace for in-flight turns; a turn still running
+    after it ends as failed with a stored reason, not left half-written."""
+    r, _ = fake_router(FakeOutcome(text="done in time", delay_s=0.05))
+    tr, db = runner(r)
+    quick = await tr.start(SCOPE, text="hello", timezone="UTC")
+    await tr.aclose(timeout_s=5)
+    stored = await db.store(SCOPE).get(quick.turn.id)
+    assert stored is not None
+    assert (stored.status, stored.output) == (TurnStatus.COMPLETED, "done in time")
+
+    r2, _ = fake_router(FakeOutcome(text="too late", delay_s=30))
+    tr2, db2 = runner(r2)
+    slow = await tr2.start(SCOPE, text="hello", timezone="UTC")
+    await asyncio.sleep(0.05)  # in flight
+    await tr2.aclose(timeout_s=0.05)
+    left = await db2.store(SCOPE).get(slow.turn.id)
+    assert left is not None
+    assert left.status is TurnStatus.FAILED
+    assert left.output is None
+    assert left.error_code == "cancelled"
+    assert left.error_message
+
+
+async def test_a_dropped_stream_leaves_the_turn_readable_from_stored_events() -> None:
+    """A client that goes away mid-stream loses nothing: the turn completes and its events are
+    in the store for the next visit."""
+    r, _ = fake_router(FakeOutcome(text="still here"))
+    tr, db = runner(r)
+    handle = await tr.start(SCOPE, text="hello", timezone="UTC")
+    await anext(handle.events())  # one event, then the connection drops
+    await asyncio.wait_for(handle.task, timeout=5)
+    events = await db.store(SCOPE).events(handle.turn.id)
+    assert [e.event.type for e in events][-1] == "step"
+    assert any(isinstance(e.event, ModelCallEvent) for e in events)
+    turn = await db.store(SCOPE).get(handle.turn.id)
+    assert turn is not None
+    assert turn.output == "still here"

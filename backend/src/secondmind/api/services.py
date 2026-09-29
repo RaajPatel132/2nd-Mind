@@ -65,7 +65,9 @@ class Services:
         return dict(zip(names, results, strict=True))
 
     async def aclose(self) -> None:
-        await self.runner.aclose()
+        # SIGTERM: in-flight turns get SHUTDOWN_GRACE_S to finish (kept under ECS's stop
+        # timeout); the rest end as failed with a stored reason, never half-written (R.12).
+        await self.runner.aclose(timeout_s=self.config.settings.shutdown_grace_s)
         for close in reversed(self.closers):
             try:
                 await close()
