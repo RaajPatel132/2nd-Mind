@@ -12,6 +12,11 @@ database, the trace backend or a model provider (ADR-0021).
 
 A message can name a picker model: that turn's chat steps all run on it (ADR-0030).
 
+The spend gate (ADR-0032) is checked by the caller before a turn starts. A turn it lets in runs
+on an *admitted* router, so a kill switch flipped mid-turn never leaves it half-written. A turn
+it stops is still a turn: ``start(..., block=...)`` stores it with a ``blocked`` event and a
+template reply, and no model is called.
+
 Undo, confirming a held write and background jobs run as turns too (``TurnKind``), with their
 own events and diff, so they are auditable and can themselves be undone.
 """
@@ -40,6 +45,7 @@ from secondmind.agent.turns import (
 from secondmind.config import ModelRef, PromptRegistry, Step
 from secondmind.core import (
     AgentStep,
+    BlockedEvent,
     Clock,
     EntityRole,
     ErrorEvent,
@@ -47,6 +53,7 @@ from secondmind.core import (
     NullTrail,
     RetrievalEvent,
     SaveOffer,
+    StepStatus,
     TargetType,
     TurnEvent,
     UsageTotals,
@@ -73,6 +80,7 @@ from secondmind.ingestion import (
     summarise_commit,
 )
 from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
+from secondmind.metering import Block
 from secondmind.observability import (
     GenerationSpan,
     NullTracer,
@@ -82,7 +90,13 @@ from secondmind.observability import (
     get_logger,
 )
 from secondmind.policy import redact_values, scan_secrets
-from secondmind.providers import ChatMessage, ModelCall, ModelRouter, ProviderUnavailableError
+from secondmind.providers import (
+    CallsRefusedError,
+    ChatMessage,
+    ModelCall,
+    ModelRouter,
+    ProviderUnavailableError,
+)
 from secondmind.retrieval import (
     ConversationIndexer,
     ConversationStore,
@@ -277,13 +291,16 @@ class TurnRunner:
         timezone: str,
         default_lead_minutes: int = 1440,
         model: str | None = None,
+        block: Block | None = None,
     ) -> TurnHandle:
+        """Store the turn and start it; the reply streams from the handle. With ``block`` (the
+        spend gate said no) the turn is stored as blocked and answers from a template."""
         message = text.strip()
         if not message:
             raise ValidationFailedError("message is empty")
         if len(message) > self._max_chars:
             raise ValidationFailedError(f"message is longer than {self._max_chars} characters")
-        router = self._picked(model)
+        router = self._picked(model).admitted()
         # Before anything is stored or sent anywhere: a secret never leaves this function.
         scan = scan_secrets(message)
         store = self._stores(scope)
@@ -308,7 +325,8 @@ class TurnRunner:
             previous=previous,
         )
         run.trail = TurnTrail(store, turn.id, queue.put, clock=self._clock)
-        task = asyncio.create_task(self._run(run), name=f"turn-{turn.id}")
+        work = self._run(run) if block is None else self._run_blocked(run, block)
+        task = asyncio.create_task(work, name=f"turn-{turn.id}")
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
         return TurnHandle(turn=turn, task=task, _queue=queue)
@@ -552,6 +570,30 @@ class TurnRunner:
             log.exception("turn.crashed")
             error = ErrorEvent(code="internal_error", message=INTERNAL_ERROR_MESSAGE)
         await self._finish(run, answer, error)
+
+    async def _run_blocked(self, run: _TurnRun, block: Block) -> None:
+        """A turn the spend gate stopped: say why, and what still works. No model is called."""
+        bind_log_context(turn_id=str(run.turn.id), workspace_id=str(run.scope.workspace_id))
+        log.info("turn.blocked", reason=block.reason.value)
+        error: ErrorEvent | None = None
+        try:
+            trail = self._trail(run)
+            async with trail.run(AgentStep.BLOCKED) as step:
+                step.status = StepStatus.REFUSED
+                await trail.emit(
+                    BlockedEvent(
+                        reason=block.reason.value,
+                        message=block.message,
+                        limit_usd=None if block.limit is None else float(block.limit),
+                        used_usd=None if block.value is None else float(block.value),
+                    )
+                )
+            if run.queue is not None:
+                run.queue.put_nowait(TokenDelta(block.reply))
+        except Exception:
+            log.exception("turn.blocked_crashed")
+            error = ErrorEvent(code="internal_error", message=INTERNAL_ERROR_MESSAGE)
+        await self._finish(run, block.reply, error)
 
     # ------------------------------------------------------------------ non-chat turns
 
@@ -845,6 +887,8 @@ class TurnRunner:
         async def embed(texts: Sequence[str]) -> list[list[float]] | None:
             try:
                 return await steps.embed(list(texts))
+            except CallsRefusedError:
+                raise  # the spend gate said no: the job is deferred, not stored without vectors
             except ProviderUnavailableError:
                 return None
 
@@ -856,31 +900,42 @@ class TurnRunner:
         """Write what was said in a completed chat turn into ``conversation_keys`` (S3.9)."""
         if self._conversation_stores is None:
             return 0
-        turn = await self._stores(scope).get(turn_id)
+        store = self._stores(scope)
+        turn = await store.get(turn_id)
         if turn is None:
             return 0
-        return await self._indexer(scope).index(_said_turn(turn))
+        return await self._indexer(scope, store, turn_id).index(_said_turn(turn))
 
     async def backfill_conversation(self, scope: WorkspaceScope, *, page: int = 100) -> int:
         """Index every completed chat turn of a workspace not indexed yet (the one-off job)."""
         if self._conversation_stores is None:
             return 0
         store, total, before = self._stores(scope), 0, None
-        indexer = self._indexer(scope)
         while True:
             turns = await store.recent(limit=page, before=before)
             if not turns:
                 return total
+            # A page's embeddings go on the ledger against its newest turn.
+            indexer = self._indexer(scope, store, turns[0].id)
             total += await indexer.backfill([_said_turn(t) for t in turns])
             before = turns[-1].id
 
-    def _indexer(self, scope: WorkspaceScope) -> ConversationIndexer:
+    def _indexer(
+        self, scope: WorkspaceScope, store: TurnStore, turn_id: uuid.UUID
+    ) -> ConversationIndexer:
         assert self._conversation_stores is not None  # noqa: S101 - checked by the callers
         route = self._router.route(Step.EMBED)
+
+        async def on_ledger(
+            call: ModelCall, span: GenerationSpan, prompt: object, output: str
+        ) -> None:
+            # Indexing has no turn of its own to trace: its embeddings go on the ledger against
+            # the turn it indexes, as the app's cost (R.7), so spend caps see every dollar.
+            await store.record_usage(turn_id, call.to_event(), system=True)
+
         steps = ModelSteps(
             router=self._router,
             prompts=self._prompts,
-            # Background indexing belongs to no turn: nothing to trace or put on a ledger.
             trace=NullTracer().start_turn(
                 turn_id=new_id(),
                 workspace_id=scope.workspace_id,
@@ -888,7 +943,7 @@ class TurnRunner:
                 turn_input=None,
                 metadata={},
             ),
-            record=_ignore_call,
+            record=on_ledger,
             now=self._clock(),
             embed_dimensions=self._embed_dimensions,
         )
@@ -905,6 +960,8 @@ class TurnRunner:
         async def embed(texts: Sequence[str], hits: int) -> list[list[float]] | None:
             try:
                 return await steps.embed(list(texts), hits)
+            except CallsRefusedError:
+                raise
             except ProviderUnavailableError:
                 return None
 
@@ -1017,7 +1074,3 @@ def _said_turn(turn: Turn) -> SaidTurn:
         completed=turn.status is TurnStatus.COMPLETED,
         chat=turn.kind is TurnKind.USER,
     )
-
-
-async def _ignore_call(call: ModelCall, span: GenerationSpan, prompt: object, output: str) -> None:
-    """Background indexing has no turn to record its embedding calls on."""

@@ -81,6 +81,15 @@ class SqlTurnStore:
             await insert_ledger_entry(session, entry)
             return stored
 
+    async def record_usage(
+        self, turn_id: uuid.UUID, event: ModelCallEvent, *, system: bool = True
+    ) -> None:
+        entry = LedgerEntry.from_model_call(
+            workspace_id=self._scope.workspace_id, turn_id=turn_id, event=event, system=system
+        )
+        async with self._db.workspace(self._scope) as session:
+            await insert_ledger_entry(session, entry)
+
     async def append_many(
         self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
     ) -> list[StoredEvent]:

@@ -120,6 +120,14 @@ class TurnStore(Protocol):
         """Persist the event and its usage-ledger row together (FR-12.1)."""
         ...
 
+    async def record_usage(
+        self, turn_id: uuid.UUID, event: ModelCallEvent, *, system: bool = True
+    ) -> None:
+        """Add a call to the usage ledger against a turn that has already ended, without an
+        event: background work the turn led to (indexing what was said). ``system`` marks it
+        as the app's cost, not the person's."""
+        ...
+
     async def append_many(
         self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
     ) -> list[StoredEvent]:

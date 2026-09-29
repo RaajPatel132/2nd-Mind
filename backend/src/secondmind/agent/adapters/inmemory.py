@@ -3,6 +3,7 @@
 import uuid
 from collections.abc import Callable, Sequence
 from datetime import datetime
+from decimal import Decimal
 
 from secondmind.agent.turns import (
     StoredEvent,
@@ -20,7 +21,7 @@ from secondmind.core import (
     WorkspaceScope,
     utc_now,
 )
-from secondmind.metering import LedgerEntry
+from secondmind.metering import LedgerEntry, Spent
 
 
 class InMemoryTurnStore:
@@ -80,12 +81,21 @@ class InMemoryTurnStore:
 
     async def record_model_call(self, turn_id: uuid.UUID, event: ModelCallEvent) -> StoredEvent:
         stored = await self.append(turn_id, event)
+        await self.record_usage(turn_id, event, system=False)
+        return stored
+
+    async def record_usage(
+        self, turn_id: uuid.UUID, event: ModelCallEvent, *, system: bool = True
+    ) -> None:
+        turn = self._own(turn_id)
         self._db.ledger.append(
             LedgerEntry.from_model_call(
-                workspace_id=self._scope.workspace_id, turn_id=turn_id, event=event
+                workspace_id=self._scope.workspace_id,
+                turn_id=turn_id,
+                event=event,
+                system=system or turn.kind is TurnKind.SYSTEM,
             )
         )
-        return stored
 
     async def append_many(
         self, turn_id: uuid.UUID, events: Sequence[TurnEvent]
@@ -134,9 +144,13 @@ class InMemoryTurns:
     def store(self, scope: WorkspaceScope) -> InMemoryTurnStore:
         return InMemoryTurnStore(self, scope)
 
-    async def tokens_used(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> int:
-        """A ``LedgerReader``: the ledger charged in these workspaces (the tests' users own
-        their workspaces)."""
+    async def spent(self, user_id: uuid.UUID, workspace_ids: Sequence[uuid.UUID]) -> Spent:
+        """A ``LedgerReader``: what was charged in these workspaces (the tests' users own their
+        workspaces); system usage is the app's."""
         del user_id
         wanted = set(workspace_ids)
-        return sum(e.charged_tokens for e in self.ledger if e.workspace_id in wanted)
+        charged = [e for e in self.ledger if e.workspace_id in wanted and not e.system]
+        return Spent(
+            usd=sum((Decimal(e.cost_usd) for e in charged), Decimal(0)),
+            tokens=sum(e.charged_tokens for e in charged),
+        )

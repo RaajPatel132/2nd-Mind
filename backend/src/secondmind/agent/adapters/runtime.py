@@ -15,7 +15,7 @@ from secondmind.memory import Memory, MemorySettings
 from secondmind.memory.adapters import Database, embedding_dimensions, sql_memory
 from secondmind.observability import Tracer, get_logger
 from secondmind.observability.adapters import build_tracer
-from secondmind.providers import FakeScript, ModelRouter
+from secondmind.providers import CallGuard, FakeScript, ModelRouter
 from secondmind.providers.adapters import build_router
 from secondmind.retrieval import (
     RecallSettings,
@@ -102,10 +102,11 @@ def build_runtime(
     on_entities_renamed: EntitiesRenamed | None = None,
     on_turn_completed: TurnCompletedHook | None = None,
     script: FakeScript | None = None,
+    gate: CallGuard | None = None,
 ) -> Runtime:
     settings = config.settings
     db = Database(str(settings.database_url), pool_size=settings.database_pool_size)
-    router = build_router(config, fake_script=script or fake_script(settings))
+    router = build_router(config, fake_script=script or fake_script(settings)).with_guard(gate)
     tracer = build_tracer(settings)
     memory = Memory(sql_memory(db), memory_settings(settings))
 
