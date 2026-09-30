@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly reboot window, Sunday 03:30 IST
+
+[Timer]
+OnCalendar=Sun 22:00 UTC
+Persistent=false
+
+[Install]
+WantedBy=timers.target

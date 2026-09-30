@@ -43,7 +43,7 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `BREAKER_WINDOW_S` | Seconds the failure count covers. | 60 | 60 | 60 | env |
 | `BREAKER_COOLDOWN_S` | Seconds an open circuit waits before a probe. | 30 | 30 | 30 | env |
 | `FAKE_PROVIDER_TOKEN_DELAY_MS` | Pause between streamed tokens of the fake provider. | 15 | n/a | n/a | env |
-| `TRACING_ENABLED` | Send traces to Langfuse. | true | false unless keys are in .env | true | env |
+| `TRACING_ENABLED` | Send traces to Langfuse. | true | false unless keys are in .env | true | ssm |
 | `LANGFUSE_HOST` | Langfuse URL (self-hosted locally; Langfuse Cloud in production). | compose | Langfuse Cloud if keys are in .env | Langfuse Cloud URL | ssm |
 | `LANGFUSE_PUBLIC_KEY` | Langfuse project public key. | compose | from .env | set | ssm |
 | `LANGFUSE_SECRET_KEY` | Langfuse project secret key. | compose | from .env | set | secret |
@@ -82,8 +82,8 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `QUOTA_USD_GUEST` | Lifetime spend a guest may use, in dollars. | 0.75 | 0.75 | 0.75 | env |
 | `QUOTA_USD_STANDARD` | Lifetime spend a signed-in person may use. | 2.50 | 2.50 | 2.50 | env |
 | `QUOTA_USD_PREMIUM` | Lifetime spend of a person the operator upgraded. | 4.00 | 4.00 | 4.00 | env |
-| `SPEND_CAP_DAILY_USD` | App-wide spend per UTC day before turns stop. | 0.50 | 0.50 | 0.50 | env |
-| `SPEND_CAP_MONTHLY_USD` | App-wide spend per UTC month before turns stop. | 5 | 5 | 5 | env |
+| `SPEND_CAP_DAILY_USD` | App-wide spend per UTC day before turns stop. | 0.50 | 0.50 | 0.50 | ssm |
+| `SPEND_CAP_MONTHLY_USD` | App-wide spend per UTC month before turns stop. | 5 | 5 | 5 | ssm |
 | `SPEND_CAP_WARN_RATIO` | Share of a cap at which a warning is logged. | 0.8 | 0.8 | 0.8 | env |
 | `PROVIDER_CREDIT_USD_ANTHROPIC` | What the app may spend on Anthropic since PROVIDER_CREDIT_SINCE (below the real balance). | unset | unset | set | ssm |
 | `PROVIDER_CREDIT_USD_OPENAI` | What the app may spend on OpenAI since PROVIDER_CREDIT_SINCE. | unset | unset | set | ssm |
@@ -93,7 +93,7 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `MAX_REQUEST_BYTES` | Largest request body the API accepts. | 262144 | 262144 | 262144 | env |
 | `ALLOWED_ORIGINS` | Extra origins allowed to send state-changing requests (comma separated). | empty | https://localhost:8443 | https://2nd-mind.<domain> | ssm |
 | `ACCESS_CODE` | The code sign-in asks for in production until real accounts arrive (S6). | unset | generated | set | secret |
-| `GUESTS_OPEN` | Off keeps every way in (code sign-in, guest, persona) behind the access code; S5 turns it on to open the site. | false | false | false | env |
+| `GUESTS_OPEN` | Off keeps every way in (code sign-in, guest, persona) behind the access code; S5 turns it on to open the site. | false | false | false | ssm |
 | `LOGIN_ATTEMPTS_PER_MINUTE` | Sign-in attempts per address per minute in production. | 5 | 5 | 5 | env |
 | `SSE_HEARTBEAT_S` | Seconds between heartbeat comments on a quiet turn stream. | 15 | 15 | 15 | env |
 | `SHUTDOWN_GRACE_S` | Seconds running turns and jobs get after SIGTERM (under the 45 s container stop timeout). | 30 | 30 | 30 | env |
@@ -106,11 +106,22 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `NGINX_MAX_BODY` | Largest request body the web tier passes on. | 1m | 1m | 1m | env |
 | `NGINX_READ_TIMEOUT` | How long the web tier waits on a quiet stream from the API. | 60s | 120s | 120s | env |
 | `NGINX_DESIGN` | Serve the /design gallery (on/off); off in production. | on | off | off | env |
+| `POSTGRES_PASSWORD` | The database owner's password (the compose file builds `DATABASE_MIGRATION_URL` from it). | compose default | generated | set | secret |
+| `APP_DB_PASSWORD` | The app database role's password (`DATABASE_URL`, and `bootstrap_role` sets it). | compose default | generated | set | secret |
+| `REDIS_PASSWORD` | The Redis password (`REDIS_URL`). | compose default | generated | set | secret |
+| `APP_HOST` | The public host name Caddy serves and gets a certificate for. | n/a | localhost | 2nd-mind.<domain> | ssm |
+| `IMAGE_REGISTRY` | Where the images are pulled from; empty means local image names. | n/a | empty | ghcr.io/<owner> | ssm |
+| `IMAGE_TAG` | The release: the git SHA (first 12 characters) the images are tagged with. | local | git SHA | git SHA | env |
+| `EDGE_HTTP_PORT` | The host port Caddy's port 80 is published on. | n/a | 8081 | 80 | env |
+| `EDGE_HTTPS_PORT` | The host port Caddy's port 443 is published on. | n/a | 8443 | 443 | env |
 
-## Application variables added this sprint
+## Where a value comes from, by name
 
-`QUOTA_USD_*`, `SPEND_CAP_*`, `PROVIDER_CREDIT_*`, `KILL_SWITCH`, `RATE_TURNS_PER_MINUTE`,
-`MAX_REQUEST_BYTES`, `ALLOWED_ORIGINS`, `STAGING_ACCESS_CODE`, `LOGIN_ATTEMPTS_PER_MINUTE`,
-`SSE_HEARTBEAT_S` and `SHUTDOWN_GRACE_S` (Sprint 3.9). `LIVE_RUN_BUDGET_USD`, `LIVE_TOTAL_BUDGET_USD`,
-`LIVE_BATCH` and `ALLOW_EXPENSIVE` are tooling for live evaluation runs only: the application
-does not read them and they are never set on AWS.
+- **Application variables** are `Settings` fields (the rows above that a test ties to the code).
+- **Deploy-only variables** (`POSTGRES_PASSWORD`, `APP_DB_PASSWORD`, `REDIS_PASSWORD`, `APP_HOST`,
+  `IMAGE_REGISTRY`, `IMAGE_TAG` and the `EDGE_*` ports) are read by `compose.prodlike.yaml`, not
+  by the application; the compose file builds the database and Redis URLs from the passwords.
+- **Tooling only** (the application doesn't read them, and they are never set on the host):
+  `LIVE_RUN_BUDGET_USD`, `LIVE_TOTAL_BUDGET_USD`, `LIVE_BATCH`, `ALLOW_EXPENSIVE` and
+  `ALLOW_DIRTY` for live evaluation runs; `AWS_PROFILE`, `PROD_URL` and `SHA` for the make
+  targets that talk to AWS and GitHub.

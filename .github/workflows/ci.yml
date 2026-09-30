@@ -1,6 +1,8 @@
 # Every push and PR: commit messages and authors, backend (lint, types, boundaries, OpenAPI snapshot, unit +
-# integration tests, audit), frontend (lint, types, build, client drift, audit), secrets, image
-# scan, and the E2E smoke against the compose stack. Jobs call the same make targets as local.
+# integration tests, audit), frontend (lint, types, build, client drift, audit), secrets, infra
+# (Terraform format, validate, tflint, trivy, offline tests), image scan and push, and the E2E smoke
+# against the compose stack. Jobs call the same make targets as local. On a push to main (and a
+# sprint branch, once DEPLOY_SPRINT_BRANCHES is true) a green run deploys, through deploy.yml.
 name: ci
 
 on:
@@ -121,11 +123,15 @@ jobs:
           docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1
           git /repo --redact --verbose --exit-code 1
 
-  # The images staging will run (ADR-0012): linux/arm64, built natively on an arm64 runner and
-  # tagged by git SHA. Scanned, not pushed (the registry arrives with S4).
+  # The images production runs (ADR-0035): linux/arm64, built natively on an arm64 runner and
+  # tagged by git SHA, scanned, and, on a push to main or a sprint branch, pushed to GHCR (public
+  # packages, the workflow's own token, never overwritten). The host pulls them with no credentials.
   images:
     name: images (linux/arm64, tagged by SHA) + trivy
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v7.0.1
       - name: tag
@@ -140,6 +146,36 @@ jobs:
           done
       - name: trivy (fail on fixable CRITICAL)
         run: scripts/trivy-scan.sh "secondmind-api:$IMAGE_TAG" "secondmind-web:$IMAGE_TAG"
+      - name: push to GHCR (main and sprint branches only)
+        if: github.event_name == 'push' && (github.ref_name == 'main' || startsWith(github.ref_name, 'sprint-'))
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="${OWNER,,}"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+          for image in secondmind-api secondmind-web; do
+            target="ghcr.io/$owner/$image:$IMAGE_TAG"
+            # A tag is never overwritten: a release is what was built for its SHA, once.
+            if docker manifest inspect "$target" >/dev/null 2>&1; then
+              echo "$target already exists, not pushed again"
+            else
+              docker tag "$image:$IMAGE_TAG" "$target"
+              docker push "$target"
+            fi
+          done
+
+  # Terraform, offline: format, validate, tflint, trivy config and the mocked-provider tests. No
+  # AWS account is involved. (Once the plan role exists, terraform-plan.yml adds a plan summary.)
+  infra:
+    name: infra (terraform fmt, validate, test, tflint, trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: make infra-check
+      - name: the lock files are up to date
+        run: git diff --exit-code -- 'infra/terraform/**/.terraform.lock.hcl'
 
   e2e:
     name: e2e (compose, fake providers)
@@ -175,3 +211,18 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report
           retention-days: 7
+
+  # Deploy: after everything above is green, on a push to main, or to a sprint branch while the
+  # repository variable DEPLOY_SPRINT_BRANCHES is true (the site is behind the access code until
+  # S5 launches it; then only main deploys). It waits for the images job, which pushes them.
+  deploy:
+    name: deploy
+    needs: [commits, backend, frontend, secrets, infra, images, e2e]
+    if: >-
+      github.event_name == 'push' && (github.ref == 'refs/heads/main'
+      || (startsWith(github.ref, 'refs/heads/sprint-') && vars.DEPLOY_SPRINT_BRANCHES == 'true'))
+    permissions:
+      contents: read
+      id-token: write
+      deployments: write
+    uses: ./.github/workflows/deploy.yml

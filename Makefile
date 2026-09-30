@@ -40,30 +40,48 @@ up-live: ## The stack on real providers (keys from .env; a missing key refuses t
 down: ## Stop the stack (keeps volumes; `make clean-volumes` drops them)
 	$(COMPOSE) down
 
-# The production-shaped rehearsal (R.13): its own project and volumes, images tagged by SHA.
+# The production-shaped rehearsal (R.13, S4.4): its own project and volumes, the production compose
+# file, images tagged by SHA. `make up-prodlike` builds them locally; production pulls the same
+# images from GHCR (IMAGE_REGISTRY).
 PRODLIKE_TAG ?= $(shell git rev-parse --short=12 HEAD)
 PRODLIKE     := IMAGE_TAG=$(PRODLIKE_TAG) $(COMPOSE) -p secondmind-prodlike \
-	-f compose.yaml -f compose.prodlike.yaml $(if $(wildcard .env),--env-file .env) --env-file .prodlike.env
+	-f compose.prodlike.yaml --env-file .prodlike.env
+PRODLIKE_URL ?= https://localhost:8443
 
 # Operator commands (kill-switch, set-tier, spend-now) talk to the plain stack, or with STACK=prodlike
 # to the rehearsal stack.
 STACKCMD = $(if $(filter prodlike,$(STACK)),$(PRODLIKE),$(COMPOSE))
 
-.prodlike.env:
-	@umask 077; { echo "PRODLIKE_SESSION_SECRET=$$(openssl rand -hex 32)"; \
-		echo "PRODLIKE_ACCESS_CODE=$$(openssl rand -hex 6)"; } > $@
-	@echo "wrote $@ (gitignored): the rehearsal's session secret and staging access code"
+.PHONY: prodlike-env
+prodlike-env: ## (Re)write .prodlike.env: the rehearsal's generated secrets and the provider keys from .env
+	@scripts/prodlike-env.sh
 
 .PHONY: up-prodlike
-up-prodlike: .prodlike.env ## The stack as staging runs it: live models, access code, read-only images (stop `make up` first)
-	$(PRODLIKE) build api web  # once: migrate, api and worker share the image, and building it three times at once races
+up-prodlike: prodlike-env ## The production stack on this machine: live models, access code, TLS from a local CA (stop `make up` first)
+	# Built once (migrate, api and worker share the image; three builds at once race), tagged by SHA.
+	IMAGE_TAG=$(PRODLIKE_TAG) APP_VERSION=$(PRODLIKE_TAG) $(COMPOSE) build api web
 	$(PRODLIKE) up -d --wait
-	@scripts/print-urls.sh
-	@echo "    Access code  $$(sed -n 's/^PRODLIKE_ACCESS_CODE=//p' .prodlike.env)"
+	@echo "    Rehearsal   $(PRODLIKE_URL)  (Caddy's local certificate: trust it once, or click through)"
+	@echo "    Access code  $$(sed -n 's/^ACCESS_CODE=//p' .prodlike.env)"
+
+.PHONY: e2e-prodlike
+e2e-prodlike: ## The @prodlike E2E subset on the rehearsal stack, real models (costs cents; run `make up-prodlike` first)
+	cd frontend && IMAGE_TAG=$(PRODLIKE_TAG) E2E_BASE_URL=$(PRODLIKE_URL) E2E_IGNORE_HTTPS_ERRORS=1 \
+		E2E_ACCESS_CODE=$$(sed -n 's/^ACCESS_CODE=//p' ../.prodlike.env) \
+		E2E_COMPOSE="-p secondmind-prodlike -f ../compose.prodlike.yaml --env-file ../.prodlike.env" \
+		npx playwright test --grep @prodlike --project=desktop --project=spend --no-deps
+
+.PHONY: measure-prodlike
+measure-prodlike: ## Peak memory of the rehearsal stack while the @prodlike subset runs (prints each container against its limit)
+	scripts/measure_memory.py -- $(MAKE) e2e-prodlike
 
 .PHONY: down-prodlike
 down-prodlike: ## Stop the rehearsal stack (keeps its volumes)
 	$(PRODLIKE) down
+
+.PHONY: clean-prodlike
+clean-prodlike: ## Stop the rehearsal stack and delete its volumes (the database, Redis, the local CA)
+	$(PRODLIKE) down -v
 
 .PHONY: clean-volumes
 clean-volumes: ## Stop the stack and delete its data volumes
@@ -79,7 +97,7 @@ migrate: ## Apply database migrations (against the compose database)
 
 # ------------------------------------------------------------------ quality gates
 .PHONY: check
-check: commits lint typecheck imports openapi-check test test-int web-check secrets audit scan-images ## Everything CI runs, except E2E
+check: commits lint typecheck imports openapi-check test test-int web-check infra-check secrets audit scan-images ## Everything CI runs, except E2E
 
 .PHONY: commits
 commits: ## Commit messages not yet on origin/main follow the standard; authors too if COMMIT_AUTHORS is set
@@ -231,6 +249,85 @@ e2e: ## Playwright smoke test against the compose stack in fake-provider mode
 	$(COMPOSE) build api web
 	MODEL_PROVIDER_MODE=fake $(COMPOSE) up -d --wait
 	cd frontend && E2E_BASE_URL=$(WEB_URL) npx playwright test
+
+# ------------------------------------------------------------------ infrastructure (ADR-0035)
+# Terraform, tflint and trivy run in containers: nothing to install. The checks are offline (the
+# AWS provider is mocked in the tests), so they need no account. plan/apply/init need your AWS
+# profile (AWS_PROFILE) and are yours to run (guide Part 2).
+TF_IMAGE      ?= hashicorp/terraform:1.16.4
+TFLINT_IMAGE  ?= ghcr.io/terraform-linters/tflint:v0.64.0
+TRIVY_IMAGE   ?= aquasec/trivy:0.74.0
+AWS_PROFILE   ?= secondmind
+ROOT          ?= platform
+
+.PHONY: infra-check
+infra-check: tf-check tf-lint tf-scan ## Terraform: format, validate, offline tests, tflint, trivy config (containers, no account)
+
+.PHONY: tf-check
+tf-check: ## terraform fmt -check, validate and the mocked-provider tests, every root and module
+	@mkdir -p $(HOME)/.cache/terraform-plugins
+	docker run --rm --entrypoint sh -v $(CURDIR)/infra:/infra \
+		-v $(HOME)/.cache/terraform-plugins:/plugin-cache -e TF_PLUGIN_CACHE_DIR=/plugin-cache \
+		$(TF_IMAGE) /infra/terraform/check.sh
+
+.PHONY: tf-lint
+tf-lint: ## tflint (with the AWS ruleset) over every root and module
+	docker run --rm --entrypoint sh -v $(CURDIR)/infra/terraform:/data -w /data \
+		-e GITHUB_TOKEN $(TFLINT_IMAGE) -c "tflint --init && tflint --recursive"
+
+.PHONY: tf-scan
+tf-scan: ## trivy config over the Terraform (fails on HIGH and CRITICAL; accepted ones are in .trivyignore)
+	docker run --rm -v $(CURDIR)/infra/terraform:/src -v $(HOME)/.cache/trivy:/root/.cache/trivy \
+		$(TRIVY_IMAGE) config --exit-code 1 --severity HIGH,CRITICAL --ignorefile /src/.trivyignore /src
+
+.PHONY: tf-bootstrap
+tf-bootstrap: ## Create the Terraform state bucket (yours to run: AWS_PROFILE=...)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/tf-bootstrap.sh
+
+.PHONY: tf-init tf-plan tf-apply tf-output
+tf-init: ## terraform init for ROOT=platform|app (yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/tf.sh $(ROOT) init
+tf-plan: ## terraform plan for ROOT=platform|app (yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/tf.sh $(ROOT) plan
+tf-apply: ## terraform apply for ROOT=platform|app (yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/tf.sh $(ROOT) apply
+tf-output: ## terraform output for ROOT=platform|app
+	AWS_PROFILE=$(AWS_PROFILE) scripts/tf.sh $(ROOT) output
+
+.PHONY: prod-secrets
+prod-secrets: ## Write .env.prod to SSM Parameter Store (PROD_SECRETS_DRY_RUN=1 checks only; yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/prod-secrets.sh
+
+.PHONY: host-stop host-start host-status
+host-stop: ## Stop the production instance to save credit (before launch only; yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/host.sh stop
+host-start: ## Start it again; the site comes back by itself
+	AWS_PROFILE=$(AWS_PROFILE) scripts/host.sh start
+host-status: ## Is the production instance running?
+	AWS_PROFILE=$(AWS_PROFILE) scripts/host.sh status
+
+.PHONY: deploy
+deploy: ## Deploy through GitHub: make deploy [SHA=<sha>: a rollback, no migrations; MIGRATE=true|false] [REF=<branch>]
+	scripts/deploy.sh "$(SHA)" "$(MIGRATE)" "$(REF)"
+
+.PHONY: prod-deploy
+prod-deploy: ## Deploy SHA=<sha> straight over SSM, without GitHub (a rollback before the workflow is on main; yours to run)
+	@test -n "$(SHA)" || { echo "usage: make prod-deploy SHA=<sha> [MIGRATE=false]"; exit 2; }
+	AWS_PROFILE=$(AWS_PROFILE) scripts/prod-ssm.sh deploy "$(SHA)" $(if $(filter false,$(MIGRATE)),no-migrate,migrate)
+
+.PHONY: prod-admin
+prod-admin: ## The admin CLI in production's api container over SSM: make prod-admin CMD="kill-switch on" (yours to run)
+	@test -n "$(CMD)" || { echo 'usage: make prod-admin CMD="kill-switch on|off|status | spend | set-tier <email> <tier>"'; exit 2; }
+	AWS_PROFILE=$(AWS_PROFILE) scripts/prod-ssm.sh admin $(CMD)
+
+.PHONY: smoke-prod
+smoke-prod: ## Readiness, headers, then the @prodlike E2E subset on real models against PROD_URL; prints cost and a run id (yours to run)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/smoke-prod.sh
+
+.PHONY: restore-local
+restore-local: ## Load a nightly dump into the local stack: make restore-local DUMP=<file> (replaces its database; runbook section 7)
+	@test -n "$(DUMP)" || { echo "usage: make restore-local DUMP=<file>"; exit 2; }
+	scripts/restore-local.sh "$(DUMP)"
 
 # ------------------------------------------------------------------ codegen and formatting
 .PHONY: gen-client

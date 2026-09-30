@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# First boot of the 2nd Mind host (rendered by Terraform: infra/terraform/modules/host). It only
+# fetches the repository and runs the scripts that do the work: setup.sh is plain Linux, and
+# aws/setup-aws.sh is the AWS half. Output goes to /var/log/secondmind-first-boot.log.
+set -euo pipefail
+exec > >(tee -a /var/log/secondmind-first-boot.log) 2>&1
+
+export DATA_DEVICE="${data_device}"
+export REPO_URL="${repo_url}"
+export REPO_REF="${repo_ref}"
+export AWS_REGION="${aws_region}"
+export SSM_PATH="${ssm_path}"
+export BACKUP_BUCKET="${backup_bucket}"
+export LOG_GROUP="${log_group}"
+
+apt-get update -qq
+apt-get install -y -qq git
+rm -rf /opt/secondmind
+git clone --depth 1 --branch "$REPO_REF" "$REPO_URL" /opt/secondmind
+/opt/secondmind/infra/host/setup.sh
+/opt/secondmind/infra/host/aws/setup-aws.sh

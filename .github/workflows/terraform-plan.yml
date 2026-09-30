@@ -1,0 +1,48 @@
+# A pull request that touches infra/ gets a `terraform plan` summary, from the read-only plan
+# role (no changes are possible). It does nothing until the plan role exists and its ARN is the
+# AWS_PLAN_ROLE_ARN repository variable (guide step 9); the offline checks in ci.yml run always.
+name: terraform-plan
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  plan:
+    name: plan (${{ matrix.root }})
+    runs-on: ubuntu-latest
+    if: ${{ vars.AWS_PLAN_ROLE_ARN != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [platform, app]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: us-east-1
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: 1.16.4
+          terraform_wrapper: false
+      - name: init and plan (read-only, no lock)
+        working-directory: infra/terraform/${{ matrix.root }}
+        env:
+          TF_VAR_domain_name: ${{ vars.DOMAIN_NAME }}
+          TF_VAR_alert_email: ${{ vars.ALERT_EMAIL }}
+          TF_VAR_github_repo: ${{ github.repository }}
+        run: |
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          terraform init -input=false \
+            -backend-config="bucket=secondmind-tfstate-$account" \
+            -backend-config="key=${{ matrix.root }}/terraform.tfstate" \
+            -backend-config="region=us-east-1"
+          terraform plan -input=false -lock=false -no-color -out=plan.bin
+          { echo '### terraform plan: ${{ matrix.root }}'; echo '```'; terraform show -no-color plan.bin | tail -n 120; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

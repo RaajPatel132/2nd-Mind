@@ -9,6 +9,7 @@ docs/sprints/
 .env.*
 .prodlike.env
 !.env.example
+!.env.prod.example
 *.pem
 *.key
 
@@ -56,3 +57,6 @@ backend/evals/runs/.spend.*
 
 # Screenshots of the live walkthrough (kept locally)
 frontend/walkthrough-shots/
+
+# Production environment file for `make prod-secrets` (the real values; .env.prod.example is the shape)
+.env.prod

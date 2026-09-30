@@ -1,0 +1,6 @@
+[Unit]
+Description=Reboot if a security update needs it
+
+[Service]
+Type=oneshot
+ExecStart=/opt/secondmind/infra/host/reboot-if-needed.sh

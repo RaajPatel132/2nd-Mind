@@ -1,0 +1,115 @@
+# Deploy one release to production over SSM (ADR-0035). Called by ci.yml after CI is green on a
+# push to main (and, until launch, on a sprint branch when the DEPLOY_SPRINT_BRANCHES repository
+# variable is true), and run by hand for any commit (`make deploy`, which is also how a rollback
+# is done: `make deploy SHA=<sha>` skips the migration).
+#
+# No AWS access key exists anywhere: the job trades GitHub's short-lived token for the deploy
+# role's temporary credentials (OIDC). That role works only from the `production` environment,
+# and can only send our one SSM document to our one instance.
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        type: string
+        description: "Full git SHA to deploy (default: the commit that triggered the workflow)"
+        required: false
+        default: ""
+      migrate:
+        type: boolean
+        required: false
+        default: true
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Full git SHA to deploy (default: the head of the selected ref)"
+        required: false
+        default: ""
+      migrate:
+        description: "Run migrations first (untick for a rollback)"
+        type: boolean
+        default: true
+
+# One deploy at a time; a deploy in progress is never cancelled by the next.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    name: deploy to production
+    runs-on: ubuntu-latest
+    # A GitHub deployment is recorded on this environment: the SHA, the time and who ran it.
+    environment:
+      name: production
+      url: https://${{ vars.APP_HOST }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.sha || github.sha }}
+
+      - name: which release
+        id: release
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          sha="${INPUT_SHA:-$GITHUB_SHA}"
+          if ! [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; then echo "not a full 40-character SHA: $sha" >&2; exit 1; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=${sha:0:12}" >> "$GITHUB_OUTPUT"
+          echo "### Deploying \`${sha:0:12}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: the images for this release exist on GHCR
+        env:
+          OWNER: ${{ github.repository_owner }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          owner="${OWNER,,}"
+          for image in secondmind-api secondmind-web; do
+            docker manifest inspect "ghcr.io/$owner/$image:$TAG" >/dev/null \
+              || { echo "ghcr.io/$owner/$image:$TAG is missing (or private: make the package public). CI pushes it after a green run on main or a sprint branch." >&2; exit 1; }
+          done
+
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: run the deploy document on the host
+        id: run
+        env:
+          INSTANCE_ID: ${{ vars.INSTANCE_ID }}
+          SHA: ${{ steps.release.outputs.sha }}
+          MIGRATE: ${{ inputs.migrate }}
+        run: |
+          command_id="$(aws ssm send-command \
+            --document-name secondmind-deploy \
+            --instance-ids "$INSTANCE_ID" \
+            --parameters "sha=$SHA,migrate=$MIGRATE" \
+            --comment "deploy ${SHA:0:12} by $GITHUB_ACTOR" \
+            --query Command.CommandId --output text)"
+          echo "command_id=$command_id" >> "$GITHUB_OUTPUT"
+          echo "SSM command $command_id"
+          # Wait for it, then show what the host said, whatever the outcome.
+          aws ssm wait command-executed --command-id "$command_id" --instance-id "$INSTANCE_ID" || true
+          status="$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query Status --output text)"
+          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "status: $status"
+          [ "$status" = "Success" ]
+
+      - name: check the public URL (no model calls)
+        env:
+          APP_HOST: ${{ vars.APP_HOST }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: scripts/check-deployed.sh "https://$APP_HOST" "$TAG"
