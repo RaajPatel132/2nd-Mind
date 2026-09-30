@@ -44,7 +44,9 @@ because it may not be allowed on the Free plan and draws more credit.
 **The edge.** Caddy terminates TLS and routes by host name; each project drops its own site file into
 `infra/edge/sites/`. It compresses everything except `/v1` (a compressing proxy would hold back the
 event stream), flushes immediately, and makes a deploy a blip: it health-checks the web tier's
-`/readyz` every second, marks it down while the api restarts, and holds requests up to 15 s.
+`/readyz` every second, marks it down while the api restarts, and holds requests up to 15 s
+(measured: steady traffic across a 3-second api outage saw no error; a lone request after a quiet
+spell can meet a 502 for a second or two first).
 
 **Portable by construction.** The containers, the compose file, Caddy, the host script, the backup
 format, the images (GHCR, public) and DNS (Cloudflare, DNS only) know nothing about AWS. AWS appears

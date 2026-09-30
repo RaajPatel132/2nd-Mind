@@ -10,7 +10,8 @@
 		flush_interval -1
 
 		# A deploy is a short blip, not an outage: while the api restarts, the web tier answers
-		# /readyz with an error, Caddy marks it down, and holds requests for up to 15 s.
+		# /readyz with an error, Caddy marks it down within about a second, and holds what
+		# arrives for up to 15 s (tests/integration/test_stream_through_nginx.py).
 		health_uri /readyz
 		health_interval 1s
 		health_timeout 3s

@@ -158,12 +158,16 @@ until launch a push to a `sprint-*` branch does too while the repository variabl
 4. From the runner: `scripts/check-deployed.sh` against the public URL (liveness, readiness, the
    release, headers on the SPA and the API, a cross-site POST refused). No model calls.
 
-**A deploy is a short blip, not an outage.** The edge holds requests for up to 15 s while the api
-restarts (it marks the web tier down while `/readyz` fails, and waits). A turn in flight finishes
-within `SHUTDOWN_GRACE_S` (30 s; the container gets 45 s); the worker finishes its job or puts it
-back on the queue. **Not yet seen in production:** the slowed turn and slowed job checks
-need the live host (guide Part 3, exercise 1, with a long message in flight); the worker's
-re-queue is covered by a test (`tests/unit/test_worker_shutdown.py`).
+**A deploy is a short blip, not an outage.** The edge checks the web tier's `/readyz` every second,
+marks it down while the api restarts, and holds requests for up to 15 s until it is back. Measured
+on a stub stack behind the real Caddy and nginx (`tests/integration/test_stream_through_nginx.py`):
+with requests arriving steadily, 3.3 seconds with no api behind the web tier cost nobody an error
+(71 requests, none failed), and the longest wait was about 4 s. A single request after a quiet
+spell can still get a 502 in the first second or two, before the edge has noticed. A turn in flight
+finishes within `SHUTDOWN_GRACE_S` (30 s; the container gets 45 s); the worker finishes its job or
+puts it back on the queue, which is covered by a test against a real worker and Redis
+(`tests/integration/test_worker_requeue.py`). **Not yet seen on the live host:** the slowed turn and
+slowed job checks (guide Part 3, exercise 1, with a long message in flight).
 
 **Tried** (`infra/host/deploy.sh` against a sandbox compose project on the rehearsal's images,
 `SKIP_PULL=1`, 2026-09-30; the AWS parts of the path, SSM and OIDC, were not exercised):

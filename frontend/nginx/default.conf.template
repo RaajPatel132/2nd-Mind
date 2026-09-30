@@ -13,9 +13,10 @@ server {
     server_tokens off;
     client_max_body_size ${NGINX_MAX_BODY};
 
-    # Re-resolve the API's address: a recreated api container gets a new IP, and nginx would
-    # otherwise keep proxying to the old one until it restarts.
-    resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
+    # Re-resolve the API's address every 2 s: a recreated api container gets a new IP, and nginx
+    # would otherwise keep proxying to the old one. Short, so a restarted api is found well inside
+    # the 15 s the edge holds requests for during a deploy.
+    resolver ${NGINX_RESOLVER} valid=2s ipv6=off;
     set $api_upstream ${API_UPSTREAM};
 
     # Same origin only: the SPA's own scripts, styles and bundled fonts, and /v1 on this host.
