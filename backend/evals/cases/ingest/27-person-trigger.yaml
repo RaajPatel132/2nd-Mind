@@ -45,7 +45,7 @@ model:
       - Remind me to follow up with Nisha after her interview.
       cues:
       - when following up with Nisha
-      - when checking in about Nisha’s job search
+      - when checking in about Nisha’s interview
       - when reviewing my reminders
 expect:
   memories:
