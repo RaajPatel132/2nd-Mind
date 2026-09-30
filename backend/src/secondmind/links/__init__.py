@@ -5,6 +5,8 @@ client and the HTML extraction are in ``secondmind.links.adapters`` (enforced by
 contract), and the safe fetcher there is the only way the app requests a URL a person gave.
 """
 
+from secondmind.links.model import PENDING_REPLY, ChunkRow, FetchStatus, LinkKind, LinkSource
+from secondmind.links.saver import LinkSaver, LinkSaveResult, SavedLink, SaveSettings, without_links
 from secondmind.links.urls import (
     ALLOWED_PORTS,
     ALLOWED_SCHEMES,
@@ -24,8 +26,17 @@ from secondmind.links.urls import (
 __all__ = [
     "ALLOWED_PORTS",
     "ALLOWED_SCHEMES",
+    "PENDING_REPLY",
+    "ChunkRow",
     "FetchRefusedError",
+    "FetchStatus",
+    "LinkKind",
+    "LinkSaveResult",
+    "LinkSaver",
+    "LinkSource",
     "ParsedUrl",
+    "SaveSettings",
+    "SavedLink",
     "canonical_url",
     "check_resolved",
     "extract_urls",
@@ -35,4 +46,5 @@ __all__ = [
     "refusal_for",
     "site_name",
     "video_site",
+    "without_links",
 ]
