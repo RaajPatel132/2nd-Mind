@@ -1,11 +1,11 @@
 # Rendered by the nginx image's envsubst step. Every variable has a default in the Dockerfile:
 #   API_UPSTREAM, NGINX_RESOLVER   where the API is, and the resolver that finds it
 #   NGINX_HSTS                     Strict-Transport-Security value; empty (no header) unless the
-#                                  site is served over HTTPS (staging, production)
+#                                  site is served over HTTPS (production and its rehearsal)
 #   NGINX_MAX_BODY                 largest request body (the API enforces MAX_REQUEST_BYTES too)
-#   NGINX_READ_TIMEOUT             how long a quiet upstream may stay silent; 60s, an ALB's idle
-#                                  timeout, so a stream that stops heartbeating fails here first
-#   NGINX_DESIGN                   "on" serves /design (development, staging); "off" is a 404
+#   NGINX_READ_TIMEOUT             how long a quiet upstream may stay silent; the API sends a
+#                                  heartbeat every 15 s, so a stream that stops fails here first
+#   NGINX_DESIGN                   "on" serves /design (development); "off" is a 404
 server {
     listen 8080;
     server_name _;
@@ -34,9 +34,10 @@ server {
         return 200 "ok\n";
     }
 
-    # The API. Buffering off so server-sent events stream token by token; the API sends a
-    # heartbeat comment every SSE_HEARTBEAT_S, well inside the read timeout.
-    location /v1/ {
+    # The API, and its readiness (the edge's health check and the deploy's wait use /readyz).
+    # Buffering off so server-sent events stream token by token; the API sends a heartbeat
+    # comment every SSE_HEARTBEAT_S, well inside the read timeout.
+    location ~ ^/(v1/|readyz$) {
         proxy_pass $api_upstream;
         proxy_http_version 1.1;
         # The browser's own host:port, so the API's same-origin check sees what the page saw.

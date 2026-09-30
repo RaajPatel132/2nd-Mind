@@ -1,0 +1,4 @@
+# The edge (ADR-0035). It knows nothing about any one project: each project drops its own site
+# file into sites/, so a later project never edits this one's. Certificates come from Let's
+# Encrypt for a public host name, and from Caddy's own local CA for `localhost` (the rehearsal).
+import /etc/caddy/sites/*.caddy

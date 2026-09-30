@@ -1,0 +1,21 @@
+# 2nd Mind's site: everything goes to the web tier (nginx), which serves the SPA and proxies
+# /v1 and /readyz to the api. APP_HOST is the public host name (2nd-mind.<domain>).
+{$APP_HOST} {
+	# Compress everything except the API: a compressing proxy would hold back the event stream.
+	@static not path /v1/*
+	encode @static zstd gzip
+
+	reverse_proxy web:8080 {
+		# Stream server-sent events token by token.
+		flush_interval -1
+
+		# A deploy is a short blip, not an outage: while the api restarts, the web tier answers
+		# /readyz with an error, Caddy marks it down, and holds requests for up to 15 s.
+		health_uri /readyz
+		health_interval 1s
+		health_timeout 3s
+		health_status 2xx
+		lb_try_duration 15s
+		lb_try_interval 250ms
+	}
+}

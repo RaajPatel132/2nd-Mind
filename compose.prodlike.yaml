@@ -1,30 +1,58 @@
-# The production-shaped rehearsal (R.13): `make up-prodlike`, an overlay on compose.yaml.
+# The production stack, and the local rehearsal of it (`make up-prodlike`). One file for both
+# (ADR-0035): production runs it on the EC2 host with the env file the deploy script writes, the
+# rehearsal runs it on a laptop with values `make up-prodlike` generates. They differ in values
+# (image registry and tag, ports, host name, keys), never in services.
 #
-# The stack as staging will run it (ADR-0012): ENV=staging on real providers, Secure cookies
-# (browsers allow them on localhost), a generated session secret and staging access code, the
-# web tier's production headers, the images CI builds (tagged by git SHA), read-only root
-# filesystems with a tmpfs, the non-root user, and the CPU and memory staging gets on Fargate.
-# Migrations run as a one-off job before the api starts, as on ECS.
+# What runs: Caddy (the edge: TLS, routing by host name), the web tier (nginx: the SPA and the
+# /v1 proxy), the api and worker (one image), Postgres 16 with pgvector, and Redis. Migrations
+# run as a one-off (`migrate`) before the api starts, and the deploy script runs them itself
+# and starts the rest with --no-deps, so a rollback can skip them.
 #
-# Secrets come from .prodlike.env (gitignored), which `make up-prodlike` writes on first use.
+# Values arrive as compose variables (an --env-file plus the process environment). A variable
+# marked `:?` must be set; the rest have the default shown. Nothing here knows about AWS
+# (portable by construction): the host's deploy script fetches the values, this file uses them.
+#
+# Memory limits add up to about 1.6 GB, under a 2 GB host: the swap file is a cushion, not
+# working memory. `make measure-prodlike` records the peak; see ADR-0035 for the numbers.
+name: secondmind-prodlike
 
-x-prodlike-env: &prodlike-env
-  ENV: staging
+x-app-env: &app-env
+  ENV: production
+  APP_VERSION: "${IMAGE_TAG:?set by make up-prodlike or the deploy script}"
   MODEL_PROVIDER_MODE: live
-  SESSION_COOKIE_SECURE: "true"
-  SESSION_SECRET: ${PRODLIKE_SESSION_SECRET:?run make up-prodlike, which generates it}
-  STAGING_ACCESS_CODE: ${PRODLIKE_ACCESS_CODE:?run make up-prodlike, which generates it}
-  DEV_AUTH: "true"
-  # The public origin the browser uses, as it will be set for staging behind CloudFront.
-  ALLOWED_ORIGINS: http://localhost:8080
-  # The caps the demo will run with, not the larger ones a developer .env may carry.
-  SPEND_CAP_DAILY_USD: "0.50"
-  SPEND_CAP_MONTHLY_USD: "5"
+  LOG_FORMAT: json
   LOG_INCLUDE_CONTENT: "false"
   TRACE_INCLUDE_CONTENT: "false"
+  SESSION_COOKIE_SECURE: "true"
+  # In production DEV_AUTH means code sign-in (ACCESS_CODE), and no /v1/dev helpers exist.
+  DEV_AUTH: "true"
+  DATABASE_URL: postgresql+asyncpg://secondmind_app:${APP_DB_PASSWORD:?}@postgres:5432/secondmind
+  DATABASE_MIGRATION_URL: postgresql+asyncpg://secondmind:${POSTGRES_PASSWORD:?}@postgres:5432/secondmind
+  APP_DB_PASSWORD: ${APP_DB_PASSWORD:?}
+  REDIS_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/1
+  SESSION_SECRET: ${SESSION_SECRET:?}
+  ACCESS_CODE: ${ACCESS_CODE:?}
+  ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:?live models need the key: .env for the rehearsal, SSM for production}"
+  OPENAI_API_KEY: "${OPENAI_API_KEY:?live models need the key: .env for the rehearsal, SSM for production}"
+  # Tracing goes to Langfuse Cloud, metadata only; off unless its keys are given.
+  TRACING_ENABLED: ${TRACING_ENABLED:-false}
+  LANGFUSE_HOST: ${LANGFUSE_HOST:-}
+  LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+  LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+  LANGFUSE_UI_URL: ${LANGFUSE_UI_URL:-}
+  LANGFUSE_PROJECT_ID: ${LANGFUSE_PROJECT_ID:-}
+  # The public origin the browser uses (the edge's host name).
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+  # The caps the site runs with: what a developer's .env may carry for eval runs doesn't apply.
+  SPEND_CAP_DAILY_USD: ${SPEND_CAP_DAILY_USD:-0.50}
+  SPEND_CAP_MONTHLY_USD: ${SPEND_CAP_MONTHLY_USD:-5}
+  PROVIDER_CREDIT_USD_ANTHROPIC: ${PROVIDER_CREDIT_USD_ANTHROPIC:-}
+  PROVIDER_CREDIT_USD_OPENAI: ${PROVIDER_CREDIT_USD_OPENAI:-}
+  PROVIDER_CREDIT_SINCE: ${PROVIDER_CREDIT_SINCE:-}
+  GUESTS_OPEN: ${GUESTS_OPEN:-false}
 
-x-prodlike-app: &prodlike-app
-  image: secondmind-api:${IMAGE_TAG:?make up-prodlike sets IMAGE_TAG to the git SHA}
+x-app: &app
+  image: "${IMAGE_REGISTRY:+${IMAGE_REGISTRY}/}secondmind-api:${IMAGE_TAG:?set by make up-prodlike or the deploy script}"
   read_only: true
   tmpfs:
     - /tmp:size=64m
@@ -32,36 +60,107 @@ x-prodlike-app: &prodlike-app
   security_opt:
     - no-new-privileges:true
   cap_drop: [ALL]
+  restart: unless-stopped
+  environment: *app-env
 
 services:
-  migrate:
-    <<: *prodlike-app
+  postgres:
+    image: pgvector/pgvector:pg16
+    command:
+      - postgres
+      - -c
+      - shared_buffers=96MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - max_connections=40
+      - -c
+      - work_mem=4MB
+      - -c
+      - maintenance_work_mem=48MB
     environment:
-      <<: *prodlike-env
+      POSTGRES_USER: secondmind
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: secondmind
+      # A subdirectory, because a freshly formatted volume has a lost+found in its root.
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    stop_grace_period: 30s
     deploy:
       resources:
-        limits: { cpus: "0.25", memory: 512M }
+        limits: { memory: 448M }
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--maxmemory", "64mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+    deploy:
+      resources:
+        limits: { memory: 96M }
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["sh", "-c", "python -m secondmind.memory.adapters.bootstrap_role && alembic upgrade head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+    deploy:
+      resources:
+        limits: { memory: 256M }
 
   api:
-    <<: *prodlike-app
-    environment:
-      <<: *prodlike-env
+    <<: *app
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    stop_grace_period: 45s
     deploy:
       resources:
-        limits: { cpus: "0.5", memory: 1G }
-    stop_grace_period: 45s
+        limits: { memory: 448M }
 
   worker:
-    <<: *prodlike-app
-    environment:
-      <<: *prodlike-env
+    <<: *app
+    command: ["arq", "secondmind.jobs.adapters.worker.WorkerSettings"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "arq", "--check", "secondmind.jobs.adapters.worker.WorkerSettings"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
+    stop_grace_period: 45s
     deploy:
       resources:
-        limits: { cpus: "0.25", memory: 512M }
-    stop_grace_period: 45s
+        limits: { memory: 288M }
 
   web:
-    image: secondmind-web:${IMAGE_TAG:?make up-prodlike sets IMAGE_TAG to the git SHA}
+    image: "${IMAGE_REGISTRY:+${IMAGE_REGISTRY}/}secondmind-web:${IMAGE_TAG:?set by make up-prodlike or the deploy script}"
     read_only: true
     tmpfs:
       - /tmp:size=16m
@@ -72,6 +171,46 @@ services:
     cap_drop: [ALL]
     environment:
       API_UPSTREAM: http://api:8000
-      # HSTS as it will be behind HTTPS; browsers ignore it on plain-HTTP localhost.
       NGINX_HSTS: max-age=31536000; includeSubDomains
-      NGINX_DESIGN: "on"
+      NGINX_DESIGN: "off"
+      NGINX_READ_TIMEOUT: 120s
+    depends_on:
+      api: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 48M }
+    restart: unless-stopped
+
+  # The edge: TLS from Let's Encrypt (a local CA for localhost, in the rehearsal), HTTP redirected
+  # to HTTPS, routing by host name. Each project adds its own file under infra/edge/sites/.
+  caddy:
+    image: caddy:2.11.4-alpine
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    environment:
+      APP_HOST: "${APP_HOST:?the public host name (2nd-mind.<domain>); localhost in the rehearsal}"
+    ports:
+      - ${EDGE_HTTP_PORT:-80}:80
+      - ${EDGE_HTTPS_PORT:-443}:443
+    volumes:
+      - ./infra/edge/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/edge/sites:/etc/caddy/sites:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+    deploy:
+      resources:
+        limits: { memory: 64M }
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

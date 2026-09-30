@@ -12,6 +12,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
+    // The rehearsal's certificate comes from Caddy's local CA.
+    ignoreHTTPSErrors: Boolean(process.env.E2E_IGNORE_HTTPS_ERRORS),
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
