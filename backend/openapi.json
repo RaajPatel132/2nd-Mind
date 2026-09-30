@@ -5407,7 +5407,9 @@
         "enum": [
           "private",
           "guest",
-          "persona_copy"
+          "persona_copy",
+          "template",
+          "scratch"
         ],
         "title": "WorkspaceKind",
         "type": "string"

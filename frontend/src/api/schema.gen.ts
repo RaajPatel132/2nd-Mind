@@ -2770,7 +2770,7 @@ export interface components {
          * WorkspaceKind
          * @enum {string}
          */
-        WorkspaceKind: "private" | "guest" | "persona_copy";
+        WorkspaceKind: "private" | "guest" | "persona_copy" | "template" | "scratch";
         /** WorkspaceOut */
         WorkspaceOut: {
             /**
