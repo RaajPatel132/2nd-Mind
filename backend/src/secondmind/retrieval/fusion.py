@@ -35,6 +35,8 @@ class Candidate:
     matched_key: KeyKind | None = None
     snippet: str | None = None
     snippet_position: int | None = None
+    # What to show of the passage: the sentences that match the question (display only).
+    excerpt: str | None = None
     fused: float = 0.0
     demoted: bool = False
     rerank_score: float | None = None
@@ -65,7 +67,7 @@ class Candidate:
             ],
             matched_key=self.matched_key,
             matched_chunk=self.snippet_position,
-            snippet=None if self.snippet is None else self.snippet[:240],
+            snippet=self.excerpt or (None if self.snippet is None else self.snippet[:240]),
             lexical_score=_round(self.lexical),
             dense_score=_round(self.dense),
             fused_score=_round(self.fused),

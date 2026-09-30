@@ -58,6 +58,8 @@ class Evidence:
     occurrences: list[Occurrence] = field(default_factory=list)
     # A passage of a saved page that matched: quoted material, never instructions (ADR-0037).
     snippet: str | None = None
+    # The sentences of that passage that match the question, for the citation to show.
+    excerpt: str | None = None
 
     @property
     def target(self) -> uuid.UUID | None:
@@ -70,7 +72,8 @@ class Evidence:
             item_id=self.item.id if self.item else None,
             turn_id=self.turn_id,
             title=self.title,
-            snippet=None if self.snippet is None else " ".join(self.snippet.split())[:300],
+            snippet=self.excerpt
+            or (None if self.snippet is None else " ".join(self.snippet.split())[:300]),
             from_page=self.snippet is not None,
         )
 

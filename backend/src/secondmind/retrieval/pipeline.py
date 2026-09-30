@@ -62,6 +62,7 @@ from secondmind.retrieval.answer import (
     conversation_offer,
     save_offer,
 )
+from secondmind.retrieval.excerpt import excerpt
 from secondmind.retrieval.fusion import SOFT, Candidate, fuse
 from secondmind.retrieval.plan import PlanContext, Planner, ResolvedPlan, SubQuery
 from secondmind.retrieval.select import (
@@ -740,6 +741,9 @@ class RecallPipeline:
                             item=item,
                             soft_only=cand.soft_only,
                             snippet=cand.snippet,
+                            excerpt=(
+                                excerpt(cand.snippet, run.sub.question) if cand.snippet else None
+                            ),
                             counted=run.sub.shape is Shape.COUNT,
                             occurrences=[
                                 o
@@ -959,6 +963,9 @@ def _trace(run: _Run, h: _Hydrated, outcome: RecallOutcome) -> SubQueryTrace:
     cited = set(outcome.cited)
     for cand in run.candidates:
         cand.cited = cand.item_id in cited
+    for cand in run.candidates:
+        if cand.snippet is not None:
+            cand.excerpt = excerpt(cand.snippet, run.sub.question)
     candidates = [cand.trace(h.items.get(cand.item_id)) for cand in run.candidates]
     candidates.extend(
         RetrievalCandidate(
