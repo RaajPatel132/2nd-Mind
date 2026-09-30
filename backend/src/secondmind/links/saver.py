@@ -169,6 +169,7 @@ class LinkSaver:
             writer = self._memory.writer(
                 scope,
                 WriterTurn(turn_id=turn_id, workspace_id=scope.workspace_id, kind="user", now=now),
+                emit=trail.emit,  # the glass box shows the save, and the turn can be undone from it
             )
             writer.add(*ops)
             await writer.commit()

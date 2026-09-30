@@ -11,7 +11,14 @@ from sqlalchemy import text
 from secondmind.agent import Turn, TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
 from secondmind.auth.adapters import SqlIdentityStore
-from secondmind.core import FetchEvent, ItemStatus, TargetType, ToolCallEvent, WorkspaceScope
+from secondmind.core import (
+    FetchEvent,
+    ItemStatus,
+    MemoryDiffEvent,
+    TargetType,
+    ToolCallEvent,
+    WorkspaceScope,
+)
 from secondmind.evals.recall import eval_runner, fake_router, load_cases
 from secondmind.links import (
     FetchedPage,
@@ -198,12 +205,11 @@ async def test_a_refused_link_is_saved_as_refused_and_nothing_is_requested(
     turn = await say(app_db, runner, scope, "look at http://169.254.169.254/latest/meta-data/")
     (event,) = await fetch_events(app_db, scope, turn)
     assert (event.status, event.rule) == ("refused", "link_local")
-    (refusal,) = [
-        e.event
-        for e in await SqlTurnStore(app_db, scope).events(turn.id)
-        if isinstance(e.event, ToolCallEvent)
-    ]
-    assert refusal.tool == "web.fetch"
+    stored = [e.event for e in await SqlTurnStore(app_db, scope).events(turn.id)]
+    (refusal,) = [e for e in stored if isinstance(e, ToolCallEvent) and e.tool == "web.fetch"]
+    # The save is in the glass box like any other: the item that was written, and its diff.
+    assert any(isinstance(e, ToolCallEvent) and e.tool == "memory.create" for e in stored)
+    assert any(isinstance(e, MemoryDiffEvent) and e.entries for e in stored)
     assert refusal.policy is not None
     assert (refusal.policy.decision.value, refusal.policy.rule_id) == ("blocked", "link_local")
     assert "link-local address" in (turn.output or "")
