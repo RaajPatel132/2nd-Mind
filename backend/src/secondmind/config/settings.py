@@ -161,6 +161,19 @@ class Settings(BaseSettings):
     # for the access code.
     guests_open: bool = False
     login_attempts_per_minute: Annotated[int, Field(ge=1, le=1_000)] = 5
+    # --- guests (S4.12, ADR-0039)
+    guest_new_per_ip_per_day: Annotated[int, Field(ge=1, le=100_000)] = 10
+    guest_ttl_days: Annotated[int, Field(ge=1, le=365)] = 7
+    device_cookie_ttl_days: Annotated[int, Field(ge=1, le=365)] = 30
+    rate_turns_per_minute_guest: Annotated[int, Field(ge=1, le=10_000)] = 4
+    # All guests together, per UTC day: a share of the daily cap, so the guests can't spend what a
+    # signed-in person needs. After it, guests are read-only (`guest_cap`) and signed-in people
+    # carry on.
+    spend_cap_guest_daily_usd: Annotated[Decimal, Field(ge=0)] = Decimal("0.30")
+    # How many proxies in front of the API append to X-Forwarded-For: Caddy then nginx in
+    # production (2), nginx alone on a dev stack (1). The client's address is that many entries from
+    # the right, so a header the client sends can't choose it.
+    trusted_proxy_hops: Annotated[int, Field(ge=0, le=5)] = 1
     sse_heartbeat_s: Annotated[float, Field(gt=0, le=300)] = 15.0
     shutdown_grace_s: Annotated[float, Field(ge=0, le=600)] = 30.0
 

@@ -41,6 +41,8 @@ class JobDeps:
     identity: "IdentityStore"
     gate: "SpendGate | None" = None
     spend: "SpendReader | None" = None
+    # How long a guest's memory is kept (S4.12).
+    guest_ttl_days: int = 7
 
 
 def _deps(ctx: dict[str, Any]) -> JobDeps:

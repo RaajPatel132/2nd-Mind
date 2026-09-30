@@ -1,6 +1,7 @@
 """SQL identity store."""
 
 import uuid
+from datetime import datetime
 
 from sqlalchemy import delete, select, text
 
@@ -8,6 +9,32 @@ from secondmind.auth import User, Workspace, WorkspaceKind
 from secondmind.auth.adapters.tables import UserRow, WorkspaceRow
 from secondmind.core import Tier, new_id
 from secondmind.memory.adapters import Database
+
+# What ``expire_guest_workspaces`` (migration 0008) empties: every workspace-owned table with
+# content. The usage ledger is kept on purpose (costs only, no content) so the caps and the totals
+# stay right. A catalog test fails when a new workspace-owned table is in neither set (S4.12).
+GUEST_EMPTIED = frozenset(
+    {
+        "categories",
+        "conversation_keys",
+        "entities",  # all but the workspace's own "me", which is cleared
+        "entity_relations",
+        "held_writes",
+        "item_access",
+        "item_versions",
+        "link_sources",
+        "memory_entities",
+        "memory_items",
+        "memory_keys",
+        "memory_links",
+        "triggers",
+        "turn_events",
+        "turns",
+        "vocab_terms",
+        "write_log",
+    }
+)
+GUEST_KEPT = frozenset({"usage_ledger"})
 
 
 class SqlIdentityStore:
@@ -67,6 +94,7 @@ class SqlIdentityStore:
                     .where(
                         WorkspaceRow.owner_user_id == user_id,
                         WorkspaceRow.kind != WorkspaceKind.TEMPLATE.value,
+                        WorkspaceRow.expired_at.is_(None),
                     )
                     .order_by(WorkspaceRow.created_at)
                 )
@@ -78,7 +106,10 @@ class SqlIdentityStore:
             rows = (
                 await session.execute(
                     select(WorkspaceRow)
-                    .where(WorkspaceRow.kind != WorkspaceKind.TEMPLATE.value)
+                    .where(
+                        WorkspaceRow.kind != WorkspaceKind.TEMPLATE.value,
+                        WorkspaceRow.expired_at.is_(None),
+                    )
                     .order_by(WorkspaceRow.created_at)
                 )
             ).scalars()
@@ -107,6 +138,19 @@ class SqlIdentityStore:
     async def delete_workspace(self, workspace_id: uuid.UUID) -> None:
         async with self._db.identity() as session:
             await session.execute(delete(WorkspaceRow).where(WorkspaceRow.id == workspace_id))
+
+    async def delete_user(self, user_id: uuid.UUID) -> None:
+        async with self._db.identity() as session:
+            await session.execute(delete(UserRow).where(UserRow.id == user_id))
+
+    async def expire_guests(self, before: datetime) -> int:
+        async with self._db.identity() as session:
+            count = (
+                await session.execute(
+                    text("SELECT expire_guest_workspaces(:before)"), {"before": before}
+                )
+            ).scalar_one()
+            return int(count)
 
     async def template_for(self, seed_id: str) -> Workspace | None:
         async with self._db.identity() as session:

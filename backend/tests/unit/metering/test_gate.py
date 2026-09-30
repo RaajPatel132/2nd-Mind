@@ -200,6 +200,7 @@ async def test_a_blocked_turns_reply_says_why_and_what_still_works() -> None:
             "provider_credit",
             "quota",
             "spend_check_unavailable",
+            "guest_cap",
         }
         for r in BlockReason
     )
@@ -265,3 +266,55 @@ async def test_free_calls_leave_the_counters_alone(cost: str) -> None:
     gate, store, _ = gate_over()
     await gate.spent("openai", Decimal(cost))
     assert (await store.totals(NOW)).day == 0
+
+
+# ------------------------------------------------------------------ the guests' share (S4.12)
+
+
+def guests_spent(amount: str, *, fail: bool = False):  # type: ignore[no-untyped-def]
+    async def read(since: datetime) -> Decimal:
+        assert since == datetime(2026, 9, 29, tzinfo=UTC)  # the start of the UTC day
+        if fail:
+            raise ConnectionError("the ledger can't be read")
+        return Decimal(amount)
+
+    return read
+
+
+async def test_guests_are_blocked_when_all_guests_together_have_spent_their_share() -> None:
+    gate, _, _ = gate_over(guest_daily_usd=Decimal("0.30"))
+    gate.attach_guest_spend(guests_spent("0.30"))
+    block = await gate.turn_block(quota("2.50"), guest=True)
+    assert block is not None
+    assert block.reason is BlockReason.GUEST_CAP
+    assert (block.limit, block.value) == (Decimal("0.300000"), Decimal("0.300000"))
+    assert "tomorrow" in block.message
+    assert "browse your memory" in block.reply
+
+
+async def test_a_signed_in_person_carries_on_when_the_guests_have_used_their_share() -> None:
+    gate, _, _ = gate_over(guest_daily_usd=Decimal("0.30"))
+    gate.attach_guest_spend(guests_spent("0.45"))
+    assert await gate.turn_block(quota("2.50")) is None  # not a guest: never asked
+    assert await gate.turn_block(quota("2.50"), guest=True) is not None
+
+
+async def test_a_guest_under_the_share_is_let_through_and_the_apps_own_blocks_come_first() -> None:
+    gate, _, _ = gate_over(guest_daily_usd=Decimal("0.30"))
+    gate.attach_guest_spend(guests_spent("0.10"))
+    assert await gate.turn_block(quota("0.60"), guest=True) is None
+    gate.attach_guest_spend(guests_spent("0.40"))
+    off, _, _ = gate_over(guest_daily_usd=Decimal("0.30"), kill_switch=True)
+    off.attach_guest_spend(guests_spent("0.40"))
+    block = await off.turn_block(quota("2.50"), guest=True)
+    assert block is not None
+    assert block.reason is BlockReason.KILL_SWITCH  # the app's blocks stop everyone first
+
+
+async def test_a_guest_turn_is_refused_when_the_guests_total_cannot_be_read() -> None:
+    gate, _, _ = gate_over(guest_daily_usd=Decimal("0.30"))
+    gate.attach_guest_spend(guests_spent("0", fail=True))
+    block = await gate.turn_block(quota("2.50"), guest=True)
+    assert block is not None
+    assert block.reason is BlockReason.UNAVAILABLE
+    assert await gate.turn_block(quota("2.50")) is None  # a signed-in person doesn't depend on it

@@ -25,16 +25,20 @@ async def world(app_db: Database, identity: SqlIdentityStore) -> PersonaWorld:
 
 @asynccontextmanager
 async def _client(
-    pg_urls: PgUrls, redis_url: str, email: str
+    pg_urls: PgUrls, redis_url: str, email: str, extra: dict[str, str] | None = None
 ) -> AsyncIterator[tuple[httpx.AsyncClient, Services]]:
-    env = BASE_ENV | {
-        "DATABASE_URL": pg_urls.app,
-        "REDIS_URL": redis_url,
-        "MODEL_PROVIDER_MODE": "fake",
-        "FAKE_PROVIDER_TOKEN_DELAY_MS": "0",
-        "DEV_AUTH": "true",
-        "DEV_USER_EMAIL": email,
-    }
+    env = (
+        BASE_ENV
+        | {
+            "DATABASE_URL": pg_urls.app,
+            "REDIS_URL": redis_url,
+            "MODEL_PROVIDER_MODE": "fake",
+            "FAKE_PROVIDER_TOKEN_DELAY_MS": "0",
+            "DEV_AUTH": "true",
+            "DEV_USER_EMAIL": email,
+        }
+        | (extra or {})
+    )
     services = await build_services(load_app_config(env))
     app = create_app(services=services)
     try:

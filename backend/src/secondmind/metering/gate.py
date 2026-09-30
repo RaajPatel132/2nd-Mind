@@ -9,7 +9,7 @@ resets them from the usage ledger, which stays the source of truth.
 """
 
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from datetime import time as clock_time
@@ -36,6 +36,9 @@ class BlockReason(StrEnum):
     PROVIDER_CREDIT = "provider_credit"
     QUOTA = "quota"
     UNAVAILABLE = "spend_check_unavailable"
+    # All guests together have used their share of the day's cap (S4.12): guests are read-only,
+    # signed-in people carry on.
+    GUEST_CAP = "guest_cap"
 
 
 _MESSAGES = {
@@ -45,6 +48,7 @@ _MESSAGES = {
     BlockReason.PROVIDER_CREDIT: "The model providers' credit for this app is used up.",
     BlockReason.QUOTA: "You've used your whole allowance.",
     BlockReason.UNAVAILABLE: "Spending can't be checked right now, so new answers are paused.",
+    BlockReason.GUEST_CAP: "The sample has been used up for today. It opens again tomorrow.",
 }
 
 STILL_WORKS = "You can still browse your memory, check Upcoming, undo, and open the glass box."
@@ -76,6 +80,8 @@ class SpendLimits:
     kill_switch: bool = False
     # The real providers the routing calls: when every one is out of credit, turns stop.
     providers: tuple[str, ...] = ()
+    # All guests together, per UTC day (a share of ``daily_usd``); None: no separate guest cap.
+    guest_daily_usd: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,11 +123,18 @@ class SpendStore(Protocol):
         """Take a token from a per-minute bucket: None if allowed, else seconds to wait."""
         ...
 
+    async def incr_daily(self, key: str, at: datetime) -> int:
+        """Count one more for ``key`` in the UTC day of ``at``; the count so far (S4.12)."""
+        ...
+
 
 class SpendReader(Protocol):
     """The ledger's totals since a moment, per provider (across every workspace)."""
 
     async def since(self, moment: datetime) -> Mapping[str, Decimal]: ...
+
+
+GuestSpend = Callable[[datetime], Awaitable[Decimal]]
 
 
 class SpendGate:
@@ -134,9 +147,11 @@ class SpendGate:
         *,
         clock: Clock = utc_now,
         monotonic: Callable[[], float] = time.monotonic,
+        guest_spend: GuestSpend | None = None,
     ) -> None:
         self._store = store
         self._limits = limits
+        self._guest_spend = guest_spend
         self._clock = clock
         self._monotonic = monotonic
         self._flag: tuple[float, bool] | None = None
@@ -182,14 +197,44 @@ class SpendGate:
             return Block(BlockReason.PROVIDER_CREDIT, limit, used)
         return None
 
-    async def turn_block(self, quota: QuotaUsage | None) -> Block | None:
-        """What stops this person's next turn: the app's blocks, then their quota."""
+    def attach_guest_spend(self, guest_spend: GuestSpend) -> None:
+        """Where the guests' total cost since a moment comes from (the ledger)."""
+        self._guest_spend = guest_spend
+
+    async def guest_block(self) -> Block | None:
+        """What stops a guest: all guests together have spent their share of today's cap. A guest
+        turn is refused when the total can't be read, too; a signed-in person never asks."""
+        limit = self._limits.guest_daily_usd
+        if limit is None or self._guest_spend is None:
+            return None
+        try:
+            day_start = datetime.combine(
+                self._clock().astimezone(UTC).date(), clock_time.min, tzinfo=UTC
+            )
+            spent = usd(await self._guest_spend(day_start))
+        except Exception:
+            log.exception("spend.guest_check_failed")
+            return Block(BlockReason.UNAVAILABLE)
+        return Block(BlockReason.GUEST_CAP, limit, spent) if spent >= limit else None
+
+    async def turn_block(self, quota: QuotaUsage | None, *, guest: bool = False) -> Block | None:
+        """What stops this person's next turn: the app's blocks, the guests' share of the day for
+        a guest, then their own quota."""
         block = await self.app_block()
         if block is not None:
             return block
+        if guest:
+            block = await self.guest_block()
+            if block is not None:
+                return block
         if quota is not None and quota.remaining_usd <= 0:
             return Block(BlockReason.QUOTA, quota.limit_usd, quota.used_usd)
         return None
+
+    async def count_today(self, key: str) -> int:
+        """One more for ``key`` today (UTC), and how many that makes: the per-address cap on new
+        guests counts with this."""
+        return await self._store.incr_daily(key, self._clock())
 
     async def rate_limited(self, identity: str, per_minute: int) -> float | None:
         """Seconds to wait before this identity may start another turn, or None."""

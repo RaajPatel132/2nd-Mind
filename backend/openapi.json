@@ -1428,6 +1428,27 @@
         "title": "GroupValue",
         "type": "object"
       },
+      "GuestIn": {
+        "additionalProperties": false,
+        "description": "Start as a guest: a sample persona of your own, with no sign-up. While the site is private\n(``GUESTS_OPEN`` off) the access code is asked for here too.",
+        "properties": {
+          "access_code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ACCESS_CODE, until the site opens to guests.",
+            "title": "Access Code"
+          }
+        },
+        "title": "GuestIn",
+        "type": "object"
+      },
       "HealthOut": {
         "properties": {
           "status": {
@@ -5746,6 +5767,93 @@
         ]
       }
     },
+    "/v1/guest": {
+      "post": {
+        "description": "Start as a guest with a copy of the sample persona, or carry on as the guest this device\nalready is. At most ``GUEST_NEW_PER_IP_PER_DAY`` new guests per address per UTC day.",
+        "operationId": "start_guest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/GuestIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start Guest",
+        "tags": [
+          "guests"
+        ]
+      }
+    },
     "/v1/held-writes/{held_id}/confirm": {
       "post": {
         "description": "Apply a held write as a new turn (with its own diff, so undo still works).",
@@ -6344,6 +6452,76 @@
         "summary": "Reset Persona",
         "tags": [
           "persona"
+        ]
+      }
+    },
+    "/v1/scratch": {
+      "post": {
+        "description": "A guest's empty memory of their own, made the first time and the same one after.",
+        "operationId": "open_scratch",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Open Scratch",
+        "tags": [
+          "guests"
         ]
       }
     },

@@ -51,6 +51,8 @@ class LinkStore(Protocol):
 
 # Seconds to wait, or None when this person may fetch another link now.
 RateCheck = Callable[[WorkspaceScope], Awaitable[float | None]]
+# How many links this person's message may hold (a guest's is lower, S4.12).
+MaxLinks = Callable[[WorkspaceScope], Awaitable[int]]
 LinkStores = Callable[[WorkspaceScope], LinkStore]
 
 
@@ -131,11 +133,13 @@ class LinkSaver:
         memory: Memory,
         settings: SaveSettings | None = None,
         rate_check: RateCheck | None = None,
+        max_links: MaxLinks | None = None,
     ) -> None:
         self._stores = stores
         self._memory = memory
         self._settings = settings or SaveSettings()
         self._rate = rate_check
+        self._max_links = max_links
 
     async def save(
         self,
@@ -155,8 +159,9 @@ class LinkSaver:
         ops: list[CreateItem] = []
         sources: list[LinkSource] = []
         seen: set[str] = set()
+        limit = await self._max_links(scope) if self._max_links else self._settings.max_links
         for index, url in enumerate(urls):
-            link = await self._judge(store, scope, url, index, seen)
+            link = await self._judge(store, scope, url, index, seen, limit)
             if link.duplicate_of is None:
                 item, source = self._item(
                     scope=scope, turn_id=turn_id, url=url, said=said, now=now, link=link
@@ -181,12 +186,18 @@ class LinkSaver:
 
     # ------------------------------------------------------------------ one link
 
-    async def _judge(
-        self, store: LinkStore, scope: WorkspaceScope, url: str, index: int, seen: set[str]
+    async def _judge(  # noqa: PLR0917 - one link, and what it is judged against
+        self,
+        store: LinkStore,
+        scope: WorkspaceScope,
+        url: str,
+        index: int,
+        seen: set[str],
+        limit: int,
     ) -> SavedLink:
         host = host_for_log(url)
         canonical = canonical_url(url)
-        if index >= self._settings.max_links:
+        if index >= limit:
             return self._refused(url, host, "too_many_links")
         try:
             parse_url(url, allow_hosts=self._settings.allow_hosts)

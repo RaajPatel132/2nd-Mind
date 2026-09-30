@@ -94,6 +94,12 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `ALLOWED_ORIGINS` | Extra origins allowed to send state-changing requests (comma separated). | empty | https://localhost:8443 | https://2nd-mind.<domain> | ssm |
 | `ACCESS_CODE` | The code sign-in asks for in production until real accounts arrive (S6). | unset | generated | set | secret |
 | `GUESTS_OPEN` | Off keeps every way in (code sign-in, guest, persona) behind the access code; S5 turns it on to open the site. | false | false | false | ssm |
+| `GUEST_NEW_PER_IP_PER_DAY` | New guests one address may make per UTC day (IPv6 counted per /64); guests who exist carry on. | 10 | 10 | 10 | env |
+| `GUEST_TTL_DAYS` | Days a guest's memory is kept before a daily job empties it (the costs stay). | 7 | 7 | 7 | env |
+| `DEVICE_COOKIE_TTL_DAYS` | Days the signed device cookie lets a returning visitor continue as the same guest. | 30 | 30 | 30 | env |
+| `RATE_TURNS_PER_MINUTE_GUEST` | Turns a guest may start per minute. | 4 | 4 | 4 | env |
+| `SPEND_CAP_GUEST_DAILY_USD` | All guests together, per UTC day: their share of the daily cap. After it guests are read-only and signed-in people carry on. | 0.30 | 0.30 | 0.30 | env |
+| `TRUSTED_PROXY_HOPS` | Proxies in front of the API that append to X-Forwarded-For: the client's address is that many entries from the right. | 1 | 2 | 2 | env |
 | `LOGIN_ATTEMPTS_PER_MINUTE` | Sign-in attempts per address per minute in production. | 5 | 5 | 5 | env |
 | `SSE_HEARTBEAT_S` | Seconds between heartbeat comments on a quiet turn stream. | 15 | 15 | 15 | env |
 | `SHUTDOWN_GRACE_S` | Seconds running turns and jobs get after SIGTERM (under the 45 s container stop timeout). | 30 | 30 | 30 | env |

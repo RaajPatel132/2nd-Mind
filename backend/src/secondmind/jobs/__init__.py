@@ -1,5 +1,6 @@
 """Background jobs run by the arq worker."""
 
+from secondmind.jobs.guests import EXPIRE_GUESTS_AT_HOUR, EXPIRE_GUESTS_AT_MINUTE, expire_guests
 from secondmind.jobs.heartbeat import heartbeat
 from secondmind.jobs.memory import (
     DEFER_SECONDS,
@@ -26,12 +27,15 @@ JOBS = (
     backfill_conversation,
     reconcile_spend,
     embed_pending,
+    expire_guests,
 )
 
 __all__ = [
     "DEFER_SECONDS",
     "DEPS_KEY",
     "EMBED_PENDING_EVERY_MINUTES",
+    "EXPIRE_GUESTS_AT_HOUR",
+    "EXPIRE_GUESTS_AT_MINUTE",
     "EXPIRE_QUICK_EVERY_MINUTES",
     "JOBS",
     "RECONCILE_SPEND_EVERY_MINUTES",
@@ -39,6 +43,7 @@ __all__ = [
     "JobDeps",
     "backfill_conversation",
     "embed_pending",
+    "expire_guests",
     "expire_quick",
     "fetch_link",
     "heartbeat",

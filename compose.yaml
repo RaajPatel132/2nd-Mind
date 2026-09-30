@@ -22,6 +22,9 @@ x-app-env: &app-env
   DEV_AUTH: ${DEV_AUTH:-true}
   # Test stack only (the app refuses to start with this set when ENV=production): the E2E fixture
   # page server and the two video hosts it stands in for (network aliases on `fixtures`).
+  # One proxy (nginx) in front of the api; a dev machine makes many guests from one address.
+  TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+  GUEST_NEW_PER_IP_PER_DAY: ${GUEST_NEW_PER_IP_PER_DAY:-1000}
   LINK_ALLOW_PRIVATE_HOSTS: ${LINK_ALLOW_PRIVATE_HOSTS-fixtures,www.youtube.com,vimeo.com}
   SESSION_SECRET: ${SESSION_SECRET:-change-me-local-dev-secret-0123456789abcdef}
 

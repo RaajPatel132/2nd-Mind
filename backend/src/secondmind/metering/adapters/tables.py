@@ -30,7 +30,8 @@ class UsageLedgerRow(Base):
     owner_user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
-    turn_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    # NULL once the turn is deleted (a guest's content expired): the cost stays, the content goes.
+    turn_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     step: Mapped[str] = mapped_column(String(32))
     provider: Mapped[str] = mapped_column(String(64))
     model: Mapped[str] = mapped_column(String(128))
@@ -46,7 +47,9 @@ class UsageLedgerRow(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(
-            ["turn_id", "workspace_id"], ["turns.id", "turns.workspace_id"], ondelete="CASCADE"
+            ["turn_id", "workspace_id"],
+            ["turns.id", "turns.workspace_id"],
+            ondelete="SET NULL (turn_id)",
         ),
         Index("ix_usage_ledger_created_at", "created_at"),
         Index("ix_usage_ledger_owner_user_id_created_at", "owner_user_id", "created_at"),

@@ -10,6 +10,8 @@ from secondmind.api.services import Services
 from secondmind.core import NotFoundError, UnauthenticatedError, WorkspaceScope
 
 SESSION_COOKIE = "sm_session"
+# A signed mark that lets a returning visitor continue as the same guest (S4.12).
+DEVICE_COOKIE = "sm_device"
 
 
 def get_services(request: Request) -> Services:

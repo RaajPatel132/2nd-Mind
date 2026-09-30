@@ -1,6 +1,6 @@
 # ADR-0032: Spend safety: kill switch, caps, provider credit, dollar quotas, rate limits
 
-- **Status:** accepted
+- **Status:** accepted (the daily cap gains a guests' share, ADR-0039)
 - **Date:** 2026-09-28
 - **Amends:** ADR-0030 (the quota is counted in dollars)
 

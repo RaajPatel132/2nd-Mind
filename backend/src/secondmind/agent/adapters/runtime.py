@@ -31,6 +31,9 @@ log = get_logger(__name__)
 
 REPLAY_DIR = Path("evals") / "cases" / "ingest"
 RECALL_REPLAY_DIR = Path("evals") / "cases" / "retrieval"
+# The sample persona's ten cases: on the fake provider, its two suggested prompts and the rest of
+# the demo answer the way the goldens recorded (S4.10). The other suites win where they overlap.
+PERSONA_REPLAY_DIR = Path("evals") / "cases" / "persona"
 
 
 @dataclass
@@ -98,9 +101,13 @@ def link_fetch_policy(settings: Settings) -> FetchPolicy:
 def fake_script(settings: Settings) -> FakeScript:
     """Unscripted fake calls replay the golden ingestion and recall cases, else use honest
     heuristics."""
-    recall = load_recall_replay(settings.resources_dir / RECALL_REPLAY_DIR)
+    persona = settings.resources_dir / PERSONA_REPLAY_DIR
+    recall = load_recall_replay(persona) | load_recall_replay(
+        settings.resources_dir / RECALL_REPLAY_DIR
+    )
+    ingest = load_replay(persona) | load_replay(settings.resources_dir / REPLAY_DIR)
     return FakeScript(
-        responders=offline_responders(load_replay(settings.resources_dir / REPLAY_DIR))
+        responders=offline_responders(ingest)
         | recall_responders(recall)
         | correction_responders(recall),
         text_responders=recall_text_responders(),
@@ -115,6 +122,7 @@ def build_runtime(
     script: FakeScript | None = None,
     gate: CallGuard | None = None,
     link_rate: Callable[[WorkspaceScope], Awaitable[float | None]] | None = None,
+    link_max: Callable[[WorkspaceScope], Awaitable[int]] | None = None,
 ) -> Runtime:
     settings = config.settings
     db = Database(str(settings.database_url), pool_size=settings.database_pool_size)
@@ -159,6 +167,7 @@ def build_runtime(
                 allow_hosts=settings.allow_private_hosts,
             ),
             link_rate,
+            link_max,
         ),
         link_reading=LinkReading(
             fetcher=SafeFetcher(link_fetch_policy(settings)),

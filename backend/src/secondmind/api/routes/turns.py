@@ -53,7 +53,7 @@ async def usage_and_block(
         raise UnauthenticatedError("Sign in first.")
     workspaces = await services.identity.workspaces_for(user_id)
     usage = await services.quotas.usage(user_id, [w.id for w in workspaces], user.tier)
-    return usage, await services.gate.turn_block(usage)
+    return usage, await services.gate.turn_block(usage, guest=user.tier is Tier.GUEST)
 
 
 def _may_pick(services: Services, tier: Tier, model: str) -> bool:
@@ -81,7 +81,13 @@ async def create_turn(
         services.identity, user_id=user_id, workspace_id=workspace_id
     )
     settings = services.config.settings
-    wait = await services.gate.rate_limited(str(user_id), settings.rate_turns_per_minute)
+    user = await services.identity.get_user(user_id)
+    per_minute = (
+        settings.rate_turns_per_minute_guest
+        if user is not None and user.tier is Tier.GUEST
+        else settings.rate_turns_per_minute
+    )
+    wait = await services.gate.rate_limited(str(user_id), per_minute)
     if wait is not None:
         raise RateLimitedError("You're sending messages too fast. Try again in a moment.", wait)
     usage, block = await usage_and_block(services, user_id)

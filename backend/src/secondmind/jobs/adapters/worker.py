@@ -20,12 +20,15 @@ from secondmind.core import ConfigError
 from secondmind.jobs import (
     DEPS_KEY,
     EMBED_PENDING_EVERY_MINUTES,
+    EXPIRE_GUESTS_AT_HOUR,
+    EXPIRE_GUESTS_AT_MINUTE,
     EXPIRE_QUICK_EVERY_MINUTES,
     JOBS,
     RECONCILE_SPEND_EVERY_MINUTES,
     JobDeferred,
     JobDeps,
     embed_pending,
+    expire_guests,
     expire_quick,
     reconcile_spend,
 )
@@ -83,6 +86,7 @@ async def _startup(ctx: dict[str, Any]) -> None:
         identity=SqlIdentityStore(runtime.db),
         gate=gate,
         spend=SqlSpendReader(runtime.db),
+        guest_ttl_days=_settings.guest_ttl_days,
     )
     await gate.reconcile(SqlSpendReader(runtime.db))  # counters start from the ledger
     log.info("worker.started", jobs=[f.__name__ for f in JOBS])
@@ -108,6 +112,13 @@ class WorkerSettings:
             embed_pending,
             name="cron:embed_pending",
             minute=set(range(0, 60, EMBED_PENDING_EVERY_MINUTES)),
+            unique=True,
+        ),
+        cron(
+            expire_guests,
+            name="cron:expire_guests",
+            hour=EXPIRE_GUESTS_AT_HOUR,
+            minute=EXPIRE_GUESTS_AT_MINUTE,
             unique=True,
         ),
         cron(

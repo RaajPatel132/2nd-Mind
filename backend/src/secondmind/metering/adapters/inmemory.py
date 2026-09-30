@@ -18,6 +18,7 @@ class InMemorySpendStore:
         self._credit_out: dict[str, float] = {}
         self._seen: dict[str, float] = {}
         self._buckets: dict[str, tuple[float, float]] = {}
+        self._daily: dict[tuple[str, str], int] = {}
         self.fail = False  # a test can make every read raise, as an unreachable Redis would
 
     def _check(self) -> None:
@@ -65,6 +66,12 @@ class InMemorySpendStore:
             return False
         self._seen[key] = now + seconds
         return True
+
+    async def incr_daily(self, key: str, at: datetime) -> int:
+        self._check()
+        slot = (key, utc_day(at))
+        self._daily[slot] = self._daily.get(slot, 0) + 1
+        return self._daily[slot]
 
     async def take(self, bucket: str, per_minute: int) -> float | None:
         now = self._monotonic()

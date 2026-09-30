@@ -50,6 +50,10 @@ x-app-env: &app-env
   PROVIDER_CREDIT_USD_OPENAI: ${PROVIDER_CREDIT_USD_OPENAI:-}
   PROVIDER_CREDIT_SINCE: ${PROVIDER_CREDIT_SINCE:-}
   GUESTS_OPEN: ${GUESTS_OPEN:-false}
+  # Caddy, then nginx: the client's address is the second entry from the right.
+  TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-2}
+  GUEST_NEW_PER_IP_PER_DAY: ${GUEST_NEW_PER_IP_PER_DAY:-10}
+  SPEND_CAP_GUEST_DAILY_USD: ${SPEND_CAP_GUEST_DAILY_USD:-0.30}
 
 x-app: &app
   image: "${IMAGE_REGISTRY:+${IMAGE_REGISTRY}/}secondmind-api:${IMAGE_TAG:?set by make up-prodlike or the deploy script}"

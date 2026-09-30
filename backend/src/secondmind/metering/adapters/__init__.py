@@ -99,6 +99,21 @@ class SqlSpendReader:
             return {str(provider): Decimal(cost) for provider, cost in rows.all()}
 
 
+class SqlGuestSpend:
+    """What all guests together have cost since a moment: a total through a ``SECURITY DEFINER``
+    function, like the app's (S4.12)."""
+
+    def __init__(self, db: Database) -> None:
+        self._db = db
+
+    async def since(self, moment: datetime) -> Decimal:
+        async with self._db.identity() as session:
+            value = (
+                await session.execute(text("SELECT guest_spend(:since)"), {"since": moment})
+            ).scalar_one()
+            return Decimal(value)
+
+
 def spend_limits(config: AppConfig) -> SpendLimits:
     """The gate's limits from the environment-only settings (ADR-0032); the providers are the
     real ones this deployment's routing calls (none when everything is on the fake provider)."""
@@ -120,6 +135,7 @@ def spend_limits(config: AppConfig) -> SpendLimits:
         credit_since=settings.provider_credit_since,
         kill_switch=settings.kill_switch,
         providers=tuple(providers),
+        guest_daily_usd=usd(settings.spend_cap_guest_daily_usd),
     )
 
 
@@ -132,6 +148,7 @@ def build_gate(config: AppConfig) -> SpendGate:
 __all__ = [
     "InMemorySpendStore",
     "RedisSpendStore",
+    "SqlGuestSpend",
     "SqlLedgerReader",
     "SqlSpendReader",
     "UsageLedgerRow",

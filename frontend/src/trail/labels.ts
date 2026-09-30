@@ -171,6 +171,7 @@ const BLOCK_LABELS: Record<string, string> = {
   provider_credit: 'Model credit used up',
   quota: 'Your allowance is used up',
   spend_check_unavailable: 'Spending can’t be checked',
+  guest_cap: 'The sample is used up for today',
 }
 export function blockedDone({ facts }: StepContext): string {
   return facts.blocked ? (BLOCK_LABELS[facts.blocked.reason] ?? 'Turn stopped') : 'Turn stopped'

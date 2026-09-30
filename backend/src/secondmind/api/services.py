@@ -14,13 +14,13 @@ from secondmind.agent.adapters import (
 from secondmind.auth import IdentityStore, SessionSigner
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.config import AppConfig, Settings
-from secondmind.core import Clock, FetchEvent, WorkspaceScope, utc_now
+from secondmind.core import Clock, FetchEvent, Tier, WorkspaceScope, utc_now
 from secondmind.evals import seed_into
 from secondmind.jobs.adapters import QueueClient
 from secondmind.memory import Memory
 from secondmind.memory.adapters import SCHEMA_HEAD, Database
 from secondmind.metering import QuotaLimits, Quotas, SpendGate
-from secondmind.metering.adapters import SqlLedgerReader, build_gate
+from secondmind.metering.adapters import SqlGuestSpend, SqlLedgerReader, build_gate
 from secondmind.observability import Tracer, get_logger
 from secondmind.persona import SEED_FILE, PersonaService, load_persona
 from secondmind.persona.adapters import SqlPersonaStore
@@ -53,8 +53,21 @@ class Services:
     clock: Clock = utc_now
     # The sample persona: a copy of it per visitor (S4.11). None when the seed file is missing.
     persona: PersonaService | None = None
+    # Signs a guest's device cookie: another purpose, so neither token passes for the other.
+    device_signer: SessionSigner | None = None
     # Dev only (DEV_AUTH): seed the recall fixture into a workspace; the number of memories.
     seed_recall: Callable[[WorkspaceScope], Awaitable[int]] | None = None
+
+    def device(self) -> SessionSigner:
+        """The signer of the device cookie (built from the session secret when not given)."""
+        if self.device_signer is None:
+            settings = self.config.settings
+            self.device_signer = SessionSigner(
+                settings.session_secret.get_secret_value(),
+                ttl_s=settings.device_cookie_ttl_days * 86_400,
+                purpose="device",
+            )
+        return self.device_signer
 
     async def run_checks(self) -> dict[str, CheckResult]:
         async def guarded(check: Check) -> CheckResult:
@@ -136,8 +149,22 @@ async def build_services(config: AppConfig) -> Services:
         except Exception:
             log.warning("links.fetch_enqueue_failed", turn_id=str(turn.id))
 
+    async def is_guest(scope: WorkspaceScope) -> bool:
+        user = await SqlIdentityStore(runtime.db).get_user(scope.user_id)
+        return user is not None and user.tier is Tier.GUEST
+
     async def link_rate(scope: WorkspaceScope) -> float | None:
-        return await gate.rate_limited(f"fetch:{scope.user_id}", settings.rate_fetches_per_minute)
+        per_minute = (
+            settings.rate_fetches_per_minute_guest
+            if await is_guest(scope)
+            else settings.rate_fetches_per_minute
+        )
+        return await gate.rate_limited(f"fetch:{scope.user_id}", per_minute)
+
+    async def link_max(scope: WorkspaceScope) -> int:
+        if await is_guest(scope):
+            return settings.max_links_per_message_guest
+        return settings.max_links_per_message
 
     gate = build_gate(config)
     runtime = build_runtime(
@@ -146,8 +173,10 @@ async def build_services(config: AppConfig) -> Services:
         on_turn_completed=index_turn,
         gate=gate,
         link_rate=link_rate,
+        link_max=link_max,
     )
     db = runtime.db
+    gate.attach_guest_spend(SqlGuestSpend(db).since)
     await require_embedding_dimensions(db, settings.embed_dimensions)
 
     async def database_check() -> CheckResult:
@@ -182,6 +211,11 @@ async def build_services(config: AppConfig) -> Services:
         runner=runtime.runner,
         tracer=runtime.tracer,
         signer=SessionSigner(settings.session_secret.get_secret_value()),
+        device_signer=SessionSigner(
+            settings.session_secret.get_secret_value(),
+            ttl_s=settings.device_cookie_ttl_days * 86_400,
+            purpose="device",
+        ),
         quotas=Quotas(SqlLedgerReader(db), quota_limits(settings)),
         gate=gate,
         checks={

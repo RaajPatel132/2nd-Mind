@@ -12,15 +12,26 @@ import uuid
 from collections.abc import Callable
 
 _VERSION = "v1"
+DEVICE_VERSION = "d1"
 
 
 class SessionSigner:
+    """Signs a user id with an expiry. ``purpose`` separates two uses of one secret: a device
+    token (a returning guest) is not a session token, whatever its bytes, and each refuses the
+    other's (S4.12)."""
+
     def __init__(
-        self, secret: str, *, ttl_s: int = 30 * 24 * 3600, clock: Callable[[], float] = time.time
+        self,
+        secret: str,
+        *,
+        ttl_s: int = 30 * 24 * 3600,
+        clock: Callable[[], float] = time.time,
+        purpose: str = "",
     ) -> None:
         if len(secret) < 32:
             raise ValueError("session secret must be at least 32 characters")
-        self._key = secret.encode("utf-8")
+        self._key = (secret if not purpose else f"{secret}|{purpose}").encode("utf-8")
+        self._version = DEVICE_VERSION if purpose == "device" else _VERSION
         self._ttl_s = ttl_s
         self._clock = clock
 
@@ -30,12 +41,12 @@ class SessionSigner:
 
     def sign(self, user_id: uuid.UUID) -> str:
         expires = int(self._clock()) + self._ttl_s
-        payload = f"{_VERSION}.{user_id}.{expires}"
+        payload = f"{self._version}.{user_id}.{expires}"
         return f"{payload}.{self._mac(payload)}"
 
     def verify(self, token: str) -> uuid.UUID | None:
         parts = token.split(".")
-        if len(parts) != 4 or parts[0] != _VERSION:
+        if len(parts) != 4 or parts[0] != self._version:
             return None
         payload, signature = ".".join(parts[:3]), parts[3]
         if not hmac.compare_digest(signature, self._mac(payload)):

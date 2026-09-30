@@ -88,6 +88,15 @@ class IdentityStore(Protocol):
         """Remove a workspace and everything in it (cascades to every workspace-owned table)."""
         ...
 
+    async def delete_user(self, user_id: uuid.UUID) -> None:
+        """Remove a user and their workspaces (a guest whose sample couldn't be made)."""
+        ...
+
+    async def expire_guests(self, before: datetime) -> int:
+        """Empty the workspaces of guests created before ``before`` (S4.12); how many workspaces.
+        The usage ledger (costs, no content) is kept."""
+        ...
+
     async def template_for(self, seed_id: str) -> Workspace | None:
         """The template workspace of a seed, if it has been loaded."""
         ...

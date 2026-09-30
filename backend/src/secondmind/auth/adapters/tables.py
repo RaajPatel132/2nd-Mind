@@ -69,6 +69,8 @@ class WorkspaceRow(Base):
     seed_version: Mapped[int | None] = mapped_column(Integer)
     seed_hash: Mapped[str | None] = mapped_column(Text)
     moved_days: Mapped[int | None] = mapped_column(Integer)
+    # A guest's workspace whose content was emptied after GUEST_TTL_DAYS (S4.12).
+    expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
@@ -87,6 +89,13 @@ class WorkspaceRow(Base):
             "owner_user_id",
             unique=True,
             postgresql_where=text("kind = 'persona_copy'"),
+        ),
+        # A guest has at most one scratch memory.
+        Index(
+            "uq_workspaces_owner_scratch",
+            "owner_user_id",
+            unique=True,
+            postgresql_where=text("kind = 'scratch'"),
         ),
         # One template per seed.
         Index(

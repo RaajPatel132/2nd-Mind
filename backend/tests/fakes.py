@@ -82,6 +82,14 @@ class InMemoryIdentity:
     async def delete_workspace(self, workspace_id):  # type: ignore[no-untyped-def]
         self.workspaces.pop(workspace_id, None)
 
+    async def delete_user(self, user_id):  # type: ignore[no-untyped-def]
+        self.users.pop(user_id, None)
+        for ws_id in [w.id for w in self.workspaces.values() if w.owner_user_id == user_id]:
+            self.workspaces.pop(ws_id)
+
+    async def expire_guests(self, before):  # type: ignore[no-untyped-def]
+        return 0
+
     async def template_for(self, seed_id):  # type: ignore[no-untyped-def]
         return next(
             (w for w in self.workspaces.values() if w.kind == "template" and w.seed_id == seed_id),

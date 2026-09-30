@@ -122,6 +122,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/guest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Guest
+         * @description Start as a guest with a copy of the sample persona, or carry on as the guest this device
+         *     already is. At most ``GUEST_NEW_PER_IP_PER_DAY`` new guests per address per UTC day.
+         */
+        post: operations["start_guest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/held-writes/{held_id}/confirm": {
         parameters: {
             query?: never;
@@ -297,6 +318,26 @@ export interface paths {
          * @description Replace the caller's copy with a fresh one, moved to today.
          */
         post: operations["reset_persona"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/scratch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Scratch
+         * @description A guest's empty memory of their own, made the first time and the same one after.
+         */
+        post: operations["open_scratch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1091,6 +1132,18 @@ export interface components {
             key: string;
             /** Value */
             value: number;
+        };
+        /**
+         * GuestIn
+         * @description Start as a guest: a sample persona of your own, with no sign-up. While the site is private
+         *     (``GUESTS_OPEN`` off) the access code is asked for here too.
+         */
+        GuestIn: {
+            /**
+             * Access Code
+             * @description ACCESS_CODE, until the site opens to guests.
+             */
+            access_code?: string | null;
         };
         /** HealthOut */
         HealthOut: {
@@ -3071,6 +3124,68 @@ export interface operations {
             };
         };
     };
+    start_guest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GuestIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many turns in a minute; `Retry-After` says how long to wait */
+            429: {
+                headers: {
+                    /** @description Seconds */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     confirm_held_write: {
         parameters: {
             query?: never;
@@ -3497,6 +3612,64 @@ export interface operations {
         };
     };
     reset_persona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many turns in a minute; `Retry-After` says how long to wait */
+            429: {
+                headers: {
+                    /** @description Seconds */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_scratch: {
         parameters: {
             query?: never;
             header?: never;

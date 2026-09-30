@@ -271,6 +271,17 @@ class EntityDetailOut(_Out):
     item_ids: list[uuid.UUID]
 
 
+class GuestIn(BaseModel):
+    """Start as a guest: a sample persona of your own, with no sign-up. While the site is private
+    (``GUESTS_OPEN`` off) the access code is asked for here too."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    access_code: str | None = Field(
+        default=None, max_length=200, description="ACCESS_CODE, until the site opens to guests."
+    )
+
+
 class DevLoginIn(BaseModel):
     """Log in as a dev user (dev auth only): optionally another one, e.g. a fresh one per E2E
     test. In production the access code is required, and each email is its own user."""

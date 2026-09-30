@@ -6,7 +6,7 @@ Amounts are stored as decimal strings (``INCRBYFLOAT``); the ledger reconciliati
 to exact values every few minutes.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from redis.asyncio import Redis
@@ -122,6 +122,14 @@ class RedisSpendStore:
     async def once(self, key: str, seconds: int) -> bool:
         return bool(await self._redis.set(f"{PREFIX}{key}", "1", ex=seconds, nx=True))
 
+    async def incr_daily(self, key: str, at: datetime) -> int:
+        slot = f"{PREFIX}daily:{_day_stamp(at)}:{key}"
+        pipe = self._redis.pipeline(transaction=True)
+        pipe.incr(slot)
+        pipe.expire(slot, DAY_TTL_S)
+        count, _ = await pipe.execute()
+        return int(count)
+
     async def take(self, bucket: str, per_minute: int) -> float | None:
         now_ms = int(datetime.now().timestamp() * 1000)  # noqa: DTZ005 - an epoch, no zone
         wait_ms = await self._redis.eval(  # type: ignore[misc]
@@ -129,6 +137,10 @@ class RedisSpendStore:
         )
         wait = int(wait_ms)
         return None if wait <= 0 else wait / 1000
+
+
+def _day_stamp(at: datetime) -> str:
+    return at.astimezone(UTC).strftime("%Y%m%d")
 
 
 def _text(raw: object) -> str:
