@@ -562,6 +562,30 @@ class PolicyEvent(_Event):
     verdict: PolicyVerdict
 
 
+class FetchEvent(_Event):
+    """A saved link's page, read (or not) after the turn that saved it (S4.7, FR-4.6). Appended to
+    that turn, so the Trail and the Inspector update in place. Only the host of the page is ever
+    recorded: the path and query count as message content."""
+
+    type: Literal["fetch"] = "fetch"
+    item_id: uuid.UUID
+    status: Literal["pending", "full", "partial", "failed", "refused"]
+    host: str
+    message: str  # the line the person sees, from the status table
+    reason: str | None = None  # why it is partial, failed or refused
+    rule: str | None = None  # the stable code of the safety rule that refused it (FR-4.6)
+    title: str | None = None
+    site: str | None = None
+    word_count: int | None = None
+    status_code: int | None = None
+    bytes: int | None = None
+    redirects: int | None = None
+    content_type: str | None = None
+    extraction_method: str | None = None
+    chunks: int | None = None
+    video: bool = False
+
+
 class StepEvent(_Event):
     """One agent step that ran: how it ended and how long it took (ADR-0029)."""
 
@@ -584,6 +608,7 @@ TurnEvent = Annotated[
     | ErrorEvent
     | BlockedEvent
     | QuotaEvent
+    | FetchEvent
     | StepEvent,
     Field(discriminator="type"),
 ]

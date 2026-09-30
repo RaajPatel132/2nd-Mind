@@ -1161,6 +1161,181 @@
         "title": "FallbackInfo",
         "type": "object"
       },
+      "FetchEvent": {
+        "additionalProperties": false,
+        "description": "A saved link's page, read (or not) after the turn that saved it (S4.7, FR-4.6). Appended to\nthat turn, so the Trail and the Inspector update in place. Only the host of the page is ever\nrecorded: the path and query count as message content.",
+        "properties": {
+          "bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bytes"
+          },
+          "chunks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunks"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "extraction_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction Method"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "redirects": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redirects"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule"
+          },
+          "site": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "full",
+              "partial",
+              "failed",
+              "refused"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "type": {
+            "const": "fetch",
+            "default": "fetch",
+            "title": "Type",
+            "type": "string"
+          },
+          "v": {
+            "default": 1,
+            "title": "V",
+            "type": "integer"
+          },
+          "video": {
+            "default": false,
+            "title": "Video",
+            "type": "boolean"
+          },
+          "word_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Count"
+          }
+        },
+        "required": [
+          "item_id",
+          "status",
+          "host",
+          "message"
+        ],
+        "title": "FetchEvent",
+        "type": "object"
+      },
       "FieldChange": {
         "additionalProperties": false,
         "properties": {
@@ -3277,6 +3452,7 @@
                 "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
+                "fetch": "#/components/schemas/FetchEvent",
                 "intent": "#/components/schemas/IntentEvent",
                 "memory_diff": "#/components/schemas/MemoryDiffEvent",
                 "model_call": "#/components/schemas/ModelCallEvent",
@@ -3321,6 +3497,9 @@
               },
               {
                 "$ref": "#/components/schemas/QuotaEvent"
+              },
+              {
+                "$ref": "#/components/schemas/FetchEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"
@@ -4137,6 +4316,7 @@
                 "citations": "#/components/schemas/CitationsEvent",
                 "decision": "#/components/schemas/DecisionEvent",
                 "error": "#/components/schemas/ErrorEvent",
+                "fetch": "#/components/schemas/FetchEvent",
                 "intent": "#/components/schemas/IntentEvent",
                 "memory_diff": "#/components/schemas/MemoryDiffEvent",
                 "model_call": "#/components/schemas/ModelCallEvent",
@@ -4181,6 +4361,9 @@
               },
               {
                 "$ref": "#/components/schemas/QuotaEvent"
+              },
+              {
+                "$ref": "#/components/schemas/FetchEvent"
               },
               {
                 "$ref": "#/components/schemas/StepEvent"

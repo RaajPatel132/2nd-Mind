@@ -931,6 +931,65 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /**
+         * FetchEvent
+         * @description A saved link's page, read (or not) after the turn that saved it (S4.7, FR-4.6). Appended to
+         *     that turn, so the Trail and the Inspector update in place. Only the host of the page is ever
+         *     recorded: the path and query count as message content.
+         */
+        FetchEvent: {
+            /** Bytes */
+            bytes?: number | null;
+            /** Chunks */
+            chunks?: number | null;
+            /** Content Type */
+            content_type?: string | null;
+            /** Extraction Method */
+            extraction_method?: string | null;
+            /** Host */
+            host: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Message */
+            message: string;
+            /** Reason */
+            reason?: string | null;
+            /** Redirects */
+            redirects?: number | null;
+            /** Rule */
+            rule?: string | null;
+            /** Site */
+            site?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "full" | "partial" | "failed" | "refused";
+            /** Status Code */
+            status_code?: number | null;
+            /** Title */
+            title?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "fetch";
+            /**
+             * V
+             * @default 1
+             */
+            v: number;
+            /**
+             * Video
+             * @default false
+             */
+            video: boolean;
+            /** Word Count */
+            word_count?: number | null;
+        };
         /** FieldChange */
         FieldChange: {
             /** After */
@@ -1865,7 +1924,7 @@ export interface components {
          */
         SseTurnEvent: {
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["FetchEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };
@@ -2258,7 +2317,7 @@ export interface components {
              */
             created_at: string;
             /** Event */
-            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["StepEvent"];
+            event: components["schemas"]["IntentEvent"] | components["schemas"]["DecisionEvent"] | components["schemas"]["MemoryDiffEvent"] | components["schemas"]["RetrievalEvent"] | components["schemas"]["CitationsEvent"] | components["schemas"]["ToolCallEvent"] | components["schemas"]["PolicyEvent"] | components["schemas"]["ModelCallEvent"] | components["schemas"]["ErrorEvent"] | components["schemas"]["BlockedEvent"] | components["schemas"]["QuotaEvent"] | components["schemas"]["FetchEvent"] | components["schemas"]["StepEvent"];
             /** Seq */
             seq: number;
         };

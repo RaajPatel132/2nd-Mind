@@ -346,6 +346,7 @@ class ExtractedPage:
     paywall: bool
     script_only: bool
     image_url: str = ""
+    duration: str = ""  # a video's length as the page states it (ISO 8601, or seconds)
 
     @property
     def too_short(self) -> bool:
@@ -435,6 +436,7 @@ def extract_html(body: bytes, declared_charset: str | None = None) -> ExtractedP
         "",
     )
     image = _meta(builder, "og:image", "twitter:image")
+    duration = _meta(builder, "video:duration", "og:video:duration") or str(ld.get("duration", ""))
 
     body_node = _body(builder.root)
     method = "body"
@@ -487,6 +489,7 @@ def extract_html(body: bytes, declared_charset: str | None = None) -> ExtractedP
         paywall=walled,
         script_only=script_only,
         image_url=image[:2048],
+        duration=duration[:40],
     )
 
 
