@@ -18,7 +18,10 @@ from secondmind.core import (
     FetchEvent,
     ItemStatus,
     KeyKind,
+    PolicyDecision,
+    PolicyVerdict,
     StepStatus,
+    ToolCallEvent,
     Trust,
     WorkspaceScope,
     new_id,
@@ -34,6 +37,7 @@ from secondmind.links import (
     LinkSource,
     ReadResult,
     ReadSettings,
+    fetch_tool_call,
     host_for_log,
 )
 from secondmind.memory import Memory, UpdateItem, WriterTurn
@@ -108,10 +112,14 @@ class LinkWorkflow:
         )
         await links.update(item_id, **result.source_changes(fetched_at=self.clock()))
         await links.replace_chunks(item_id, result.chunks)
+        digest_call: ToolCallEvent | None = None
         if result.status in (FetchStatus.FULL, FetchStatus.PARTIAL) and result.title:
-            await self._write_item(scope, source, turn.started_at, turn.kind.value, result)
+            verdict = await self._write_item(
+                scope, source, turn.started_at, turn.kind.value, result
+            )
+            digest_call = _digest_call(result, verdict)
             await self._rebuild_keys(scope, item_id, result, steps, timezone)
-        await self._report(turns, source, result, started)
+        await self._report(turns, source, result, started, digest_call)
         return result
 
     async def embed_pending(self, scope: WorkspaceScope) -> int:
@@ -156,7 +164,7 @@ class LinkWorkflow:
         turn_started_at: datetime,
         turn_kind: str,
         result: ReadResult,
-    ) -> None:
+    ) -> PolicyVerdict | None:
         writer = self.memory.writer(
             scope,
             WriterTurn(
@@ -177,7 +185,8 @@ class LinkWorkflow:
                 origin="content",
             )
         )
-        await writer.commit()
+        committed = await writer.commit()
+        return committed.outcomes[0].verdict if committed.outcomes else None
 
     async def _rebuild_keys(
         self,
@@ -205,9 +214,29 @@ class LinkWorkflow:
     # ------------------------------------------------------------------ the turn's Trail
 
     async def _report(
-        self, turns: TurnStore, source: LinkSource, result: ReadResult, started: datetime
+        self,
+        turns: TurnStore,
+        source: LinkSource,
+        result: ReadResult,
+        started: datetime,
+        digest_call: ToolCallEvent | None,
     ) -> None:
         trail = TurnTrail(turns, source.turn_id, clock=self.clock)
+        host = result.final_host or host_for_log(source.url)
+        refused = result.status is FetchStatus.REFUSED
+        calls: list[ToolCallEvent] = []
+        if result.extraction_method != "pasted":
+            calls.append(
+                fetch_tool_call(
+                    host=host,
+                    rule=result.rule,
+                    reason=result.reason,
+                    refused=refused,
+                    summary=result.message,
+                )
+            )
+        if digest_call is not None:
+            calls.append(digest_call)
         event = FetchEvent(
             item_id=source.item_id,
             status=result.status.value,
@@ -232,7 +261,7 @@ class LinkWorkflow:
             status=STEP_STATUS[result.status],
             started_at=started,
             latency_ms=elapsed,
-            events=[event],
+            events=[*calls, event],
         )
 
     # ------------------------------------------------------------------ model steps
@@ -295,6 +324,22 @@ class LinkWorkflow:
                 return None  # the chunks are saved without vectors; a later job embeds them
 
         return embed
+
+
+def _digest_call(result: ReadResult, verdict: PolicyVerdict | None) -> ToolCallEvent:
+    """The Tool calls panel's row for the digest's write: what the policy decided about it."""
+    written = verdict is not None and verdict.decision is PolicyDecision.ALLOWED
+    return ToolCallEvent(
+        tool="digest",
+        arguments={"writes": "title, summary and tags of the link's own item"},
+        result_summary=(
+            "the page filled in its own link, marked as content"
+            if written
+            else "not written: the policy held or refused it"
+        ),
+        policy=verdict,
+        access="write",
+    )
 
 
 def _quote(person_said: str) -> str:

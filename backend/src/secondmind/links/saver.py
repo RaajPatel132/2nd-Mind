@@ -17,9 +17,12 @@ from secondmind.core import (
     AgentStep,
     FetchEvent,
     Kind,
+    PolicyDecision,
+    PolicyVerdict,
     ResourceFormat,
     Source,
     StepStatus,
+    ToolCallEvent,
     Trail,
     Trust,
     WorkspaceScope,
@@ -85,6 +88,33 @@ class LinkSaveResult:
         """Nothing is left to save once the links are taken out (a word or two of framing)."""
         words = re.sub(r"\[link\]", " ", self.remaining)
         return len(re.findall(r"[\w']+", words)) <= 4
+
+
+def fetch_tool_call(
+    *, host: str, rule: str | None, reason: str | None, refused: bool, summary: str = ""
+) -> ToolCallEvent:
+    """The Tool calls panel's row for one request: ``web.fetch(host)``, allowed or refused, and
+    the rule that refused it (FR-4.6). Only the host is recorded, never the path or query."""
+    if refused:
+        verdict = PolicyVerdict(
+            decision=PolicyDecision.BLOCKED,
+            rule_id=rule or "FETCH-REFUSED",
+            reason=f"Didn't open it: {reason or 'not allowed'}.",
+        )
+        summary = summary or "refused, no request was made"
+    else:
+        verdict = PolicyVerdict(
+            decision=PolicyDecision.ALLOWED,
+            rule_id="FETCH-SAFE",
+            reason="A public address: one request, no cookies, nothing in the page followed.",
+        )
+    return ToolCallEvent(
+        tool="web.fetch",
+        arguments={"host": host},
+        result_summary=summary,
+        policy=verdict,
+        access="read",
+    )
 
 
 def without_links(message: str, urls: Sequence[str]) -> str:
@@ -244,6 +274,12 @@ class LinkSaver:
                 if link.duplicate_of is not None:
                     continue
                 refused = link.status is FetchStatus.REFUSED
+                if refused:
+                    await trail.emit(
+                        fetch_tool_call(
+                            host=link.host, rule=link.rule, reason=link.reason, refused=True
+                        )
+                    )
                 await trail.emit(
                     FetchEvent(
                         item_id=link.item_id,

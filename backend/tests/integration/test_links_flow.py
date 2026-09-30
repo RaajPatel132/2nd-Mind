@@ -11,7 +11,7 @@ from sqlalchemy import text
 from secondmind.agent import Turn, TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
 from secondmind.auth.adapters import SqlIdentityStore
-from secondmind.core import FetchEvent, ItemStatus, TargetType, WorkspaceScope
+from secondmind.core import FetchEvent, ItemStatus, TargetType, ToolCallEvent, WorkspaceScope
 from secondmind.evals.recall import eval_runner, fake_router, load_cases
 from secondmind.links import (
     FetchedPage,
@@ -167,6 +167,28 @@ async def test_a_saved_link_is_read_by_the_worker_and_undone_with_its_turn(
     await runner.aclose()
 
 
+async def test_the_read_puts_its_request_and_its_digest_write_in_the_tool_calls(
+    app_db: Database, identity: SqlIdentityStore
+) -> None:
+    scope = await workspace(identity)
+    runner, _ = runner_for(app_db, Fetcher(html(f"<article><p>{PROSE}</p></article>")))
+    turn = await say(app_db, runner, scope, "https://journal.example/sleep for the sleep tips")
+    (pending,) = await fetch_events(app_db, scope, turn)
+    await runner.read_link(scope, pending.item_id, timezone="UTC")
+    calls = {
+        c.tool: c
+        for c in (e.event for e in await SqlTurnStore(app_db, scope).events(turn.id))
+        if isinstance(c, ToolCallEvent)
+    }
+    assert calls["web.fetch"].arguments == {"host": "journal.example"}  # a host, never a path
+    assert calls["web.fetch"].policy is not None
+    assert calls["web.fetch"].policy.decision.value == "allowed"
+    assert calls["digest"].policy is not None  # the write went through the policy like any other
+    assert calls["digest"].policy.decision.value == "allowed"
+    assert calls["digest"].policy.rule_id == "P-DEFAULT"
+    await runner.aclose()
+
+
 async def test_a_refused_link_is_saved_as_refused_and_nothing_is_requested(
     app_db: Database, identity: SqlIdentityStore
 ) -> None:
@@ -176,6 +198,14 @@ async def test_a_refused_link_is_saved_as_refused_and_nothing_is_requested(
     turn = await say(app_db, runner, scope, "look at http://169.254.169.254/latest/meta-data/")
     (event,) = await fetch_events(app_db, scope, turn)
     assert (event.status, event.rule) == ("refused", "link_local")
+    (refusal,) = [
+        e.event
+        for e in await SqlTurnStore(app_db, scope).events(turn.id)
+        if isinstance(e.event, ToolCallEvent)
+    ]
+    assert refusal.tool == "web.fetch"
+    assert refusal.policy is not None
+    assert (refusal.policy.decision.value, refusal.policy.rule_id) == ("blocked", "link_local")
     assert "link-local address" in (turn.output or "")
     source = await stores(scope).by_item(event.item_id)
     assert source is not None

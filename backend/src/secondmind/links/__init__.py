@@ -24,7 +24,14 @@ from secondmind.links.reader import (
     ReadResult,
     ReadSettings,
 )
-from secondmind.links.saver import LinkSaver, LinkSaveResult, SavedLink, SaveSettings, without_links
+from secondmind.links.saver import (
+    LinkSaver,
+    LinkSaveResult,
+    SavedLink,
+    SaveSettings,
+    fetch_tool_call,
+    without_links,
+)
 from secondmind.links.urls import (
     ALLOWED_PORTS,
     ALLOWED_SCHEMES,
@@ -70,6 +77,7 @@ __all__ = [
     "check_resolved",
     "data_block",
     "extract_urls",
+    "fetch_tool_call",
     "host_for_log",
     "is_well_formed",
     "parse_ipv4_spelling",
