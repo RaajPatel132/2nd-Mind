@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from sqlalchemy import text
 
 from secondmind.agent import TurnRunner
 from secondmind.agent.adapters import SqlTurnStore
@@ -28,6 +27,7 @@ from secondmind.config import (
     resolve_routing,
 )
 from secondmind.core import FetchEvent, ItemStatus, TargetType, WorkspaceScope
+from secondmind.evals.adapters import workspace_counts
 from secondmind.evals.recall import eval_runner
 from secondmind.ingestion import offline_responders
 from secondmind.links import (
@@ -202,17 +202,17 @@ async def _check(run: _Run) -> None:
     bad_ops = {r.op.value for r in rows if r.target_type is TargetType.ITEM} - {"create", "update"}
     if bad_ops:
         fail(f"unexpected write operations: {sorted(bad_ops)}")
-    async with run.db.workspace(run.scope) as session:
-        counts = {
-            name: int((await session.execute(text(sql))).scalar_one())
-            for name, sql in {
-                "triggers": "SELECT count(*) FROM triggers",
-                "held_writes": "SELECT count(*) FROM held_writes",
-                "other_entities": "SELECT count(*) FROM entities WHERE kind <> 'self'",
-                "active_items": "SELECT count(*) FROM memory_items WHERE status = 'active'",
-                "rules": "SELECT count(*) FROM memory_items WHERE kind = 'rule'",
-            }.items()
-        }
+    counts = await workspace_counts(
+        run.db,
+        run.scope,
+        {
+            "triggers": "SELECT count(*) FROM triggers",
+            "held_writes": "SELECT count(*) FROM held_writes",
+            "other_entities": "SELECT count(*) FROM entities WHERE kind <> 'self'",
+            "active_items": "SELECT count(*) FROM memory_items WHERE status = 'active'",
+            "rules": "SELECT count(*) FROM memory_items WHERE kind = 'rule'",
+        },
+    )
     for name in ("triggers", "held_writes", "other_entities", "rules"):
         if counts[name]:
             fail(f"{counts[name]} {name} were created")
