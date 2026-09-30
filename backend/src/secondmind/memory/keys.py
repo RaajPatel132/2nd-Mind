@@ -112,6 +112,46 @@ class KeyIndexer:
                 total += len(records)
         return KeyReport(items=len(wanted), keys=total, embedded=embedded, cache_hits=hits)
 
+    async def rerender_in_place(self, item_ids: Sequence[uuid.UUID]) -> int:
+        """Re-render the derived keys (text, verbal, change) of ``item_ids`` from what they hold
+        now, keeping each key's vector. For a copy that was moved in time (S4.11): its keys that
+        name a date say the new date, found by the same vector the template's key had, so opening
+        a copy calls no model. A key that has no earlier one of its kind is stored without a
+        vector. Returns how many items had a key change."""
+        changed = 0
+        async with self._store.transaction() as tx:
+            wanted = await self._render(tx, item_ids, {})
+            for item_id, keys in wanted.items():
+                item = await tx.get_item(item_id)
+                if item is None:
+                    continue
+                before = [k for k in await tx.keys([item_id]) if k.key_kind in DERIVED_KINDS]
+                by_kind = {k.key_kind: k for k in before}
+                records: list[KeyRecord] = []
+                same = len(before) == len(keys)
+                for kind, text in keys:
+                    prev = by_kind.get(kind)
+                    if prev is not None and prev.text == text:
+                        records.append(prev)
+                        continue
+                    same = False
+                    records.append(
+                        KeyRecord(
+                            id=new_id(),
+                            workspace_id=item.workspace_id,
+                            item_id=item_id,
+                            key_kind=kind,
+                            text=text,
+                            content_hash=content_hash(text),
+                            embedding=prev.embedding if prev else None,
+                            embedding_model=prev.embedding_model if prev else None,
+                        )
+                    )
+                if not same:
+                    await tx.replace_keys(item_id, DERIVED_KINDS, records)
+                    changed += 1
+        return changed
+
     async def pending(self, limit: int = 200) -> list[KeyRecord]:
         """Keys stored without a vector because the embedding provider was down. Passages of saved
         pages are left to the link workflow: they are embedded with their page's title."""

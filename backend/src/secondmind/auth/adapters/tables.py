@@ -64,15 +64,35 @@ class WorkspaceRow(Base):
     timezone: Mapped[str] = mapped_column(Text)
     # Default reminder lead time (FR-3.9), used when a message doesn't give one.
     default_lead_minutes: Mapped[int] = mapped_column(Integer, server_default="1440")
+    # A persona template, and a copy of it, record the seed they hold (S4.10, S4.11).
+    seed_id: Mapped[str | None] = mapped_column(Text)
+    seed_version: Mapped[int | None] = mapped_column(Integer)
+    seed_hash: Mapped[str | None] = mapped_column(Text)
+    moved_days: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("kind IN ('private', 'guest', 'persona_copy')", name="kind"),
-        # Each account has exactly one private workspace.
+        CheckConstraint(
+            "kind IN ('private', 'guest', 'persona_copy', 'template', 'scratch')", name="kind"
+        ),
+        # Each account has exactly one private workspace, and at most one persona copy.
         Index(
             "uq_workspaces_owner_private",
             "owner_user_id",
             unique=True,
             postgresql_where=text("kind = 'private'"),
+        ),
+        Index(
+            "uq_workspaces_owner_persona",
+            "owner_user_id",
+            unique=True,
+            postgresql_where=text("kind = 'persona_copy'"),
+        ),
+        # One template per seed.
+        Index(
+            "uq_workspaces_template_seed",
+            "seed_id",
+            unique=True,
+            postgresql_where=text("kind = 'template'"),
         ),
     )

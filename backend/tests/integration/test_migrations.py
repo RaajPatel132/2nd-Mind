@@ -21,7 +21,7 @@ BACKEND = Path(__file__).resolve().parents[2]
 
 
 async def test_schema_is_at_head(app_db: Database) -> None:
-    assert await app_db.schema_revision() == SCHEMA_HEAD == "0006"
+    assert await app_db.schema_revision() == SCHEMA_HEAD == "0007"
 
 
 async def test_models_match_migrations(pg_urls: PgUrls) -> None:

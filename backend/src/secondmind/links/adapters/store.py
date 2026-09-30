@@ -36,6 +36,11 @@ class SqlLinkStore:
         async with self._db.workspace(self._scope) as s:
             await s.execute(insert(_SOURCES), [values])
 
+    async def add_source(self, source: LinkSource, chunks: Sequence[ChunkRow]) -> None:
+        """A link's source row and the passages of its page, together (a seeded link, S4.10)."""
+        await self.add(source)
+        await self.replace_chunks(source.item_id, chunks)
+
     async def by_item(self, item_id: uuid.UUID) -> LinkSource | None:
         async with self._db.workspace(self._scope) as s:
             row = (

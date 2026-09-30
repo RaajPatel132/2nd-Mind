@@ -55,4 +55,35 @@ class InMemoryIdentity:
         return [w for w in self.workspaces.values() if w.owner_user_id == user_id]
 
     async def all_workspaces(self):  # type: ignore[no-untyped-def]
-        return list(self.workspaces.values())
+        return [w for w in self.workspaces.values() if w.kind != "template"]
+
+    async def create_user(self, *, email, tier=None):  # type: ignore[no-untyped-def]
+        from secondmind.auth import User  # noqa: PLC0415
+        from secondmind.core import Tier, new_id  # noqa: PLC0415
+
+        user = User(id=new_id(), email=email, created_at=utc_now(), tier=tier or Tier.STANDARD)
+        self.users[user.id] = user
+        return user
+
+    async def create_workspace(self, *, owner_user_id, kind, timezone):  # type: ignore[no-untyped-def]
+        from secondmind.auth import Workspace  # noqa: PLC0415
+        from secondmind.core import new_id  # noqa: PLC0415
+
+        ws = Workspace(
+            id=new_id(),
+            owner_user_id=owner_user_id,
+            kind=kind,
+            timezone=timezone,
+            created_at=utc_now(),
+        )
+        self.workspaces[ws.id] = ws
+        return ws
+
+    async def delete_workspace(self, workspace_id):  # type: ignore[no-untyped-def]
+        self.workspaces.pop(workspace_id, None)
+
+    async def template_for(self, seed_id):  # type: ignore[no-untyped-def]
+        return next(
+            (w for w in self.workspaces.values() if w.kind == "template" and w.seed_id == seed_id),
+            None,
+        )

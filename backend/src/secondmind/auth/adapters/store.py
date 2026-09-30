@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 
 from secondmind.auth import User, Workspace, WorkspaceKind
 from secondmind.auth.adapters.tables import UserRow, WorkspaceRow
@@ -64,7 +64,10 @@ class SqlIdentityStore:
             rows = (
                 await session.execute(
                     select(WorkspaceRow)
-                    .where(WorkspaceRow.owner_user_id == user_id)
+                    .where(
+                        WorkspaceRow.owner_user_id == user_id,
+                        WorkspaceRow.kind != WorkspaceKind.TEMPLATE.value,
+                    )
                     .order_by(WorkspaceRow.created_at)
                 )
             ).scalars()
@@ -73,9 +76,49 @@ class SqlIdentityStore:
     async def all_workspaces(self) -> list[Workspace]:
         async with self._db.identity() as session:
             rows = (
-                await session.execute(select(WorkspaceRow).order_by(WorkspaceRow.created_at))
+                await session.execute(
+                    select(WorkspaceRow)
+                    .where(WorkspaceRow.kind != WorkspaceKind.TEMPLATE.value)
+                    .order_by(WorkspaceRow.created_at)
+                )
             ).scalars()
             return [_workspace(r) for r in rows]
+
+    async def create_user(self, *, email: str | None, tier: Tier = Tier.STANDARD) -> User:
+        async with self._db.identity() as session:
+            row = UserRow(id=new_id(), email=email, tier=tier.value)
+            session.add(row)
+            await session.flush()
+            await session.refresh(row)
+            return _user(row)
+
+    async def create_workspace(
+        self, *, owner_user_id: uuid.UUID, kind: WorkspaceKind, timezone: str
+    ) -> Workspace:
+        async with self._db.identity() as session:
+            row = WorkspaceRow(
+                id=new_id(), owner_user_id=owner_user_id, kind=kind.value, timezone=timezone
+            )
+            session.add(row)
+            await session.flush()
+            await session.refresh(row)
+            return _workspace(row)
+
+    async def delete_workspace(self, workspace_id: uuid.UUID) -> None:
+        async with self._db.identity() as session:
+            await session.execute(delete(WorkspaceRow).where(WorkspaceRow.id == workspace_id))
+
+    async def template_for(self, seed_id: str) -> Workspace | None:
+        async with self._db.identity() as session:
+            row = (
+                await session.execute(
+                    select(WorkspaceRow).where(
+                        WorkspaceRow.kind == WorkspaceKind.TEMPLATE.value,
+                        WorkspaceRow.seed_id == seed_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            return None if row is None else _workspace(row)
 
 
 def _user(row: UserRow) -> User:
@@ -90,4 +133,8 @@ def _workspace(row: WorkspaceRow) -> Workspace:
         timezone=row.timezone,
         created_at=row.created_at,
         default_lead_minutes=row.default_lead_minutes,
+        seed_id=row.seed_id,
+        seed_version=row.seed_version,
+        seed_hash=row.seed_hash,
+        moved_days=row.moved_days,
     )

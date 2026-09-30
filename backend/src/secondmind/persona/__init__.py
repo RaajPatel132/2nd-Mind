@@ -16,6 +16,7 @@ from secondmind.persona.loader import (
     seed_hash,
 )
 from secondmind.persona.seed import Seeded, SourceSink, seed_workspace
+from secondmind.persona.service import PersonaService, PersonaStore, TemplateDeps, seed_template
 from secondmind.persona.spec import (
     EntitySpec,
     ItemSpec,
@@ -46,6 +47,8 @@ __all__ = [
     "LinkSpec",
     "OccurredSpec",
     "PersonaSeed",
+    "PersonaService",
+    "PersonaStore",
     "RelationSpec",
     "RoleSpec",
     "Seeded",
@@ -53,6 +56,7 @@ __all__ = [
     "SourceSink",
     "SourceSpec",
     "SuggestedPrompts",
+    "TemplateDeps",
     "TimeSpec",
     "TriggerSpec",
     "TurnSpec",
@@ -67,5 +71,6 @@ __all__ = [
     "missing",
     "resolve_time",
     "seed_hash",
+    "seed_template",
     "seed_workspace",
 ]

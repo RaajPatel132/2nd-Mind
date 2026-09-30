@@ -14,6 +14,10 @@ class WorkspaceKind(StrEnum):
     PRIVATE = "private"
     GUEST = "guest"
     PERSONA_COPY = "persona_copy"
+    # The canonical persona (S4.10): owned by a system user, copied for each visitor, never entered.
+    TEMPLATE = "template"
+    # A guest's own empty memory (S4.12).
+    SCRATCH = "scratch"
 
 
 class User(BaseModel):
@@ -47,6 +51,11 @@ class Workspace(BaseModel):
     timezone: str
     created_at: datetime
     default_lead_minutes: int = 1440
+    # A copy of the persona records which seed it came from and how far it was moved (S4.11).
+    seed_id: str | None = None
+    seed_version: int | None = None
+    seed_hash: str | None = None
+    moved_days: int | None = None
 
 
 class IdentityStore(Protocol):
@@ -63,7 +72,24 @@ class IdentityStore(Protocol):
     async def workspaces_for(self, user_id: uuid.UUID) -> list[Workspace]: ...
 
     async def all_workspaces(self) -> list[Workspace]:
-        """Every workspace, oldest first (background jobs that sweep all of them)."""
+        """Every workspace a person can use, oldest first (background jobs that sweep all of them).
+        A persona template is left out: nothing runs against it but the seed and the copy."""
+        ...
+
+    async def create_user(self, *, email: str | None, tier: Tier = Tier.STANDARD) -> User:
+        """A new user. A guest has no email, and neither has the system user owning a template."""
+        ...
+
+    async def create_workspace(
+        self, *, owner_user_id: uuid.UUID, kind: WorkspaceKind, timezone: str
+    ) -> Workspace: ...
+
+    async def delete_workspace(self, workspace_id: uuid.UUID) -> None:
+        """Remove a workspace and everything in it (cascades to every workspace-owned table)."""
+        ...
+
+    async def template_for(self, seed_id: str) -> Workspace | None:
+        """The template workspace of a seed, if it has been loaded."""
         ...
 
 
@@ -73,6 +99,10 @@ async def resolve_scope(
     """The acting user may only enter workspaces they own. Anything else is 'not found', so
     the existence of other people's workspaces is never revealed."""
     workspace = await identity.get_workspace(workspace_id)
-    if workspace is None or workspace.owner_user_id != user_id:
+    if (
+        workspace is None
+        or workspace.owner_user_id != user_id
+        or workspace.kind is WorkspaceKind.TEMPLATE  # never entered, by anyone (S4.10)
+    ):
         raise NotFoundError("workspace not found")
     return WorkspaceScope(workspace_id=workspace.id, user_id=user_id), workspace
