@@ -6,9 +6,15 @@ import { formatMoney, formatUsd, initialsOf } from '../lib/format'
 import { BrandMark, Button, CountUp, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
 import { t } from '../ui/motion'
 import { ModelPicker } from './ModelPicker'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 type Props = {
   me: Me
+  /** The workspace that is open, and how to change it (S4.11). */
+  activeId: string
+  onSwitch: (workspaceId: string) => void
+  onSample: (reset: boolean) => Promise<string | null>
+  onScratch?: () => Promise<string | null>
   providerMode: string
   /** The model picker; null when the server offers none (the provider-mode tag shows instead). */
   picker: Picker | null
@@ -29,7 +35,7 @@ type Props = {
  * Brand, wordmark and workspace on the left; the model picker and the avatar with its quota
  * ring on the right. Transparent at rest; surface, blur and a hairline once content scrolls under.
  */
-export function TopBar({ me, providerMode, picker, offered, model, onModel, usage, last, delta, docked, view }: Props) {
+export function TopBar({ me, activeId, onSwitch, onSample, onScratch, providerMode, picker, offered, model, onModel, usage, last, delta, docked, view }: Props) {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => {
@@ -58,10 +64,14 @@ export function TopBar({ me, providerMode, picker, offered, model, onModel, usag
             <BrandMark />
             <Wordmark />
           </a>
-          {/* A single workspace: a plain pill, no menu (the switcher arrives with a second one). */}
-          <span className="hidden whitespace-nowrap rounded-full px-3 py-1 text-label text-fg-2 ring-1 ring-inset ring-line-strong sm:inline">
-            My memory
-          </span>
+          <WorkspaceSwitcher
+            workspaces={me.workspaces}
+            activeId={activeId}
+            guest={me.user.email === null}
+            onSwitch={onSwitch}
+            onSample={onSample}
+            onScratch={onScratch}
+          />
         </div>
         <div className="flex min-w-0 items-center gap-3">
           <nav aria-label="Pages" className="flex items-center gap-1">

@@ -1,7 +1,29 @@
 import { useEffect, useState } from 'react'
-import { ApiError, devLogin, getMe, getMeta, type Me, type Meta } from '../api/client'
+import { ApiError, devLogin, getMe, getMeta, openPersona, resetPersona, type Me, type Meta } from '../api/client'
 
 export type Session = { me: Me; workspace: Me['workspaces'][number]; meta: Meta }
+
+const REMEMBERED = 'sm.workspace'
+
+/** The workspace to open: the one this browser used last, if it is still the person's, else the first. */
+function chosen(me: Me): Me['workspaces'][number] | undefined {
+  try {
+    const id = window.localStorage.getItem(REMEMBERED)
+    const found = id ? me.workspaces.find((w) => w.id === id) : undefined
+    if (found) return found
+  } catch {
+    // storage can be blocked: the first workspace is fine
+  }
+  return me.workspaces[0]
+}
+
+function remember(id: string): void {
+  try {
+    window.localStorage.setItem(REMEMBERED, id)
+  } catch {
+    // a convenience only
+  }
+}
 
 type State =
   | { status: 'loading' }
@@ -18,6 +40,10 @@ type State =
 export function useSession(): State & {
   retry: () => void
   signIn: (email: string, accessCode: string) => Promise<string | null>
+  /** Open another of the person's workspaces. */
+  switchTo: (workspaceId: string) => void
+  /** Open the sample persona (made on first use), or start it over; returns why it failed, or null. */
+  sample: (reset: boolean) => Promise<string | null>
 } {
   const [state, setState] = useState<State>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
@@ -37,7 +63,7 @@ export function useSession(): State & {
           return
         }
         const me = existing ?? (await devLogin())
-        const workspace = me.workspaces[0]
+        const workspace = chosen(me)
         if (!workspace) throw new Error('No workspace found for this account.')
         if (!cancelled) setState({ status: 'ready', session: { me, workspace, meta } })
       } catch (err) {
@@ -72,9 +98,37 @@ export function useSession(): State & {
     }
   }
 
+  function switchTo(workspaceId: string): void {
+    setState((current) => {
+      if (current.status !== 'ready') return current
+      const workspace = current.session.me.workspaces.find((w) => w.id === workspaceId)
+      if (!workspace) return current
+      remember(workspace.id)
+      return { status: 'ready', session: { ...current.session, workspace } }
+    })
+  }
+
+  async function sample(reset: boolean): Promise<string | null> {
+    try {
+      const workspace = await (reset ? resetPersona() : openPersona())
+      const me = await getMe()
+      if (!me) return 'Sign in again to open the sample.'
+      const meta = await getMeta()
+      const opened = me.workspaces.find((w) => w.id === workspace.id) ?? workspace
+      remember(opened.id)
+      setState({ status: 'ready', session: { me, workspace: opened, meta } })
+      return null
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) return 'Too many copies just now. Wait a moment.'
+      return err instanceof Error ? err.message : 'Could not open the sample.'
+    }
+  }
+
   return {
     ...state,
     signIn,
+    switchTo,
+    sample,
     retry: () => {
       if (window.location.search) window.history.replaceState(null, '', '/')
       setState({ status: 'loading' })

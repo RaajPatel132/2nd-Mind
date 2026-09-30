@@ -23,7 +23,7 @@ export default function App() {
   if (state.status === 'signed-out') return <SignedOut onSignIn={state.retry} />
   if (state.status === 'needs-code') return <AccessGate onSignIn={state.signIn} />
   if (state.status === 'error') return <BootError message={state.message} onRetry={state.retry} />
-  return <Workspace key={state.session.workspace.id} session={state.session} />
+  return <Workspace key={state.session.workspace.id} session={state.session} switchTo={state.switchTo} sample={state.sample} />
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -68,7 +68,15 @@ function useDueSoon(workspaceId: string): string | null {
   return note
 }
 
-function Workspace({ session }: { session: Session }) {
+function Workspace({
+  session,
+  switchTo,
+  sample,
+}: {
+  session: Session
+  switchTo: (workspaceId: string) => void
+  sample: (reset: boolean) => Promise<string | null>
+}) {
   const { workspace, meta, me } = session
   const usage = useUsage()
   const { model, pick, offered } = useModelPick(meta.picker, usage.usage?.tier)
@@ -161,6 +169,9 @@ function Workspace({ session }: { session: Session }) {
         </a>
         <TopBar
           me={me}
+          activeId={workspace.id}
+          onSwitch={switchTo}
+          onSample={sample}
           providerMode={meta.provider_mode}
           picker={meta.picker ?? null}
           offered={offered}

@@ -8,6 +8,7 @@ import type { components, paths } from './schema.gen'
 
 export type Schemas = components['schemas']
 export type Me = Schemas['MeOut']
+export type WorkspaceInfo = Schemas['WorkspaceOut']
 export type Meta = Schemas['MetaOut']
 export type Picker = Schemas['PickerOut']
 export type ModelChoice = Schemas['ModelChoiceOut']
@@ -149,6 +150,16 @@ export async function listEntities(workspaceId: string): Promise<Entity[]> {
 /** Edit one memory in place; it runs as its own undoable turn (S3.12). */
 export async function editItem(itemId: string, body: ItemEdit): Promise<Turn> {
   return unwrap(await api.PATCH('/v1/items/{item_id}', { params: { path: { item_id: itemId } }, body }))
+}
+
+/** The caller's copy of the sample persona: made the first time, the same one after (S4.11). */
+export async function openPersona(): Promise<WorkspaceInfo> {
+  return unwrap(await api.POST('/v1/persona'))
+}
+
+/** Replace the caller's persona copy with a fresh one, moved to today. */
+export async function resetPersona(): Promise<WorkspaceInfo> {
+  return unwrap(await api.POST('/v1/persona/reset'))
 }
 
 /** "Add the text" for a link that could only be read in part: the same digest and chunking, as content (S4.7). */
