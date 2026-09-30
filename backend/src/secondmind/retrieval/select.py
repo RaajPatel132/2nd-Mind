@@ -65,9 +65,15 @@ async def rerank(
     *,
     now: datetime,
     timezone: str,
+    passage_floor: float = 0.0,
 ) -> None:
     """Score ``candidates`` in place (``rerank_score`` and ``rerank_reason``). Raises
-    ``ProviderUnavailableError`` if the step can't be served; unknown ids are ignored."""
+    ``ProviderUnavailableError`` if the step can't be served; unknown ids are ignored.
+
+    The reranker sees each memory's own text and never a page's passages (what a page says reaches
+    a model only at save and in the answer, ADR-0037), so a memory found by what its page says is
+    judged on its summary alone. ``passage_floor`` keeps such a memory in play: see
+    :func:`keep_passage_matches`."""
     if not candidates:
         return
     listing = [
@@ -92,6 +98,22 @@ async def rerank(
         if cand is not None:
             cand.rerank_score = min(1.0, max(0.0, float(score.score)))
             cand.rerank_reason = " ".join(score.reason.split())[:200]
+    keep_passage_matches(candidates, passage_floor)
+
+
+PASSAGE_KEPT = "kept: a passage of the page matches your words (the reranker saw only its summary)"
+
+
+def keep_passage_matches(candidates: Sequence[Candidate], floor: float) -> None:
+    """Lift a memory whose saved page matched the question's words up to ``floor``, when the
+    reranker scored it lower. It could not see the passage, so a low score from the summary alone
+    is no evidence against it; the answer step reads the passage and says so if it doesn't help."""
+    for cand in candidates:
+        if cand.snippet is None or not cand.lexical:
+            continue
+        if cand.rerank_score is None or cand.rerank_score < floor:
+            cand.rerank_score = floor
+            cand.rerank_reason = PASSAGE_KEPT
 
 
 def select(

@@ -598,6 +598,7 @@ class RecallPipeline:
                             h.keys,
                             now=ctx.now.instant,
                             timezone=ctx.now.timezone,
+                            passage_floor=self._s.rerank_min_score,
                         )
                         for run in runs
                         if run.candidates
