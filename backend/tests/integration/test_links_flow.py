@@ -24,6 +24,8 @@ from secondmind.links import (
 from secondmind.links.adapters import SqlLinkStore
 from secondmind.memory import Memory
 from secondmind.memory.adapters import Database, sql_memory
+from secondmind.retrieval import Access, Filters, Query
+from secondmind.retrieval.adapters import SqlRecallStore
 from tests.integration.memory_seed import workspace
 from tests.unit.links.test_reader import PROSE, html
 
@@ -212,4 +214,39 @@ async def test_a_message_with_a_link_and_more_saves_the_rest_as_usual(
     items = await runner.memory.reader(scope).items(ids)
     assert len(items) >= 2  # the link's item, and what the rest of the message said
     assert any("oolong" in i.text for i in items)
+    await runner.aclose()
+
+
+async def test_recall_finds_what_only_the_page_body_says_and_hands_over_the_passage(
+    app_db: Database, identity: SqlIdentityStore
+) -> None:
+    from secondmind.core import KeyKind  # noqa: PLC0415
+
+    scope = await workspace(identity)
+    body = html(
+        "<article><h1>Gardening by the moon</h1>"
+        f"<p>{PROSE}</p>"
+        "<p>Gardeners have long planted carrots in the dark of the moon, and the old almanacs "
+        "insist that lettuce sown under a waxing crescent bolts more slowly than lettuce sown at "
+        "any other time of the month. There is, frankly, no evidence for it at all.</p></article>"
+    )
+    runner, _ = runner_for(app_db, Fetcher(body))
+    turn = await say(app_db, runner, scope, "https://garden.example/moon for the garden")
+    (pending,) = await fetch_events(app_db, scope, turn)
+    await runner.read_link(scope, pending.item_id, timezone="UTC")
+
+    store = SqlRecallStore(app_db, scope, timeout_ms=10_000)
+    # Nothing the person said mentions lettuce or crescent moons: only the page body does.
+    hits = await store.search(
+        Query("lettuce waxing crescent bolts", None, "fake"), Filters(), Access(), limit=10
+    )
+    (hit,) = [h for h in hits if h.item_id == pending.item_id]
+    assert hit.matched_key is KeyKind.CHUNK
+    assert hit.snippet is not None
+    assert "lettuce" in hit.snippet
+    assert hit.snippet_position is not None
+    # The item found is the link's own, so a citation points at the item.
+    item = await runner.memory.reader(scope).item(hit.item_id)
+    assert item is not None
+    assert item.content_ref == "https://garden.example/moon"
     await runner.aclose()

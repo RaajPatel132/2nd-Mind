@@ -150,7 +150,7 @@ steps:
     timeout_s: 30
     max_output_tokens: 1500
     effort: low
-    prompt: answer@3
+    prompt: answer@4
   judge:
     provider: openai
     model: gpt-6-luna

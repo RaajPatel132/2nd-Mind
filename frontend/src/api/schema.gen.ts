@@ -478,6 +478,11 @@ export interface components {
         };
         /** Citation */
         Citation: {
+            /**
+             * From Page
+             * @default false
+             */
+            from_page: boolean;
             /** Item Id */
             item_id?: string | null;
             /**
@@ -487,6 +492,8 @@ export interface components {
             kind: "item" | "turn";
             /** Marker */
             marker: number;
+            /** Snippet */
+            snippet?: string | null;
             /** Title */
             title: string;
             /** Turn Id */
@@ -1727,6 +1734,11 @@ export interface components {
             layer: components["schemas"]["Layer"];
             /** Lexical Score */
             lexical_score?: number | null;
+            /**
+             * Matched Chunk
+             * @description For a saved page: the passage (position) that matched.
+             */
+            matched_chunk?: number | null;
             /** @description The key kind the search matched on ('matched via cue key'). */
             matched_key?: components["schemas"]["KeyKind"] | null;
             /**
@@ -1746,6 +1758,11 @@ export interface components {
              * @default false
              */
             selected: boolean;
+            /**
+             * Snippet
+             * @description For a saved page: the matching passage, quoted (shortened).
+             */
+            snippet?: string | null;
             /**
              * Soft Only
              * @description Found by the soft channel only.

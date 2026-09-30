@@ -361,6 +361,12 @@ class RetrievalCandidate(BaseModel):
     matched_key: KeyKind | None = Field(
         default=None, description="The key kind the search matched on ('matched via cue key')."
     )
+    matched_chunk: int | None = Field(
+        default=None, description="For a saved page: the passage (position) that matched."
+    )
+    snippet: str | None = Field(
+        default=None, description="For a saved page: the matching passage, quoted (shortened)."
+    )
     lexical_score: float | None = None
     dense_score: float | None = None
     fused_score: float | None = Field(default=None, description="RRF across every channel.")
@@ -517,6 +523,9 @@ class Citation(BaseModel):
     item_id: uuid.UUID | None = None
     turn_id: uuid.UUID | None = None
     title: str
+    # A citation of a saved page shows the passage it rests on, marked as coming from the page.
+    snippet: str | None = None
+    from_page: bool = False
 
 
 class CitationsEvent(_Event):

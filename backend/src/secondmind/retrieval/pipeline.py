@@ -738,6 +738,7 @@ class RecallPipeline:
                             title=item.title,
                             item=item,
                             soft_only=cand.soft_only,
+                            snippet=cand.snippet,
                             counted=run.sub.shape is Shape.COUNT,
                             occurrences=[
                                 o

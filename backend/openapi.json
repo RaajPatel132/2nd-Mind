@@ -171,6 +171,11 @@
       "Citation": {
         "additionalProperties": false,
         "properties": {
+          "from_page": {
+            "default": false,
+            "title": "From Page",
+            "type": "boolean"
+          },
           "item_id": {
             "anyOf": [
               {
@@ -195,6 +200,17 @@
             "minimum": 1.0,
             "title": "Marker",
             "type": "integer"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snippet"
           },
           "title": {
             "title": "Title",
@@ -3060,6 +3076,18 @@
             ],
             "title": "Lexical Score"
           },
+          "matched_chunk": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a saved page: the passage (position) that matched.",
+            "title": "Matched Chunk"
+          },
           "matched_key": {
             "anyOf": [
               {
@@ -3096,6 +3124,18 @@
             "default": false,
             "title": "Selected",
             "type": "boolean"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a saved page: the matching passage, quoted (shortened).",
+            "title": "Snippet"
           },
           "soft_only": {
             "default": false,

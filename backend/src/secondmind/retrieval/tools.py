@@ -117,6 +117,9 @@ class Hit:
     lexical: float | None = None
     dense: float | None = None
     matched_key: KeyKind | None = None
+    # When the best-matching key is a passage of a saved page: the passage and its position.
+    snippet: str | None = None
+    snippet_position: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -33,6 +33,8 @@ class Candidate:
     lexical: float | None = None
     dense: float | None = None
     matched_key: KeyKind | None = None
+    snippet: str | None = None
+    snippet_position: int | None = None
     fused: float = 0.0
     demoted: bool = False
     rerank_score: float | None = None
@@ -62,6 +64,8 @@ class Candidate:
                 for c, r in sorted(self.found_by.items(), key=lambda kv: kv[1])
             ],
             matched_key=self.matched_key,
+            matched_chunk=self.snippet_position,
+            snippet=None if self.snippet is None else self.snippet[:240],
             lexical_score=_round(self.lexical),
             dense_score=_round(self.dense),
             fused_score=_round(self.fused),
@@ -100,6 +104,7 @@ def fuse(
                 cand.dense = max(cand.dense or -1.0, hit.dense)
             if hit.matched_key is not None and (cand.matched_key is None or channel == SOFT):
                 cand.matched_key = hit.matched_key
+                cand.snippet, cand.snippet_position = hit.snippet, hit.snippet_position
     for cand in by_id.values():
         if shape not in NO_DEMOTION and is_history(items[cand.item_id]):
             cand.fused *= history_demotion

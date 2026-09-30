@@ -126,7 +126,7 @@ async def test_meta_exposes_config_hash_and_routing(client: httpx.AsyncClient) -
         "provider": "fake",
         "model": "fake-chat",
         "fallback": None,
-        "prompt": "answer@3",
+        "prompt": "answer@4",
         "timeout_s": 30.0,
     }
 

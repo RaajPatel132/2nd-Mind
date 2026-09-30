@@ -327,13 +327,16 @@ class SqlRecallStore:
         where = w.filters(filters, access)
         tsq = tsquery_text(query.text)
         lexical = (
-            "SELECT NULL::uuid AS item_id, NULL::text AS key_kind, NULL::real AS score WHERE false"
+            "SELECT NULL::uuid AS item_id, NULL::text AS key_kind, NULL::real AS score, "
+            "NULL::text AS snippet, NULL::int AS position WHERE false"
         )
         if tsq is not None:
             q = w.bind(tsq)
             lexical = f"""
                 SELECT k.item_id, k.key_kind,
-                       ts_rank_cd(k.tsv, to_tsquery('english', {q}), 32) AS score
+                       ts_rank_cd(k.tsv, to_tsquery('english', {q}), 32) AS score,
+                       CASE WHEN k.key_kind = 'chunk' THEN k.text END AS snippet,
+                       k.position AS position
                 FROM memory_keys k
                 WHERE k.tsv @@ to_tsquery('english', {q})
                   AND k.item_id IN (SELECT id FROM eligible)
@@ -341,14 +344,17 @@ class SqlRecallStore:
                 LIMIT {_POOL}
             """
         dense = (
-            "SELECT NULL::uuid AS item_id, NULL::text AS key_kind, NULL::float AS score WHERE false"
+            "SELECT NULL::uuid AS item_id, NULL::text AS key_kind, NULL::float AS score, "
+            "NULL::text AS snippet, NULL::int AS position WHERE false"
         )
         if query.vector is not None:
             vec = w.bind(vector_literal(query.vector))
             model = w.bind(query.model)
             dense = f"""
                 SELECT k.item_id, k.key_kind,
-                       1 - (k.embedding <=> CAST({vec} AS vector)) AS score
+                       1 - (k.embedding <=> CAST({vec} AS vector)) AS score,
+                       CASE WHEN k.key_kind = 'chunk' THEN k.text END AS snippet,
+                       k.position AS position
                 FROM memory_keys k
                 WHERE k.embedding IS NOT NULL AND k.embedding_model = {model}
                   AND k.item_id IN (SELECT id FROM eligible)
@@ -360,15 +366,15 @@ class SqlRecallStore:
             lex_keys AS ({lexical}),
             dense_keys AS ({dense}),
             lex AS (
-                SELECT item_id, key_kind, score,
+                SELECT item_id, key_kind, score, snippet, position,
                        row_number() OVER (ORDER BY score DESC, item_id) AS rnk
-                FROM (SELECT DISTINCT ON (item_id) item_id, key_kind, score
+                FROM (SELECT DISTINCT ON (item_id) item_id, key_kind, score, snippet, position
                       FROM lex_keys ORDER BY item_id, score DESC) best
             ),
             dns AS (
-                SELECT item_id, key_kind, score,
+                SELECT item_id, key_kind, score, snippet, position,
                        row_number() OVER (ORDER BY score DESC, item_id) AS rnk
-                FROM (SELECT DISTINCT ON (item_id) item_id, key_kind, score
+                FROM (SELECT DISTINCT ON (item_id) item_id, key_kind, score, snippet, position
                       FROM dense_keys ORDER BY item_id, score DESC) best
             )
             SELECT coalesce(l.item_id, d.item_id) AS item_id,
@@ -376,7 +382,11 @@ class SqlRecallStore:
                    CASE WHEN d.rnk IS NULL OR (l.rnk IS NOT NULL AND l.rnk <= d.rnk)
                         THEN l.key_kind ELSE d.key_kind END AS key_kind,
                    coalesce(1.0 / (:rrf_k + l.rnk), 0) + coalesce(1.0 / (:rrf_k + d.rnk), 0)
-                       AS rrf
+                       AS rrf,
+                   CASE WHEN d.rnk IS NULL OR (l.rnk IS NOT NULL AND l.rnk <= d.rnk)
+                        THEN l.snippet ELSE d.snippet END AS snippet,
+                   CASE WHEN d.rnk IS NULL OR (l.rnk IS NOT NULL AND l.rnk <= d.rnk)
+                        THEN l.position ELSE d.position END AS position
             FROM lex l FULL OUTER JOIN dns d ON d.item_id = l.item_id
             ORDER BY rrf DESC, item_id
             LIMIT :limit
@@ -392,6 +402,8 @@ class SqlRecallStore:
                 lexical=float(r[1]) if r[1] is not None else None,
                 dense=float(r[2]) if r[2] is not None else None,
                 matched_key=KeyKind(r[3]) if r[3] else None,
+                snippet=r[5],
+                snippet_position=r[6] if r[5] is not None else None,
             )
             for n, r in enumerate(rows)
         ]
