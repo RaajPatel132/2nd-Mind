@@ -39,4 +39,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0032](0032-spend-safety.md) | Spend safety: kill switch, caps, provider credit, dollar quotas, rate limits | accepted |
 | [0033](0033-supported-postgres-features.md) | The Postgres features we rely on, checked against RDS Postgres 16 | accepted |
 | [0034](0034-web-hardening-and-staging-access.md) | Web hardening and staging access | accepted |
-| [0035](0035-one-environment-on-one-host.md) | One environment on one host, built to move | proposed |
+| [0035](0035-one-environment-on-one-host.md) | One environment on one host, built to move | accepted |
