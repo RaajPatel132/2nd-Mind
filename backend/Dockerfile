@@ -28,6 +28,7 @@ COPY --chown=app:app config ./config
 COPY --chown=app:app prompts ./prompts
 # Golden ingest cases: the offline fake brain replays their recorded model outputs.
 COPY --chown=app:app evals ./evals
+COPY --chown=app:app seeds ./seeds
 COPY --chown=app:app migrations ./migrations
 COPY --chown=app:app alembic.ini ./
 ARG APP_VERSION=dev

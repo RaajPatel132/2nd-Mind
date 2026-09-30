@@ -1,0 +1,1317 @@
+# The sample persona (S4.10): Aditi Rao, a product designer in Bengaluru. Entirely synthetic: every
+# person, place, company, show, book and page here is invented; nothing is about payments or money.
+#
+# Times are days from the anchor ("-12d 07:30", "+3d"), never calendar dates: a copy of this seed is
+# moved to today by whole days (S4.11), so what was upcoming stays upcoming. The text of anything
+# that doesn't recur never names a weekday, a date or a relative day ("last week"); the lint tests
+# in tests/unit/persona/ enforce that, and the no-payments rule.
+#
+# now = a Monday, 10:00 Asia/Kolkata. Loaded through MemoryWriter as one system turn (S4.10).
+#
+# Kabir has no birthday in here on purpose: the suggested save adds it (FR-13.5), and the suggested
+# recall ("What could I get Kabir for his birthday?") then uses it with what is already seeded.
+
+id: aditi-rao
+version: 1
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+
+prompts:
+  save: "Kabir mentioned he wants the new Murakami novel. His birthday is in March."
+  recall: "What could I get Kabir for his birthday?"
+
+entities:
+  # ---- people
+  - {key: kabir, kind: person, name: Kabir Sethi, aliases: [Kabir], labels: [partner], is_key: true}
+  - {key: nisha, kind: person, name: Nisha, labels: [sister], is_key: true}
+  - {key: rohan, kind: person, name: Rohan Verma, aliases: [Rohan]}
+  - {key: amma, kind: person, name: Sunita Rao, aliases: [Amma], labels: [mother], is_key: true}
+  - {key: appa, kind: person, name: Anand Rao, aliases: [Appa], labels: [father]}
+  - {key: priya, kind: person, name: Priya Menon, labels: [manager]}
+  - {key: sameer, kind: person, name: Sameer Joshi, labels: [colleague]}
+  - {key: tara, kind: person, name: Tara Bose, labels: [friend]}
+  - {key: dev, kind: person, name: Dev Malhotra, labels: [friend]}
+  - {key: anika, kind: person, name: Anika Kulkarni, labels: [friend]}
+  - {key: zoya, kind: person, name: Zoya Ali, labels: [colleague]}
+  # ---- places
+  - {key: bengaluru, kind: place, name: Bengaluru}
+  - {key: pune, kind: place, name: Pune}
+  - {key: goa, kind: place, name: Goa}
+  - {key: mumbai, kind: place, name: Mumbai}
+  - {key: coorg, kind: place, name: Coorg}
+  - {key: cubbon_park, kind: place, name: Cubbon Park}
+  - {key: lalbagh, kind: place, name: Lalbagh}
+  - {key: copper_kettle, kind: place, name: The Copper Kettle, attributes: {type: cafe}}
+  - {key: saffron_lane, kind: place, name: Saffron Lane, attributes: {type: restaurant}}
+  - {key: banyan_rooftop, kind: place, name: Banyan Rooftop, attributes: {type: restaurant}}
+  - {key: noodle_house, kind: place, name: Noodle House 27, attributes: {type: restaurant}}
+  - {key: clay_corner, kind: place, name: Clay Corner Studio}
+  # ---- organisations
+  - {key: lumen, kind: org, name: Lumen Labs}
+  - {key: pixel_barn, kind: org, name: Pixel Barn}
+  - {key: pace_club, kind: org, name: Pace Running Club}
+  - {key: flex_gym, kind: org, name: Flex Gym}
+  # ---- works
+  - {key: slow_horses, kind: work, name: Slow Horses, attributes: {type: TV series}}
+  - {key: andor, kind: work, name: Andor, attributes: {type: TV series}}
+  - {key: the_bear, kind: work, name: The Bear, attributes: {type: TV series}}
+  - {key: paatal_lok, kind: work, name: Paatal Lok, attributes: {type: TV series}}
+  - {key: fleabag, kind: work, name: Fleabag, attributes: {type: TV series}}
+  - {key: shogun, kind: work, name: Shogun, attributes: {type: TV series}}
+  - {key: ted_lasso, kind: work, name: Ted Lasso, attributes: {type: TV series}}
+  - {key: piranesi, kind: work, name: Piranesi, attributes: {type: novel}}
+  - {key: overstory, kind: work, name: The Overstory, attributes: {type: novel}}
+  - {key: sweetgrass, kind: work, name: Braiding Sweetgrass, attributes: {type: book}}
+  - {key: everyday_things, kind: work, name: The Design of Everyday Things, attributes: {type: book}}
+  - {key: klara, kind: work, name: Klara and the Sun, attributes: {type: novel}}
+  # ---- topics, projects, things
+  - {key: sourdough, kind: topic, name: Sourdough}
+  - {key: pottery, kind: topic, name: Pottery}
+  - {key: figma_variables, kind: topic, name: Figma variables}
+  - {key: sleep, kind: topic, name: Sleep}
+  - {key: half_marathon, kind: project, name: Bengaluru half marathon}
+  - {key: seed_library, kind: project, name: Seed library app}
+  - {key: thrift_map, kind: project, name: Thrift map}
+  - {key: goa_trip, kind: project, name: Goa trip}
+  - {key: running_shoes, kind: thing, name: Trail running shoes}
+  - {key: kindle, kind: thing, name: Kindle}
+
+relations:
+  - {src: rohan, relation: spouse_of, dst: nisha, evidence: rohan_husband}
+  - {src: kabir, relation: partner_of, dst: self}
+  - {src: nisha, relation: sibling_of, dst: self}
+  - {src: amma, relation: parent_of, dst: self}
+  - {src: priya, relation: manager_of, dst: self}
+  - {src: tara, relation: friend_of, dst: self}
+
+items:
+  # ================================================================ where I live and work
+  - key: live_pune
+    kind: fact
+    title: Lived in Pune
+    text: I lived in Pune.
+    subject: self
+    predicate: lives_in
+    value: Pune
+    entities: [{entity: pune, role: at}]
+    valid_from: {at: "-1500d", precision: month}
+    mentioned: "-400d 19:00"
+    category: home
+  - key: live_bengaluru
+    kind: fact
+    title: Lives in Bengaluru
+    text: I live in Bengaluru.
+    subject: self
+    predicate: lives_in
+    value: Bengaluru
+    entities: [{entity: bengaluru, role: at}]
+    valid_from: {at: "-380d", precision: month}
+    mentioned: "-380d 18:00"
+    category: home
+    in_core: true
+  - key: job_pixel_barn
+    kind: fact
+    title: Worked at Pixel Barn
+    text: I worked at Pixel Barn as a designer.
+    subject: self
+    predicate: works_at
+    value: Pixel Barn
+    entities: [{entity: pixel_barn, role: at}]
+    valid_from: {at: "-1400d", precision: month}
+    mentioned: "-400d 12:00"
+    category: work
+  - key: job_lumen
+    kind: fact
+    title: Product designer at Lumen Labs
+    text: I work at Lumen Labs as a product designer.
+    subject: self
+    predicate: works_at
+    value: Lumen Labs
+    entities: [{entity: lumen, role: at}]
+    valid_from: {at: "-380d", precision: month}
+    mentioned: "-380d 12:00"
+    category: work
+    in_core: true
+  - key: manager_priya
+    kind: fact
+    title: Priya is my manager
+    text: Priya Menon is my manager at Lumen Labs.
+    subject: priya
+    predicate: manager_of
+    value: Priya Menon
+    entities: [{entity: priya, role: about}, {entity: lumen, role: at}]
+    mentioned: "-370d 11:00"
+    category: work
+  - key: priya_one_on_one
+    kind: plan
+    title: One-on-one with Priya
+    text: A weekly one-on-one with Priya on Thursday afternoons. She likes the agenda sent the evening before.
+    entities: [{entity: priya, role: with}]
+    occurred: {start: "-200d 17:30", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=TH;BYHOUR=17;BYMINUTE=30"
+    mentioned: "-200d 17:00"
+    category: work
+  - key: sameer_team
+    kind: fact
+    title: Sameer is on my team
+    text: Sameer Joshi sits next to me on the design team and owns the onboarding flows.
+    subject: sameer
+    entities: [{entity: sameer, role: about}]
+    mentioned: "-300d 10:30"
+    category: work
+  - key: zoya_research
+    kind: fact
+    title: Zoya does the user research
+    text: Zoya Ali runs user research for our team, and I get her findings before every design review.
+    subject: zoya
+    entities: [{entity: zoya, role: about}]
+    mentioned: "-250d 15:00"
+    category: work
+  - key: tara_friend
+    kind: fact
+    title: Tara is my oldest friend
+    text: Tara Bose and I met in college, and she still lives in Pune.
+    subject: tara
+    entities: [{entity: tara, role: about}, {entity: pune, role: at}]
+    mentioned: "-350d 20:00"
+    category: people
+  - key: dev_friend
+    kind: fact
+    title: Dev runs a pottery studio
+    text: Dev Malhotra started Clay Corner Studio, and I do the wheel class there.
+    subject: dev
+    entities: [{entity: dev, role: about}, {entity: clay_corner, role: at}]
+    mentioned: "-180d 19:30"
+    category: people
+  - key: anika_friend
+    kind: fact
+    title: Anika is my running buddy
+    text: Anika Kulkarni runs with me at weekends, and she is the one who got me into racing.
+    subject: anika
+    entities: [{entity: anika, role: about}, {entity: pace_club, role: at}]
+    mentioned: "-260d 08:30"
+    category: people
+  - key: kabir_partner
+    kind: fact
+    title: Kabir is my partner
+    text: Kabir Sethi is my partner. He works as a data engineer and cooks on weekends.
+    subject: kabir
+    entities: [{entity: kabir, role: about}]
+    mentioned: "-390d 21:00"
+    category: people
+    in_core: true
+  - key: nisha_sister
+    kind: fact
+    title: Nisha is my sister
+    text: Nisha is my younger sister. She lives in Mumbai with her husband.
+    subject: nisha
+    entities: [{entity: nisha, role: about}, {entity: mumbai, role: at}]
+    mentioned: "-390d 21:30"
+    category: people
+    in_core: true
+  - key: rohan_husband
+    kind: fact
+    title: Rohan is Nisha's husband
+    text: Nisha's husband is Rohan Verma.
+    subject: rohan
+    entities: [{entity: rohan, role: about}, {entity: nisha, role: with}]
+    mentioned: "-320d 20:00"
+    category: people
+  - key: amma_pune
+    kind: fact
+    title: Amma lives in Pune
+    text: My mother, Sunita, and my father, Anand, live in Pune.
+    subject: amma
+    predicate: lives_in
+    value: Pune
+    entities: [{entity: amma, role: about}, {entity: appa, role: about}, {entity: pune, role: at}]
+    mentioned: "-390d 20:30"
+    category: people
+  - key: allergic_peanuts
+    kind: fact
+    title: Allergic to peanuts
+    text: I am allergic to peanuts, so I always ask about them at restaurants.
+    subject: self
+    predicate: allergic_to
+    value: peanuts
+    mentioned: "-500d 13:00"
+    category: health
+    in_core: true
+  - key: vegetarian
+    kind: preference
+    title: Vegetarian, with eggs
+    text: I am vegetarian, but I eat eggs.
+    subject: self
+    sentiment: 1
+    mentioned: "-500d 13:05"
+    category: food
+    in_core: true
+  # ================================================================ tastes
+  - key: likes_thrillers
+    kind: preference
+    title: Likes slow-burn thrillers
+    text: I like slow-burn thrillers and spy stories more than anything with jump scares.
+    subject: self
+    sentiment: 2
+    mentioned: "-300d 22:00"
+    category: entertainment
+  - key: dislikes_horror
+    kind: preference
+    title: Doesn't like horror
+    text: I don't like horror films at all, even the famous ones.
+    subject: self
+    sentiment: -2
+    mentioned: "-300d 22:05"
+    category: entertainment
+  - key: likes_filter_coffee
+    kind: preference
+    title: Filter coffee, no sugar
+    text: I like South Indian filter coffee without sugar, and I'll skip a cafe that only has espresso.
+    subject: self
+    sentiment: 2
+    mentioned: "-280d 09:00"
+    category: food
+  - key: window_seat
+    kind: preference
+    title: Window seat on trains and planes
+    text: I always pick the window seat, and I hate being woken up for the trolley.
+    subject: self
+    sentiment: 1
+    mentioned: "-200d 14:00"
+    category: travel
+  - key: early_runs
+    kind: preference
+    title: Runs before work
+    text: I run best early in the morning, before the city wakes up, and I skip anything after dinner.
+    subject: self
+    sentiment: 2
+    mentioned: "-220d 07:30"
+    category: fitness
+  - key: dark_mode
+    kind: preference
+    title: Dark mode everywhere
+    text: I keep every app in dark mode, and I find bright white screens tiring at night.
+    subject: self
+    sentiment: 1
+    mentioned: "-150d 23:00"
+    category: tech
+  - key: quiet_cafes
+    kind: preference
+    title: Quiet cafes for thinking
+    text: I do my best design thinking in a quiet cafe with a notebook, not at my desk.
+    subject: self
+    sentiment: 2
+    mentioned: "-140d 11:00"
+    category: work
+  - key: ceramics_taste
+    kind: preference
+    title: Loves handmade ceramics
+    text: I love handmade ceramics, especially speckled glazes in earthy colours.
+    subject: self
+    sentiment: 2
+    mentioned: "-170d 18:00"
+    category: hobbies
+  - key: kabir_likes_pottery
+    kind: preference
+    title: Kabir likes ceramics too
+    text: Kabir has started collecting small handmade ceramics, and he loved the mugs at the Clay Corner open day.
+    subject: kabir
+    sentiment: 2
+    entities: [{entity: kabir, role: about}, {entity: clay_corner, role: at}]
+    mentioned: "-90d 18:30"
+    category: people
+  - key: kabir_coffee
+    kind: preference
+    title: Kabir is into pour-over coffee
+    text: Kabir has been wanting a proper pour-over coffee set for the flat, and he keeps reading about grinders.
+    subject: kabir
+    sentiment: 2
+    entities: [{entity: kabir, role: about}]
+    mentioned: "-60d 09:30"
+    category: people
+  - key: kabir_hiking
+    kind: preference
+    title: Kabir loves the outdoors
+    text: Kabir would happily spend every long weekend hiking, and his trekking backpack is falling apart.
+    subject: kabir
+    sentiment: 2
+    entities: [{entity: kabir, role: about}]
+    mentioned: "-120d 20:00"
+    category: people
+  - key: kabir_boardgames
+    kind: preference
+    title: Kabir likes board games
+    text: Kabir likes cooperative board games, and our friends come over to play them at weekends.
+    subject: kabir
+    sentiment: 1
+    entities: [{entity: kabir, role: about}]
+    mentioned: "-75d 21:30"
+    category: people
+  - key: nisha_books
+    kind: preference
+    title: Nisha reads mysteries
+    text: Nisha reads a mystery a week and always wants a recommendation.
+    subject: nisha
+    sentiment: 1
+    entities: [{entity: nisha, role: about}]
+    mentioned: "-130d 20:00"
+    category: people
+  - key: tara_tea
+    kind: preference
+    title: Tara drinks only green tea
+    text: Tara won't touch coffee. She drinks green tea all day.
+    subject: tara
+    sentiment: 1
+    entities: [{entity: tara, role: about}]
+    mentioned: "-160d 16:00"
+    category: people
+  # ================================================================ routines and standing plans
+  - key: run_routine
+    kind: plan
+    title: Morning runs with Anika
+    text: A run with Anika every Tuesday at 6:30 am and every Saturday at 6 am.
+    entities: [{entity: anika, role: with}, {entity: cubbon_park, role: at}]
+    occurred: {start: "-250d 06:30", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=TU,SA;BYHOUR=6;BYMINUTE=30"
+    mentioned: "-250d 20:00"
+    category: fitness
+  - key: gym_routine
+    kind: plan
+    title: Gym at Flex on Wednesday evenings
+    text: Strength training at Flex Gym every Wednesday at 7 pm, and a short mobility session on Fridays.
+    entities: [{entity: flex_gym, role: at}]
+    occurred: {start: "-240d 19:00", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0"
+    mentioned: "-240d 19:30"
+    category: fitness
+  - key: pottery_class
+    kind: plan
+    title: Wheel class at Clay Corner
+    text: The wheel throwing class at Clay Corner Studio, every Sunday at 11 am.
+    entities: [{entity: clay_corner, role: at}, {entity: dev, role: with}]
+    occurred: {start: "-175d 11:00", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=SU;BYHOUR=11;BYMINUTE=0"
+    mentioned: "-175d 19:00"
+    category: hobbies
+  - key: design_critique
+    kind: plan
+    title: Design critique
+    text: The team's design critique happens every Monday at 3 pm, and I present when my flows are up.
+    entities: [{entity: lumen, role: at}]
+    occurred: {start: "-300d 15:00", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=MO;BYHOUR=15;BYMINUTE=0"
+    mentioned: "-300d 15:30"
+    category: work
+  - key: family_call
+    kind: plan
+    title: Call with Amma and Appa
+    text: A video call with Amma and Appa every Sunday evening, after dinner.
+    entities: [{entity: amma, role: with}, {entity: appa, role: with}]
+    occurred: {start: "-390d 20:30", precision: datetime}
+    rrule: "FREQ=WEEKLY;BYDAY=SU;BYHOUR=20;BYMINUTE=30"
+    mentioned: "-390d 21:00"
+    category: people
+  - key: sourdough_feed
+    kind: plan
+    title: Feed the sourdough starter
+    text: Feed the sourdough starter every morning and bake a loaf on the weekend.
+    entities: [{entity: sourdough, role: about}]
+    occurred: {start: "-100d 08:00", precision: datetime}
+    rrule: "FREQ=DAILY;BYHOUR=8;BYMINUTE=0"
+    mentioned: "-100d 08:30"
+    category: hobbies
+  # ================================================================ birthdays
+  - key: nisha_birthday
+    kind: plan
+    subtype: birthday
+    title: Nisha's birthday
+    text: Nisha's birthday. She loves mystery novels and dark chocolate.
+    entities: [{entity: nisha, role: for}]
+    occurred: {start: "+35d", precision: day}
+    rrule: "FREQ=YEARLY"
+    mentioned: "-200d 21:00"
+    category: people/birthdays
+    triggers:
+      - {"on": time, fires_at: "+32d 09:00", lead_minutes: 4320}
+  - key: tara_birthday
+    kind: plan
+    subtype: birthday
+    title: Tara's birthday
+    text: Tara's birthday. She likes plants and green tea.
+    entities: [{entity: tara, role: for}]
+    occurred: {start: "+18d", precision: day}
+    rrule: "FREQ=YEARLY"
+    mentioned: "-150d 20:30"
+    category: people/birthdays
+    triggers:
+      - {"on": time, fires_at: "+15d 09:00", lead_minutes: 4320}
+  - key: amma_birthday
+    kind: plan
+    subtype: birthday
+    title: Amma's birthday
+    text: Amma's birthday. She always wants a handwritten card.
+    entities: [{entity: amma, role: for}]
+    occurred: {start: "+98d", precision: day}
+    rrule: "FREQ=YEARLY"
+    mentioned: "-320d 21:00"
+    category: people/birthdays
+  - key: dev_birthday
+    kind: plan
+    subtype: birthday
+    title: Dev's birthday
+    text: Dev's birthday. He likes a good bottle of hot sauce.
+    entities: [{entity: dev, role: for}]
+    occurred: {start: "-58d", precision: day}
+    rrule: "FREQ=YEARLY"
+    mentioned: "-300d 19:00"
+    category: people/birthdays
+  - key: my_birthday
+    kind: plan
+    subtype: birthday
+    title: My birthday
+    text: My own birthday. Kabir always plans a surprise.
+    entities: [{entity: kabir, role: with}]
+    occurred: {start: "-110d", precision: day}
+    rrule: "FREQ=YEARLY"
+    mentioned: "-380d 21:00"
+    category: people/birthdays
+  # ================================================================ upcoming plans
+  - key: goa_trip
+    kind: plan
+    title: Goa trip with Kabir
+    text: A week in Goa with Kabir, mostly beaches, good food, and no laptop.
+    entities: [{entity: goa, role: at}, {entity: kabir, role: with}, {entity: goa_trip, role: about}]
+    occurred: {start: "+52d", end: "+59d", precision: day}
+    mentioned: "-20d 21:00"
+    category: travel
+    triggers:
+      - {"on": topic, cue: "when planning the Goa trip or packing for it"}
+  - key: half_marathon_race
+    kind: plan
+    title: Bengaluru half marathon
+    text: The Bengaluru half marathon. Anika and I both signed up, and the goal is to finish under two hours.
+    entities: [{entity: half_marathon, role: about}, {entity: anika, role: with}]
+    occurred: {start: "+24d 06:00", precision: datetime}
+    mentioned: "-70d 20:00"
+    category: fitness
+  - key: design_conf_talk
+    kind: plan
+    title: Talk at the design meetup
+    text: A ten minute talk on designing with variables at the Bengaluru design meetup.
+    entities: [{entity: figma_variables, role: about}, {entity: bengaluru, role: at}]
+    occurred: {start: "+12d 18:30", precision: datetime}
+    mentioned: "-30d 11:00"
+    category: work
+    triggers:
+      - {"on": time, fires_at: "+11d 09:00", lead_minutes: 1440}
+  - key: housewarming
+    kind: plan
+    title: Anika's housewarming
+    text: Anika is having a housewarming, and I offered to bring a plant and a dessert.
+    entities: [{entity: anika, role: for}]
+    occurred: {start: "+9d 17:00", precision: datetime}
+    mentioned: "-14d 19:00"
+    category: people
+  - key: mumbai_visit
+    kind: plan
+    title: Visit Nisha and Rohan in Mumbai
+    text: A long weekend in Mumbai with Nisha and Rohan.
+    entities: [{entity: nisha, role: with}, {entity: rohan, role: with}, {entity: mumbai, role: at}]
+    occurred: {start: "+70d", end: "+73d", precision: day}
+    mentioned: "-40d 21:00"
+    category: travel
+  - key: coorg_weekend
+    kind: plan
+    title: Coorg weekend with friends
+    text: A weekend at a coffee estate in Coorg with Tara, Dev and Anika.
+    entities: [{entity: coorg, role: at}, {entity: tara, role: with}, {entity: dev, role: with}, {entity: anika, role: with}]
+    occurred: {start: "-60d", end: "-58d", precision: day}
+    state: happened
+    mentioned: "-90d 21:00"
+    category: travel
+  - key: meet_tara_pune
+    kind: plan
+    title: Meet Tara in Pune
+    text: A weekend in Pune to see Tara and my parents.
+    entities: [{entity: tara, role: with}, {entity: pune, role: at}]
+    occurred: {start: "+30d", end: "+32d", precision: day}
+    mentioned: "-25d 20:00"
+    category: travel
+  # ================================================================ tasks
+  - key: task_dentist
+    kind: task
+    subtype: appointment
+    title: Book the dentist
+    text: Book a dentist appointment for a cleaning.
+    due: {at: "+6d 18:00", precision: day}
+    mentioned: "-12d 13:00"
+    category: health
+    triggers:
+      - {"on": time, fires_at: "+6d 10:00", lead_minutes: 0}
+  - key: task_review_notes
+    kind: task
+    title: Send design review notes to Priya
+    text: Send Priya my notes from the design review before the one-on-one.
+    entities: [{entity: priya, role: for}]
+    due: {at: "+3d 17:00", precision: day}
+    mentioned: "-1d 16:00"
+    category: work
+    triggers:
+      - {"on": time, fires_at: "+3d 09:00", lead_minutes: 0}
+  - key: task_nisha_gift
+    kind: task
+    title: Get a gift for Nisha
+    text: Pick out a mystery novel for Nisha's birthday and get it wrapped.
+    entities: [{entity: nisha, role: for}]
+    due: {at: "+30d", precision: day}
+    mentioned: "-5d 20:00"
+    category: shopping/gifts
+  - key: task_passport
+    kind: task
+    title: Renew my passport
+    text: Renew my passport before the Goa flights, since it has under six months left.
+    due: {at: "+25d", precision: day}
+    mentioned: "-8d 10:30"
+    category: admin
+    triggers:
+      - {"on": time, fires_at: "+20d 09:00", lead_minutes: 0}
+  - key: task_library
+    kind: task
+    title: Return the library books
+    text: Return the two library books before they are due.
+    due: {at: "+2d", precision: day}
+    mentioned: "-4d 12:00"
+    category: errands
+  - key: task_slides
+    kind: task
+    title: Finish the meetup slides
+    text: Finish the slides for the design meetup talk and do one dry run with Sameer.
+    entities: [{entity: sameer, role: with}, {entity: figma_variables, role: about}]
+    due: {at: "+10d", precision: day}
+    mentioned: "-10d 19:00"
+    category: work
+  - key: task_shoes
+    kind: task
+    title: Break in the new trail shoes
+    text: Break in the trail running shoes with a couple of short runs before the race.
+    entities: [{entity: running_shoes, role: about}, {entity: half_marathon, role: for}]
+    due: {at: "+14d", precision: day}
+    mentioned: "-6d 08:00"
+    category: fitness
+  - key: task_plant_dessert
+    kind: task
+    title: Plan the housewarming dessert
+    text: Decide on a dessert for Anika's housewarming that Kabir can carry on the metro.
+    entities: [{entity: anika, role: for}, {entity: kabir, role: with}]
+    due: {at: "+8d", precision: day}
+    mentioned: "-3d 21:00"
+    category: people
+  - key: task_flat_wifi
+    kind: task
+    title: Sort out the flat internet
+    text: Call the broadband people about the flat's slow internet and ask them to send someone.
+    due: {at: "+4d", precision: day}
+    mentioned: "-2d 09:00"
+    category: home
+  - key: task_dropped_course
+    kind: task
+    title: Sign up for the typography course
+    text: Sign up for the online typography course.
+    state: dropped
+    mentioned: "-120d 22:00"
+    category: learning
+  - key: task_done_review
+    kind: task
+    title: Turn in the onboarding flow designs
+    text: Turn in the onboarding flow designs for review.
+    state: done
+    entities: [{entity: sameer, role: with}]
+    due: {at: "-15d", precision: day}
+    mentioned: "-28d 14:00"
+    category: work
+  - key: task_done_flowers
+    kind: task
+    title: Order flowers for Amma
+    text: Order flowers to be delivered to Amma in Pune.
+    state: done
+    entities: [{entity: amma, role: for}]
+    due: {at: "-40d", precision: day}
+    mentioned: "-50d 18:00"
+    category: people
+  - key: task_kabir_ask
+    kind: task
+    title: Ask Kabir about his week
+    text: Ask Kabir how the data migration at his work went.
+    entities: [{entity: kabir, role: with}]
+    mentioned: "-2d 22:00"
+    category: people
+    triggers:
+      - {"on": person, entity: kabir}
+  - key: task_priya_promotion
+    kind: task
+    title: Bring up the design lead role
+    text: Bring up the design lead role with Priya at the next one-on-one.
+    entities: [{entity: priya, role: with}]
+    mentioned: "-9d 18:00"
+    category: work
+    triggers:
+      - {"on": person, entity: priya}
+  # ================================================================ things I want to watch, read, try
+  - key: want_andor
+    kind: intention
+    subtype: watch
+    title: Watch Andor
+    text: Watch Andor. Everyone on the team says the writing is great.
+    entities: [{entity: andor, role: about}]
+    mentioned: "-45d 13:00"
+    category: entertainment/series
+  - key: want_the_bear
+    kind: intention
+    subtype: watch
+    title: Watch The Bear
+    text: Watch The Bear, starting from the first season.
+    entities: [{entity: the_bear, role: about}]
+    mentioned: "-80d 21:30"
+    category: entertainment/series
+  - key: want_paatal_lok
+    kind: intention
+    subtype: watch
+    title: Watch Paatal Lok
+    text: Watch Paatal Lok. Kabir says it is gripping.
+    entities: [{entity: paatal_lok, role: about}, {entity: kabir, role: with}]
+    mentioned: "-55d 22:00"
+    category: entertainment/series
+  - key: want_shogun
+    kind: intention
+    subtype: watch
+    title: Watch Shogun
+    text: Watch Shogun with Kabir on a long weekend.
+    entities: [{entity: shogun, role: about}, {entity: kabir, role: with}]
+    mentioned: "-35d 22:00"
+    category: entertainment/series
+  - key: want_fleabag
+    kind: intention
+    subtype: watch
+    title: Rewatch Fleabag
+    text: Rewatch Fleabag with Tara the next time she visits.
+    state: dropped
+    entities: [{entity: fleabag, role: about}, {entity: tara, role: with}]
+    mentioned: "-200d 22:00"
+    category: entertainment/series
+  - key: want_slow_horses
+    kind: intention
+    subtype: watch
+    title: Watch Slow Horses
+    text: Watch Slow Horses, the spy series Sameer keeps recommending.
+    entities: [{entity: slow_horses, role: about}, {entity: sameer, role: with}]
+    mentioned: "-150d 13:00"
+    category: entertainment/series
+  - key: watched_slow_horses
+    kind: episode
+    subtype: watch
+    title: Watched Slow Horses
+    text: I watched Slow Horses, and I loved how bleak and funny it was.
+    entities: [{entity: slow_horses, role: about}]
+    occurred: {start: "-20d 22:00", precision: datetime}
+    mentioned: "-20d 23:30"
+    category: entertainment/series
+    sentiment: 2
+  - key: read_piranesi
+    kind: intention
+    subtype: read
+    title: Read Piranesi
+    text: Read Piranesi, which Tara has been pushing on me for months.
+    state: fulfilled
+    entities: [{entity: piranesi, role: about}, {entity: tara, role: with}]
+    mentioned: "-210d 20:00"
+    category: books
+  - key: finished_piranesi
+    kind: episode
+    subtype: read
+    title: Finished Piranesi
+    text: I finished Piranesi in two sittings and I can't stop thinking about the house.
+    entities: [{entity: piranesi, role: about}]
+    occurred: {start: "-100d 23:00", precision: datetime}
+    mentioned: "-100d 23:30"
+    category: books
+    sentiment: 2
+  - key: reading_overstory
+    kind: intention
+    subtype: read
+    title: Reading The Overstory
+    text: I'm reading The Overstory slowly, a few chapters at a time before bed.
+    state: active
+    entities: [{entity: overstory, role: about}]
+    mentioned: "-25d 23:00"
+    category: books
+  - key: want_sweetgrass
+    kind: intention
+    subtype: read
+    title: Read Braiding Sweetgrass
+    text: Read Braiding Sweetgrass. Anika says it changed how she sees the park.
+    entities: [{entity: sweetgrass, role: about}, {entity: anika, role: with}]
+    mentioned: "-65d 19:00"
+    category: books
+  - key: want_everyday_things
+    kind: intention
+    subtype: read
+    title: Reread The Design of Everyday Things
+    text: Reread The Design of Everyday Things before the meetup talk.
+    entities: [{entity: everyday_things, role: about}]
+    mentioned: "-28d 12:00"
+    category: books
+  - key: want_klara
+    kind: intention
+    subtype: read
+    title: Read Klara and the Sun
+    text: Read Klara and the Sun, the next book for our book club.
+    entities: [{entity: klara, role: about}]
+    mentioned: "-15d 21:00"
+    category: books
+  - key: want_banyan
+    kind: intention
+    subtype: try
+    title: Try Banyan Rooftop
+    text: Try Banyan Rooftop with Kabir. Zoya says the dosas are the best in the area.
+    entities: [{entity: banyan_rooftop, role: at}, {entity: kabir, role: with}, {entity: zoya, role: with}]
+    mentioned: "-33d 13:00"
+    category: food/restaurants
+  - key: want_noodles
+    kind: intention
+    subtype: try
+    title: Try Noodle House 27
+    text: Try Noodle House 27 for lunch. Sameer wants to go after the critique.
+    entities: [{entity: noodle_house, role: at}, {entity: sameer, role: with}]
+    mentioned: "-18d 12:30"
+    category: food/restaurants
+  - key: want_sourdough_focaccia
+    kind: intention
+    subtype: try
+    title: Bake a focaccia
+    text: Bake a rosemary focaccia with the sourdough starter for Anika's housewarming.
+    entities: [{entity: sourdough, role: about}, {entity: anika, role: for}]
+    mentioned: "-7d 08:30"
+    category: hobbies
+  - key: want_learn_variables
+    kind: intention
+    subtype: learn
+    title: Learn Figma variables properly
+    text: Learn Figma variables and modes properly, not just the basics.
+    entities: [{entity: figma_variables, role: about}]
+    mentioned: "-90d 11:30"
+    category: learning
+  - key: want_fulfilled_noodles
+    kind: intention
+    subtype: try
+    title: Try the ramen place near the office
+    text: Try the ramen place near the office.
+    state: fulfilled
+    mentioned: "-70d 12:00"
+    category: food/restaurants
+  - key: ate_ramen
+    kind: episode
+    subtype: meal
+    title: Had ramen near the office
+    text: Had lunch at the ramen place near the office with Zoya, and the broth was rich and smoky.
+    entities: [{entity: zoya, role: with}]
+    occurred: {start: "-60d 13:00", precision: datetime}
+    mentioned: "-60d 14:00"
+    category: food/restaurants
+  # ================================================================ side-project ideas and notes
+  - key: idea_seed_library
+    kind: note
+    title: Seed library app idea
+    text: Idea for a seed library app. Neighbours list the seeds they have spare, and others can request a few. Start with one housing society.
+    entities: [{entity: seed_library, role: about}]
+    mentioned: "-130d 23:00"
+    category: projects
+    tags: [idea, side-project]
+  - key: idea_seed_library_2
+    kind: note
+    title: "Seed library: how it could work"
+    text: For the seed library, each listing needs a photo, the plant name, and the month the seeds were saved. Keep the first version as simple as a shared form.
+    entities: [{entity: seed_library, role: about}]
+    mentioned: "-110d 23:30"
+    category: projects
+    tags: [idea, side-project]
+  - key: idea_thrift_map
+    kind: note
+    title: Thrift map idea
+    text: A map of thrift and second-hand shops in the city, with photos from people who went. Kabir could build the data side.
+    entities: [{entity: thrift_map, role: about}, {entity: kabir, role: with}]
+    mentioned: "-95d 22:00"
+    category: projects
+    tags: [idea, side-project]
+  - key: idea_recipe_cards
+    kind: note
+    title: Recipe cards for the sourdough
+    text: Make a set of printable recipe cards for the sourdough bakes, with a small hand-drawn loaf on each.
+    entities: [{entity: sourdough, role: about}]
+    mentioned: "-50d 09:30"
+    category: projects
+    tags: [idea]
+  - key: idea_onboarding_test
+    kind: note
+    title: Onboarding test idea
+    text: Try a five-question check-in at the start of onboarding to see if new users pick the right template.
+    entities: [{entity: sameer, role: with}]
+    mentioned: "-42d 15:30"
+    category: work
+    tags: [idea]
+  - key: note_goa_packing
+    kind: note
+    title: Goa packing list
+    text: For Goa, pack reef-safe sunscreen, two swimsuits, a light shawl for evenings, and the waterproof phone pouch.
+    entities: [{entity: goa, role: about}, {entity: goa_trip, role: about}]
+    mentioned: "-12d 22:00"
+    category: travel
+    triggers:
+      - {"on": topic, cue: "when packing for a beach trip"}
+  - key: note_goa_food
+    kind: note
+    title: Places to eat in Goa
+    text: Kabir wants to try a thali place in Panjim and a beach shack that Tara recommended for fresh fish.
+    entities: [{entity: goa, role: at}, {entity: kabir, role: with}, {entity: tara, role: with}]
+    mentioned: "-11d 21:30"
+    category: travel
+  - key: note_nisha_mystery
+    kind: note
+    title: Mystery novels Nisha might like
+    text: "Mystery novels Nisha hasn't read yet: a Japanese locked-room story, a cosy one set in a Kerala village, and anything by the author of the lighthouse book."
+    entities: [{entity: nisha, role: for}]
+    mentioned: "-20d 20:00"
+    category: shopping/gifts
+  - key: note_priya_feedback
+    kind: note
+    title: Priya's feedback on my last review
+    text: Priya said my last design review was clear but too long. She wants three slides, each with one decision.
+    entities: [{entity: priya, role: about}]
+    mentioned: "-16d 17:45"
+    category: work
+  - key: note_critique_format
+    kind: note
+    title: Critique format that worked
+    text: The critique format that worked best was two minutes of context, five minutes of silent comments on the board, and then one decision per screen.
+    mentioned: "-84d 16:30"
+    category: work
+  - key: note_kabir_favourites
+    kind: note
+    title: Kabir's small favourites
+    text: Kabir's small favourites are cardamom biscuits, the blue mug, and handwritten notes in his lunch box.
+    entities: [{entity: kabir, role: about}]
+    mentioned: "-140d 21:30"
+    category: people
+  - key: note_tara_plants
+    kind: note
+    title: Plants Tara has been wanting
+    text: Tara has been wanting a rubber plant and a proper terracotta pot for her balcony.
+    entities: [{entity: tara, role: about}]
+    mentioned: "-40d 19:30"
+    category: people
+  - key: note_amma_card
+    kind: note
+    title: What Amma likes
+    text: Amma likes handwritten cards, marigold flowers, and anything from the old bookshop near her house.
+    entities: [{entity: amma, role: about}]
+    mentioned: "-110d 20:00"
+    category: people
+  - key: note_run_fueling
+    kind: note
+    title: Long run fuelling
+    text: For long runs, dates and a banana before, and salted water at the turnaround. Never try anything new on race morning.
+    mentioned: "-75d 08:15"
+    category: fitness
+  - key: note_sleep_tips
+    kind: note
+    title: Sleep tips that helped
+    text: Dim the lights an hour before bed, keep the phone in the other room, and get up at the same time, even at weekends.
+    entities: [{entity: sleep, role: about}]
+    mentioned: "-210d 23:30"
+    category: health
+  # ================================================================ superseded, fulfilled, because
+  - key: likes_espresso
+    kind: preference
+    title: Likes strong espresso
+    text: I like a double espresso in the morning.
+    subject: self
+    sentiment: 1
+    mentioned: "-700d 09:00"
+    category: food
+  - key: knee_niggle
+    kind: episode
+    title: Sore left knee after long runs
+    text: My left knee has been sore for days after the long runs, mostly on the downhill bits.
+    occurred: {start: "-9d 09:00", precision: datetime}
+    mentioned: "-9d 09:30"
+    category: health
+  - key: skip_long_runs
+    kind: plan
+    title: Skip the long runs for two weeks
+    text: Skip the long runs for two weeks and do short easy ones instead, while the knee settles.
+    occurred: {start: "-8d", end: "+6d", precision: day}
+    mentioned: "-8d 08:00"
+    category: fitness
+  - key: amma_health
+    kind: note
+    title: Amma's check-up
+    text: Amma's check-up results are pending and I'm anxious about them. The doctor will call Appa.
+    sensitivity: sensitive
+    entities: [{entity: amma, role: about}, {entity: appa, role: about}]
+    mentioned: "-3d 22:30"
+    category: health
+  # ================================================================ rules and patterns
+  - key: rule_birthdays
+    kind: rule
+    title: Remind me before birthdays
+    text: Remind me three days before any birthday so there is time to get something.
+    state: active
+    mentioned: "-300d 20:00"
+    category: people
+  - key: rule_late_reviews
+    kind: rule
+    title: No design reviews late in the week
+    text: Don't schedule design reviews late in the working week. People are checked out by the afternoon.
+    state: active
+    entities: [{entity: lumen, role: about}]
+    mentioned: "-180d 16:00"
+    category: work
+  - key: rule_vegetarian_food
+    kind: rule
+    title: Vegetarian places only
+    text: When I ask about restaurants, only suggest places that have good vegetarian food.
+    state: active
+    mentioned: "-400d 13:00"
+    category: food
+  - key: rule_short_answers
+    kind: rule
+    title: Keep answers short
+    text: Keep answers short and plain, and I'll ask for more if I want it.
+    state: active
+    mentioned: "-250d 10:00"
+    category: preferences
+  - key: pattern_gym_deadlines
+    kind: pattern
+    title: Skips the gym before deadlines
+    text: I tend to skip the gym in the week before a big deadline, and feel worse for it.
+    state: confirmed
+    mentioned: "-60d 20:00"
+    category: fitness
+  - key: pattern_long_run_sat
+    kind: pattern
+    title: Longest run on the weekend before a race
+    text: I tend to do my longest run two weekends before a race, then taper.
+    state: confirmed
+    mentioned: "-45d 08:00"
+    category: fitness
+  - key: pattern_cafe_thinking
+    kind: pattern
+    title: Best ideas come away from the desk
+    text: My best design ideas tend to come at a cafe or on a walk, not at my desk.
+    state: confirmed
+    mentioned: "-130d 18:00"
+    category: work
+  # ================================================================ saved links, videos and files
+  - key: res_sourdough
+    kind: resource
+    title: A gentle guide to sourdough starters
+    text: for the sourdough
+    summary: A patient guide to building, feeding and troubleshooting a sourdough starter, with a weekly feeding schedule for a warm kitchen.
+    entities: [{entity: sourdough, role: about}]
+    mentioned: "-105d 08:00"
+    category: hobbies
+    tags: [sourdough, baking]
+    source:
+      kind: link
+      url: https://hearthnotes.example/sourdough-starters
+      site: Hearth Notes
+      author: Leela Nair
+      published: "-300d"
+      words: 1420
+      passages:
+        - "A starter is only flour and water that have been left long enough to attract the wild yeast already in your kitchen. For the first week, feed it once a day with equal weights of flour and water, and discard most of what is left before each feeding. It will smell sharp and odd for days, and that is normal."
+        - "You will know it is ready when it doubles in size four to six hours after a feeding and the surface is full of small bubbles. A starter that is too runny wants less water; one that has turned grey on top only needs to be stirred back in. A warm shelf above the fridge suits most kitchens."
+        - "Once the starter is steady, keep it in the fridge and feed it weekly. Take it out the night before you bake, feed it twice, and use it when it is at its peak. If you forget it for a month, pour off the dark liquid and feed it for three days before trusting it again."
+  - key: res_variables
+    kind: resource
+    title: Designing with variables, a practical guide
+    text: for the meetup talk
+    summary: How to set up colour, spacing and typography variables with modes, so one design system can switch between themes without copies.
+    entities: [{entity: figma_variables, role: about}]
+    mentioned: "-28d 11:00"
+    category: work
+    tags: [figma, design-systems]
+    source:
+      kind: link
+      url: https://pixelandpattern.example/designing-with-variables
+      site: Pixel and Pattern
+      author: Mohan Reddy
+      published: "-60d"
+      words: 2310
+      passages:
+        - "Variables let you name a value once and use it everywhere. Start with primitive variables that hold raw values, such as a grey scale or a spacing step, and then build semantic variables on top that say what a value is for: surface, text, border. Components should only ever refer to the semantic ones."
+        - "Modes are where variables earn their keep. A collection can hold a light mode and a dark mode, or a compact and a comfortable density, and every frame can be switched with one click. Keep the number of modes small. Every mode you add is a mode you have to check on every screen."
+        - "When you hand over to engineering, export the semantic names, not the raw values. A developer who sees surface.raised knows what to do with it, while a developer who sees a hex code will copy it into three places and lose track of them."
+  - key: res_taper
+    kind: resource
+    title: How to taper for a half marathon
+    text: for the race
+    summary: A three week taper plan for a half marathon that cuts mileage but keeps some pace work, with advice on the last meal and the morning of the race.
+    entities: [{entity: half_marathon, role: about}]
+    mentioned: "-40d 07:30"
+    category: fitness
+    tags: [running, race]
+    source:
+      kind: link
+      url: https://runnersledger.example/taper-half-marathon
+      site: Runner's Ledger
+      author: Farah Khan
+      published: "-150d"
+      words: 1660
+      passages:
+        - "The taper is where the race is won or quietly lost. Over the last three weeks, cut your weekly distance by about a fifth each week, but keep one short session at race pace so your legs remember what it feels like. Most runners who fall apart in the final kilometres trained well and then ran too much in the last fortnight."
+        - "Eat normally in the final days. The night before, choose a meal you have eaten before a long run, not a celebratory feast. On the morning, have breakfast two to three hours before the start, and sip water in the last hour rather than gulping it at the line."
+        - "Expect to feel strange. Restless legs, a short temper, and a nagging sense that you are losing fitness are all common during a taper. Trust the plan, and save the extra energy for the second half of the race."
+  - key: res_night_train
+    kind: resource
+    title: Why the night train to Goa is worth it
+    text: for the Goa trip
+    summary: A travel piece on taking the overnight train to Goa, and what to book and pack.
+    entities: [{entity: goa, role: about}]
+    mentioned: "-14d 20:30"
+    category: travel
+    tags: [goa, travel]
+    source:
+      kind: link
+      url: https://coastalpost.example/night-train-to-goa
+      site: The Coastal Post
+      status: partial
+      reason: paywall
+      words: 180
+      passages:
+        - "There is a particular pleasure in falling asleep in one city and waking to coconut palms in another. The overnight train to Goa leaves in the evening, rattles through the ghats after dark, and arrives as the light comes up over the fields."
+  - key: res_ceramic_studios
+    kind: resource
+    title: The new wave of ceramic studios
+    text: Kabir might like this
+    summary: An article about small ceramic studios opening in Indian cities.
+    entities: [{entity: pottery, role: about}, {entity: kabir, role: with}]
+    mentioned: "-85d 19:00"
+    category: hobbies
+    tags: [pottery]
+    source:
+      kind: link
+      url: https://craftcircle.example/ceramic-studios
+      site: Craft Circle
+      status: partial
+      reason: needs JavaScript
+  - key: res_coffee_spots
+    kind: resource
+    title: Bengaluru's filter coffee spots
+    text: to try with Kabir
+    summary: A list of old filter coffee places around Bengaluru.
+    entities: [{entity: kabir, role: with}, {entity: bengaluru, role: at}]
+    mentioned: "-50d 10:00"
+    category: food
+    tags: [coffee]
+    source:
+      kind: link
+      url: https://dailydekko.example/filter-coffee-bengaluru
+      site: Daily Dekko
+      status: partial
+      reason: blocked (HTTP 403)
+  - key: res_pour_over
+    kind: resource
+    title: Pour-over coffee for beginners
+    text: for Kabir's coffee set
+    summary: "A calm walkthrough of making a pour-over coffee at home: grind size, water temperature and the bloom."
+    entities: [{entity: kabir, role: for}]
+    mentioned: "-58d 21:00"
+    category: food
+    tags: [coffee, video]
+    source:
+      kind: video
+      url: https://www.youtube.com/watch?v=p0UrOv3rBr
+      site: Youtube
+      channel: Brew Bench
+      duration_s: 782
+  - key: res_wheel_video
+    kind: resource
+    title: Throwing a bowl on the wheel
+    text: before my wheel class
+    summary: A potter throws, trims and glazes a stoneware bowl in one afternoon.
+    entities: [{entity: pottery, role: about}]
+    mentioned: "-160d 20:30"
+    category: hobbies
+    tags: [pottery, video]
+    source:
+      kind: video
+      url: https://vimeo.com/438920117
+      site: Vimeo
+      channel: Clay Hours
+      duration_s: 845
+  - key: res_whiteboard
+    kind: resource
+    title: Whiteboard photo of the onboarding flow
+    text: photo of the whiteboard after the workshop
+    summary: A photo of the whiteboard from the onboarding workshop, with the flow sketched in five steps.
+    entities: [{entity: sameer, role: with}]
+    mentioned: "-36d 16:00"
+    category: work
+    tags: [onboarding, whiteboard]
+    source:
+      kind: image
+      extracted: "Onboarding flow. 1 Welcome and pick a goal. 2 Choose a template. 3 Invite a teammate (skip allowed). 4 First task with a hint. 5 Done screen with a checklist. Sameer: test step 3 with five users. Open question: do we need a progress bar?"
+  - key: res_meetup_schedule
+    kind: resource
+    title: Design meetup schedule
+    text: the meetup schedule PDF
+    summary: The schedule for the design meetup, with the talk slots and the order of the speakers.
+    entities: [{entity: figma_variables, role: about}, {entity: bengaluru, role: at}]
+    mentioned: "-30d 11:30"
+    category: work
+    tags: [meetup, schedule]
+    source:
+      kind: pdf
+      extracted: "Bengaluru Design Meetup. Doors open 6:00 pm. 6:30 Welcome. 6:40 Talk 1: Research in a hurry. 6:55 Talk 2: Designing with variables (Aditi Rao, 10 minutes). 7:10 Talk 3: Motion that means something. 7:30 Tea and open floor. Venue: the second floor studio."
+  # ================================================================ a few with no category or subtype
+  - key: misc_oat_milk
+    kind: note
+    title: Oat milk at the office pantry
+    text: The office pantry stocks oat milk in the small fridge, top shelf.
+    mentioned: "-22d 10:10"
+  - key: misc_metro_card
+    kind: note
+    title: Metro card is in the blue wallet
+    text: The metro card lives in the blue wallet, not the black one.
+    mentioned: "-64d 08:40"
+  - key: misc_plant_watering
+    kind: note
+    title: Watering the balcony plants
+    text: The balcony plants need water every second day, and the fern likes a misting.
+    mentioned: "-33d 07:50"
+
+links:
+  - {type: supersedes, src: live_bengaluru, dst: live_pune, valid_to: "-380d"}
+  - {type: supersedes, src: job_lumen, dst: job_pixel_barn, valid_to: "-380d"}
+  - {type: supersedes, src: likes_filter_coffee, dst: likes_espresso, valid_to: "-300d"}
+  - {type: fulfils, src: finished_piranesi, dst: read_piranesi}
+  - {type: fulfils, src: ate_ramen, dst: want_fulfilled_noodles}
+  - {type: because, src: skip_long_runs, dst: knee_niggle}
+  - {type: part_of, src: note_goa_packing, dst: goa_trip}
+  - {type: part_of, src: note_goa_food, dst: goa_trip}
+  - {type: evidence_for, src: res_taper, dst: half_marathon_race}
+  - {type: gift_for_event, src: note_nisha_mystery, dst: nisha_birthday}
+  - {type: gift_for_event, src: task_nisha_gift, dst: nisha_birthday}
+  - {type: part_of, src: res_meetup_schedule, dst: design_conf_talk}
+  - {type: part_of, src: task_slides, dst: design_conf_talk}
+
+# Repetitive series: a run log, gym visits, episodes watched and dinners out. {n} counts from 1,
+# {day} is the offset from the anchor, and each `vary` list cycles.
+series:
+  - count: 18
+    from_days: -2
+    every_days: -3
+    vary:
+      km: [5, 6, 5.5, 8, 5, 10, 6, 5, 12, 5, 7, 5, 6, 14, 5, 8, 5, 16]
+      feel: [an easy pace, it felt hard, my legs were heavy, a steady pace, a little slower than I wanted, a good rhythm]
+    item:
+      key: run_{n}
+      kind: episode
+      subtype: run
+      title: "Ran {km} km"
+      text: "I ran {km} km in the morning, {feel}."
+      value: {number: "{km}", unit: km}
+      entities: [{entity: cubbon_park, role: at}]
+      occurred: {start: "{day}d 06:45", precision: datetime}
+      mentioned: "{day}d 08:00"
+      category: fitness
+      tags: [running]
+  - count: 10
+    from_days: -5
+    every_days: -7
+    vary:
+      session: [leg day, back and biceps, push day, leg day with squats, core and mobility]
+    item:
+      key: gym_{n}
+      kind: episode
+      subtype: workout
+      title: "Gym: {session}"
+      text: "Gym at Flex: {session}."
+      entities: [{entity: flex_gym, role: at}]
+      occurred: {start: "{day}d 19:00", precision: datetime}
+      mentioned: "{day}d 20:45"
+      category: fitness
+      tags: [gym]
+  - count: 14
+    from_days: -1
+    every_days: -2
+    vary:
+      ep_title: [the pilot, the lunch, the trip, the fallout, the wedding, the apology, the rematch]
+    item:
+      key: lasso_ep_{n}
+      kind: episode
+      subtype: watch
+      title: "Watched Ted Lasso, episode {n}"
+      text: "Watched an episode of Ted Lasso with Kabir: {ep_title}."
+      entities: [{entity: ted_lasso, role: about}, {entity: kabir, role: with}]
+      occurred: {start: "{day}d 22:00", precision: datetime}
+      mentioned: "{day}d 23:15"
+      category: entertainment/series
+  - count: 8
+    from_days: -4
+    every_days: -11
+    vary:
+      dish: [dosas, a thali, pasta, wood-fired pizza, momos, a mushroom risotto, chaat, a veg biryani]
+      with: [Kabir, Tara, Anika, Zoya, Kabir, Dev, Sameer, Kabir]
+    item:
+      key: dinner_{n}
+      kind: episode
+      subtype: meal
+      title: "Dinner out: {dish}"
+      text: "Went out for {dish} with {with}, and it was worth the wait."
+      occurred: {start: "{day}d 20:00", precision: datetime}
+      mentioned: "{day}d 22:30"
+      category: food/restaurants
+
+# Ten past chats, so the conversation is not empty and "what did you say" has something to find.
+turns:
+  - key: t_priya_review
+    at: "-16d 18:00"
+    user: What did Priya say about my last review?
+    assistant: "Priya said your last design review was clear but too long. She wants three slides, each with one decision."
+  - key: t_sourdough
+    at: "-105d 08:20"
+    user: Saved the sourdough starter guide
+    assistant: Saved the link. Reading it now.
+  - key: t_books
+    at: "-65d 20:00"
+    user: What books would you suggest for a slow weekend?
+    assistant: "Since you loved Piranesi, try Klara and the Sun, which is quiet and strange in the same way, or Braiding Sweetgrass if you want something gentler."
+  - key: t_gift_tara
+    at: "-44d 19:10"
+    user: What could I give Tara?
+    assistant: "Tara likes plants and green tea. A rubber plant in a terracotta pot and a tin of good green tea would suit her."
+  - key: t_where_live
+    at: "-300d 10:00"
+    user: Where do I live now?
+    assistant: You live in Bengaluru. You moved from Pune.
+  - key: t_race
+    at: "-40d 07:40"
+    user: How long should my taper be for the half marathon?
+    assistant: "The guide you saved suggests three weeks, cutting your distance by about a fifth each week and keeping one short session at race pace."
+  - key: t_passport
+    at: "-8d 10:40"
+    user: Remind me to renew my passport
+    assistant: "Noted. I'll remind you before the Goa flights."
+  - key: t_knee
+    at: "-9d 09:40"
+    user: My knee is sore after the long runs
+    assistant: "Noted. I saved that, and I'll keep it in mind when you plan your runs."
+  - key: t_noodles
+    at: "-18d 12:40"
+    user: Sameer wants to try Noodle House 27 after the critique
+    assistant: Saved that as something to try with Sameer.
+  - key: t_coffee
+    at: "-58d 21:10"
+    user: Save this pour-over video for Kabir's coffee set
+    assistant: Saved the link. Reading it now.

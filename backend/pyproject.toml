@@ -142,7 +142,7 @@ source_modules = [
     "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
-    "secondmind.links", "secondmind.core",
+    "secondmind.links", "secondmind.persona", "secondmind.core",
 ]
 forbidden_modules = ["fastapi", "starlette", "uvicorn"]
 
@@ -153,7 +153,7 @@ source_modules = [
     "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
-    "secondmind.links",
+    "secondmind.links", "secondmind.persona",
 ]
 forbidden_modules = [
     "sqlalchemy", "asyncpg", "alembic", "anthropic", "openai", "redis", "arq", "langfuse",
@@ -181,7 +181,7 @@ source_modules = [
     "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
-    "secondmind.links", "secondmind.core",
+    "secondmind.links", "secondmind.persona", "secondmind.core",
 ]
 forbidden_modules = ["secondmind.memory.store", "secondmind.memory.adapters.store"]
 allow_indirect_imports = true
