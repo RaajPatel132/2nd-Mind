@@ -300,10 +300,23 @@ class WorkspaceOut(_Out):
     kind: WorkspaceKind
     timezone: str
     created_at: datetime
+    seed_version: int | None = Field(
+        default=None, description="For a copy of the sample persona: the seed's version."
+    )
+    moved_days: int | None = Field(
+        default=None, description="For a copy of the sample persona: how many days it was moved."
+    )
 
     @classmethod
     def of(cls, ws: Workspace) -> "WorkspaceOut":
-        return cls(id=ws.id, kind=ws.kind, timezone=ws.timezone, created_at=ws.created_at)
+        return cls(
+            id=ws.id,
+            kind=ws.kind,
+            timezone=ws.timezone,
+            created_at=ws.created_at,
+            seed_version=ws.seed_version,
+            moved_days=ws.moved_days,
+        )
 
 
 class UserOut(_Out):

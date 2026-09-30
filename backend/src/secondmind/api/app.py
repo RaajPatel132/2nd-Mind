@@ -10,7 +10,7 @@ from pydantic.json_schema import models_json_schema
 
 from secondmind.api.errors import install_error_handlers
 from secondmind.api.middleware import RequestIdMiddleware
-from secondmind.api.routes import auth, dev, memory, system, turns
+from secondmind.api.routes import auth, dev, memory, persona, system, turns
 from secondmind.api.schemas import SSE_EVENTS
 from secondmind.api.security import RequestGuardMiddleware, SecurityHeadersMiddleware
 from secondmind.api.services import Services
@@ -92,6 +92,7 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(turns.router)
     app.include_router(memory.router)
+    app.include_router(persona.router)
     if settings.dev_helpers:  # only where sign-in is open: development and test, never production
         app.include_router(dev.router)
     app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]

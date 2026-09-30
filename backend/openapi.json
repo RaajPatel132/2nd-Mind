@@ -5429,6 +5429,30 @@
           "kind": {
             "$ref": "#/components/schemas/WorkspaceKind"
           },
+          "moved_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a copy of the sample persona: how many days it was moved.",
+            "title": "Moved Days"
+          },
+          "seed_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a copy of the sample persona: the seed's version.",
+            "title": "Seed Version"
+          },
           "timezone": {
             "title": "Timezone",
             "type": "string"
@@ -6180,6 +6204,146 @@
         "summary": "Meta",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/v1/persona": {
+      "post": {
+        "description": "The caller's copy of the sample persona, made the first time and the same one after.",
+        "operationId": "open_persona",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Open Persona",
+        "tags": [
+          "persona"
+        ]
+      }
+    },
+    "/v1/persona/reset": {
+      "post": {
+        "description": "Replace the caller's copy with a fresh one, moved to today.",
+        "operationId": "reset_persona",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not signed in"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found (or not yours)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many turns in a minute; `Retry-After` says how long to wait",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset Persona",
+        "tags": [
+          "persona"
         ]
       }
     },

@@ -17,10 +17,13 @@ from secondmind.config import AppConfig, Settings
 from secondmind.core import Clock, FetchEvent, WorkspaceScope, utc_now
 from secondmind.evals import seed_into
 from secondmind.jobs.adapters import QueueClient
-from secondmind.memory.adapters import SCHEMA_HEAD
+from secondmind.memory import Memory
+from secondmind.memory.adapters import SCHEMA_HEAD, Database
 from secondmind.metering import QuotaLimits, Quotas, SpendGate
 from secondmind.metering.adapters import SqlLedgerReader, build_gate
 from secondmind.observability import Tracer, get_logger
+from secondmind.persona import SEED_FILE, PersonaService, load_persona
+from secondmind.persona.adapters import SqlPersonaStore
 
 log = get_logger(__name__)
 
@@ -48,6 +51,8 @@ class Services:
     checks: Mapping[str, Check]
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
     clock: Clock = utc_now
+    # The sample persona: a copy of it per visitor (S4.11). None when the seed file is missing.
+    persona: PersonaService | None = None
     # Dev only (DEV_AUTH): seed the recall fixture into a workspace; the number of memories.
     seed_recall: Callable[[WorkspaceScope], Awaitable[int]] | None = None
 
@@ -170,6 +175,7 @@ async def build_services(config: AppConfig) -> Services:
     async def close_gate() -> None:
         await gate.store.aclose()  # type: ignore[attr-defined]
 
+    persona = _persona_service(config, db, runtime.memory)
     return Services(
         config=config,
         identity=SqlIdentityStore(db),
@@ -184,5 +190,25 @@ async def build_services(config: AppConfig) -> Services:
             "providers": provider_check(config),
         },
         closers=[runtime.aclose, queue.aclose, close_gate],
+        persona=persona,
         seed_recall=seed_recall if settings.dev_helpers else None,
+    )
+
+
+def _persona_service(config: AppConfig, db: Database, memory: Memory) -> PersonaService | None:
+    """The persona service, from the seed file in the resources directory (S4.11)."""
+    path = config.settings.resources_dir / SEED_FILE
+    try:
+        seed = load_persona(path)
+    except FileNotFoundError:
+        log.warning("persona.seed_missing", path=str(path))
+        return None
+    return PersonaService(
+        identity=SqlIdentityStore(db),
+        store=SqlPersonaStore(db),
+        memory=memory,
+        seed_id=seed.id,
+        timezone=seed.timezone,
+        anchor=seed.anchor,
+        clock=utc_now,
     )
