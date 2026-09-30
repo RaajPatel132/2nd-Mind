@@ -10,6 +10,11 @@
 # tag is put back. `--no-migrate` (a rollback) skips the migration: one release of schema
 # compatibility makes that safe (NFR-10.4).
 #
+# SKIP_PULL=1, PRUNE_IMAGES=0 and COMPOSE_PROJECT=<name> are for trying the script on a machine
+# whose images are local (`make up-prodlike` builds them): use a project name of your own there,
+# because `secondmind` is also the local dev stack's, and shares its volume names. On a host they
+# stay unset.
+#
 # Settings live in /etc/secondmind/host.conf (KEY=value): ENV_SOURCE (ssm|file), ENV_FILE, and
 # for ssm: SSM_PATH and AWS_REGION. The env file holds the app's values, IMAGE_REGISTRY included.
 set -euo pipefail
@@ -33,7 +38,7 @@ log() { echo "==> $(date -u +%H:%M:%S) $*"; }
 
 # IMAGE_REGISTRY (ghcr.io/<owner>) is in the env file; only the tag changes per call.
 compose() {
-  IMAGE_TAG="$1" docker compose -p secondmind -f "$APP_DIR/compose.prodlike.yaml" \
+  IMAGE_TAG="$1" docker compose -p "${COMPOSE_PROJECT:-secondmind}" -f "$APP_DIR/compose.prodlike.yaml" \
     --env-file "$ENV_FILE" "${@:2}"
 }
 
@@ -62,7 +67,9 @@ chmod 600 "$ENV_FILE"
 
 # ------------------------------------------------------------------ images and the data services
 log "pull"
-compose "$TAG" pull api web caddy postgres redis
+if [[ "${SKIP_PULL:-}" != 1 ]]; then
+  compose "$TAG" pull api web caddy postgres redis
+fi
 compose "$TAG" up -d --no-deps --wait postgres redis
 
 # ------------------------------------------------------------------ migrate, as a one-off
@@ -75,15 +82,16 @@ if ((MIGRATE)); then
 fi
 
 # ------------------------------------------------------------------ bring the stack up
+# `up` itself fails when the api never turns healthy (the web tier waits for it), so a failed start
+# and a release that never answers /readyz are the same case: put the previous release back.
 log "up"
-compose "$TAG" up -d --no-deps api worker web caddy
-if ! wait_ready "$TAG"; then
+if ! compose "$TAG" up -d --no-deps api worker web caddy || ! wait_ready "$TAG"; then
   echo "release $TAG did not become ready in ${READY_TIMEOUT_S}s" >&2
   compose "$TAG" logs --tail 40 api >&2 || true
   if [[ -n "$PREVIOUS" && "$PREVIOUS" != "$TAG" ]]; then
     log "putting $PREVIOUS back"
-    compose "$PREVIOUS" up -d --no-deps api worker web caddy
-    wait_ready "$PREVIOUS" && log "$PREVIOUS is serving again" || echo "$PREVIOUS is not ready either" >&2
+    compose "$PREVIOUS" up -d --no-deps api worker web caddy || true
+    if wait_ready "$PREVIOUS"; then log "$PREVIOUS is serving again"; else echo "$PREVIOUS is not ready either" >&2; fi
   fi
   exit 1
 fi
@@ -95,7 +103,9 @@ echo "$TAG" > "$STATE_DIR/current"
 # Keep this release and the one before it; anything older is re-pulled if a rollback needs it.
 keep_a="$TAG"
 keep_b="$(cat "$STATE_DIR/previous" 2>/dev/null || echo "$TAG")"
-docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '/secondmind-(api|web):|^secondmind-(api|web):' \
-  | grep -v -e ":$keep_a\$" -e ":$keep_b\$" | xargs -r docker rmi >/dev/null 2>&1 || true
-docker image prune -f >/dev/null 2>&1 || true
+if [[ "${PRUNE_IMAGES:-1}" == 1 ]]; then
+  docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '/secondmind-(api|web):|^secondmind-(api|web):' \
+    | grep -v -e ":$keep_a\$" -e ":$keep_b\$" | xargs -r docker rmi >/dev/null 2>&1 || true
+  docker image prune -f >/dev/null 2>&1 || true
+fi
 log "release $TAG is serving"

@@ -19,4 +19,4 @@ $compose exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB
 echo "==> migrating to this checkout's head (a dump from an older release is brought forward)"
 $compose run --rm migrate
 $compose up -d --wait api worker
-echo "restored. Sign in as the users the dump had; check with: docker compose exec -T postgres psql -U \$POSTGRES_USER -d \$POSTGRES_DB -c 'select count(*) from items'"
+echo "restored. Sign in as the users the dump had; check with: docker compose exec -T postgres psql -U \$POSTGRES_USER -d \$POSTGRES_DB -c 'select count(*) from memory_items'"
