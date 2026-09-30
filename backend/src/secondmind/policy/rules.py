@@ -56,6 +56,9 @@ class OpFacts:
     edits_existing: bool = False
     # Only moves an item in or out of the quick layer: housekeeping, not a change to a memory.
     layer_only: bool = False
+    # Content read for a saved link fills in that one item: its title, summary and tags, on an
+    # item the same turn created (S4.7). Nothing else content makes may change an item.
+    fills_own_item: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,6 +95,8 @@ def p_trust_1(op: OpFacts, ctx: PolicyContext) -> PolicyVerdict | None:
         return None
     if op.core_write:
         return _held("P-TRUST-1", "a core write proposed from content, not from you")
+    if op.op is WriteOp.UPDATE and op.fills_own_item and not op.creates_trigger:
+        return None  # the page fills in the link it was read for, and nothing else
     if op.kind is Kind.RULE or op.creates_trigger or op.op not in CONTENT_ALLOWED_OPS:
         return _blocked("P-TRUST-1", "content can't change rules, set triggers or edit memory")
     return None

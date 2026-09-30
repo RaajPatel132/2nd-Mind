@@ -9,6 +9,7 @@ from secondmind.jobs.memory import (
     JobDeps,
     backfill_conversation,
     expire_quick,
+    fetch_link,
     index_conversation,
     rerender_entity_keys,
 )
@@ -16,6 +17,7 @@ from secondmind.jobs.spend import RECONCILE_SPEND_EVERY_MINUTES, reconcile_spend
 
 JOBS = (
     heartbeat,
+    fetch_link,
     rerender_entity_keys,
     expire_quick,
     index_conversation,
@@ -33,6 +35,7 @@ __all__ = [
     "JobDeps",
     "backfill_conversation",
     "expire_quick",
+    "fetch_link",
     "heartbeat",
     "index_conversation",
     "reconcile_spend",

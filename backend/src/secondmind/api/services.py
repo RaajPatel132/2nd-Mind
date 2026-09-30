@@ -14,7 +14,7 @@ from secondmind.agent.adapters import (
 from secondmind.auth import IdentityStore, SessionSigner
 from secondmind.auth.adapters import SqlIdentityStore
 from secondmind.config import AppConfig, Settings
-from secondmind.core import Clock, WorkspaceScope, utc_now
+from secondmind.core import Clock, FetchEvent, WorkspaceScope, utc_now
 from secondmind.evals import seed_into
 from secondmind.jobs.adapters import QueueClient
 from secondmind.memory.adapters import SCHEMA_HEAD
@@ -117,10 +117,30 @@ async def build_services(config: AppConfig) -> Services:
             )
         except Exception:
             log.warning("conversation.index_enqueue_failed", turn_id=str(turn.id))
+        # A link saved in this turn is read by the worker (S4.7): the turn has already said so.
+        try:
+            for stored in await runtime.runner.store(scope).events(turn.id):
+                event = stored.event
+                if isinstance(event, FetchEvent) and event.status == "pending":
+                    await queue.enqueue(
+                        "fetch_link",
+                        str(scope.workspace_id),
+                        str(scope.user_id),
+                        str(event.item_id),
+                    )
+        except Exception:
+            log.warning("links.fetch_enqueue_failed", turn_id=str(turn.id))
+
+    async def link_rate(scope: WorkspaceScope) -> float | None:
+        return await gate.rate_limited(f"fetch:{scope.user_id}", settings.rate_fetches_per_minute)
 
     gate = build_gate(config)
     runtime = build_runtime(
-        config, on_entities_renamed=rerender, on_turn_completed=index_turn, gate=gate
+        config,
+        on_entities_renamed=rerender,
+        on_turn_completed=index_turn,
+        gate=gate,
+        link_rate=link_rate,
     )
     db = runtime.db
     await require_embedding_dimensions(db, settings.embed_dimensions)

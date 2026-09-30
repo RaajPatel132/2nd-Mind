@@ -55,6 +55,7 @@ from secondmind.evals.fixture import (
 from secondmind.evals.harness import Pass
 from secondmind.evals.runs import CaseRecord
 from secondmind.ingestion import IngestSettings, offline_responders, replay_key
+from secondmind.links import LinkReading, LinkSaver
 from secondmind.memory import Memory
 from secondmind.memory.adapters import EMBED_DIMENSIONS, Database, sql_memory
 from secondmind.observability import NullTracer
@@ -268,6 +269,8 @@ def eval_runner(
     now: datetime,
     settings: RecallSettings | None = None,
     resources: Path = DEFAULT_RESOURCES_DIR,
+    link_saver: LinkSaver | None = None,
+    link_reading: LinkReading | None = None,
 ) -> TurnRunner:
     """A turn runner on Postgres with the clock frozen at ``now``. Cases share a seeded
     workspace, so it keeps no chat history: each question is asked on its own, whatever ran
@@ -291,6 +294,8 @@ def eval_runner(
         recall=settings or RecallSettings(),
         conversation_stores=lambda s: SqlConversationStore(db, s),
         history_turns=0,
+        link_saver=link_saver,
+        link_reading=link_reading,
     )
 
 

@@ -46,7 +46,9 @@ class LinkStore(Protocol):
     async def by_canonical(self, canonical_url: str) -> LinkSource | None: ...
 
 
-RateCheck = Callable[[], Awaitable[float | None]]  # seconds to wait, or None when allowed
+# Seconds to wait, or None when this person may fetch another link now.
+RateCheck = Callable[[WorkspaceScope], Awaitable[float | None]]
+LinkStores = Callable[[WorkspaceScope], LinkStore]
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,12 +97,12 @@ def without_links(message: str, urls: Sequence[str]) -> str:
 class LinkSaver:
     def __init__(
         self,
-        store: LinkStore,
+        stores: LinkStores,
         memory: Memory,
         settings: SaveSettings | None = None,
         rate_check: RateCheck | None = None,
     ) -> None:
-        self._store = store
+        self._stores = stores
         self._memory = memory
         self._settings = settings or SaveSettings()
         self._rate = rate_check
@@ -117,13 +119,14 @@ class LinkSaver:
         urls = extract_urls(message)
         if not urls:
             return None
+        store = self._stores(scope)
         said = without_links(message, urls)
         result = LinkSaveResult(remaining=said)
         ops: list[CreateItem] = []
         sources: list[LinkSource] = []
         seen: set[str] = set()
         for index, url in enumerate(urls):
-            link = await self._judge(url, index, seen)
+            link = await self._judge(store, scope, url, index, seen)
             if link.duplicate_of is None:
                 item, source = self._item(
                     scope=scope, turn_id=turn_id, url=url, said=said, now=now, link=link
@@ -140,14 +143,16 @@ class LinkSaver:
             writer.add(*ops)
             await writer.commit()
             for source in sources:
-                await self._store.add(source)
+                await store.add(source)
         await self._report(trail, result)
         result.reply = self._reply(result)
         return result
 
     # ------------------------------------------------------------------ one link
 
-    async def _judge(self, url: str, index: int, seen: set[str]) -> SavedLink:
+    async def _judge(
+        self, store: LinkStore, scope: WorkspaceScope, url: str, index: int, seen: set[str]
+    ) -> SavedLink:
         host = host_for_log(url)
         canonical = canonical_url(url)
         if index >= self._settings.max_links:
@@ -156,14 +161,14 @@ class LinkSaver:
             parse_url(url, allow_hosts=self._settings.allow_hosts)
         except FetchRefusedError as exc:
             return self._refused(url, host, exc.rule)
-        if self._rate is not None and await self._rate() is not None:
+        if self._rate is not None and await self._rate(scope) is not None:
             return self._refused(url, host, "rate_limited")
         if canonical in seen:
             return SavedLink(
                 uuid.UUID(int=0), url, FetchStatus.PENDING, host, duplicate_of=uuid.UUID(int=0)
             )
         seen.add(canonical)
-        existing = await self._store.by_canonical(canonical)
+        existing = await store.by_canonical(canonical)
         if existing is not None:
             return SavedLink(
                 existing.item_id, url, FetchStatus.PENDING, host, duplicate_of=existing.item_id

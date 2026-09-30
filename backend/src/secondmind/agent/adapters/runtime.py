@@ -11,6 +11,8 @@ from secondmind.config import AppConfig, Settings
 from secondmind.core import ConfigError, WorkspaceScope
 from secondmind.corrections import correction_responders
 from secondmind.ingestion import IngestSettings, load_replay, offline_responders
+from secondmind.links import LinkReading, LinkSaver, ReadSettings, SaveSettings
+from secondmind.links.adapters import FetchPolicy, SafeFetcher, SqlLinkStore
 from secondmind.memory import Memory, MemorySettings
 from secondmind.memory.adapters import Database, embedding_dimensions, sql_memory
 from secondmind.observability import Tracer, get_logger
@@ -84,6 +86,15 @@ def ingest_settings(settings: Settings) -> IngestSettings:
     )
 
 
+def link_fetch_policy(settings: Settings) -> FetchPolicy:
+    return FetchPolicy(
+        timeout_s=settings.link_fetch_timeout_s,
+        max_bytes=settings.link_max_bytes,
+        max_redirects=settings.link_max_redirects,
+        allow_hosts=settings.allow_private_hosts,
+    )
+
+
 def fake_script(settings: Settings) -> FakeScript:
     """Unscripted fake calls replay the golden ingestion and recall cases, else use honest
     heuristics."""
@@ -103,6 +114,7 @@ def build_runtime(
     on_turn_completed: TurnCompletedHook | None = None,
     script: FakeScript | None = None,
     gate: CallGuard | None = None,
+    link_rate: Callable[[WorkspaceScope], Awaitable[float | None]] | None = None,
 ) -> Runtime:
     settings = config.settings
     db = Database(str(settings.database_url), pool_size=settings.database_pool_size)
@@ -120,6 +132,9 @@ def build_runtime(
     def conversation_stores(scope: WorkspaceScope) -> SqlConversationStore:
         return SqlConversationStore(db, scope)
 
+    def link_stores(scope: WorkspaceScope) -> SqlLinkStore:
+        return SqlLinkStore(db, scope)
+
     runner = TurnRunner(
         router=router,
         prompts=config.prompts,
@@ -136,6 +151,22 @@ def build_runtime(
         trigger_threshold=settings.trigger_similarity_threshold,
         conversation_stores=conversation_stores,
         on_turn_completed=on_turn_completed,
+        link_saver=LinkSaver(
+            link_stores,
+            memory,
+            SaveSettings(
+                max_links=settings.max_links_per_message,
+                allow_hosts=settings.allow_private_hosts,
+            ),
+            link_rate,
+        ),
+        link_reading=LinkReading(
+            fetcher=SafeFetcher(link_fetch_policy(settings)),
+            stores=link_stores,
+            settings=ReadSettings(
+                chunk_tokens=settings.link_chunk_tokens, max_chunks=settings.link_max_chunks
+            ),
+        ),
     )
     return Runtime(config=config, db=db, router=router, tracer=tracer, memory=memory, runner=runner)
 

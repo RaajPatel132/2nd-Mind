@@ -168,14 +168,26 @@ def heuristic_intent(message: str) -> dict[str, Any]:
 
 
 def heuristic_digest(block: str) -> dict[str, Any]:
-    """Offline stand-in for the digest step: a title and summary lifted from the quoted page (its
-    first lines), no tags or cues. Only the text inside the data block is read."""
+    """Offline stand-in for the digest step: the title and a short summary lifted from the quoted
+    page (its ``Title:`` and ``Description:`` lines, else its first lines), no tags or cues. Only
+    the text inside the data block is read."""
     match = re.search(r"<<<DATA:[0-9a-f]+[^\n]*>>>\n(.*?)\n<<<END DATA:", block, re.DOTALL)
     body = match.group(1) if match else block
     lines = [line.strip() for line in body.splitlines() if line.strip()]
-    title = lines[0][:120] if lines else "Untitled page"
-    summary = " ".join(" ".join(lines[1:]).split()[:40]) or "offline fake: nothing to summarise"
-    return {"title": title, "summary": summary, "tags": [], "cues": []}
+    fields = {k.lower(): v.strip() for k, _, v in (ln.partition(":") for ln in lines) if v.strip()}
+    title = fields.get("title") or (lines[0] if lines else "Untitled page")
+    rest = [
+        ln
+        for ln in lines
+        if not re.match(r"^(Title|Site|Author|Published|Description|Channel|Duration):", ln)
+    ]
+    summary = fields.get("description") or " ".join(" ".join(rest).split()[:40])
+    return {
+        "title": title[:120],
+        "summary": summary or "offline fake: nothing to summarise",
+        "tags": [],
+        "cues": [],
+    }
 
 
 def heuristic_note(message: str) -> dict[str, Any]:

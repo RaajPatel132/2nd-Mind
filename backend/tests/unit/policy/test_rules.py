@@ -300,3 +300,46 @@ def test_every_rule_has_an_allowed_a_held_or_blocked_case() -> None:
 
     fired = {rule for _, _, _, d, rule in CASES if d is not PolicyDecision.ALLOWED}
     assert {rule_id for rule_id, _ in RULES} <= fired
+
+
+def test_content_may_fill_in_the_one_link_item_it_was_read_for_and_nothing_else() -> None:
+    fills = OpFacts(
+        op=WriteOp.UPDATE,
+        kind=Kind.RESOURCE,
+        trust=Trust.CONTENT_DERIVED,
+        origin="content",
+        edits_existing=True,
+        fills_own_item=True,
+    )
+    assert evaluate(fills, PolicyContext()).decision is PolicyDecision.ALLOWED
+    # The same edit to any other item (or of other fields) is blocked, as before.
+    other = OpFacts(
+        op=WriteOp.UPDATE,
+        kind=Kind.RESOURCE,
+        trust=Trust.CONTENT_DERIVED,
+        origin="content",
+        edits_existing=True,
+    )
+    verdict = evaluate(other, PolicyContext())
+    assert verdict.decision is PolicyDecision.BLOCKED
+    assert verdict.rule_id == "P-TRUST-1"
+    # A core write from content is still held, even on its own item.
+    core = OpFacts(
+        op=WriteOp.UPDATE,
+        kind=Kind.RESOURCE,
+        trust=Trust.CONTENT_DERIVED,
+        origin="content",
+        core_write=True,
+        fills_own_item=True,
+    )
+    assert evaluate(core, PolicyContext()).decision is PolicyDecision.HELD
+    # Content still can't create a trigger or touch a rule, own item or not.
+    trigger = OpFacts(
+        op=WriteOp.UPDATE,
+        kind=Kind.RESOURCE,
+        trust=Trust.CONTENT_DERIVED,
+        origin="content",
+        creates_trigger=True,
+        fills_own_item=True,
+    )
+    assert evaluate(trigger, PolicyContext()).decision is PolicyDecision.BLOCKED

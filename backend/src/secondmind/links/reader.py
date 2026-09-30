@@ -12,9 +12,10 @@ import re
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Protocol
-from uuid import uuid4
+from typing import Any, Protocol
+from uuid import UUID, uuid4
 
+from secondmind.core import WorkspaceScope
 from secondmind.links.adapters.extract import ExtractedPage, extract_html, extract_plain
 from secondmind.links.adapters.fetcher import FetchedPage, Fetcher, FetchFailedError
 from secondmind.links.adapters.video import VideoInfo, read_video
@@ -44,6 +45,26 @@ RULE_LABELS: dict[str, str] = {
     "rate_limited": "too many links just now",
     "dns": "address didn't resolve",
 }
+
+
+class LinkSourceStore(Protocol):
+    """What the read needs of the links table (``SqlLinkStore`` is the real one)."""
+
+    async def by_item(self, item_id: UUID) -> LinkSource | None: ...
+
+    async def update(self, item_id: UUID, **changes: Any) -> None: ...
+
+    async def replace_chunks(self, item_id: UUID, chunks: Sequence[ChunkRow]) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class LinkReading:
+    """Everything the worker needs to read a saved link: the safe fetcher, the links table for a
+    workspace, and the read's settings."""
+
+    fetcher: Fetcher
+    stores: Callable[[WorkspaceScope], LinkSourceStore]
+    settings: "ReadSettings"
 
 
 class DigestFn(Protocol):
@@ -417,6 +438,8 @@ __all__ = [
     "DigestFn",
     "EmbedFn",
     "LinkReader",
+    "LinkReading",
+    "LinkSourceStore",
     "ReadResult",
     "ReadSettings",
     "VideoInfo",

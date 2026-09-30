@@ -29,14 +29,14 @@ async def save(
     async def sink(event: object) -> None:
         events.append(event)
 
-    async def rate_check() -> float | None:
+    async def rate_check(_: object) -> float | None:
         return rate
 
     mem, _ = memory()
     ws = scope()
     t = turn(ws)
     store = store or Store()
-    saver = LinkSaver(store, mem, SaveSettings(max_links=max_links), rate_check)
+    saver = LinkSaver(lambda _: store, mem, SaveSettings(max_links=max_links), rate_check)
     result = await saver.save(
         scope=ws,
         turn_id=t.turn_id,

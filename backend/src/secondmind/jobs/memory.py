@@ -123,3 +123,26 @@ async def backfill_conversation(ctx: dict[str, Any]) -> dict[str, int]:
             raise JobDeferred(exc.reason) from exc
     log.info("job.backfill_conversation_done", workspaces=len(workspaces), rows=rows)
     return {"workspaces": len(workspaces), "rows": rows}
+
+
+async def fetch_link(
+    ctx: dict[str, Any], workspace_id: str, user_id: str, item_id: str
+) -> dict[str, str]:
+    """Read a saved link's page (S4.7): fetch it safely, digest, chunk and embed it, and write the
+    result onto the turn that saved the link. Checks the spend gate like any job that needs a
+    model; its cost is the person's, on that turn's ledger."""
+    deps = _deps(ctx)
+    await _may_use_models(deps)
+    workspace = await deps.identity.get_workspace(uuid.UUID(workspace_id))
+    if workspace is None:
+        log.warning("job.fetch_link_skipped", reason="workspace gone")
+        return {"status": "skipped"}
+    scope = WorkspaceScope(workspace_id=workspace.id, user_id=uuid.UUID(user_id))
+    try:
+        result = await deps.runner.read_link(scope, uuid.UUID(item_id), timezone=workspace.timezone)
+    except CallsRefusedError as exc:  # the switch flipped, or a cap was reached, while it ran
+        raise JobDeferred(exc.reason) from exc
+    if result is None:
+        return {"status": "skipped"}
+    log.info("job.fetch_link_done", status=result.status.value, rule=result.rule)
+    return {"status": result.status.value}

@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from zoneinfo import ZoneInfo
 
 from secondmind.agent.graph import TurnContext, build_turn_graph
+from secondmind.agent.link_reading import LinkWorkflow
 from secondmind.agent.trail import EventRecorded, StepStarted, TurnTrail
 from secondmind.agent.turns import (
     StepModel,
@@ -80,6 +81,7 @@ from secondmind.ingestion import (
     TurnNow,
     summarise_commit,
 )
+from secondmind.links import LinkReading, LinkSaver, ReadResult
 from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
 from secondmind.metering import Block
 from secondmind.observability import (
@@ -257,6 +259,8 @@ class TurnRunner:
         trigger_threshold: float = 0.6,
         conversation_stores: ConversationStores | None = None,
         on_turn_completed: TurnCompletedHook | None = None,
+        link_saver: LinkSaver | None = None,
+        link_reading: LinkReading | None = None,
     ) -> None:
         self._router = router
         self._prompts = prompts
@@ -276,6 +280,20 @@ class TurnRunner:
         self._corrector = Corrector()
         self._conversation_stores = conversation_stores
         self._on_completed = on_turn_completed
+        self._link_saver = link_saver
+        self._link_workflow = (
+            LinkWorkflow(
+                reading=link_reading,
+                router=router,
+                prompts=prompts,
+                stores=stores,
+                memory=memory,
+                clock=clock,
+                embed_dimensions=embed_dimensions,
+            )
+            if link_reading is not None
+            else None
+        )
         self._graph = build_turn_graph()
         self._tasks: set[asyncio.Task[None]] = set()
 
@@ -449,21 +467,41 @@ class TurnRunner:
             to_save = save_message(offer) if isinstance(offer, SaveOffer) else turn.input
 
             async def ingest() -> IngestOutcome:
-                outcome = await self._pipeline.run(
-                    IngestContext(
+                # The links in the message are saved at once, as pending resource items (the page
+                # is read afterwards, by the worker); the rest of the message is saved as usual.
+                # A message with a secret in it is left to the secret path, links and all.
+                saved = None
+                message = to_save
+                if self._link_saver is not None and not run.secret_kinds:
+                    saved = await self._link_saver.save(
                         scope=run.scope,
                         turn_id=turn.id,
                         message=to_save,
-                        now=now,
-                        emit=emit,
-                        steps=steps,
-                        memory=self._memory,
-                        default_lead_minutes=run.default_lead_minutes,
-                        secret_found=bool(run.secret_kinds),
-                        secret_kinds=run.secret_kinds,
+                        now=turn.started_at,
                         trail=trail,
                     )
-                )
+                    if saved is not None:
+                        message = saved.remaining
+                if saved is not None and saved.only_links:
+                    outcome = IngestOutcome(reply=saved.reply)
+                else:
+                    outcome = await self._pipeline.run(
+                        IngestContext(
+                            scope=run.scope,
+                            turn_id=turn.id,
+                            message=message,
+                            now=now,
+                            emit=emit,
+                            steps=steps,
+                            memory=self._memory,
+                            default_lead_minutes=run.default_lead_minutes,
+                            secret_found=bool(run.secret_kinds),
+                            secret_kinds=run.secret_kinds,
+                            trail=trail,
+                        )
+                    )
+                    if saved is not None:
+                        outcome.reply = f"{outcome.reply}\n\n{saved.reply}".strip()
                 outcomes.append(outcome)
                 return outcome
 
@@ -912,6 +950,22 @@ class TurnRunner:
         if turn is None:
             return 0
         return await self._indexer(scope, store, turn_id).index(_said_turn(turn))
+
+    # ------------------------------------------------------------------ links
+
+    async def read_link(
+        self,
+        scope: WorkspaceScope,
+        item_id: uuid.UUID,
+        *,
+        timezone: str,
+        pasted: str | None = None,
+    ) -> ReadResult | None:
+        """Read a saved link's page (or use text the person added for it) and write the result
+        onto the turn that saved it (S4.7). None when there's nothing to do."""
+        if self._link_workflow is None:
+            return None
+        return await self._link_workflow.run(scope, item_id, timezone=timezone, pasted=pasted)
 
     async def backfill_conversation(self, scope: WorkspaceScope, *, page: int = 100) -> int:
         """Index every completed chat turn of a workspace not indexed yet (the one-off job)."""

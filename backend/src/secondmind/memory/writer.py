@@ -24,6 +24,7 @@ from secondmind.core import (
     DiffEntry,
     EntityKind,
     ItemStatus,
+    Kind,
     Layer,
     LinkType,
     MemoryDiffEvent,
@@ -32,6 +33,7 @@ from secondmind.core import (
     PolicyVerdict,
     ReconcileInfo,
     Sensitivity,
+    Source,
     TargetType,
     ToolCallEvent,
     TurnEvent,
@@ -512,12 +514,25 @@ class MemoryWriter:
                 core_write=core_write,
                 edits_existing=item_id not in created,
                 layer_only=_layer_only(op),
+                fills_own_item=self._fills_own_item(op, before),
             )
         if target_type is TargetType.TRIGGER:
             return OpFacts(**base, target="trigger", edits_existing=True)
         if target_type is TargetType.ENTITY:
             return OpFacts(**base, target="entity", edits_existing=not getattr(op, "create", False))
         return OpFacts(**base, target=target_type.value)
+
+    def _fills_own_item(self, op: Op, before: ItemRecord) -> bool:
+        """Content read for a saved link may set that link's title, summary and tags: the item
+        is a link this very turn saved, and the change is nothing but those fields."""
+        return (
+            isinstance(op, UpdateItem)
+            and op.origin == "content"
+            and before.created_by_turn_id == self._turn.turn_id
+            and before.kind is Kind.RESOURCE
+            and before.source is Source.LINK
+            and set(op.changes) <= {"title", "summary", "tags"}
+        )
 
     @staticmethod
     def _item_changes(op: Op, before: ItemRecord) -> dict[str, Any]:  # noqa: PLR0911
