@@ -40,3 +40,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0033](0033-supported-postgres-features.md) | The Postgres features we rely on, checked against RDS Postgres 16 | accepted |
 | [0034](0034-web-hardening-and-staging-access.md) | Web hardening and staging access | accepted |
 | [0035](0035-one-environment-on-one-host.md) | One environment on one host, built to move | accepted |
+| [0036](0036-link-fetching-and-fetch-safety.md) | Link fetching and fetch safety | accepted (part 1) |
