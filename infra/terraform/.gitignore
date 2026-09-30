@@ -1,0 +1,9 @@
+# Terraform working files. The two roots' lock files (.terraform.lock.hcl) ARE committed; the
+# modules are only ever test roots, and get a throwaway one.
+modules/**/.terraform.lock.hcl
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log

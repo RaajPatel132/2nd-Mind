@@ -1,0 +1,12 @@
+# Findings accepted on purpose (ADR-0035). Each needs a reason a reviewer can weigh; the rest of
+# what trivy finds (HIGH and CRITICAL) fails `make tf-scan`.
+
+# The backup bucket is encrypted with S3-managed keys (AES256). A customer-managed KMS key costs
+# $1 a month, and the credits-only rule says nothing may add a paid service the credits wouldn't
+# cover. The bucket is private, versioned and TLS-only, and holds nightly dumps that expire in 30 days.
+AWS-0132
+
+# The host needs to reach the internet: GHCR for images, Ubuntu's mirrors for updates, the model
+# providers, Langfuse Cloud and Let's Encrypt, none of which have a fixed address range. Nothing
+# reaches the host except 80 and 443, and there is no SSH.
+AWS-0104

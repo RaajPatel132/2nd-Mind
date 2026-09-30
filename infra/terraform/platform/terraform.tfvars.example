@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (gitignored) and fill in. Guide step 8.
+domain_name = "example.com"         # the domain you bought
+alert_email = "you@example.com"     # the two Budgets email this address
+github_repo = "your-user/2nd-Mind"  # owner/name of the public repository
+
+# The host fetches its setup from this branch at first boot. Until the sprint is merged the code
+# is on the sprint branch; after the merge, use "main".
+repo_ref = "sprint-4-production-and-links"

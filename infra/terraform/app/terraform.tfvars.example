@@ -1,0 +1,3 @@
+# Copy to terraform.tfvars (gitignored) and fill in. Guide step 9.
+github_repo = "your-user/2nd-Mind"    # owner/name of the public repository
+# create_oidc_provider = false        # only if this AWS account already has GitHub's OIDC provider
