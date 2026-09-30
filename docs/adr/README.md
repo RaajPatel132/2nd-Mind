@@ -42,3 +42,5 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0035](0035-one-environment-on-one-host.md) | One environment on one host, built to move | accepted |
 | [0036](0036-link-fetching-and-fetch-safety.md) | Link fetching and fetch safety | accepted |
 | [0037](0037-content-is-data.md) | Content is data: the trust boundary for links | accepted |
+| [0038](0038-the-sample-persona.md) | The sample persona: template, copy and rebase | accepted |
+| [0039](0039-guests.md) | Guests: device ids, per-address caps and expiry | accepted |
