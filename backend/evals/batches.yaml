@@ -1,32 +1,14 @@
-# The spending plan of Sprint 3.9 (R.1): each live run labelled LIVE_BATCH=<name> may spend at
+# The spending plan of Sprint 4 (S4.1): each live run labelled LIVE_BATCH=<name> may spend at
 # most what is left of its batch's allowance, and a batch that ends up over 125% of it halts
-# every later run until the halt is cleared and explained. Totals are in evals/runs/.spend.
+# every later run until the halt is cleared and explained. Totals are in evals/runs/.spend, and
+# the sprint's total is LIVE_TOTAL_BUDGET_USD=1.50. Sprint 3.9's plan (B1 to B7 and R, $4.00) is
+# in its report; its spend book is archived beside this sprint's as evals/runs/.spend.s3.9.
 #
-# B1 and B2 came in under (they spent $0.04 and $0.08) and B3 needed more than planned: the full
-# runs found prompt gaps, and each fix (extract@4 and @5, plan@3, rerank@3, intent@3) was re-run
-# on its own cases. The three together keep the planned $1.15. B3 then took another $0.20 from the
-# reserve for the last passes (extract@6, intent@3 and the final recall run); the sprint total
-# is unchanged. B5 took $0.10 from the reserve as well: the latency comparisons and both
-# fallback runs each needed the full ten cases.
-#
-# B6 took $0.45 more (and B7 gave back $0.10) from the unallocated part of the $4: the first full ingest run of the chosen
-# routing (extract@6) stopped at its budget with five misses; two were fixtures (a golden that
-# looked for one wording), one was the model's tags deciding "Added detail" on a repeated wish,
-# one was the word "null" written into a field, and one was a prompt gap (a moved plan marked
-# "moved" itself), so extract@7 exists and the ingest suite ran again on it. A fresh extract call
-# costs $0.01, so the two halves of that run (21 cases, then the other 9) and the full recall run
-# (estimated at $0.28 because the estimate ignores the cache) needed the room.
-#
-# B7 took $0.15 from the reserve R: the smoke-live script needed four runs on the stack while
-# its checks were being made right ($0.09 each), and the E2E subset, the runbook trials, the
-# recall fixture seed and the walkthrough on real models added $0.18 more. The reserve is
-# explained in the sprint report.
+# Every batch runs free on the fake provider first (L0, `--dry-run`, no allowance needed).
+# After a fix, re-run only the cases it touched; the response cache serves repeat calls.
 batches:
-  B1: {allowance_usd: 0.05, what: "smoke: live-check, contract tests, 5 intent + 3 ingest + 3 recall on candidate B"}
-  B2: {allowance_usd: 0.10, what: "probe: a stratified ~25% sample on candidates A and B"}
-  B3: {allowance_usd: 1.20, what: "full suites on the lead candidate, and the re-runs after each triage fix"}
-  B4: {allowance_usd: 0.60, what: "the Sonnet 5 reference subset (8 ingest + 10 recall)"}
-  B5: {allowance_usd: 0.45, what: "step-ups on their own cases; the fallback path on 10 cases"}
-  B6: {allowance_usd: 0.95, what: "one full run of the chosen routing; the vector bench on real embeddings"}
-  B7: {allowance_usd: 0.55, what: "smoke-live, the walkthrough, the rehearsal stack"}
-  R: {allowance_usd: 0.10, what: "reserve: only for a surprise, each use explained in the report"}
+  L1: {allowance_usd: 0.10, what: "smoke: 3 link, 2 injection and 2 persona cases"}
+  L2: {allowance_usd: 0.45, what: "full: links (13), injection (10), link recall (5), persona (10)"}
+  L3: {allowance_usd: 0.20, what: "fixes: the failed cases again, from the cache"}
+  L4: {allowance_usd: 0.45, what: "production: smoke-prod three times, the walkthrough, the template's embeddings"}
+  R: {allowance_usd: 0.30, what: "reserve: only for a surprise, each use explained in the report"}

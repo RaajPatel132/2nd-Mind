@@ -28,7 +28,8 @@ SPEND_FILE = RUNS_DIR / ".spend"
 BATCHES_FILE = DEFAULT_RESOURCES_DIR / "evals" / "batches.yaml"
 
 DEFAULT_RUN_BUDGET = Decimal("0.50")
-DEFAULT_TOTAL_BUDGET = Decimal("4.00")
+# Sprint 4 counts its own live spend (S4.1): $1.50, not the $4 that S3.9 had.
+DEFAULT_TOTAL_BUDGET = Decimal("1.50")
 # A batch that spends more than this share of its allowance stops the plan.
 STOP_RATIO = Decimal("1.25")
 

@@ -103,6 +103,16 @@ def test_budgets_come_from_the_environment() -> None:
     assert Budgets.from_env({"ALLOW_EXPENSIVE": "1"}).allow_expensive
 
 
+def test_the_sprint_total_defaults_to_this_sprints_share() -> None:
+    assert Budgets.from_env({}).total == Decimal("1.50")
+
+
+def test_the_spending_plan_adds_up_to_the_sprint_total() -> None:
+    from secondmind.evals.spend import read_allowances  # noqa: PLC0415
+
+    assert sum(read_allowances().values()) == Decimal("1.50")
+
+
 # ------------------------------------------------------------------ the response cache
 
 
