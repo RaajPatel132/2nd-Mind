@@ -155,6 +155,9 @@ class FakeProvider:
         self._embedding_dim = embedding_dim
         self.requests: list[AdapterRequest] = []
         self.embed_calls: list[list[str]] = []
+        # Set to make every embedding call fail (an outage of the embedding provider); a test
+        # clears it to bring the provider back.
+        self.embed_error: ProviderErrorKind | None = None
         self._seen_prefixes: set[str] = set()
 
     @property
@@ -224,6 +227,10 @@ class FakeProvider:
         self, model: str, texts: Sequence[str], dimensions: int | None = None
     ) -> AdapterEmbedding:
         self.embed_calls.append(list(texts))
+        if self.embed_error is not None:
+            raise ProviderError(
+                self.embed_error, "fake: the embedding provider is down", provider=self._name
+            )
         dim = dimensions or self._embedding_dim
         vectors = [_embedding(text, dim) for text in texts]
         usage = RawUsage(input_tokens=sum(estimate_tokens(t) for t in texts), output_tokens=0)

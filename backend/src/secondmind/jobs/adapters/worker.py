@@ -19,11 +19,13 @@ from secondmind.config import load_app_config
 from secondmind.core import ConfigError
 from secondmind.jobs import (
     DEPS_KEY,
+    EMBED_PENDING_EVERY_MINUTES,
     EXPIRE_QUICK_EVERY_MINUTES,
     JOBS,
     RECONCILE_SPEND_EVERY_MINUTES,
     JobDeferred,
     JobDeps,
+    embed_pending_chunks,
     expire_quick,
     reconcile_spend,
 )
@@ -100,6 +102,12 @@ class WorkerSettings:
             expire_quick,
             name="cron:expire_quick",
             minute=set(range(0, 60, EXPIRE_QUICK_EVERY_MINUTES)),
+            unique=True,
+        ),
+        cron(
+            embed_pending_chunks,
+            name="cron:embed_pending_chunks",
+            minute=set(range(0, 60, EMBED_PENDING_EVERY_MINUTES)),
             unique=True,
         ),
         cron(

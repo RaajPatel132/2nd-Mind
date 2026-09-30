@@ -10,6 +10,7 @@ from secondmind.agent import StepModel, StoredEvent, TraceStatus, Turn, TurnKind
 from secondmind.auth import User, Workspace, WorkspaceKind
 from secondmind.core import AgentStep, EntityRole, Layer, Tier, TurnEvent, UsageTotals, UsdAmount
 from secondmind.corrections import CorrectionChanges
+from secondmind.links import LinkSource
 from secondmind.memory import (
     EntityRecord,
     HeldWriteRecord,
@@ -250,6 +251,19 @@ class ItemDetailOut(_Out):
     entities: list[ItemEntityRecord]
     links: list[LinkRecord]
     triggers: list[TriggerRecord]
+    source: LinkSource | None = Field(
+        default=None,
+        description="For a saved link: where it came from and how reading it went (S4.7).",
+    )
+
+
+class ItemContentIn(BaseModel):
+    """Text the person pastes for a link that could only be read in part ("Add the text"). It is
+    content, not something they said: it goes through the same digest and chunking (ADR-0037)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=100_000)
 
 
 class EntityDetailOut(_Out):

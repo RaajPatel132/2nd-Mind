@@ -183,6 +183,28 @@ export interface paths {
         patch: operations["edit_item"];
         trace?: never;
     };
+    "/v1/items/{item_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Item Content
+         * @description "Add the text" to a link that could only be read in part: the pasted text goes through the
+         *     same digest and chunking as a page, as content (S4.7). It calls a model, so it stops when
+         *     new turns are stopped (the kill switch, the caps, the quota).
+         */
+        post: operations["add_item_content"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -997,6 +1019,11 @@ export interface components {
             /** Word Count */
             word_count?: number | null;
         };
+        /**
+         * FetchStatus
+         * @enum {string}
+         */
+        FetchStatus: "pending" | "full" | "partial" | "failed" | "refused";
         /** FieldChange */
         FieldChange: {
             /** After */
@@ -1107,6 +1134,15 @@ export interface components {
             v: number;
         };
         /**
+         * ItemContentIn
+         * @description Text the person pastes for a link that could only be read in part ("Add the text"). It is
+         *     content, not something they said: it goes through the same digest and chunking (ADR-0037).
+         */
+        ItemContentIn: {
+            /** Text */
+            text: string;
+        };
+        /**
          * ItemDetailOut
          * @description A plain view of one memory item, its entity roles, links and triggers (S2.11).
          */
@@ -1116,6 +1152,8 @@ export interface components {
             item: components["schemas"]["ItemRecord"];
             /** Links */
             links: components["schemas"]["LinkRecord"][];
+            /** @description For a saved link: where it came from and how reading it went (S4.7). */
+            source?: components["schemas"]["LinkSource"] | null;
             /** Triggers */
             triggers: components["schemas"]["TriggerRecord"][];
         };
@@ -1355,6 +1393,11 @@ export interface components {
          * @enum {string}
          */
         Layer: "core" | "quick" | "archive";
+        /**
+         * LinkKind
+         * @enum {string}
+         */
+        LinkKind: "article" | "video" | "link";
         /** LinkRecord */
         LinkRecord: {
             /**
@@ -1378,6 +1421,81 @@ export interface components {
              * Format: uuid
              */
             src_item_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+        };
+        /** LinkSource */
+        LinkSource: {
+            /** Author */
+            author?: string | null;
+            /** Bytes Read */
+            bytes_read?: number | null;
+            /** Canonical Url */
+            canonical_url: string;
+            /** Channel */
+            channel?: string | null;
+            /**
+             * Chunk Count
+             * @default 0
+             */
+            chunk_count: number;
+            /** Content Type */
+            content_type?: string | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Detail */
+            detail?: {
+                [key: string]: unknown;
+            };
+            /** Duration S */
+            duration_s?: number | null;
+            /** Extraction Method */
+            extraction_method?: string | null;
+            /** Fetch Reason */
+            fetch_reason?: string | null;
+            /** @default pending */
+            fetch_status: components["schemas"]["FetchStatus"];
+            /** Fetched At */
+            fetched_at?: string | null;
+            /** Final Host */
+            final_host?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            kind: components["schemas"]["LinkKind"];
+            /** Published At */
+            published_at?: string | null;
+            /** Redirects */
+            redirects?: number | null;
+            /** Site */
+            site?: string | null;
+            /** Status Code */
+            status_code?: number | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /**
+             * Turn Id
+             * Format: uuid
+             */
+            turn_id: string;
+            /** Updated At */
+            updated_at?: string | null;
+            /** Url */
+            url: string;
+            /** Word Count */
+            word_count?: number | null;
             /**
              * Workspace Id
              * Format: uuid
@@ -3072,6 +3190,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TurnOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found (or not yours) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_item_content: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemContentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDetailOut"];
                 };
             };
             /** @description Not signed in */

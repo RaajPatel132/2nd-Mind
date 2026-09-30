@@ -160,6 +160,18 @@ class SqlLinkStore:
             )
             return [(r.id, r.item_id, r.text) for r in rows]
 
+    async def set_embeddings(
+        self, vectors: Sequence[tuple[uuid.UUID, list[float]]], model: str
+    ) -> None:
+        """Give chunk keys the vectors a later job computed for them."""
+        async with self._db.workspace(self._scope) as s:
+            for key_id, vector in vectors:
+                await s.execute(
+                    update(_KEYS)
+                    .where(_KEYS.c.id == key_id, _KEYS.c.key_kind == KeyKind.CHUNK.value)
+                    .values(embedding=vector, embedding_model=model, updated_at=utc_now())
+                )
+
     async def count_sources(self) -> int:
         async with self._db.workspace(self._scope) as s:
             return int((await s.execute(select(func.count()).select_from(_SOURCES))).scalar_one())

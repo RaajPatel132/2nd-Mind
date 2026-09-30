@@ -523,12 +523,12 @@ class MemoryWriter:
         return OpFacts(**base, target=target_type.value)
 
     def _fills_own_item(self, op: Op, before: ItemRecord) -> bool:
-        """Content read for a saved link may set that link's title, summary and tags: the item
-        is a link this very turn saved, and the change is nothing but those fields."""
+        """Content read for a saved link may set that link item's title, summary and tags: the
+        item is a resource made from a link, and the change is nothing but those fields. (Which
+        item is the worker's business: it passes the one whose page it read.)"""
         return (
             isinstance(op, UpdateItem)
             and op.origin == "content"
-            and before.created_by_turn_id == self._turn.turn_id
             and before.kind is Kind.RESOURCE
             and before.source is Source.LINK
             and set(op.changes) <= {"title", "summary", "tags"}

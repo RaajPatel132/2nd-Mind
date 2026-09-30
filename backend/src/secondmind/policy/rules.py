@@ -56,8 +56,8 @@ class OpFacts:
     edits_existing: bool = False
     # Only moves an item in or out of the quick layer: housekeeping, not a change to a memory.
     layer_only: bool = False
-    # Content read for a saved link fills in that one item: its title, summary and tags, on an
-    # item the same turn created (S4.7). Nothing else content makes may change an item.
+    # Content read for a saved link fills in that link's item: its title, summary and tags
+    # (S4.7). Nothing else content makes may change an item.
     fills_own_item: bool = False
 
 

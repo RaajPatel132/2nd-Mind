@@ -57,6 +57,12 @@ class LinkSourceStore(Protocol):
 
     async def replace_chunks(self, item_id: UUID, chunks: Sequence[ChunkRow]) -> None: ...
 
+    async def unembedded_chunks(self, limit: int = 200) -> list[tuple[UUID, UUID, str]]: ...
+
+    async def set_embeddings(
+        self, vectors: Sequence[tuple[UUID, list[float]]], model: str
+    ) -> None: ...
+
 
 @dataclass(frozen=True, slots=True)
 class LinkReading:

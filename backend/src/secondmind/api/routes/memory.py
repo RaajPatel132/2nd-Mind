@@ -10,12 +10,13 @@ from fastapi import APIRouter, Query
 
 from secondmind.api.deps import ServicesDep, UserIdDep, find_turn
 from secondmind.api.errors import ERROR_RESPONSES
-from secondmind.api.routes.turns import turn_out
+from secondmind.api.routes.turns import turn_out, usage_and_block
 from secondmind.api.schemas import (
     EntitiesOut,
     EntityDetailOut,
     HeldWriteOut,
     HeldWritesOut,
+    ItemContentIn,
     ItemDetailOut,
     ItemEditIn,
     SnoozeIn,
@@ -27,7 +28,8 @@ from secondmind.api.schemas import (
 )
 from secondmind.api.services import Services
 from secondmind.auth import Workspace, resolve_scope
-from secondmind.core import NotFoundError, WorkspaceScope
+from secondmind.core import NotFoundError, ValidationFailedError, WorkspaceScope
+from secondmind.links import FetchStatus
 from secondmind.memory import MemoryReader
 
 router = APIRouter(prefix="/v1", tags=["memory"])
@@ -158,7 +160,26 @@ async def get_item(item_id: uuid.UUID, services: ServicesDep, user_id: UserIdDep
         entities=await reader.item_entities([item_id]),
         links=await reader.links([item_id]),
         triggers=await reader.triggers([item_id]),
+        source=await services.runner.link_source(scope, item_id),
     )
+
+
+@router.post("/items/{item_id}/content", response_model=ItemDetailOut, responses=ERROR_RESPONSES)
+async def add_item_content(
+    item_id: uuid.UUID, body: ItemContentIn, services: ServicesDep, user_id: UserIdDep
+) -> ItemDetailOut:
+    """ "Add the text" to a link that could only be read in part: the pasted text goes through the
+    same digest and chunking as a page, as content (S4.7). It calls a model, so it stops when
+    new turns are stopped (the kill switch, the caps, the quota)."""
+    _, scope, workspace = await _find(services, user_id, lambda r: r.item(item_id), "item")
+    source = await services.runner.link_source(scope, item_id)
+    if source is None or source.fetch_status is FetchStatus.PENDING:
+        raise ValidationFailedError("that isn't a saved link that's waiting for text")
+    _, block = await usage_and_block(services, user_id)
+    if block is not None:
+        raise ValidationFailedError(block.message)
+    await services.runner.read_link(scope, item_id, timezone=workspace.timezone, pasted=body.text)
+    return await get_item(item_id, services, user_id)
 
 
 @router.patch("/items/{item_id}", response_model=TurnOut, responses=ERROR_RESPONSES)

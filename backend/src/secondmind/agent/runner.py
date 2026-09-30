@@ -81,7 +81,7 @@ from secondmind.ingestion import (
     TurnNow,
     summarise_commit,
 )
-from secondmind.links import LinkReading, LinkSaver, ReadResult
+from secondmind.links import LinkReading, LinkSaver, LinkSource, ReadResult
 from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
 from secondmind.metering import Block
 from secondmind.observability import (
@@ -966,6 +966,18 @@ class TurnRunner:
         if self._link_workflow is None:
             return None
         return await self._link_workflow.run(scope, item_id, timezone=timezone, pasted=pasted)
+
+    async def embed_pending_chunks(self, scope: WorkspaceScope) -> int:
+        """Embed page passages saved without a vector (S4.7, ledger 47)."""
+        if self._link_workflow is None:
+            return 0
+        return await self._link_workflow.embed_pending(scope)
+
+    async def link_source(self, scope: WorkspaceScope, item_id: uuid.UUID) -> LinkSource | None:
+        """Where a saved link came from and how reading it went (None for any other item)."""
+        if self._link_workflow is None:
+            return None
+        return await self._link_workflow.reading.stores(scope).by_item(item_id)
 
     async def backfill_conversation(self, scope: WorkspaceScope, *, page: int = 100) -> int:
         """Index every completed chat turn of a workspace not indexed yet (the one-off job)."""

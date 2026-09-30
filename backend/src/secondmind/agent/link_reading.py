@@ -114,6 +114,39 @@ class LinkWorkflow:
         await self._report(turns, source, result, started)
         return result
 
+    async def embed_pending(self, scope: WorkspaceScope) -> int:
+        """Embed page passages that were saved without a vector (the provider was down when the
+        page was read). Their cost is the app's (system): nobody asked for this call."""
+        links = self.reading.stores(scope)
+        pending = await links.unembedded_chunks()
+        if not pending:
+            return 0
+        turns = self.stores(scope)
+        by_item: dict[uuid.UUID, list[tuple[uuid.UUID, str]]] = {}
+        for key_id, item_id, chunk_text in pending:
+            by_item.setdefault(item_id, []).append((key_id, chunk_text))
+        done = 0
+        for item_id, keys in by_item.items():
+            source = await links.by_item(item_id)
+            item = await self.memory.reader(scope).item(item_id)
+            if source is None or item is None or item.status is not ItemStatus.ACTIVE:
+                continue
+            steps = self._steps(scope, turns, source, system=True)
+            try:
+                vectors = await steps.embed([f"{item.title}\n\n{t}" for _, t in keys])
+            except CallsRefusedError:
+                raise
+            except ProviderUnavailableError:
+                continue  # still down: the next run tries again
+            if vectors is None or len(vectors) != len(keys):
+                continue
+            await links.set_embeddings(
+                [(key_id, v) for (key_id, _), v in zip(keys, vectors, strict=True)],
+                steps.embedding_model,
+            )
+            done += len(keys)
+        return done
+
     # ------------------------------------------------------- the item, on the original turn
 
     async def _write_item(
@@ -204,13 +237,20 @@ class LinkWorkflow:
 
     # ------------------------------------------------------------------ model steps
 
-    def _steps(self, scope: WorkspaceScope, turns: TurnStore, source: LinkSource) -> ModelSteps:
+    def _steps(
+        self,
+        scope: WorkspaceScope,
+        turns: TurnStore,
+        source: LinkSource,
+        *,
+        system: bool = False,
+    ) -> ModelSteps:
         async def on_ledger(
             call: ModelCall, span: GenerationSpan, prompt: object, output: str
         ) -> None:
             # The read belongs to the turn that saved the link: its calls go on that turn's ledger
             # as the person's cost (their save), and so count against their quota.
-            await turns.record_usage(source.turn_id, call.to_event(), system=False)
+            await turns.record_usage(source.turn_id, call.to_event(), system=system)
 
         return ModelSteps(
             router=self.router,

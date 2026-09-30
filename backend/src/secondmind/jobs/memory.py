@@ -146,3 +146,27 @@ async def fetch_link(
         return {"status": "skipped"}
     log.info("job.fetch_link_done", status=result.status.value, rule=result.rule)
     return {"status": result.status.value}
+
+
+EMBED_PENDING_EVERY_MINUTES = 15
+
+
+async def embed_pending_chunks(ctx: dict[str, Any]) -> dict[str, int]:
+    """Embed the passages of saved pages that were stored without a vector because the embedding
+    provider was down (ledger 47, S4.7). Until then they are found by words. Deferred, like any job
+    that needs a model, while the spend gate is stopping new model work."""
+    deps = _deps(ctx)
+    await _may_use_models(deps)
+    workspaces = await deps.identity.all_workspaces()
+    embedded = 0
+    for workspace in workspaces:
+        scope = WorkspaceScope(workspace_id=workspace.id, user_id=workspace.owner_user_id)
+        try:
+            embedded += await deps.runner.embed_pending_chunks(scope)
+        except CallsRefusedError as exc:
+            raise JobDeferred(exc.reason) from exc
+        except Exception:
+            log.exception("job.embed_pending_failed", workspace_id=str(workspace.id))
+    if embedded:
+        log.info("job.embed_pending_done", chunks=embedded)
+    return {"embedded": embedded}

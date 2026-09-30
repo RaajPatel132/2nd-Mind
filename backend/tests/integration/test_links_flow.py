@@ -54,14 +54,14 @@ class Fetcher:
         )
 
 
-def runner_for(db: Database, fetcher: Fetcher) -> tuple[TurnRunner, Any]:
+def runner_for(db: Database, fetcher: Fetcher, router: Any = None) -> tuple[TurnRunner, Any]:
     from datetime import UTC, datetime  # noqa: PLC0415
 
     stores = lambda scope: SqlLinkStore(db, scope)  # noqa: E731
     memory = Memory(sql_memory(db))
     runner = eval_runner(
         db,
-        fake_router(load_cases()),
+        router or fake_router(load_cases()),
         now=datetime(2026, 9, 30, 10, 0, tzinfo=UTC),
         link_saver=LinkSaver(stores, memory, SaveSettings()),
         link_reading=LinkReading(
@@ -249,4 +249,80 @@ async def test_recall_finds_what_only_the_page_body_says_and_hands_over_the_pass
     item = await runner.memory.reader(scope).item(hit.item_id)
     assert item is not None
     assert item.content_ref == "https://garden.example/moon"
+    await runner.aclose()
+
+
+async def test_passages_saved_without_vectors_get_them_later_and_are_found_by_words_until_then(
+    app_db: Database, identity: SqlIdentityStore
+) -> None:
+    from secondmind.providers import ProviderErrorKind  # noqa: PLC0415
+
+    scope = await workspace(identity)
+    router = fake_router(load_cases())
+    provider = router._adapters["fake"]
+    provider.embed_error = ProviderErrorKind.CONNECTION
+    body = html(f"<article><h1>Sleep well</h1><p>{PROSE}</p></article>")
+    runner, stores = runner_for(app_db, Fetcher(body), router)
+    links = stores(scope)
+    turn = await say(app_db, runner, scope, "https://journal.example/sleep for later")
+    (pending,) = await fetch_events(app_db, scope, turn)
+    result = await runner.read_link(scope, pending.item_id, timezone="UTC")
+    assert result is not None
+    assert result.status is FetchStatus.FULL  # the page is read and saved even with embeddings down
+    chunks = await links.chunks(pending.item_id)
+    assert chunks
+    assert all(c.embedding is None for c in chunks)
+    assert len(await links.unembedded_chunks()) == len(chunks)
+
+    # Still down: nothing is embedded, nothing is lost.
+    assert await runner.embed_pending_chunks(scope) == 0
+    assert len(await links.unembedded_chunks()) == len(chunks)
+
+    # The provider answers again: the periodic job gives every passage its vector.
+    provider.embed_error = None
+    assert await runner.embed_pending_chunks(scope) == len(chunks)
+    assert await links.unembedded_chunks() == []
+    embedded = await links.chunks(pending.item_id)
+    assert all(c.embedding is not None and c.embedding_model for c in embedded)
+    await runner.aclose()
+
+
+async def test_text_added_to_a_partly_read_link_completes_it_and_counts_as_content(
+    app_db: Database, identity: SqlIdentityStore
+) -> None:
+    scope = await workspace(identity)
+    walled = html(
+        "<article><h1>Big story</h1><p>The first paragraph is free to read, and says the council "
+        "voted on Tuesday to approve the new plan after a long debate about its cost.</p>"
+        "<div class='paywall'>Subscribe to continue reading.</div></article>"
+    )
+    runner, stores = runner_for(app_db, Fetcher(walled))
+    links = stores(scope)
+    turn = await say(app_db, runner, scope, "https://news.example/big-story for the council")
+    (pending,) = await fetch_events(app_db, scope, turn)
+    first = await runner.read_link(scope, pending.item_id, timezone="UTC")
+    assert first is not None
+    assert (first.status, first.reason) == (FetchStatus.PARTIAL, "paywall")
+    assert first.message == "Could only read part of it (paywall). Add the text?"
+    partial = await links.by_item(pending.item_id)
+    assert partial is not None
+    assert partial.fetch_status is FetchStatus.PARTIAL
+
+    # "Add the text": pasted text goes through the same digest and chunking, as content.
+    pasted = PROSE + " The council's plan also moves the library to the old mill."
+    done = await runner.read_link(scope, pending.item_id, timezone="UTC", pasted=pasted)
+    assert done is not None
+    assert done.status is FetchStatus.FULL
+    assert done.extraction_method == "pasted"
+    source = await links.by_item(pending.item_id)
+    assert source is not None
+    assert source.fetch_status is FetchStatus.FULL
+    assert any("old mill" in c.text for c in await links.chunks(pending.item_id))
+    item = await runner.memory.reader(scope).item(pending.item_id)
+    assert item is not None
+    assert item.trust.value == "user_stated"  # the person's own words stay theirs
+    assert "council" in item.text
+    # A link that has been read in full takes no more text by this route's own rule.
+    full = [e for e in await fetch_events(app_db, scope, turn) if e.status == "full"]
+    assert full
     await runner.aclose()

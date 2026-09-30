@@ -4,10 +4,12 @@ from secondmind.jobs.heartbeat import heartbeat
 from secondmind.jobs.memory import (
     DEFER_SECONDS,
     DEPS_KEY,
+    EMBED_PENDING_EVERY_MINUTES,
     EXPIRE_QUICK_EVERY_MINUTES,
     JobDeferred,
     JobDeps,
     backfill_conversation,
+    embed_pending_chunks,
     expire_quick,
     fetch_link,
     index_conversation,
@@ -23,17 +25,20 @@ JOBS = (
     index_conversation,
     backfill_conversation,
     reconcile_spend,
+    embed_pending_chunks,
 )
 
 __all__ = [
     "DEFER_SECONDS",
     "DEPS_KEY",
+    "EMBED_PENDING_EVERY_MINUTES",
     "EXPIRE_QUICK_EVERY_MINUTES",
     "JOBS",
     "RECONCILE_SPEND_EVERY_MINUTES",
     "JobDeferred",
     "JobDeps",
     "backfill_conversation",
+    "embed_pending_chunks",
     "expire_quick",
     "fetch_link",
     "heartbeat",
