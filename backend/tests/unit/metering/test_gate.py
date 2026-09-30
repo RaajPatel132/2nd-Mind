@@ -170,6 +170,18 @@ async def test_a_store_that_cant_be_read_fails_closed() -> None:
     assert await gate.refuse() == "spend_check_unavailable"
 
 
+async def test_a_credit_flag_that_cant_be_read_fails_closed_too() -> None:
+    class CreditFlagDown(InMemorySpendStore):
+        async def credit_out(self, provider: str) -> bool:
+            raise ConnectionError("redis went away between two reads")
+
+    ticker = Ticker()
+    gate, _, _ = gate_over(CreditFlagDown(ticker), ticker)
+    block = await gate.app_block()
+    assert block is not None
+    assert block.reason is BlockReason.UNAVAILABLE
+
+
 async def test_a_blocked_turns_reply_says_why_and_what_still_works() -> None:
     gate, _, _ = gate_over(kill_switch=True)
     block = await gate.app_block()

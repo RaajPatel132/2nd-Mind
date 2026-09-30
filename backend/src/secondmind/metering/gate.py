@@ -160,29 +160,26 @@ class SpendGate:
 
     async def app_block(self) -> Block | None:
         """What stops every new turn, if anything. Fails closed if the store can't be read."""
+        limits = self._limits
+        providers = limits.providers or tuple(limits.credits_usd)
         try:
             if await self.kill_switch_on():
                 return Block(BlockReason.KILL_SWITCH)
             totals = await self._store.totals(self._clock())
+            out = [p for p in providers if await self._credit_used_up(p, totals)]
         except Exception:
             log.exception("spend.check_failed")
             return Block(BlockReason.UNAVAILABLE)
-        limits = self._limits
         if totals.day >= limits.daily_usd:
             return Block(BlockReason.DAILY_CAP, limits.daily_usd, totals.day)
         if totals.month >= limits.monthly_usd:
             return Block(BlockReason.MONTHLY_CAP, limits.monthly_usd, totals.month)
-        providers = limits.providers or tuple(limits.credits_usd)
-        if providers:
-            out = [p for p in providers if await self._credit_used_up(p, totals)]
-            if len(out) == len(providers):
-                used = usd(sum((totals.providers.get(p, Decimal(0)) for p in out), Decimal(0)))
-                limit = (
-                    usd(sum(limits.credits_usd.values(), Decimal(0)))
-                    if limits.credits_usd
-                    else None
-                )
-                return Block(BlockReason.PROVIDER_CREDIT, limit, used)
+        if providers and len(out) == len(providers):
+            used = usd(sum((totals.providers.get(p, Decimal(0)) for p in out), Decimal(0)))
+            limit = (
+                usd(sum(limits.credits_usd.values(), Decimal(0))) if limits.credits_usd else None
+            )
+            return Block(BlockReason.PROVIDER_CREDIT, limit, used)
         return None
 
     async def turn_block(self, quota: QuotaUsage | None) -> Block | None:
