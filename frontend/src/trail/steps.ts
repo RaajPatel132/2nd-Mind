@@ -25,6 +25,8 @@ import {
 import type { AgentStep } from '../api/client'
 import * as D from './details'
 import * as L from './labels'
+import * as FL from './linkLabels'
+import * as LK from './links'
 import * as R from './recall'
 import * as RL from './recallLabels'
 import type { StepSpec } from './types'
@@ -161,9 +163,9 @@ export const STEPS: Record<AgentStep, StepSpec> = {
   fetch: {
     icon: Globe,
     running: 'Reading the link',
-    done: () => 'Read the link',
-    chips: L.none,
-    Plain: D.ReservedPlain,
-    Tech: D.ReservedTech,
+    done: FL.fetchDone,
+    chips: FL.fetchChips,
+    Plain: LK.FetchPlain,
+    Tech: LK.FetchTech,
   },
 }

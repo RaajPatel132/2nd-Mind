@@ -90,7 +90,7 @@ function StepRow({ ctx, live, onKey }: { ctx: StepContext; live: boolean; onKey:
   const urgent = view.state === 'held' || view.state === 'refused'
   const [open, setOpen] = useState(urgent)
   const label = stepLabel(ctx)
-  const chips = view.state === 'running' || view.state === 'failed' ? [] : spec.chips(ctx).slice(0, 3)
+  const chips = view.state === 'running' || (view.state === 'failed' && view.step !== 'fetch') ? [] : spec.chips(ctx).slice(0, 3)
 
   // Held and refused open by themselves, including when a live step turns into one.
   const [wasUrgent, setWasUrgent] = useState(urgent)
@@ -99,8 +99,10 @@ function StepRow({ ctx, live, onKey }: { ctx: StepContext; live: boolean; onKey:
     if (urgent) setOpen(true)
   }
 
-  const Plain = view.state === 'failed' ? D.FailedPlain : spec.Plain
-  const Tech = view.state === 'failed' ? D.FailedTech : spec.Tech
+  // A page that couldn't be opened is a result of the fetch step, not a step that broke.
+  const broke = view.state === 'failed' && view.step !== 'fetch'
+  const Plain = broke ? D.FailedPlain : spec.Plain
+  const Tech = broke ? D.FailedTech : spec.Tech
   return (
     <motion.li
       className="trail-step"
@@ -172,7 +174,9 @@ function Timer({ view }: { view: StepView }) {
   const running = view.state === 'running'
   useEffect(() => {
     if (!running) return
-    const began = performance.now()
+    // A page is read after the turn ends, so its clock starts when the save did, not when this row mounted.
+    const waited = view.step === 'fetch' ? Math.max(0, Date.now() - Date.parse(view.startedAt)) : 0
+    const began = performance.now() - waited
     let frame = 0
     const tick = (now: number) => {
       if (ref.current) ref.current.textContent = formatMs(now - began)
@@ -182,7 +186,7 @@ function Timer({ view }: { view: StepView }) {
     return () => {
       cancelAnimationFrame(frame)
     }
-  }, [running])
+  }, [running, view.step, view.startedAt])
   return (
     <span ref={ref} className="min-w-14 text-right font-machine text-mono-sm text-fg-3 tnum">
       {running ? '0 ms' : view.latencyMs != null ? formatSeconds(view.latencyMs) : ''}

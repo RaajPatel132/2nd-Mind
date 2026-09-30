@@ -98,8 +98,12 @@ export function enrichChips({ calls }: StepContext): string[] {
 function isSecretRefusal(facts: Facts): boolean {
   return facts.policies.some((p) => p.verdict.decision === 'blocked' && p.verdict.rule_id.startsWith('P-SECRET'))
 }
+/** Only the writer's own ops count as changes: a page request or a digest write is not one. */
+function writerOps(tools: ToolCallEvent[]): ToolCallEvent[] {
+  return tools.filter((t) => t.tool.startsWith('memory.'))
+}
 function verdicts(tools: ToolCallEvent[], decision: 'allowed' | 'held' | 'blocked'): number {
-  return tools.filter((t) => t.policy?.decision === decision).length
+  return writerOps(tools).filter((t) => t.policy?.decision === decision).length
 }
 export function guardDone({ view, facts }: StepContext): string {
   if (view.state === 'refused') {
@@ -114,7 +118,7 @@ export function guardDone({ view, facts }: StepContext): string {
   return allowed ? `${plural(allowed, 'change')} allowed` : 'Nothing to check'
 }
 export function guardChips({ facts }: StepContext): string[] {
-  return [...new Set(facts.tools.map((t) => t.policy?.rule_id).filter((r): r is string => Boolean(r)))].slice(0, 3)
+  return [...new Set(writerOps(facts.tools).map((t) => t.policy?.rule_id).filter((r): r is string => Boolean(r)))].slice(0, 3)
 }
 
 export function saveDone({ facts }: StepContext): string {

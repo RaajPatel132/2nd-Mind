@@ -295,7 +295,7 @@ export function GuardPlain({ ctx }: P) {
 }
 
 export function GuardTech({ ctx }: P) {
-  const writes = ctx.facts.tools.filter((t) => t.access !== 'read')
+  const writes = ctx.facts.tools.filter((t) => t.tool.startsWith('memory.'))
   if (writes.length === 0) return <Muted>No changes to check.</Muted>
   return <ToolCalls ctx={{ ...ctx, facts: { ...ctx.facts, tools: writes } }} />
 }
@@ -413,14 +413,6 @@ export function FailedTech({ ctx }: P) {
   const e = ctx.facts.error
   if (!e) return <Muted>No error was recorded.</Muted>
   return <KV rows={[['code', e.code], ['step', e.step ?? '—'], ['retryable', e.retryable ? 'yes' : 'no']]} />
-}
-
-export function ReservedPlain() {
-  return <Plain>This step arrives with recall and links in a later version.</Plain>
-}
-
-export function ReservedTech({ ctx }: P) {
-  return <ModelLines calls={ctx.calls} />
 }
 
 // ------------------------------------------------------------------ blocked

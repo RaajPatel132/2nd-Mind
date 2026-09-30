@@ -13,6 +13,6 @@ export function stepContext(view: StepView, facts: Facts, turn: Turn | null, tim
 export function stepLabel(ctx: StepContext): string {
   const spec = STEPS[ctx.view.step]
   if (ctx.view.state === 'running') return spec.running
-  if (ctx.view.state === 'failed') return FAILED_LABEL
+  if (ctx.view.state === 'failed' && ctx.view.step !== 'fetch') return FAILED_LABEL
   return spec.done(ctx)
 }

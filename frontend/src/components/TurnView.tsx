@@ -1,6 +1,7 @@
 import { Copy, PanelRightOpen, Undo2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Citation } from '../api/client'
 import { outputOf, type ChatTurn } from '../hooks/useConversation'
 import { useAnnounce } from '../hooks/useAnnouncer'
 import { formatClock, formatSeconds, formatTokens, formatUsd, plural, shortId } from '../lib/format'
@@ -93,6 +94,7 @@ function Answer({ turn, event, facts, onInspect }: { turn: ChatTurn; event: bool
     const byMarker = new Map(cites.map((c) => [c.marker, c]))
     const parts = turn.chunks.join('').split(/(\[\d+\])/)
     return (
+      <>
       <div className={cx('measure mt-4 whitespace-pre-wrap break-words text-pretty', event ? 'text-label font-normal text-fg-2' : 'text-answer text-fg')} data-testid="assistant-message">
         {parts.map((part, i) => {
           const m = /^\[(\d+)\]$/.exec(part)
@@ -115,6 +117,8 @@ function Answer({ turn, event, facts, onInspect }: { turn: ChatTurn; event: bool
           )
         })}
       </div>
+      <PageSnippets citations={cites} />
+      </>
     )
   }
   return (
@@ -131,6 +135,24 @@ function Answer({ turn, event, facts, onInspect }: { turn: ChatTurn; event: bool
       {streaming && <span aria-hidden className="caret" />}
       {streaming && turn.chunks.length === 0 && <span className="sr-only">Thinking…</span>}
     </div>
+  )
+}
+
+/** What a saved page said, when an answer rests on it: the passage, marked as the page's words (S4.7, FR-4.3). */
+function PageSnippets({ citations }: { citations: Citation[] }) {
+  const quoted = citations.filter((c) => c.from_page && c.snippet)
+  if (quoted.length === 0) return null
+  return (
+    <ul className="measure m-0 mt-3 grid list-none gap-2 p-0" data-testid="page-snippets" aria-label="What the page says">
+      {quoted.map((c) => (
+        <li key={c.marker} className="min-w-0 border-l-2 border-line-strong pl-3" data-testid="page-snippet">
+          <p className="m-0 font-ui text-overline uppercase text-fg-3">
+            From the page · [{c.marker}] {c.title}
+          </p>
+          <p className="m-0 mt-0.5 break-words text-pretty text-label font-normal text-fg-2">“{c.snippet}”</p>
+        </li>
+      ))}
+    </ul>
   )
 }
 

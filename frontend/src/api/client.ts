@@ -28,6 +28,8 @@ export type QuotaEvent = Schemas['QuotaEvent']
 export type RetrievalEvent = Schemas['RetrievalEvent']
 export type CitationsEvent = Schemas['CitationsEvent']
 export type Citation = Schemas['Citation']
+export type FetchEvent = Schemas['FetchEvent']
+export type LinkSource = Schemas['LinkSource']
 export type SubQueryTrace = Schemas['SubQueryTrace']
 export type RetrievalCandidate = Schemas['RetrievalCandidate']
 export type Upcoming = Schemas['UpcomingOut']
@@ -147,6 +149,11 @@ export async function listEntities(workspaceId: string): Promise<Entity[]> {
 /** Edit one memory in place; it runs as its own undoable turn (S3.12). */
 export async function editItem(itemId: string, body: ItemEdit): Promise<Turn> {
   return unwrap(await api.PATCH('/v1/items/{item_id}', { params: { path: { item_id: itemId } }, body }))
+}
+
+/** "Add the text" for a link that could only be read in part: the same digest and chunking, as content (S4.7). */
+export async function addItemText(itemId: string, text: string): Promise<ItemDetail> {
+  return unwrap(await api.POST('/v1/items/{item_id}/content', { params: { path: { item_id: itemId } }, body: { text } }))
 }
 
 /** Move a pending reminder to a new time; the memory's own date stays (S3.14). */

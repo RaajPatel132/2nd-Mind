@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, getTurnEvents, listTurns, streamTurn, type Turn, type Usage } from '../api/client'
-import type { StepStart, TrailEvent } from '../trail/model'
+import { hasPendingFetch, type StepStart, type TrailEvent } from '../trail/model'
 
 export type ChatTurn = {
   key: string
@@ -46,6 +46,9 @@ function fromTurn(turn: Turn, live = false): ChatTurn {
 }
 
 const EVENT_FETCHES = 4
+/** A saved link is read after the turn ends: its turn is asked again until the read has ended. */
+const FETCH_POLL_MS = 2000
+const FETCH_POLL_FOR_MS = 15 * 60_000
 
 type Options = {
   /** A streamed turn finished (completed or failed), with its reply text. */
@@ -89,6 +92,25 @@ export function useConversation(workspaceId: string, options: Options = {}) {
     },
     [patch],
   )
+
+  // A turn that saved a link is still waiting for the page: ask again until the worker is done,
+  // so its Trail updates in place with no reload (S4.9).
+  const waitingFor = turns
+    .filter((t) => t.id !== null && t.status === 'completed' && hasPendingFetch(t.events))
+    .map((t) => t.id as string)
+    .join(',')
+  useEffect(() => {
+    if (!waitingFor) return
+    const ids = waitingFor.split(',')
+    const began = Date.now()
+    const timer = setInterval(() => {
+      if (Date.now() - began > FETCH_POLL_FOR_MS) clearInterval(timer)
+      else void loadEvents(ids)
+    }, FETCH_POLL_MS)
+    return () => {
+      clearInterval(timer)
+    }
+  }, [waitingFor, loadEvents])
 
   // History loads once per workspace (the parent remounts on workspace change).
   useEffect(() => {

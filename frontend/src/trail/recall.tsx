@@ -271,8 +271,36 @@ function FoundBy({ c }: { c: RetrievalCandidate }) {
   );
 }
 
-/** The candidate table; at phone width it becomes a list (rulebook §7). */
+/** The candidates, and which passage of a saved page matched (S4.7: "matched via page passage 5"). */
 export function Candidates({ list }: { list: RetrievalCandidate[] }) {
+  return (
+    <>
+      <CandidateTable list={list} />
+      <MatchedPassages list={list} />
+    </>
+  );
+}
+
+/** For each saved page that matched by what it says: the passage that did, as plain quoted text. */
+function MatchedPassages({ list }: { list: RetrievalCandidate[] }) {
+  const matched = list.filter((c) => c.matched_chunk != null && c.snippet);
+  if (matched.length === 0) return null;
+  return (
+    <ul className="m-0 mt-3 grid list-none gap-2 p-0" data-testid="matched-passages">
+      {matched.map((c, i) => (
+        <li key={`${c.item_id ?? c.title}-${String(i)}`} className="min-w-0 border-l-2 border-line-strong pl-3" data-testid="matched-passage">
+          <p className="m-0 font-machine text-mono-sm text-fg-3">
+            {truncate(c.title, 50)} · matched via page passage {String((c.matched_chunk ?? 0) + 1)}
+          </p>
+          <p className="m-0 mt-0.5 break-words text-label font-normal text-fg-2">“{c.snippet}”</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The candidate table; at phone width it becomes a list (rulebook §7). */
+function CandidateTable({ list }: { list: RetrievalCandidate[] }) {
   const wide = useMediaQuery("(min-width: 640px)");
   if (list.length === 0) return <Muted>Nothing was found.</Muted>;
   if (!wide) {
