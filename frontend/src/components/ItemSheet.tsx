@@ -15,6 +15,7 @@ import {
   type Turn,
 } from "../api/client";
 import { formatInZone, formatValue } from "../lib/format";
+import { LinkSection } from "./LinkSection";
 import {
   Button,
   Chip,
@@ -142,6 +143,18 @@ function Body({
     if (detail && focus === "date") dateRef.current?.focus();
   }, [detail, focus]);
 
+  // A link that is still being read fills in by itself: ask again until the worker is done.
+  const reading = detail?.source?.fetch_status === "pending";
+  useEffect(() => {
+    if (!reading) return;
+    const timer = setInterval(() => {
+      getItem(itemId).then(setDetail, () => undefined);
+    }, 2500);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [reading, itemId]);
+
   async function run(body: ItemEdit) {
     setBusy(true);
     try {
@@ -226,6 +239,17 @@ function Body({
         )}
         {item && (
           <>
+            {detail.source && (
+              <div className="mb-4">
+                <LinkSection
+                  title={item.title}
+                  summary={item.summary ?? null}
+                  source={detail.source}
+                  onUpdated={setDetail}
+                />
+                <Overline className="mt-4">What you said</Overline>
+              </div>
+            )}
             <p className="m-0 measure text-body text-fg">{item.text}</p>
             {when && (
               <p className="m-0 mt-1 font-machine text-mono-sm text-fg-3">

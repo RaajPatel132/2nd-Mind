@@ -1,5 +1,5 @@
 /** Synthetic turns for /design: every step in every state. Made-up people and places only. */
-import type { AgentStep, ModelCallEvent, Picker, StepEvent, TurnEvent } from '../api/client'
+import type { AgentStep, FetchEvent, ModelCallEvent, Picker, StepEvent, TurnEvent } from '../api/client'
 import type { StepStart, TrailEvent } from '../trail/model'
 
 const NOW = '2026-09-25T05:11:00Z'
@@ -109,6 +109,80 @@ export const REFUSED_EVENTS: TurnEvent[] = [
 export const FAILED_EVENTS: TurnEvent[] = [
   step('extract', 'failed', 20000, 0),
   { type: 'error', v: 1, code: 'provider_unavailable', message: "The model didn't answer in time, so nothing from this message was saved.", step: 'extract', retryable: true },
+]
+
+const LINK_ID = '3f5d6c1e-9a52-4a77-8b6a-0c1f2d9e7a10'
+
+function fetched(status: FetchEvent['status'], extra: Partial<FetchEvent> = {}): FetchEvent {
+  return { type: 'fetch', v: 1, item_id: LINK_ID, status, host: 'journal.example', message: '', video: false, ...extra }
+}
+
+/** A link was saved; the worker has not read the page yet (still running, for a minute or so). */
+export const FETCH_PENDING_EVENTS: TurnEvent[] = [fetched('pending', { message: 'Reading the page.' }), step('fetch', 'done', 12, 0)]
+
+/** The same link once read: the row keeps its place and takes the result. */
+export const FETCH_READ_EVENTS: TurnEvent[] = [
+  ...FETCH_PENDING_EVENTS,
+  {
+    type: 'tool_call',
+    v: 1,
+    access: 'read',
+    tool: 'web.fetch',
+    arguments: { host: 'journal.example' },
+    result_summary: 'Read Sleep well · The Journal · 1,240 words',
+    policy: { decision: 'allowed', rule_id: 'FETCH-SAFE', reason: 'A public address: one request, no cookies, nothing in the page followed.' },
+  },
+  {
+    type: 'tool_call',
+    v: 1,
+    access: 'write',
+    tool: 'digest',
+    arguments: { writes: "title, summary and tags of the link's own item" },
+    result_summary: 'the page filled in its own link, marked as content',
+    policy: { decision: 'allowed', rule_id: 'P-DEFAULT', reason: 'allowed' },
+  },
+  fetched('full', {
+    message: 'Read Sleep well · The Journal · 1,240 words',
+    title: 'Sleep well',
+    site: 'The Journal',
+    word_count: 1240,
+    status_code: 200,
+    bytes: 48213,
+    redirects: 0,
+    content_type: 'text/html',
+    extraction_method: 'readability',
+    chunks: 6,
+  }),
+  step('fetch', 'done', 2310, 6000),
+]
+
+export const FETCH_PARTIAL_EVENTS: TurnEvent[] = [
+  ...FETCH_PENDING_EVENTS,
+  fetched('partial', {
+    host: 'courier.example',
+    message: 'Could only read part of it (paywall). Add the text?',
+    reason: 'paywall',
+    status_code: 200,
+    bytes: 9120,
+    redirects: 0,
+    content_type: 'text/html',
+    extraction_method: 'readability',
+  }),
+  step('fetch', 'done', 940, 6000),
+]
+
+export const FETCH_REFUSED_EVENTS: TurnEvent[] = [
+  {
+    type: 'tool_call',
+    v: 1,
+    access: 'read',
+    tool: 'web.fetch',
+    arguments: { host: '192.168.1.20' },
+    result_summary: 'refused, no request was made',
+    policy: { decision: 'blocked', rule_id: 'private_address', reason: "Didn't open it: private address." },
+  },
+  fetched('refused', { host: '192.168.1.20', message: "Didn't open it: private address.", reason: 'private address', rule: 'private_address' }),
+  step('fetch', 'refused', 3, 0),
 ]
 
 export function withSeq(events: TurnEvent[]): TrailEvent[] {

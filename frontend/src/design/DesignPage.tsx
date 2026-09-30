@@ -4,7 +4,7 @@
  * every step state on synthetic data, and a replay button for each motion preset.
  */
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowRight, Copy, Plus, Settings, Trash2 } from 'lucide-react'
+import { ArrowRight, Copy, ExternalLink, Plus, Settings, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { factsOf, stepViews, type Facts, type StepStart, type StepView, type TrailEvent } from '../trail/model'
 import { usePacedSteps } from '../trail/pacing'
@@ -13,6 +13,7 @@ import { Trail } from '../trail/Trail'
 import {
   BrandMark,
   Button,
+  ButtonLink,
   CardButton,
   CitationChip,
   Chip,
@@ -23,6 +24,7 @@ import {
   Icon,
   IconButton,
   Kbd,
+  LinkCard,
   Overline,
   Popover,
   QuotaRing,
@@ -31,6 +33,7 @@ import {
   Skeleton,
   Tag,
   TextArea,
+  TextAreaField,
   TextField,
   Tooltip,
   Wordmark,
@@ -39,7 +42,7 @@ import {
 } from '../ui'
 import { motionProps, presets, type PresetName } from '../ui/motion'
 import { contrast } from './contrast'
-import { FAILED_EVENTS, HELD_EVENTS, PICKER, REFUSED_EVENTS, RUNNING_START, SAVE_EVENTS, withSeq } from './fixtures'
+import { FAILED_EVENTS, FETCH_PARTIAL_EVENTS, FETCH_PENDING_EVENTS, FETCH_READ_EVENTS, FETCH_REFUSED_EVENTS, HELD_EVENTS, PICKER, REFUSED_EVENTS, RUNNING_START, SAVE_EVENTS, withSeq } from './fixtures'
 import { ModelPicker } from '../components/ModelPicker'
 
 type Swatch = { name: string; bg: string; use: string; text?: boolean }
@@ -434,6 +437,27 @@ function ComponentsSection() {
             </div>
           ))}
         </Demo>
+        <Demo title="ButtonLink, TextAreaField" note="A link that looks like a Button, for leaving the app in a new tab. A labelled several-line field.">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <ButtonLink href="https://example.com" target="_blank" rel="noopener noreferrer" size="sm" icon={<Icon icon={ExternalLink} />}>
+              Open original
+            </ButtonLink>
+            <ButtonLink href="https://example.com" target="_blank" rel="noopener noreferrer" variant="ghost">
+              ghost
+            </ButtonLink>
+          </div>
+          <TextAreaField label="Paste the text of the page" hint="I read it the same way I read the page." defaultValue="" />
+        </Demo>
+        <Demo title="LinkCard" note="A saved link in every state: waiting, read, partly read, video, couldn't open, refused. Plain text only; the original opens in a new tab.">
+          <LinkCard title="Sleep well" href="https://journal.example/sleep" host="journal.example" site="The Journal" status="full" facts={['Anjali Verma', 'Thu 13 Aug']} summary="Sleep researchers keep finding that a cool, dark room and a regular bedtime matter more than any gadget." />
+          <LinkCard title="Ten minute dal tadka" href="https://www.youtube.com/watch?v=qk7Lp2xR9aE" host="www.youtube.com" site="Youtube" kind="video" status="full" facts={['Quiet Kitchen', '10:40']} summary="A quick dal tadka with tempered cumin, garlic and dried chillies." />
+          <LinkCard title="Council approves the riverside plan" href="https://courier.example/riverside-plan" host="courier.example" site="The Daily Courier" status="partial" note="paywall">
+            <Button size="sm">Add the text</Button>
+          </LinkCard>
+          <LinkCard title="the ridge loop" href="https://trailhead.example/routes/ridge-loop" host="trailhead.example" status="pending" />
+          <LinkCard title="the annual report" href="https://files.example/report" host="files.example" status="failed" />
+          <LinkCard title="that link" href="http://192.168.1.20/admin" host="192.168.1.20" status="refused" note="private address" />
+        </Demo>
         <Demo title="IconButton, Kbd, Tooltip" note="Always labelled, always a tooltip (400ms delay).">
           <div className="flex flex-wrap items-center gap-2.5">
             <IconButton icon={Copy} label="Copy" />
@@ -663,9 +687,9 @@ function ComponentsSection() {
 
 // ------------------------------------------------------------------ the Trail
 
-function TrailDemo({ title, note, events, starts = [], folded = false }: { title: string; note: string; events: TrailEvent[]; starts?: StepStart[]; folded?: boolean }) {
+function TrailDemo({ title, note, events, starts = [], folded = false, nowMs }: { title: string; note: string; events: TrailEvent[]; starts?: StepStart[]; folded?: boolean; nowMs?: number }) {
   const [isFolded, setFolded] = useState(folded)
-  const views = useMemo(() => stepViews(events, starts), [events, starts])
+  const views = useMemo(() => stepViews(events, starts, nowMs), [events, starts, nowMs])
   const facts = useMemo(() => factsOf(events), [events])
   return (
     <div className="min-w-0 rounded-md border border-line bg-canvas px-4 pb-2.5 pt-3.5" data-testid="trail-demo">
@@ -703,6 +727,15 @@ function TrailSection() {
         <TrailDemo title="Refused" note="Red. Opens by itself and says why." events={withSeq(REFUSED_EVENTS)} />
         <TrailDemo title="Failed" note="A red ring. Says what went wrong and what to do." events={withSeq(FAILED_EVENTS)} />
         <TrailDemo title="Folded" note="An older turn folds into one summary row, which expands back." events={save} folded />
+        <TrailDemo
+          title="Reading a link"
+          note="The page is read after the turn ends. The row is running while the worker reads, then takes the result in place."
+          events={withSeq(FETCH_PENDING_EVENTS)}
+          nowMs={Date.parse('2026-09-25T05:11:30Z')}
+        />
+        <TrailDemo title="A link, read" note="The result replaces the waiting row. Click for the request's facts: host, status, bytes, redirects, passages." events={withSeq(FETCH_READ_EVENTS)} />
+        <TrailDemo title="A link, partly read" note="A paywall or a page that needs JavaScript. The memory offers Add the text." events={withSeq(FETCH_PARTIAL_EVENTS)} />
+        <TrailDemo title="A link, refused" note="A private address is never requested. Red, open, with the rule." events={withSeq(FETCH_REFUSED_EVENTS)} />
       </div>
       <div className="mt-3">
         <Card>

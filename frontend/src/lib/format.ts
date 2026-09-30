@@ -121,3 +121,12 @@ export function initialsOf(email: string): string {
   const letters = parts.length > 1 ? `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}` : name.slice(0, 2)
   return letters.toUpperCase() || '?'
 }
+
+/** A video's length: "14:05", or "1:02:03" past an hour. */
+export function formatLength(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return h > 0 ? `${String(h)}:${pad(m)}:${pad(s)}` : `${String(m)}:${pad(s)}`
+}

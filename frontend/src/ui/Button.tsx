@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cx } from './cx'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -17,6 +17,13 @@ const SIZES: Record<ButtonSize, string> = {
   lg: 'h-12 px-6 text-label',
 }
 
+const BASE = [
+  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-ui',
+  'transition dur-2 ease-out hover:-translate-y-px active:scale-97 active:dur-1',
+  'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0',
+  'motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100',
+].join(' ')
+
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
   size?: ButtonSize
@@ -32,19 +39,30 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
-      className={cx(
-        'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-ui',
-        'transition dur-2 ease-out hover:-translate-y-px active:scale-97 active:dur-1',
-        'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0',
-        'motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100',
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      )}
+      className={cx(BASE, VARIANTS[variant], SIZES[size], className)}
       {...rest}
     >
       {icon}
       {children}
     </button>
+  )
+})
+
+export type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  icon?: ReactNode
+}
+
+/** A link that looks like a Button, for leaving the app (an original page opens in a new tab). */
+export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(function ButtonLink(
+  { variant = 'secondary', size = 'md', icon, className, children, ...rest },
+  ref,
+) {
+  return (
+    <a ref={ref} className={cx(BASE, VARIANTS[variant], SIZES[size], className)} {...rest}>
+      {icon}
+      {children}
+    </a>
   )
 })
