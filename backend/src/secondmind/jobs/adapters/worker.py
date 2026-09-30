@@ -25,7 +25,7 @@ from secondmind.jobs import (
     RECONCILE_SPEND_EVERY_MINUTES,
     JobDeferred,
     JobDeps,
-    embed_pending_chunks,
+    embed_pending,
     expire_quick,
     reconcile_spend,
 )
@@ -105,8 +105,8 @@ class WorkerSettings:
             unique=True,
         ),
         cron(
-            embed_pending_chunks,
-            name="cron:embed_pending_chunks",
+            embed_pending,
+            name="cron:embed_pending",
             minute=set(range(0, 60, EMBED_PENDING_EVERY_MINUTES)),
             unique=True,
         ),

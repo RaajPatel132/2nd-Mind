@@ -112,6 +112,31 @@ class KeyIndexer:
                 total += len(records)
         return KeyReport(items=len(wanted), keys=total, embedded=embedded, cache_hits=hits)
 
+    async def pending(self, limit: int = 200) -> list[KeyRecord]:
+        """Keys stored without a vector because the embedding provider was down. Passages of saved
+        pages are left to the link workflow: they are embedded with their page's title."""
+        async with self._store.transaction() as tx:
+            return await tx.unembedded_keys(limit, exclude=(KeyKind.CHUNK,))
+
+    async def embed_missing(self, limit: int = 200) -> int:
+        """Give every such key its vector now that the provider answers (ledger 47)."""
+        return await self.embed_keys(await self.pending(limit))
+
+    async def embed_keys(self, keys: Sequence[KeyRecord]) -> int:
+        """Embed exactly ``keys``. Nothing is asked of the provider when there is nothing to do,
+        and the keys stay as they are (found by words) when it is still down. Returns how many
+        keys got a vector."""
+        if self._embed is None or not keys:
+            return 0
+        texts = sorted({k.text for k in keys})
+        vectors = await self._embed(texts, 0)
+        if vectors is None or len(vectors) != len(texts):
+            return 0
+        by_text = dict(zip(texts, vectors, strict=True))
+        async with self._store.transaction() as tx:
+            await tx.set_key_embeddings([(k.id, by_text[k.text]) for k in keys], self._model)
+        return len(keys)
+
     async def _render(
         self,
         tx: MemoryTx,

@@ -105,11 +105,18 @@ class SqlMemoryTx:
         self._ws = workspace_id
 
     async def _all[R: BaseModel](
-        self, record: type[R], table: Table, *where: Any, order: Any = None
+        self,
+        record: type[R],
+        table: Table,
+        *where: Any,
+        order: Any = None,
+        limit: int | None = None,
     ) -> list[R]:
         stmt = select(*_cols(table, record)).where(*where)
         if order is not None:
             stmt = stmt.order_by(order)
+        if limit is not None:
+            stmt = stmt.limit(limit)
         rows = (await self._s.execute(stmt)).mappings().all()
         return [record.model_validate(dict(r)) for r in rows]
 
@@ -282,6 +289,22 @@ class SqlMemoryTx:
         if not item_ids:
             return []
         return await self._all(KeyRecord, _KEYS, _KEYS.c.item_id.in_(list(item_ids)))
+
+    async def unembedded_keys(self, limit: int, exclude: Sequence[KeyKind] = ()) -> list[KeyRecord]:
+        where = [_KEYS.c.embedding.is_(None)]
+        if exclude:
+            where.append(_KEYS.c.key_kind.not_in([k.value for k in exclude]))
+        return await self._all(KeyRecord, _KEYS, *where, order=_KEYS.c.created_at, limit=limit)
+
+    async def set_key_embeddings(
+        self, vectors: Sequence[tuple[uuid.UUID, list[float]]], model: str
+    ) -> None:
+        for key_id, vector in vectors:
+            await self._s.execute(
+                update(_KEYS)
+                .where(_KEYS.c.id == key_id, _KEYS.c.embedding.is_(None))
+                .values(embedding=vector, embedding_model=model)
+            )
 
     async def expired_quick(self, now: datetime) -> list[ItemRecord]:
         c = _ITEMS.c

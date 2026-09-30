@@ -50,6 +50,7 @@ from secondmind.core import (
     Clock,
     EntityRole,
     ErrorEvent,
+    ItemStatus,
     ModelCallEvent,
     NullTrail,
     QuotaEvent,
@@ -82,7 +83,7 @@ from secondmind.ingestion import (
     summarise_commit,
 )
 from secondmind.links import LinkReading, LinkSaver, LinkSource, ReadResult
-from secondmind.memory import CommitResult, Embedder, Memory, WriterTurn
+from secondmind.memory import CommitResult, Embedder, KeyRecord, Memory, WriterTurn
 from secondmind.metering import Block
 from secondmind.observability import (
     GenerationSpan,
@@ -973,6 +974,31 @@ class TurnRunner:
             return 0
         return await self._link_workflow.embed_pending(scope)
 
+    async def embed_pending_keys(self, scope: WorkspaceScope, *, timezone: str) -> int:
+        """Embed search keys that were saved without a vector because the embedding provider was
+        down (ledger 47). Each item's embeddings go on the ledger against the turn that last wrote
+        it, as the app's cost. Until then those keys are found by words."""
+        probe = self._memory.keys(scope, timezone=timezone, embed=None, model="")
+        waiting = await probe.pending()
+        if not waiting:
+            return 0
+        store = self._stores(scope)
+        by_item: dict[uuid.UUID, list[KeyRecord]] = {}
+        for key in waiting:
+            by_item.setdefault(key.item_id, []).append(key)
+        reader = self._memory.reader(scope)
+        done = 0
+        for item_id, keys in by_item.items():
+            item = await reader.item(item_id)
+            if item is None or item.status is not ItemStatus.ACTIVE:
+                continue
+            steps = self._background_steps(scope, store, item.updated_by_turn_id)
+            indexer = self._memory.keys(
+                scope, timezone=timezone, embed=self._embedder(steps), model=steps.embedding_model
+            )
+            done += await indexer.embed_keys(keys)
+        return done
+
     async def link_source(self, scope: WorkspaceScope, item_id: uuid.UUID) -> LinkSource | None:
         """Where a saved link came from and how reading it went (None for any other item)."""
         if self._link_workflow is None:
@@ -998,15 +1024,26 @@ class TurnRunner:
     ) -> ConversationIndexer:
         assert self._conversation_stores is not None  # noqa: S101 - checked by the callers
         route = self._router.route(Step.EMBED)
+        steps = self._background_steps(scope, store, turn_id)
+        return ConversationIndexer(
+            self._conversation_stores(scope),
+            embed=self._embedder(steps),
+            model=f"{route.primary.provider}:{route.primary.model}@{self._embed_dimensions}",
+        )
+
+    def _background_steps(
+        self, scope: WorkspaceScope, store: TurnStore, turn_id: uuid.UUID
+    ) -> ModelSteps:
+        """Model steps for work that has no turn of its own to trace (indexing, late embedding):
+        its calls go on the ledger against ``turn_id``, as the app's cost (R.7), so the spend caps
+        see every dollar."""
 
         async def on_ledger(
             call: ModelCall, span: GenerationSpan, prompt: object, output: str
         ) -> None:
-            # Indexing has no turn of its own to trace: its embeddings go on the ledger against
-            # the turn it indexes, as the app's cost (R.7), so spend caps see every dollar.
             await store.record_usage(turn_id, call.to_event(), system=True)
 
-        steps = ModelSteps(
+        return ModelSteps(
             router=self._router,
             prompts=self._prompts,
             trace=NullTracer().start_turn(
@@ -1019,11 +1056,6 @@ class TurnRunner:
             record=on_ledger,
             now=self._clock(),
             embed_dimensions=self._embed_dimensions,
-        )
-        return ConversationIndexer(
-            self._conversation_stores(scope),
-            embed=self._embedder(steps),
-            model=f"{route.primary.provider}:{route.primary.model}@{self._embed_dimensions}",
         )
 
     @staticmethod

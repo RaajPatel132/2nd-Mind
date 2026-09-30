@@ -268,6 +268,22 @@ class InMemoryTx:
         wanted = set(item_ids)
         return [k for k in self._t.keys.values() if k.item_id in wanted]
 
+    async def unembedded_keys(self, limit: int, exclude: Sequence[KeyKind] = ()) -> list[KeyRecord]:
+        found = [
+            k for k in self._t.keys.values() if k.embedding is None and k.key_kind not in exclude
+        ]
+        return found[:limit]
+
+    async def set_key_embeddings(
+        self, vectors: Sequence[tuple[uuid.UUID, list[float]]], model: str
+    ) -> None:
+        for key_id, vector in vectors:
+            key = self._t.keys.get(key_id)
+            if key is not None and key.embedding is None:
+                self._t.keys[key_id] = key.model_copy(
+                    update={"embedding": vector, "embedding_model": model}
+                )
+
     async def expired_quick(self, now: datetime) -> list[ItemRecord]:
         return [
             i

@@ -104,6 +104,16 @@ class MemoryTx(Protocol):
 
     async def keys(self, item_ids: Sequence[uuid.UUID]) -> list[KeyRecord]: ...
 
+    async def unembedded_keys(self, limit: int, exclude: Sequence[KeyKind] = ()) -> list[KeyRecord]:
+        """Keys stored without a vector (the embedding provider was down), oldest first."""
+        ...
+
+    async def set_key_embeddings(
+        self, vectors: Sequence[tuple[uuid.UUID, list[float]]], model: str
+    ) -> None:
+        """Give keys the vectors a later job computed for them (derived data, not logged)."""
+        ...
+
     async def expired_quick(self, now: datetime) -> list[ItemRecord]: ...
 
     async def passed_triggers(self, now: datetime) -> list[TriggerRecord]: ...

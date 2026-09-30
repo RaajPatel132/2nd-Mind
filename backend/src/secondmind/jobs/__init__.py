@@ -9,7 +9,7 @@ from secondmind.jobs.memory import (
     JobDeferred,
     JobDeps,
     backfill_conversation,
-    embed_pending_chunks,
+    embed_pending,
     expire_quick,
     fetch_link,
     index_conversation,
@@ -25,7 +25,7 @@ JOBS = (
     index_conversation,
     backfill_conversation,
     reconcile_spend,
-    embed_pending_chunks,
+    embed_pending,
 )
 
 __all__ = [
@@ -38,7 +38,7 @@ __all__ = [
     "JobDeferred",
     "JobDeps",
     "backfill_conversation",
-    "embed_pending_chunks",
+    "embed_pending",
     "expire_quick",
     "fetch_link",
     "heartbeat",
