@@ -1,0 +1,25 @@
+# Recall: a partly read link is found by what the person said about it.
+id: R02-partial-by-words
+title: a partial link is found by what the person said
+messages: ["the riverside vote https://courier.example/riverside-plan"]
+digest:
+  title: "Council approves the riverside plan"
+  summary: "The council voted on Tuesday to approve the riverside plan."
+  tags: [council]
+  cues: []
+question: Which article did I save about the riverside vote?
+model:
+  intent: {confidence: 0.97, intent: recall, reason: "You want the article you saved."}
+  plan:
+    sub_queries:
+      - about: riverside vote
+        entities: []
+        filters: {kinds: [resource]}
+        question: Which article did I save about the riverside vote?
+        shape: semantic
+        topic: riverside vote article
+  rerank:
+    - {match: riverside, score: 0.9}
+expect:
+  cites: [https://courier.example/riverside-plan]
+  one_item: true

@@ -1,0 +1,17 @@
+# Partial: a page that is only a script shell has no text to read.
+id: L08-script-only
+title: a page that needs JavaScript is kept as partial
+messages: ["the ridge loop https://trailhead.example/routes/ridge-loop"]
+digest:
+  title: "Trailhead"
+  summary: "Plan and share hiking routes."
+  tags: [hiking]
+  cues: []
+expect:
+  url: https://trailhead.example/routes/ridge-loop
+  status: partial
+  reason: needs JavaScript
+  said: the ridge loop
+  message_contains: ["Add the text?"]
+  requests: 1
+  items: {resource: 1}

@@ -1,0 +1,17 @@
+# Full: a page in Spanish, with accents, is read and kept as it was written.
+id: L06-spanish
+title: a page in another language is read in full
+messages: ["for the filter coffee https://recetas.example/cafe-de-filtro"]
+digest:
+  title: "Cómo preparar un buen café de filtro"
+  summary: "Consejos para un café de filtro, desde el molido hasta la floración y el vertido en círculos."
+  tags: [café, filtro]
+  cues: [preparing coffee at home]
+expect:
+  url: https://recetas.example/cafe-de-filtro
+  status: full
+  site: Sabores de Casa
+  title: "Cómo preparar un buen café de filtro"
+  chunks_contain: [floración, granos]
+  requests: 1
+  items: {resource: 1}

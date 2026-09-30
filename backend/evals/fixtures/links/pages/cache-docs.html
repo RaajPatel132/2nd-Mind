@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><title>Cache invalidation guide</title>
+<meta property="og:site_name" content="Stackworks Docs">
+</head><body><main>
+<h1>Cache invalidation guide</h1>
+<p>A cache holds a copy of data so that the next read is fast. The hard part is knowing when the copy is stale, because a cache that never refreshes serves wrong answers and a cache that refreshes too eagerly saves nothing. This guide covers the three strategies the library supports.</p>
+<h2>Time to live</h2>
+<p>Every entry can carry a time to live. When it expires the next read fetches fresh data and stores it again. Choose a short lifetime for data that changes often and a long one for reference data, and add a little random jitter so that many entries do not expire in the same second.</p>
+<pre><code>cache.set("profile:42", profile, ttl=300, jitter=30)</code></pre>
+<h2>Explicit invalidation</h2>
+<p>When your code changes a record it can delete the matching key straight away. This keeps readers close to the truth but every writer has to remember to do it, so keep the key names in one module and call the same helper everywhere.</p>
+<h2>Versioned keys</h2>
+<p>Instead of deleting, include a version number in the key. Bumping the version makes every old entry unreachable at once, and they simply age out. This is the safest approach for large batch updates.</p>
+</main></body></html>

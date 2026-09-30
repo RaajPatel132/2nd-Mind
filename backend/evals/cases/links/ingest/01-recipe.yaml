@@ -1,0 +1,24 @@
+# Full: a recipe article. Metadata, a summary, chunks; the person's words stay theirs.
+id: L01-recipe
+title: a recipe article is read in full
+messages: ["for the pasta night https://recipes.example/pasta-carbonara"]
+digest:
+  title: "Creamy carbonara without cream"
+  summary: "A carbonara whose sauce comes from egg yolks, pecorino and pasta water, stirred in off the heat."
+  tags: [pasta, carbonara, recipe]
+  cues: [deciding what to cook for a pasta dinner]
+expect:
+  url: https://recipes.example/pasta-carbonara
+  status: full
+  site: Hearth and Table
+  kind: link
+  title: "Creamy carbonara without cream"
+  summary_contains: [egg yolks]
+  tags: [pasta, carbonara, recipe]
+  chunks_min: 1
+  chunks_contain: [pasta water]
+  said: for the pasta night
+  requests: 1
+  reply_contains: ["Saved the link. Reading it now."]
+  message_contains: ["Read Creamy carbonara without cream"]
+  items: {resource: 1}

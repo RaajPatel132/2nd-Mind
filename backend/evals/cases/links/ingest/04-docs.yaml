@@ -1,0 +1,17 @@
+# Full: a documentation page with headings and a code block.
+id: L04-docs
+title: a documentation page is read in full
+messages: ["the cache guide https://docs.example/cache-invalidation"]
+digest:
+  title: "Cache invalidation guide"
+  summary: "Three ways to keep a cache fresh: time to live with jitter, explicit deletion, and versioned keys."
+  tags: [caching, documentation]
+  cues: [fixing stale data in a cache]
+expect:
+  url: https://docs.example/cache-invalidation
+  status: full
+  site: Stackworks Docs
+  chunks_min: 1
+  chunks_contain: [versioned keys, time to live]
+  requests: 1
+  items: {resource: 1}

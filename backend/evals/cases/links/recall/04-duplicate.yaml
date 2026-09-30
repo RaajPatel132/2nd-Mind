@@ -1,0 +1,27 @@
+# Recall: a link saved twice is one item, so recall finds one, not two.
+id: R04-duplicate
+title: a link saved twice is found once
+messages:
+  - "for the pasta night https://recipes.example/pasta-carbonara"
+  - "that pasta again https://www.recipes.example/pasta-carbonara?utm_source=mail"
+digest:
+  title: "Creamy carbonara without cream"
+  summary: "A carbonara whose sauce comes from egg yolks, pecorino and pasta water."
+  tags: [pasta, recipe]
+  cues: []
+question: Which carbonara recipe did I save?
+model:
+  intent: {confidence: 0.97, intent: recall, reason: "You want a recipe you saved."}
+  plan:
+    sub_queries:
+      - about: carbonara recipe
+        entities: []
+        filters: {kinds: [resource]}
+        question: Which carbonara recipe did I save?
+        shape: semantic
+        topic: carbonara recipe
+  rerank:
+    - {match: carbonara, score: 0.9}
+expect:
+  cites: [https://recipes.example/pasta-carbonara]
+  one_item: true

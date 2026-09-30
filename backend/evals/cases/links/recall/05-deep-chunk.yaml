@@ -1,0 +1,29 @@
+# Recall: a fact deep in a long page. Nothing the person said or the summary holds it; a late
+# passage does.
+id: R05-deep-chunk
+title: a chunk deep in a long page
+messages: ["saving this for later https://fieldnotes.example/old-orchard"]
+digest:
+  title: "A year in the old orchard"
+  summary: "A tour of one orchard through the seasons."
+  tags: [orchard]
+  cues: []
+question: Who restored the cider press and what did they make by hand?
+model:
+  intent: {confidence: 0.97, intent: recall, reason: "You want a detail from a page you saved."}
+  plan:
+    sub_queries:
+      - about: cider press restoration
+        entities: []
+        filters: {kinds: [resource]}
+        question: Who restored the cider press and what did they make by hand?
+        shape: semantic
+        topic: cider press restored by hand oak screw
+  rerank:
+    - {match: orchard, score: 0.9}
+expect:
+  cites: [https://fieldnotes.example/old-orchard]
+  snippet_contains: [oak screw]
+  from_page: true
+  matched_chunk: true
+  deep_chunk: 4

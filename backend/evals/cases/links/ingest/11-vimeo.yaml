@@ -1,0 +1,20 @@
+# Video: Vimeo's oEmbed carries the description and duration, so its watch page failing costs
+# nothing. A field a source doesn't give stays empty.
+id: L11-vimeo
+title: a Vimeo link is read from oEmbed alone
+messages: ["for the pottery evening https://vimeo.com/438920117"]
+digest:
+  title: "Hand-thrown bowls, start to finish"
+  summary: "A potter throws, trims and glazes four stoneware bowls in one afternoon."
+  tags: [pottery, ceramics]
+  cues: [planning a pottery class]
+expect:
+  url: https://vimeo.com/438920117
+  status: full
+  kind: video
+  channel: Clay Hours
+  duration_s: 845
+  extraction_method: oembed
+  said: for the pottery evening
+  message_contains: ["Clay Hours", "14:05"]
+  items: {resource: 1}

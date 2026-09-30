@@ -1,0 +1,17 @@
+# Partial: a paywall. What is free is kept and the person is offered "Add the text".
+id: L07-paywall
+title: a paywalled article is kept as partial
+messages: ["the riverside vote https://courier.example/riverside-plan"]
+digest:
+  title: "Council approves the riverside plan"
+  summary: "The council voted on Tuesday to approve the riverside plan after a long debate about cost."
+  tags: [council, riverside]
+  cues: []
+expect:
+  url: https://courier.example/riverside-plan
+  status: partial
+  reason: paywall
+  said: the riverside vote
+  message_contains: ["Could only read part of it (paywall). Add the text?"]
+  requests: 1
+  items: {resource: 1}

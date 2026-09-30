@@ -1,0 +1,21 @@
+# Video: YouTube gives a title and channel through oEmbed, and a description and duration through
+# the watch page. No transcript.
+id: L10-youtube
+title: a YouTube link gets its title, channel and length
+messages: ["a quick dinner https://www.youtube.com/watch?v=qk7Lp2xR9aE"]
+digest:
+  title: "Ten minute dal tadka"
+  summary: "A quick dal tadka with tempered cumin, garlic and dried chillies, ready in ten minutes."
+  tags: [cooking, dal]
+  cues: [cooking a fast weeknight dinner]
+expect:
+  url: https://www.youtube.com/watch?v=qk7Lp2xR9aE
+  status: full
+  kind: video
+  channel: Quiet Kitchen
+  duration_s: 640
+  extraction_method: oembed
+  said: a quick dinner
+  message_contains: ["Quiet Kitchen", "10:40"]
+  requests: 2
+  items: {resource: 1}

@@ -1,0 +1,28 @@
+# Recall: an answer only the page body has. The item's own summary never says when the committee
+# votes; the matching passage does, and the citation carries it, marked as from the page.
+id: R01-page-body
+title: an answer that only the page body has
+messages: ["the night bus story https://news.example/night-buses"]
+digest:
+  title: "Night bus routes redrawn for hospital and station riders"
+  summary: "The night buses now link the hospital district and the two stations instead of the old centre."
+  tags: [transport, buses]
+  cues: []
+question: When will the transport committee vote on the loop line request?
+model:
+  intent: {confidence: 0.97, intent: recall, reason: "You want a fact from a page you saved."}
+  plan:
+    sub_queries:
+      - about: night bus story
+        entities: []
+        filters: {kinds: [resource]}
+        question: When will the transport committee vote on the loop line request?
+        shape: semantic
+        topic: transport committee vote on the loop line request
+  rerank:
+    - {match: night bus, score: 0.9}
+expect:
+  cites: [https://news.example/night-buses]
+  snippet_contains: [November]
+  from_page: true
+  matched_chunk: true

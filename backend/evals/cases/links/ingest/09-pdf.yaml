@@ -1,0 +1,12 @@
+# Partial: a PDF is never downloaded; the link and what the person said are kept.
+id: L09-pdf
+title: a PDF is kept as partial without being downloaded
+messages: ["the annual report https://files.example/annual-report.pdf"]
+expect:
+  url: https://files.example/annual-report.pdf
+  status: partial
+  reason: PDF
+  said: the annual report
+  message_contains: ["Could only read part of it (PDF). Add the text?"]
+  chunks: 0
+  items: {resource: 1}

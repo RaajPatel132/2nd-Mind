@@ -1,0 +1,23 @@
+# The fixture transport (S4.7): what each synthetic URL answers. The link goldens read pages through
+# this and never touch the internet; a URL that isn't here fails as if the host were down, and the
+# suite checks nothing unknown was requested.
+pages:
+  https://recipes.example/pasta-carbonara: {file: pasta.html}
+  https://news.example/night-buses: {file: night-buses.html}
+  https://fieldnotes.example/old-orchard: {file: orchard.html}
+  https://docs.example/cache-invalidation: {file: cache-docs.html}
+  # A short link that redirects once to the real page.
+  https://go.example/s/8f2: {file: bread.html, final_url: https://blog.example/slow-bread, redirects: 1}
+  https://recetas.example/cafe-de-filtro: {file: espresso.html}
+  https://courier.example/riverside-plan: {file: council.html}
+  https://trailhead.example/routes/ridge-loop: {file: app-shell.html}
+  https://tea.example/guide: {file: tea.html}
+  https://www.youtube.com/watch?v=qk7Lp2xR9aE: {file: yt-watch.html}
+  https://vimeo.com/438920117: {status: 404}
+# Refused the way the real fetcher refuses: a PDF is never downloaded.
+refused:
+  https://files.example/annual-report.pdf: {rule: content_type, detail: application/pdf, message: "That link is a PDF."}
+# oEmbed answers, keyed by the video's URL.
+oembed:
+  https://www.youtube.com/watch?v=qk7Lp2xR9aE: {file: yt-oembed.json}
+  https://vimeo.com/438920117: {file: vimeo-oembed.json}

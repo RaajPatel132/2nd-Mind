@@ -1,0 +1,18 @@
+# Duplicate: the same link twice (different tracking parameter, a www host, a fragment) is the item
+# already saved: no second item and no second request.
+id: L12-duplicate
+title: the same link twice is the item already saved
+messages:
+  - "for the pasta night https://recipes.example/pasta-carbonara"
+  - "that pasta again https://www.recipes.example/pasta-carbonara?utm_source=mail#top"
+digest:
+  title: "Creamy carbonara without cream"
+  summary: "A carbonara whose sauce comes from egg yolks, pecorino and pasta water."
+  tags: [pasta, recipe]
+  cues: []
+expect:
+  url: https://recipes.example/pasta-carbonara
+  status: full
+  sources: 1
+  requests: 1
+  reply_contains: ["You already saved that link."]

@@ -1,0 +1,19 @@
+# Full: a news article whose author and date come from its JSON-LD.
+id: L02-news
+title: a news article keeps its author and site
+messages: ["the night bus story https://news.example/night-buses"]
+digest:
+  title: "Night bus routes redrawn for hospital and station riders"
+  summary: "The night buses now link the hospital district and the two stations instead of the old centre; a vote on a market loop line is due in November."
+  tags: [transport, buses, city]
+  cues: [talking about getting home late]
+expect:
+  url: https://news.example/night-buses
+  status: full
+  site: The Weekly Ledger
+  author: Anjali Verma
+  chunks_min: 1
+  chunks_contain: [loop line]
+  requests: 1
+  said: the night bus story
+  items: {resource: 1}

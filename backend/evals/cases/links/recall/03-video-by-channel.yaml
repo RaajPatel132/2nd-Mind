@@ -1,0 +1,25 @@
+# Recall: a video is found by its channel, which the read makes one of its tags.
+id: R03-video-by-channel
+title: a video found by its channel
+messages: ["a quick dinner https://www.youtube.com/watch?v=qk7Lp2xR9aE"]
+digest:
+  title: "Ten minute dal tadka"
+  summary: "A quick dal tadka with tempered cumin and garlic, ready in ten minutes."
+  tags: [cooking]
+  cues: []
+question: What was the video from Quiet Kitchen?
+model:
+  intent: {confidence: 0.97, intent: recall, reason: "You want a video you saved."}
+  plan:
+    sub_queries:
+      - about: Quiet Kitchen video
+        entities: []
+        filters: {kinds: [resource]}
+        question: What was the video from Quiet Kitchen?
+        shape: semantic
+        topic: video from Quiet Kitchen
+  rerank:
+    - {match: dal tadka, score: 0.9}
+expect:
+  cites: ["https://www.youtube.com/watch?v=qk7Lp2xR9aE"]
+  one_item: true

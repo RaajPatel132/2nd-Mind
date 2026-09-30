@@ -1,0 +1,17 @@
+# Full: a long page becomes several passages, all stored.
+id: L03-long-read
+title: a long read is split into passages
+messages: ["saving this for later https://fieldnotes.example/old-orchard"]
+digest:
+  title: "A year in the old orchard"
+  summary: "A tour of one orchard through the seasons, from winter pruning and grafting to pressing day and the cider press."
+  tags: [orchard, apples, cider]
+  cues: [planning a trip to a fruit orchard]
+expect:
+  url: https://fieldnotes.example/old-orchard
+  status: full
+  site: Field Notes Quarterly
+  chunks_min: 4
+  chunks_contain: [June drop, oak screw]
+  requests: 1
+  items: {resource: 1}

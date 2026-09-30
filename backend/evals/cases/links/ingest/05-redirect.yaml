@@ -1,0 +1,18 @@
+# Full: a short link that redirects once. The real page's host is what is shown.
+id: L05-redirect
+title: a short link that redirects is followed once
+messages: ["a bread recipe https://go.example/s/8f2"]
+digest:
+  title: "A slow loaf for lazy weekends"
+  summary: "An overnight no-knead loaf baked in a lidded pot, with a blistered crust and an open crumb."
+  tags: [bread, baking]
+  cues: [baking something over the weekend]
+expect:
+  url: https://go.example/s/8f2
+  status: full
+  final_host: blog.example
+  redirects: 1
+  site: Crumb and Crust
+  chunks_contain: [lidded pot]
+  requests: 1
+  items: {resource: 1}
