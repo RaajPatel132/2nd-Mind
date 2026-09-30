@@ -1,13 +1,15 @@
 # Runbook
 
 What to do when something needs doing to a running stack. The sections marked **tried** were run
-on the production-shaped local stack (`make up-prodlike`) in Sprint 3.9, with the output shown;
-the AWS ones are stubs that name the sprint that fills them in (NFR-10.10).
+for real, with the output shown: §1 to §4 on the rehearsal stack (`make up-prodlike`) on
+2026-09-29, §5 to §7 on this machine on 2026-09-30 against a sandbox compose project and the
+rehearsal's database. What needs AWS credentials (the SSM and GitHub parts) is yours, and the
+guide's Part 3 teaches each one as an exercise (NFR-10.10).
 
 Commands run from the repository root. On the local stack `make` talks to the compose services
-(add `STACK=prodlike` to address the rehearsal stack instead); on AWS the same CLI runs as an ECS
-task (S4) and the same Redis flag applies. **Tried** means run for real on `make up-prodlike` with
-live models on 2026-09-29; the output shown is what came back.
+(add `STACK=prodlike` to address the rehearsal stack instead). In production the same admin CLI
+runs in the api container over SSM: `make prod-admin CMD="kill-switch on"`, and the same Redis
+flag applies.
 
 ## Contents
 
@@ -15,10 +17,11 @@ live models on 2026-09-29; the output shown is what came back.
 2. [Spend cap reached](#2-spend-cap-reached) (tried)
 3. [Provider outage or out of credit](#3-provider-outage-or-out-of-credit) (tried)
 4. [Upgrade or downgrade a person](#4-upgrade-or-downgrade-a-person) (tried)
-5. [Deploy](#5-deploy) (S4)
-6. [Roll back](#6-roll-back) (S4)
-7. [Restore the database](#7-restore-the-database) (S8)
+5. [Deploy](#5-deploy) (tried locally)
+6. [Roll back](#6-roll-back) (tried locally)
+7. [Restore the database](#7-restore-the-database) (tried locally)
 8. [Alerts](#8-alerts) (S8)
+9. [The host](#9-the-host) (yours to run)
 
 ## 1. Kill switch
 
@@ -137,22 +140,167 @@ Their quota and model picker follow it on their next turn.
 
 ## 5. Deploy
 
-*Stub. S4 fills this in from ADR-0012: build and push the two images (tagged by git SHA) from
-CI, apply Terraform for the environment, run the migrate task, then roll the api and worker
-services; the migrate task and the services use the same image tag.*
+**When:** a change is ready. Deploying is CI's job: a push to `main` that passes CI deploys it, and
+until launch a push to a `sprint-*` branch does too while the repository variable
+`DEPLOY_SPRINT_BRANCHES` is `true`.
+
+**What happens** (`.github/workflows/ci.yml`, then `deploy.yml`, then `infra/host/deploy.sh`):
+
+1. CI builds the arm64 images, scans them and, on `main` or a `sprint-*` push, pushes
+   `ghcr.io/<owner>/secondmind-api` and `-web`, tagged with the first 12 characters of the git SHA.
+   A tag is never overwritten.
+2. The deploy job (environment `production`, one at a time) checks those images exist, assumes the
+   deploy role through GitHub OIDC, and sends the `secondmind-deploy` SSM document to the host.
+3. On the host, as root: check out the SHA, then `deploy.sh <sha>`: fetch the env file from SSM,
+   pull the images, start Postgres and Redis if they are not up, run the migration as a one-off,
+   start api, worker, web and caddy on the new tag, and wait until `/readyz` answers and
+   `/v1/meta` reports this release.
+4. From the runner: `scripts/check-deployed.sh` against the public URL (liveness, readiness, the
+   release, headers on the SPA and the API, a cross-site POST refused). No model calls.
+
+**A deploy is a short blip, not an outage.** The edge holds requests for up to 15 s while the api
+restarts (it marks the web tier down while `/readyz` fails, and waits). A turn in flight finishes
+within `SHUTDOWN_GRACE_S` (30 s; the container gets 45 s); the worker finishes its job or puts it
+back on the queue. **Not yet seen in production:** the slowed turn and slowed job checks
+need the live host (guide Part 3, exercise 1, with a long message in flight); the worker's
+re-queue is covered by a test (`tests/unit/test_worker_shutdown.py`).
+
+**Tried** (`infra/host/deploy.sh` against a sandbox compose project on the rehearsal's images,
+`SKIP_PULL=1`, 2026-09-30; the AWS parts of the path, SSM and OIDC, were not exercised):
+
+```text
+==> 16:41:45 up
+==> 16:41:53 release b5e88c310ab0 is serving                        # first deploy: 23 s in all
+
+# a release whose api never becomes healthy (READY_TIMEOUT_S=25)
+==> 16:44:28 release bad000000000 (previous: b5e88c310ab0); migrate=1
+dependency failed to start: container secondmind-api-1 is unhealthy
+release bad000000000 did not become ready in 25s
+==> 16:44:33 putting b5e88c310ab0 back
+==> 16:45:25 b5e88c310ab0 is serving again                         # /v1/meta reports b5e88c310ab0
+
+# a release whose migration raises
+migration failed: nothing was changed, b5e88c310ab0 keeps serving   # current release unchanged
+```
+
+A first version of the script died at "dependency failed to start" without putting the previous
+release back; the trial found it and the script now treats a failed start and a release that never
+answers as the same case.
+
+**If a deploy fails:** read the job's output (GitHub → Actions → deploy → *run the deploy document*
+prints the host's output), or on AWS: Systems Manager → Run Command → Command history. Then
+[roll back](#6-roll-back) if the site is in a bad state. The previous release is put back
+automatically when a release doesn't become ready, so the usual cause of a red deploy is the
+*images for this release exist* check (a private GHCR package, or CI not having pushed that SHA).
 
 ## 6. Roll back
 
-*Stub. S4: redeploy the previous image tag; migrations are written so the previous release runs
-on the new schema (one release of compatibility, NFR-10.4; CONTRIBUTING.md has the two-step
-rule), so a rollback never needs a schema downgrade.*
+**When:** the newest release is wrong and the previous one was right.
+
+```sh
+make deploy SHA=<previous-sha>          # asks GitHub to run the deploy workflow, without migrations
+make prod-deploy SHA=<previous-sha>     # the same over SSM with your login: works from any branch
+```
+
+`make deploy` needs the workflow to exist on the default branch (GitHub lists a workflow only
+then), which is true after the sprint is merged; `make prod-deploy` sends the same SSM document
+directly and is the way before that and the way if GitHub is down. Without migrations, because one
+release of schema compatibility (NFR-10.4, CONTRIBUTING.md) means the previous release runs on the
+new schema, so a rollback never needs a schema downgrade. Roll forward the same way:
+`make deploy SHA=<newer-sha>` (the migration already ran), or add `MIGRATE=true` for a release
+that has one that hasn't.
+
+**Check:** `curl -s https://2nd-mind.<domain>/v1/meta` shows the SHA you asked for under `version`.
+
+**Tried** (`deploy.sh <sha> --no-migrate` on the sandbox, 2026-09-30):
+
+```text
+==> 16:45:44 release b5e88c310ab0 (previous: b5e88c310ab0); migrate=0
+==> 16:45:45 up
+==> 16:45:46 release b5e88c310ab0 is serving
+```
+
+The rollback through GitHub and SSM is yours to try (guide Part 3, exercise 2).
 
 ## 7. Restore the database
 
-*Stub. S8: RDS point-in-time restore into a new instance, repoint `DATABASE_URL` in Secrets
-Manager, roll the services.*
+**When:** data was lost or damaged, or to check that backups work. There are two layers:
+
+- **Daily snapshots** of the data volume (7 kept): Data Lifecycle Manager. They bring back the whole
+  disk (Postgres, Redis, the edge's certificates).
+- **A nightly `pg_dump`** (02:30 IST) kept on the host for two days and in the backup bucket for 30:
+  `s3://secondmind-backups-<account-id>/dumps/<year>/<month>/secondmind-<timestamp>.dump`. It's a
+  PostgreSQL custom-format dump.
+
+**Restore a dump into the local stack** (to look at production's data, or to prove the backup):
+
+```sh
+aws s3 cp s3://secondmind-backups-<account-id>/dumps/<year>/<month>/<file>.dump ./last.dump --profile secondmind
+make up
+make restore-local DUMP=./last.dump
+```
+
+`make restore-local` replaces the local database (`scripts/restore-local.sh`): it stops the api and
+worker, drops and recreates the database, creates the app's database roles, loads the dump with
+`pg_restore --no-owner`, runs the migrations to this checkout's head, and starts the api and worker
+again.
+
+**Tried** (a dump of the rehearsal database, loaded into an isolated local stack, 2026-09-30):
+
+```text
+==> stopping the api and worker
+==> replacing the database
+==> the app's database roles
+bootstrap: role 'secondmind_app' ready (member of secondmind_rw)
+==> restoring rehearsal.dump
+==> migrating to this checkout's head
+restored.
+rows before (users|turns|memory_items|usage_ledger)  20|30|25|163
+rows after                                            20|30|25|163
+```
+
+A user from the dump signed in on the restored stack and saw their workspace.
+
+**Restore production itself** (the disk is gone, or the database is corrupt): from a snapshot,
+create a volume in the same availability zone, stop the instance, swap it in for the data volume
+(or restore the dump into the running Postgres: `pg_restore --clean --if-exists --no-owner` inside the
+postgres container), start it, and run `make smoke-prod`. Practise the dump half at least once
+(guide Part 3, exercise 4). The point-in-time restore of S8's load-test sprint is out of scope here:
+the most a failure loses is a day.
 
 ## 8. Alerts
 
 *Stub. S8: the `spend.cap_warning` log event, provider error rates and readiness failures become
 alarms.*
+
+## 9. The host
+
+The everyday operations on the production host. All of them need your AWS login, and none is run by
+the session.
+
+**Get a shell:** `aws ssm start-session --target <instance-id> --profile secondmind` (the id is
+`scripts/tf.sh platform output -raw instance_id`). No SSH, no open port.
+
+**Run one thing without a shell:** `scripts/prod-ssm.sh shell '<command>'`;
+`scripts/prod-ssm.sh admin spend` (the admin CLI); `make prod-admin CMD="kill-switch status"`.
+
+**Stop and start** (before launch, to save credit): `make host-stop`, `make host-start`,
+`make host-status`. Stopped, the instance's $12.3 a month stops; the Elastic IP and the disks
+(about $5.60 a month) keep drawing. After a start the site returns by itself: the data volume
+mounts before Docker starts, and every container is `restart: unless-stopped`.
+
+**Patching.** `unattended-upgrades` installs security updates daily. A systemd timer
+(`secondmind-reboot.timer`, Sunday 03:30 IST) reboots only if `/var/run/reboot-required` exists.
+To look: `scripts/prod-ssm.sh shell 'apt list --upgradable 2>/dev/null | head; cat /var/run/reboot-required || echo none'`.
+To reboot now: `scripts/prod-ssm.sh shell 'shutdown -r +1'`, then `scripts/check-deployed.sh https://2nd-mind.<domain>`.
+
+**Logs.** Containers log JSON to CloudWatch, group `/secondmind/prod`, kept 7 days, and never contain
+message content. One turn's lines: Logs Insights, `fields @timestamp, @message | filter @message like /<turn-id>/ | sort @timestamp asc`.
+On the host, `docker logs secondmind-api-1 --tail 100` also works (the awslogs driver keeps a local copy).
+
+**Memory.** `free -h` and `docker stats --no-stream`. The stack is measured at about 0.6 GB in use
+(peak 611 MiB on the `@prodlike` subset) and its limits add up to about 1.6 GB; the 2 GB swap file is
+a cushion, not working memory.
+
+**Timers.** `systemctl list-timers "secondmind-*"` shows the nightly dump and the reboot window;
+`sudo /opt/secondmind/infra/host/backup.sh` takes a dump now.
