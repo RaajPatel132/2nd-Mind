@@ -21,6 +21,7 @@ PROMPTS_BY_STEP: dict[Step, str] = {
     Step.INTENT: "intent@1",
     Step.EXTRACT: "extract@2",
     Step.ENRICH: "enrich@1",
+    Step.DIGEST: "digest@1",
     Step.RECONCILE: "reconcile@1",
     Step.RESOLVE: "resolve@1",
     Step.PLAN: "plan@1",

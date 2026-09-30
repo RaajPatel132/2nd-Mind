@@ -97,6 +97,17 @@ steps:
     max_output_tokens: 1024
     effort: low
     prompt: enrich@1
+  # Reads a link's page, or text pasted for a link, and writes that one item's title, summary,
+  # tags and cue situations (S4.7). The content arrives in a data block and the output schema
+  # holds nothing but those fields (S4.8).
+  digest:
+    provider: openai
+    model: gpt-6-luna
+    fallback: anthropic:claude-haiku-4-5
+    timeout_s: 30
+    max_output_tokens: 1024
+    effort: low
+    prompt: digest@1
   # Only for the fuzzy cases the deterministic rules don't settle (S2.8).
   reconcile:
     provider: openai

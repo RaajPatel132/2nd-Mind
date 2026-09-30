@@ -56,6 +56,7 @@ TYPICAL_OUTPUT: dict[str, int] = {
     "extract": 700,
     "resolve": 200,
     "enrich": 250,
+    "digest": 250,
     "reconcile": 120,
     "plan": 350,
     "rerank": 300,

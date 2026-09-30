@@ -76,6 +76,9 @@ def offline_responders(
         refs = [m.get("ref") for m in listing if isinstance(m, dict)]
         return {"memories": [{"ref": r, "alt": [], "cues": []} for r in refs if r]}
 
+    def digest(request: AdapterRequest) -> dict[str, Any]:
+        return recorded("digest", request) or heuristic_digest(request.messages[-1].content)
+
     def resolve(request: AdapterRequest) -> dict[str, Any]:
         return recorded("resolve", request) or {
             "candidate": "c1",
@@ -93,6 +96,7 @@ def offline_responders(
         "intent": intent,
         "extract": extract,
         "enrich": enrich,
+        "digest": digest,
         "resolve": resolve,
         "reconcile": reconcile,
     }
@@ -161,6 +165,17 @@ def heuristic_intent(message: str) -> dict[str, Any]:
     else:
         intent, reason = "save", "it tells me something to keep"
     return {"intent": intent, "confidence": 0.6, "reason": f"offline fake: {reason}"}
+
+
+def heuristic_digest(block: str) -> dict[str, Any]:
+    """Offline stand-in for the digest step: a title and summary lifted from the quoted page (its
+    first lines), no tags or cues. Only the text inside the data block is read."""
+    match = re.search(r"<<<DATA:[0-9a-f]+[^\n]*>>>\n(.*?)\n<<<END DATA:", block, re.DOTALL)
+    body = match.group(1) if match else block
+    lines = [line.strip() for line in body.splitlines() if line.strip()]
+    title = lines[0][:120] if lines else "Untitled page"
+    summary = " ".join(" ".join(lines[1:]).split()[:40]) or "offline fake: nothing to summarise"
+    return {"title": title, "summary": summary, "tags": [], "cues": []}
 
 
 def heuristic_note(message: str) -> dict[str, Any]:
