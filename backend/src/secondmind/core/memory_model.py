@@ -160,6 +160,8 @@ class KeyKind(StrEnum):
     CUE = "cue"
     QUESTION = "question"
     CHANGE = "change"
+    # A passage of a saved page (S4.7): found by what it says, cited as the page it came from.
+    CHUNK = "chunk"
 
 
 class TriggerOn(StrEnum):

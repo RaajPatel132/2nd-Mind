@@ -208,6 +208,8 @@ class KeyRecord(_Record):
     content_hash: str
     embedding: list[float] | None = None
     embedding_model: str | None = None
+    # Only for chunk keys: which passage of the page this is (0 is the first).
+    position: int | None = None
 
 
 class WriteLogRecord(_Record):

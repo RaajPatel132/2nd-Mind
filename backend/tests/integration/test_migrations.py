@@ -21,7 +21,7 @@ BACKEND = Path(__file__).resolve().parents[2]
 
 
 async def test_schema_is_at_head(app_db: Database) -> None:
-    assert await app_db.schema_revision() == SCHEMA_HEAD == "0005"
+    assert await app_db.schema_revision() == SCHEMA_HEAD == "0006"
 
 
 async def test_models_match_migrations(pg_urls: PgUrls) -> None:
@@ -77,6 +77,7 @@ async def test_every_workspace_owned_table_has_rls_and_a_policy(owner_db: Databa
         "held_writes",
         "conversation_keys",
         "item_access",
+        "link_sources",
     }
     for name, (rls_on, policies) in tables.items():
         assert rls_on, f"{name} has workspace_id but RLS is off"

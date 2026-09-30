@@ -21,6 +21,8 @@ from secondmind.core import (
     new_id,
     utc_now,
 )
+from secondmind.links.adapters import SqlLinkStore
+from secondmind.links.model import ChunkRow, FetchStatus, LinkKind, LinkSource
 from secondmind.memory import (
     LinkItems,
     Memory,
@@ -146,6 +148,35 @@ async def seed_memory(db: Database, scope: WorkspaceScope) -> SeededMemory:
     assert len(held) == 1, result.diff.entries
     keys = memory.keys(scope, timezone="UTC", embed=FakeEmbedder(), model=EMBED_MODEL)
     await keys.rebuild([tulips.item_id, task.item_id, therapy.item_id])
+    # Where a saved link came from (link_sources) and a passage of its page (a chunk key).
+    links = SqlLinkStore(db, scope)
+    await links.add(
+        LinkSource(
+            id=new_id(),
+            workspace_id=scope.workspace_id,
+            item_id=tulips.item_id,
+            turn_id=turn.turn_id,
+            url="https://journal.example/tulips",
+            canonical_url="https://journal.example/tulips",
+            kind=LinkKind.ARTICLE,
+            fetch_status=FetchStatus.FULL,
+            site="journal.example",
+        )
+    )
+    chunk_text = "Tulips keep longer in cool water."
+    await links.replace_chunks(
+        tulips.item_id,
+        [
+            ChunkRow(
+                id=new_id(),
+                position=0,
+                text=chunk_text,
+                content_hash=hashlib.sha256(chunk_text.encode()).hexdigest(),
+                embedding=vector(chunk_text),
+                embedding_model=EMBED_MODEL,
+            )
+        ],
+    )
     # What was said (conversation_keys) and what recall retrieved (item_access).
     indexer = ConversationIndexer(
         SqlConversationStore(db, scope), embed=FakeEmbedder(), model=EMBED_MODEL

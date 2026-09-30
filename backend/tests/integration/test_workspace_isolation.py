@@ -72,6 +72,7 @@ TABLES = [
     TableSpec("write_log", "rationale = 'tampered'"),
     TableSpec("held_writes", "status = status"),
     TableSpec("conversation_keys", "text = 'tampered'"),
+    TableSpec("link_sources", "fetch_reason = 'tampered'"),
 ]
 # Append-only: the app role may not update or delete it at all (checked separately).
 APPEND_ONLY = [TableSpec("item_access", "cited = cited")]

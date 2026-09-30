@@ -403,6 +403,7 @@ class MemoryKeyRow(Base):
     content_hash: Mapped[str] = mapped_column(String(64))
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBED_DIMENSIONS))
     embedding_model: Mapped[str | None] = mapped_column(String(128))
+    position: Mapped[int | None] = mapped_column(Integer)
     tsv: Mapped[Any] = mapped_column(
         TSVECTOR, Computed("to_tsvector('english', text)", persisted=True)
     )
@@ -416,7 +417,8 @@ class MemoryKeyRow(Base):
             ondelete="CASCADE",
         ),
         CheckConstraint(
-            "key_kind IN ('text', 'verbal', 'alt', 'cue', 'question', 'change')", name="key_kind"
+            "key_kind IN ('text', 'verbal', 'alt', 'cue', 'question', 'change', 'chunk')",
+            name="key_kind",
         ),
         Index("ix_memory_keys_tsv", "tsv", postgresql_using="gin"),
         Index("ix_memory_keys_item_id", "item_id"),
