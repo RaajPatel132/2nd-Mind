@@ -50,6 +50,9 @@ class Budgets:
     total: Decimal = DEFAULT_TOTAL_BUDGET
     batch: str | None = None
     allow_expensive: bool = False
+    # A live run refuses a tree with uncommitted changes under backend/ unless this is set, and
+    # the run file records that it was (ledger 45).
+    allow_dirty: bool = False
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> "Budgets":
@@ -69,6 +72,7 @@ class Budgets:
             total=amount("LIVE_TOTAL_BUDGET_USD", DEFAULT_TOTAL_BUDGET),
             batch=env.get("LIVE_BATCH", "").strip() or None,
             allow_expensive=env.get("ALLOW_EXPENSIVE", "").strip() in {"1", "true", "yes"},
+            allow_dirty=env.get("ALLOW_DIRTY", "").strip() in {"1", "true", "yes"},
         )
 
 

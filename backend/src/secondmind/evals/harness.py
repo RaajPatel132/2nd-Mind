@@ -4,7 +4,8 @@ live, with budgets, the response cache, case selection and a stamped run file.
 A **live** run:
 
 1. refuses to start when the sprint total plus its budget would pass ``LIVE_TOTAL_BUDGET_USD``,
-   or its batch has used its allowance (:mod:`secondmind.evals.spend`);
+   or its batch has used its allowance (:mod:`secondmind.evals.spend`), or when there are
+   uncommitted changes under ``backend/`` (``ALLOW_DIRTY=1`` overrides, and the run file says so);
 2. refuses a routing with a model priced at or above Claude Sonnet 5 unless ``ALLOW_EXPENSIVE=1``
    and the cases are a named subset (``--cases @reference``);
 3. runs the same cases as a dry run first (the fake provider, each call costed as the live model
@@ -273,6 +274,16 @@ class Harness:
                 refs.add(route.fallback)
         return sorted(str(r) for r in refs if blended(self.prices, r) >= limit)
 
+    def check_clean_tree(self) -> None:
+        """A live run is stamped with a git SHA, so the code it ran must be that commit."""
+        sha, dirty = git_state(self.resources)
+        if dirty and not self.budgets.allow_dirty:
+            raise BudgetRefusedError(
+                f"uncommitted changes under backend/ (HEAD {sha}): a live run is stamped with "
+                "the commit it ran, so commit first, or set ALLOW_DIRTY=1 to run anyway (the "
+                "run file will say so)"
+            )
+
     def check_expensive(self) -> None:
         expensive = self.expensive_models()
         if not expensive or self.mode != "live":
@@ -303,6 +314,7 @@ class Harness:
             started_at=datetime.now(UTC),
             git_sha=sha,
             git_dirty=dirty,
+            allow_dirty=dirty and mode == "live" and self.budgets.allow_dirty,
             config_hash=compute_config_hash(routing, self.prices, self.prompts),
             price_version=self.prices.version,
             prompt_versions={s.value: r.prompt for s, r in routing.routes.items()},
@@ -337,6 +349,7 @@ class Harness:
         estimates: dict[str, Decimal] = {}
         if self.mode == "live":
             budget = book.effective_budget(self.budgets)
+            self.check_clean_tree()
             self.check_expensive()
             self.say(f"estimating on the fake provider first ({len(cases)} cases)…")
             estimate = await self._pass("dry-run", cases, run_case, id_of=id_of, setup=setup)

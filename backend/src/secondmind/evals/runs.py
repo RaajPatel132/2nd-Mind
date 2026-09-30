@@ -89,6 +89,8 @@ class RunRecord(BaseModel):
     finished_at: datetime | None = None
     git_sha: str
     git_dirty: bool
+    # ALLOW_DIRTY was set for a live run over uncommitted code (ledger 45).
+    allow_dirty: bool = False
     config_hash: str
     price_version: str
     prompt_versions: dict[str, str | None]
@@ -371,11 +373,17 @@ def metrics(run: RunRecord) -> list[Metric]:
     return sorted(rows, key=lambda m: order.index(m.section))
 
 
+def _dirty_note(run: RunRecord) -> str:
+    if not run.git_dirty:
+        return ""
+    return " (dirty, ALLOW_DIRTY)" if run.allow_dirty else " (dirty)"
+
+
 def _header(run: RunRecord) -> list[str]:
     models = sorted(set(run.models.values()))
     return [
         f"{run.suite} · {run.run_id} · {run.mode} · routing {run.routing} · {run.status}",
-        f"  git {run.git_sha}{' (dirty)' if run.git_dirty else ''} · config "
+        f"  git {run.git_sha}{_dirty_note(run)} · config "
         f"{run.config_hash[:12]} · prices {run.price_version} · models {', '.join(models)}",
     ]
 

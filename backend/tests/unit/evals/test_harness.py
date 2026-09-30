@@ -37,6 +37,13 @@ REPO = DEFAULT_RESOURCES_DIR.parent
 ALLOWANCES = {"B1": Decimal("0.10")}
 
 
+@pytest.fixture(autouse=True)
+def _clean_tree(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whatever the working tree looks like while this suite runs, a live run sees a clean one
+    unless a test says otherwise."""
+    monkeypatch.setattr("secondmind.evals.harness.git_state", lambda _cwd: ("abc1234", False))
+
+
 def _spent(book: SpendBook, amount: str, batch: str | None = None) -> None:
     book.record(
         run_id="r",
@@ -101,6 +108,8 @@ def test_budgets_come_from_the_environment() -> None:
     assert budgets == Budgets(run=Decimal("0.35"), total=Decimal(3), batch="B2")
     assert Budgets.from_env({}).run == Decimal("0.50")
     assert Budgets.from_env({"ALLOW_EXPENSIVE": "1"}).allow_expensive
+    assert not Budgets.from_env({}).allow_dirty
+    assert Budgets.from_env({"ALLOW_DIRTY": "1"}).allow_dirty
 
 
 def test_the_sprint_total_defaults_to_this_sprints_share() -> None:
@@ -252,6 +261,50 @@ async def test_a_live_run_whose_estimate_passes_its_budget_does_not_start(tmp_pa
     with pytest.raises(BudgetRefusedError, match="estimate"):
         await harness.run(intent_cases(), run_intent_case, id_of=lambda c: c.id)
     assert not SpendBook.load(tmp_path / ".spend").runs
+
+
+async def test_a_live_run_over_uncommitted_code_does_not_start(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("secondmind.evals.harness.git_state", lambda _cwd: ("abc1234", True))
+    harness = _harness(tmp_path)
+    _billed_fake(harness)
+    with pytest.raises(BudgetRefusedError, match="uncommitted changes under backend/"):
+        await harness.run(intent_cases()[:2], run_intent_case, id_of=lambda c: c.id)
+    assert not SpendBook.load(tmp_path / ".spend").runs
+    assert not (tmp_path / "intent").exists()
+
+
+async def test_allow_dirty_lets_it_run_and_the_run_file_says_so(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("secondmind.evals.harness.git_state", lambda _cwd: ("abc1234", True))
+    harness = _harness(tmp_path, budgets=Budgets(run=Decimal("0.50"), allow_dirty=True))
+    _billed_fake(harness)
+    record = await harness.run(intent_cases()[:2], run_intent_case, id_of=lambda c: c.id)
+    assert record.git_dirty
+    assert record.allow_dirty
+    stored = load_run(tmp_path / "intent" / f"{record.run_id}.json")
+    assert stored.allow_dirty
+
+
+async def test_a_clean_live_run_does_not_carry_the_flag(tmp_path: Path) -> None:
+    harness = _harness(tmp_path, budgets=Budgets(run=Decimal("0.50"), allow_dirty=True))
+    _billed_fake(harness)
+    record = await harness.run(intent_cases()[:2], run_intent_case, id_of=lambda c: c.id)
+    assert not record.git_dirty
+    assert not record.allow_dirty
+
+
+async def test_a_dry_run_ignores_a_dirty_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("secondmind.evals.harness.git_state", lambda _cwd: ("abc1234", True))
+    record = await _harness(tmp_path, mode="dry-run").run(
+        intent_cases()[:2], run_intent_case, id_of=lambda c: c.id
+    )
+    assert record.git_dirty
+    assert not record.allow_dirty
 
 
 async def test_a_dry_run_estimates_the_live_model_and_spends_nothing(tmp_path: Path) -> None:
