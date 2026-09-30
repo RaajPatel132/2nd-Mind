@@ -197,6 +197,10 @@ smoke-live: ## Drive the running stack through the S3 demo and S2 examples on re
 seed-dev: ## Reset the dev user's workspace and seed the synthetic recall fixture (compose stack)
 	$(COMPOSE) exec api python -m secondmind.evals seed-dev --web-url $(WEB_URL)
 
+.PHONY: seed-persona
+seed-persona: ## Load the Aditi Rao persona into its template workspace (skipped when the seed file is unchanged; FORCE=1 reloads)
+	$(COMPOSE) exec api python -m secondmind.persona.adapters seed $(if $(FORCE),--force,)
+
 # Spend safety (R.10, ADR-0032): operate the running stack without a deploy.
 ADMIN := python -m secondmind.api.admin
 

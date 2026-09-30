@@ -96,6 +96,14 @@ if ! compose "$TAG" up -d --no-deps api worker web caddy || ! wait_ready "$TAG";
   exit 1
 fi
 
+# ------------------------------------------------------------------ the persona template
+# Loaded, or reloaded when the seed file's hash changed (S4.10); copies already made stay as they
+# are. It never rolls the release back: the site is serving, and guests just can't open the sample
+# persona until it is loaded (`make seed-persona`, or the next deploy).
+log "persona template"
+compose "$TAG" exec -T api python -m secondmind.persona.adapters seed \
+  || echo "the persona template was not loaded; run it again by hand (runbook)" >&2
+
 # ------------------------------------------------------------------ record and tidy
 mkdir -p "$STATE_DIR"
 [[ "$PREVIOUS" != "$TAG" && -n "$PREVIOUS" ]] && echo "$PREVIOUS" > "$STATE_DIR/previous"
