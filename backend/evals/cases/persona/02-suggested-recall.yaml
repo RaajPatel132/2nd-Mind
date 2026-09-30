@@ -1,0 +1,57 @@
+# The persona's second suggested prompt: what to get Kabir, from the new save and what is seeded.
+id: P02-suggested-recall
+title: "the suggested recall: a gift for Kabir from the save and the seeded tastes"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+setup:
+  - input: Kabir mentioned he wants the new Murakami novel. His birthday is in March.
+    model:
+      intent: {confidence: 0.96, intent: save, reason: "A gift idea for Kabir, and his birthday month, both worth keeping."}
+      extract:
+        entities:
+          - {id: e1, mention: Kabir, name: Kabir Sethi, kind: person}
+        memories:
+          - ref: m1
+            kind: intention
+            subtype: gift
+            title: Gift Kabir the new Murakami novel
+            text: Kabir wants the new Murakami novel, so it could be a gift for his birthday.
+            category: shopping/gifts
+            entities: [{entity: e1, role: for}]
+            importance: 3
+            rationale: A gift idea for a known occasion.
+          - ref: m2
+            kind: plan
+            subtype: birthday
+            title: Kabir's birthday
+            text: Kabir's birthday is in [[t1]].
+            category: people/birthdays
+            entities: [{entity: e1, role: for}]
+            times: [{id: t1, expression: March, clock: occurred, direction: future, recurring: true}]
+            importance: 4
+            rationale: A yearly date; the day isn't known yet.
+question: What could I get Kabir for his birthday?
+shape: entity
+gold:
+  - kabir_coffee
+  - kabir_likes_pottery
+  - kabir_hiking
+reply_contains:
+  - Murakami
+model:
+  intent: {confidence: 0.98, intent: recall, reason: "You want gift ideas for Kabir from what is saved about him."}
+  plan:
+    sub_queries:
+      - shape: entity
+        question: What could I get Kabir for his birthday?
+        topic: gift ideas for Kabir's birthday
+        about: Kabir
+        entities:
+          - {mention: Kabir, name: Kabir Sethi}
+        filters:
+          kinds: [preference, intention, note]
+  rerank:
+    - {match: Murakami, score: 0.95}
+    - {match: pour-over, score: 0.9}
+    - {match: ceramics, score: 0.9}
+    - {match: trekking backpack, score: 0.85}

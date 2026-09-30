@@ -1,0 +1,20 @@
+id: P03-latest
+title: "latest: where I live now, with the move out of Pune behind it"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: Where do I live?
+shape: latest
+gold: [live_bengaluru]
+forbidden: [live_pune]
+reply_contains: [Bengaluru]
+model:
+  intent: {confidence: 1.0, intent: recall, reason: "You're asking where you live."}
+  plan:
+    sub_queries:
+      - shape: latest
+        question: Where do I live?
+        topic: where I live
+        filters: {current_only: true, kinds: [fact], predicate: lives_in, states: [current]}
+  rerank:
+    - {match: I live in Bengaluru, score: 1.0, state: current}
+    - {match: I lived in Pune, score: 0.3, state: superseded}

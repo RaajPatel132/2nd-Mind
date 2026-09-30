@@ -1,0 +1,21 @@
+id: P04-history
+title: "history: where I lived before, shown from the superseded fact"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: Where did I live before Bengaluru?
+shape: history
+gold: [live_pune]
+reply_contains: [Pune]
+model:
+  intent: {confidence: 0.98, intent: recall, reason: "You're asking about a place you used to live."}
+  plan:
+    sub_queries:
+      - shape: history
+        question: Where did I live before Bengaluru?
+        topic: where I lived before Bengaluru
+        about: living location
+        entities: [{mention: Bengaluru, name: Bengaluru}]
+        filters: {kinds: [fact], predicate: lives_in, states: [superseded]}
+  rerank:
+    - {match: I lived in Pune, score: 1.0, state: superseded}
+    - {match: I live in Bengaluru, score: 0.7, state: current}

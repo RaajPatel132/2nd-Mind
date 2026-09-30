@@ -1,0 +1,21 @@
+id: P06-entity
+title: "entity: a relation path to Nisha's husband"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: Who is Nisha's husband?
+shape: entity
+gold: [rohan_husband]
+reply_contains: [Rohan]
+model:
+  intent: {confidence: 0.99, intent: recall, reason: "You're asking who your sister's husband is."}
+  plan:
+    sub_queries:
+      - shape: entity
+        question: Who is Nisha's husband?
+        topic: Nisha's husband
+        about: Nisha's husband
+        entities:
+          - {mention: Nisha, name: Nisha, path: [spouse_of]}
+        filters: {kinds: [fact], states: [current]}
+  rerank:
+    - {match: Rohan, score: 0.95}

@@ -1,0 +1,21 @@
+id: P10-no-answer
+title: "no answer: a detail that was never saved is not made up"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: What's Kabir's passport number?
+shape: exact
+must_abstain: true
+model:
+  intent: {confidence: 0.99, intent: recall, reason: "You're asking for a personal detail about Kabir."}
+  plan:
+    sub_queries:
+      - shape: exact
+        question: What's Kabir's passport number?
+        topic: Kabir's passport number
+        about: passport number
+        entities: [{mention: Kabir, name: Kabir Sethi}]
+        filters:
+          kinds: [fact]
+          attribute: {key: passport number, value: passport number}
+  rerank:
+    - {match: Kabir, score: 0.1}

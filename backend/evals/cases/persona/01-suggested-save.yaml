@@ -1,0 +1,44 @@
+# The persona's first suggested prompt (FR-13.5): one save that shows a memory diff.
+id: P01-suggested-save
+title: "the suggested save: a gift idea and a birthday month for Kabir"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: Kabir mentioned he wants the new Murakami novel. His birthday is in March.
+saved:
+  - {kind: intention, title_contains: Murakami}
+  - {kind: plan, title_contains: birthday}
+model:
+  intent: {confidence: 0.96, intent: save, reason: "A gift idea for Kabir, and his birthday month, both worth keeping."}
+  extract:
+    entities:
+      - {id: e1, mention: Kabir, name: Kabir Sethi, kind: person}
+    memories:
+      - ref: m1
+        kind: intention
+        subtype: gift
+        title: Gift Kabir the new Murakami novel
+        text: Kabir wants the new Murakami novel, so it could be a gift for his birthday.
+        category: shopping/gifts
+        tags: [gift, books, murakami]
+        entities: [{entity: e1, role: for}]
+        links: [{type: gift_for_event, to: m2}]
+        importance: 3
+        rationale: A gift idea for a known occasion.
+      - ref: m2
+        kind: plan
+        subtype: birthday
+        title: Kabir's birthday
+        text: Kabir's birthday is in [[t1]].
+        category: people/birthdays
+        entities: [{entity: e1, role: for}]
+        times: [{id: t1, expression: March, clock: occurred, direction: future, recurring: true}]
+        importance: 4
+        rationale: A yearly date; the day isn't known yet.
+  enrich:
+    memories:
+      - ref: m1
+        alt: ["What does Kabir want?", "What gift could I give Kabir?", "Which book does Kabir want?"]
+        cues: ["when choosing a gift for Kabir", "when shopping for books"]
+      - ref: m2
+        alt: ["When is Kabir's birthday?", "Which month is Kabir's birthday in?", "When should I plan something for Kabir?"]
+        cues: ["when planning for Kabir's birthday", "when picking a gift for Kabir"]

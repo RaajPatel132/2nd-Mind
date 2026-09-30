@@ -35,7 +35,7 @@ TABLES = [
 ]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def world(app_db: Database, identity: SqlIdentityStore) -> PersonaWorld:
     return await load_template(app_db, identity)
 

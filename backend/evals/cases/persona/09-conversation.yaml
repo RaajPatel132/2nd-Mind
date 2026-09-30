@@ -1,0 +1,16 @@
+id: P09-conversation
+title: "conversation: what the assistant suggested in an earlier chat"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: What books did you suggest for a slow weekend?
+shape: conversation
+reply_contains: [Klara and the Sun]
+model:
+  intent: {confidence: 0.99, intent: recall, reason: "You're asking about book suggestions from an earlier chat."}
+  plan:
+    sub_queries:
+      - shape: conversation
+        question: What books did you suggest for a slow weekend?
+        topic: books suggested for a slow weekend
+        about: books
+        role: assistant

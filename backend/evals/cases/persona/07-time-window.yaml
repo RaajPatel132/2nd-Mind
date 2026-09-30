@@ -1,0 +1,17 @@
+id: P07-time-window
+title: "time window: the rest of this week's routines, whatever weekday today is"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: What's coming up this week?
+shape: time_window
+gold: [run_routine, pottery_class, family_call]
+forbidden: [goa_trip, half_marathon_race]
+model:
+  intent: {confidence: 0.92, intent: recall, reason: "You're asking what is coming up this week."}
+  plan:
+    sub_queries:
+      - shape: time_window
+        question: What's coming up this week?
+        topic: things coming up this week
+        times: [{expression: this week, clock: occurred, direction: future}]
+        filters: {kinds: [plan], states: [scheduled]}

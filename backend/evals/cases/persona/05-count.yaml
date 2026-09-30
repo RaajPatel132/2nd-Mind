@@ -1,0 +1,18 @@
+id: P05-count
+title: "count: the shows still on the list, computed by the database"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: How many shows do I want to watch?
+shape: count
+gold: [want_andor, want_the_bear, want_paatal_lok, want_shogun]
+forbidden: [want_slow_horses, want_fleabag]
+aggregate: 4
+model:
+  intent: {confidence: 1.0, intent: recall, reason: "You're asking how many shows are on your list."}
+  plan:
+    sub_queries:
+      - shape: count
+        question: How many shows do I want to watch?
+        topic: shows I want to watch
+        filters: {kinds: [intention], subtypes: [watch], states: [wanted]}
+        aggregate: {op: count}

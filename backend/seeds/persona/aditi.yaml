@@ -1196,6 +1196,7 @@ links:
   - {type: supersedes, src: likes_filter_coffee, dst: likes_espresso, valid_to: "-300d"}
   - {type: fulfils, src: finished_piranesi, dst: read_piranesi}
   - {type: fulfils, src: ate_ramen, dst: want_fulfilled_noodles}
+  - {type: fulfils, src: watched_slow_horses, dst: want_slow_horses}
   - {type: because, src: skip_long_runs, dst: knee_niggle}
   - {type: part_of, src: note_goa_packing, dst: goa_trip}
   - {type: part_of, src: note_goa_food, dst: goa_trip}
@@ -1286,7 +1287,7 @@ turns:
   - key: t_books
     at: "-65d 20:00"
     user: What books would you suggest for a slow weekend?
-    assistant: "Since you loved Piranesi, try Klara and the Sun, which is quiet and strange in the same way, or Braiding Sweetgrass if you want something gentler."
+    assistant: "For a slow weekend I'd suggest these books: Klara and the Sun, which is quiet and strange in the way Piranesi was, or Braiding Sweetgrass if you want something gentler."
   - key: t_gift_tara
     at: "-44d 19:10"
     user: What could I give Tara?

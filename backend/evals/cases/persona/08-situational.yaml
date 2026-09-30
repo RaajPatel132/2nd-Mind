@@ -1,0 +1,18 @@
+id: P08-situational
+title: "situational: packing for a trip finds the note that waits for that moment"
+now: "2026-10-05T10:00"
+timezone: Asia/Kolkata
+question: I'm packing for the beach trip. What should I remember?
+shape: semantic
+gold: [note_goa_packing]
+reply_contains: [sunscreen]
+model:
+  intent: {confidence: 0.96, intent: recall, reason: "You're about to pack and want what you saved for it."}
+  plan:
+    sub_queries:
+      - shape: semantic
+        question: I'm packing for the beach trip. What should I remember?
+        topic: packing for the beach trip
+        filters: {kinds: [note]}
+  rerank:
+    - {match: sunscreen, score: 0.95}
