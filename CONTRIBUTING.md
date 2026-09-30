@@ -41,8 +41,9 @@ change), `test`, `docs`, `build` (deps, packaging, images), `ci`, `chore` (repo 
 
 **Scopes:** backend modules (`api`, `agent`, `ingestion`, `retrieval`, `memory`, `providers`,
 `policy`, `metering`, `auth`, `jobs`, `observability`, `evals`, `config`, `core`, `db`,
-`prompts`), delivery (`web`, `e2e`, `infra`, `docker`, `ci`, `deps`) and docs/repo (`docs`,
-`adr`, `sprint`, `repo`, `release`). Omit the scope when a change spans many modules.
+`prompts`, `corrections`, `links`, `persona`), delivery (`web`, `e2e`, `infra`, `docker`, `ci`,
+`deps`) and docs/repo (`docs`, `adr`, `sprint`, `repo`, `release`). Omit the scope when a
+change spans many modules.
 
 **Breaking changes:** `feat(api)!: rename turns endpoint` plus a `BREAKING CHANGE:` footer.
 

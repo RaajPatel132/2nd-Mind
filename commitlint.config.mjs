@@ -5,6 +5,7 @@ const SCOPES = [
   // backend modules
   'api', 'agent', 'ingestion', 'retrieval', 'memory', 'providers', 'policy', 'metering',
   'auth', 'jobs', 'observability', 'evals', 'config', 'core', 'db', 'prompts', 'corrections',
+  'links', 'persona',
   // frontend and delivery
   'web', 'e2e', 'infra', 'docker', 'ci', 'deps',
   // docs and repo
