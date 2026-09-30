@@ -1277,7 +1277,7 @@ export interface components {
          * KeyKind
          * @enum {string}
          */
-        KeyKind: "text" | "verbal" | "alt" | "cue" | "question" | "change";
+        KeyKind: "text" | "verbal" | "alt" | "cue" | "question" | "change" | "chunk";
         /**
          * Kind
          * @description What a memory is, defined by how it behaves over time.
