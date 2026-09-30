@@ -21,7 +21,11 @@ async function shot(page: Page, name: string) {
 test('S3 demo on the recall fixture, at 1440 and 1920', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await freshUser(page, testInfo)
-  expect((await page.request.post('/v1/dev/seed-recall')).ok()).toBeTruthy()
+  const seeded = await page.request.post('/v1/dev/seed-recall')
+  // Production has no dev helpers: the fixture walkthrough runs on the plain stack, and the
+  // persona replaces it there (S4.13).
+  test.skip(seeded.status() === 404, 'the recall fixture is seeded by a dev helper, absent in production')
+  expect(seeded.ok()).toBeTruthy()
   await page.reload()
   await expect(page.getByTestId('composer')).toBeVisible({ timeout: 30_000 })
   await shot(page, 'first-run-fixture')

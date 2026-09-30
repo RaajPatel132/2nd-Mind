@@ -1,6 +1,6 @@
 """R.11: what the API does for the browser's safety. Headers on every response; no CORS; a write
 must be JSON and must not come from another site; bodies have a size limit; the interactive docs
-and the dev helpers exist only where they belong; and on staging, dev sign-in needs the access
+and the dev helpers exist only where they belong; and in production, dev sign-in needs the access
 code (compared in constant time, attempts limited, one user per email)."""
 
 from collections.abc import AsyncIterator
@@ -14,7 +14,7 @@ from tests.unit.test_api import _services, frames
 
 CODE = "open-sesame-42"
 SECURE = {
-    "SESSION_SECRET": "a-long-random-staging-secret-value-0123456789",
+    "SESSION_SECRET": "a-long-random-production-secret-value-0123456789",
     "SESSION_COOKIE_SECURE": "true",
 }
 LIVE = {
@@ -240,16 +240,26 @@ async def test_the_dev_helpers_exist_only_with_dev_auth(base_env: dict[str, str]
         assert (await c.post("/v1/dev/seed-recall")).status_code == 401  # there, behind sign-in
 
 
-# ------------------------------------------------------------------ staging access
+async def test_production_has_code_sign_in_but_no_dev_helpers(base_env: dict[str, str]) -> None:
+    async with client_for(coded(base_env), "https") as c:
+        assert (await c.post("/v1/dev/seed-recall")).status_code == 404
+        signed_in = await c.post(
+            "/v1/auth/dev-login", json={"email": "ada@example.test", "access_code": CODE}
+        )
+        assert signed_in.status_code == 200
+        assert (await c.post("/v1/dev/seed-recall")).status_code == 404  # even signed in
 
 
-def staging(base_env: dict[str, str], **changes: str) -> Services:
-    env = LIVE | SECURE | {"ENV": "staging", "DEV_AUTH": "true", "STAGING_ACCESS_CODE": CODE}
+# ------------------------------------------------------------------ the access code
+
+
+def coded(base_env: dict[str, str], **changes: str) -> Services:
+    env = LIVE | SECURE | {"ENV": "production", "DEV_AUTH": "true", "ACCESS_CODE": CODE}
     return _services(base_env, **(env | changes))
 
 
-async def test_staging_dev_login_needs_the_access_code(base_env: dict[str, str]) -> None:
-    async with client_for(staging(base_env), "https") as c:
+async def test_production_dev_login_needs_the_access_code(base_env: dict[str, str]) -> None:
+    async with client_for(coded(base_env), "https") as c:
         meta = (await c.get("/v1/meta")).json()
         assert meta["access_code_required"] is True
         for body in (
@@ -269,7 +279,7 @@ async def test_staging_dev_login_needs_the_access_code(base_env: dict[str, str])
 
 
 async def test_each_code_holder_gets_their_own_user_and_workspace(base_env: dict[str, str]) -> None:
-    async with client_for(staging(base_env), "https") as c:
+    async with client_for(coded(base_env), "https") as c:
         ada = (
             await c.post(
                 "/v1/auth/dev-login", json={"email": "ada@example.test", "access_code": CODE}
@@ -287,10 +297,10 @@ async def test_each_code_holder_gets_their_own_user_and_workspace(base_env: dict
         assert opened.status_code == 404
 
 
-async def test_staging_access_attempts_are_rate_limited_per_address(
+async def test_access_attempts_are_rate_limited_per_address(
     base_env: dict[str, str],
 ) -> None:
-    async with client_for(staging(base_env, LOGIN_ATTEMPTS_PER_MINUTE="3"), "https") as c:
+    async with client_for(coded(base_env, LOGIN_ATTEMPTS_PER_MINUTE="3"), "https") as c:
         statuses = [
             (
                 await c.post(
@@ -313,7 +323,7 @@ async def test_the_access_code_is_compared_in_constant_time(base_env: dict[str, 
     assert auth.hmac.compare_digest.__module__ in ("hmac", "_operator", "operator", "_hashlib")
     source = auth._check_access_code.__code__.co_names
     assert "compare_digest" in source
-    async with client_for(staging(base_env), "https") as c:
+    async with client_for(coded(base_env), "https") as c:
         near = await c.post(
             "/v1/auth/dev-login", json={"email": "a@example.test", "access_code": CODE[:-1]}
         )

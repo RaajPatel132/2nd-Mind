@@ -1,5 +1,6 @@
-"""Dev-only helpers (DEV_AUTH=true, never in production): seed the synthetic recall fixture
-into the signed-in user's workspace, for local exploration and the E2E suite (S3.1)."""
+"""Dev-only helpers (DEV_AUTH=true in development or test, never in production): seed the
+synthetic recall fixture into the signed-in user's workspace, for local exploration and the E2E
+suite (S3.1)."""
 
 from fastapi import APIRouter
 

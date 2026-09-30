@@ -1,5 +1,5 @@
-"""Dev-only auth (DEV_AUTH=true): a dev user and their private workspace, via a signed cookie.
-Refused at start-up when ENV=production. Real auth replaces this in S4/S6."""
+"""Dev auth (DEV_AUTH=true): a user and their private workspace, via a signed cookie. Open in
+development; in production it is code sign-in (email plus ACCESS_CODE) until S6's accounts."""
 
 import hmac
 
@@ -21,13 +21,13 @@ async def dev_login(
     request: Request, services: ServicesDep, response: Response, body: DevLoginIn | None = None
 ) -> MeOut:
     """Create or reuse the dev user (or the one named in the body) and their private workspace;
-    set the session cookie. On staging the access code is required first (R.11): compared in
+    set the session cookie. In production the access code is required first (R.11): compared in
     constant time, attempts per address limited, and each email is its own user, so isolation
     still applies between the people who hold the code."""
     settings = services.config.settings
     if not settings.dev_auth:
         raise NotFoundError("not found")
-    if settings.env == "staging":
+    if settings.access_code_required:
         await _check_access_code(request, services, body)
     email = body.email if body is not None and body.email else settings.dev_user_email
     user, workspace = await services.identity.ensure_user_with_private_workspace(
@@ -53,7 +53,7 @@ async def _check_access_code(
     wait = await services.gate.rate_limited(f"login:{caller}", settings.login_attempts_per_minute)
     if wait is not None:
         raise RateLimitedError("Too many attempts. Wait a moment and try again.", wait)
-    expected = settings.staging_access_code
+    expected = settings.access_code
     given = (body.access_code if body is not None and body.access_code else "").encode()
     # Always compare, whatever was sent, so the time taken says nothing about the code.
     ok = expected is not None and hmac.compare_digest(given, expected.get_secret_value().encode())

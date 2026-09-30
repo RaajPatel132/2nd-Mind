@@ -38,22 +38,15 @@ def test_short_session_secret_is_rejected(base_env: dict[str, str]) -> None:
         load_settings(base_env)
 
 
-def test_dev_auth_is_refused_in_production(base_env: dict[str, str]) -> None:
-    base_env |= {"ENV": "production", "DEV_AUTH": "true"}
-    with pytest.raises(ConfigError, match="DEV_AUTH must be false when ENV=production"):
-        load_settings(base_env)
-
-
-def test_content_logging_is_refused_in_production(base_env: dict[str, str]) -> None:
-    base_env |= {"ENV": "production", "LOG_INCLUDE_CONTENT": "true"}
-    with pytest.raises(ConfigError, match="LOG_INCLUDE_CONTENT"):
-        load_settings(base_env)
+def test_staging_is_retired(base_env: dict[str, str]) -> None:
+    with pytest.raises(ConfigError, match="ENV"):
+        load_settings(base_env | {"ENV": "staging"})
 
 
 SECURE_SECRET = "a-long-random-staging-secret-value-0123456789"
 
 
-def deployed(base_env: dict[str, str], env: str = "staging", **changes: str) -> dict[str, str]:
+def deployed(base_env: dict[str, str], env: str = "production", **changes: str) -> dict[str, str]:
     """A configuration that satisfies every start-up guard for ``env``, changed as asked."""
     return (
         base_env
@@ -70,9 +63,8 @@ def deployed(base_env: dict[str, str], env: str = "staging", **changes: str) -> 
     )
 
 
-def test_a_staging_configuration_that_meets_every_guard_loads(base_env: dict[str, str]) -> None:
-    assert load_settings(deployed(base_env)).env == "staging"
-    assert load_settings(deployed(base_env, "production")).env == "production"
+def test_a_production_configuration_that_meets_every_guard_loads(base_env: dict[str, str]) -> None:
+    assert load_settings(deployed(base_env)).env == "production"
 
 
 @pytest.mark.parametrize(
@@ -93,12 +85,11 @@ def test_a_staging_configuration_that_meets_every_guard_loads(base_env: dict[str
         ({"LOG_INCLUDE_CONTENT": "true"}, "LOG_INCLUDE_CONTENT must be false"),
     ],
 )
-@pytest.mark.parametrize("env", ["staging", "production"])
 def test_each_deployed_guard_refuses_start_up(
-    base_env: dict[str, str], env: str, change: dict[str, str], message: str
+    base_env: dict[str, str], change: dict[str, str], message: str
 ) -> None:
     with pytest.raises(ConfigError, match=message):
-        load_settings(deployed(base_env, env, **change))
+        load_settings(deployed(base_env, **change))
 
 
 def test_tracing_may_be_on_when_it_is_configured_or_off_on_purpose(
@@ -114,20 +105,34 @@ def test_tracing_may_be_on_when_it_is_configured_or_off_on_purpose(
     assert not load_settings(deployed(base_env, TRACING_ENABLED="false")).tracing_configured
 
 
-def test_dev_login_on_staging_needs_the_access_code(base_env: dict[str, str]) -> None:
-    with pytest.raises(ConfigError, match="STAGING_ACCESS_CODE"):
+def test_content_logging_is_refused_in_production(base_env: dict[str, str]) -> None:
+    with pytest.raises(ConfigError, match="LOG_INCLUDE_CONTENT"):
+        load_settings(deployed(base_env, LOG_INCLUDE_CONTENT="true"))
+
+
+def test_code_sign_in_on_production_needs_the_access_code(base_env: dict[str, str]) -> None:
+    # DEV_AUTH in production is code sign-in, and it needs the code (ADR-0034 as amended).
+    with pytest.raises(ConfigError, match="needs ACCESS_CODE"):
         load_settings(deployed(base_env, DEV_AUTH="true"))
-    ok = load_settings(deployed(base_env, DEV_AUTH="true", STAGING_ACCESS_CODE="open-sesame-42"))
-    assert ok.staging_access_code is not None
-    assert ok.staging_access_code.get_secret_value() == "open-sesame-42"
+    ok = load_settings(deployed(base_env, DEV_AUTH="true", ACCESS_CODE="open-sesame-42"))
+    assert ok.access_code is not None
+    assert ok.access_code.get_secret_value() == "open-sesame-42"
+    assert ok.access_code_required
+    assert not ok.dev_helpers  # the /v1/dev helpers are for development only
 
 
-def test_production_still_refuses_dev_auth_even_with_an_access_code(
+def test_open_dev_sign_in_and_its_helpers_exist_only_in_development(
     base_env: dict[str, str],
 ) -> None:
-    changes = {"DEV_AUTH": "true", "STAGING_ACCESS_CODE": "open-sesame-42"}
-    with pytest.raises(ConfigError, match="DEV_AUTH must be false when ENV=production"):
-        load_settings(deployed(base_env, "production", **changes))
+    dev = load_settings(base_env | {"DEV_AUTH": "true"})
+    assert dev.dev_helpers
+    assert not dev.access_code_required
+    assert not load_settings(base_env | {"DEV_AUTH": "false"}).dev_helpers
+
+
+def test_guests_are_closed_until_s5_opens_the_site(base_env: dict[str, str]) -> None:
+    assert not load_settings(base_env).guests_open
+    assert load_settings(base_env | {"GUESTS_OPEN": "true"}).guests_open
 
 
 def test_local_and_test_environments_have_no_deployed_guards(base_env: dict[str, str]) -> None:
@@ -146,3 +151,20 @@ def test_env_example_lists_every_setting() -> None:
     names = {line.split("=", 1)[0].lstrip("# ").strip() for line in example.splitlines()}
     missing = [f.upper() for f in Settings.model_fields if f.upper() not in names]
     assert not missing, f".env.example is missing: {missing}"
+
+
+def test_an_empty_environment_variable_is_an_unset_one(
+    base_env: dict[str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Compose passes optional variables through empty; Settings must read the process
+    # environment the way load_settings reads a mapping.
+    for name in ("LANGFUSE_HOST", "PROVIDER_CREDIT_USD_ANTHROPIC", "PROVIDER_CREDIT_SINCE"):
+        monkeypatch.setenv(name, "")
+    from secondmind.config import Settings  # noqa: PLC0415
+
+    for name, value in base_env.items():
+        monkeypatch.setenv(name, value)
+    settings = Settings()  # type: ignore[call-arg]
+    assert settings.langfuse_host is None
+    assert settings.provider_credit_usd_anthropic is None
+    assert settings.provider_credit_since is None

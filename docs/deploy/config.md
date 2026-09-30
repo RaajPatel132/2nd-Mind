@@ -1,28 +1,41 @@
 # Configuration matrix
 
-Every variable the application reads, what it means, the value it has in each environment and where
-the value comes from. `Settings` is the source of truth for the application's own variables; a test
-(`tests/unit/test_config_matrix.py`) fails when a field is added there without a row here, the same
-way `.env.example` is checked. Values that are secrets are never written in this file.
+Every variable the application reads, what it means, the value it has in each place it runs and
+where the production value comes from. `Settings` is the source of truth for the application's
+own variables; a test (`tests/unit/test_config_matrix.py`) fails when a field is added there
+without a row here, the same way `.env.example` is checked. Values that are secrets are never
+written in this file.
 
-**Source:** `env` is a plain environment variable in the task definition; `ssm` is an SSM Parameter
-Store parameter (config that isn't secret but is set per environment); `secret` is a Secrets Manager
-secret injected by ECS. On a laptop everything comes from `.env` or the compose defaults.
+**The three columns.** *Development* is a laptop's `make up`, from `.env` or the compose
+defaults. *Rehearsal* is `make up-prodlike`: the production compose file and images, real
+models, with the values it generates or takes from `.env`. *Production* is the EC2 host
+(ADR-0035): `compose.prodlike.yaml` with the environment file the deploy script writes.
 
-| Variable | Meaning | Development | Staging | Production | Source |
+**Source** (of the production value):
+
+- `env`: fixed in `compose.prodlike.yaml`, the same in the rehearsal and production.
+- `ssm`: an SSM Parameter Store `String` under `/secondmind/prod/`, written by
+  `make prod-secrets` from the gitignored `.env.prod`.
+- `secret`: an SSM `SecureString` under the same path (the passwords behind the three database
+  and Redis URLs are stored, and the URLs themselves are built by compose).
+
+The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`, and a test
+(`tests/unit/test_deploy_matrix.py`) keeps that file and this one in step.
+
+| Variable | Meaning | Development | Rehearsal | Production | Source |
 |---|---|---|---|---|---|
-| `ENV` | Which environment this is; turns the start-up guards on for staging and production. | development | staging | production | env |
+| `ENV` | Which environment this is; turns the start-up guards on for production (there is no staging: ADR-0035). | development | production | production | env |
 | `APP_VERSION` | Build label shown in /v1/meta and logs; the image tag (git SHA) in CI. | dev | git SHA | git SHA | env |
 | `LOG_LEVEL` | Minimum log level. | INFO | INFO | INFO | env |
 | `LOG_FORMAT` | json for machines, console for a terminal. | json | json | json | env |
-| `LOG_INCLUDE_CONTENT` | Log message content (dev flag only; refused in staging and production). | false | false | false | env |
+| `LOG_INCLUDE_CONTENT` | Log message content (dev flag only; refused in production). | false | false | false | env |
 | `RESOURCES_DIR` | Where config/ and prompts/ live (the image's /app). | backend/ | /app | /app | env |
-| `DATABASE_URL` | Postgres URL for the app's non-owner role (carries the password). | compose default | RDS, app role | RDS, app role | secret |
+| `DATABASE_URL` | Postgres URL for the app's non-owner role (carries the password). | compose default | built by compose from the generated passwords | built by compose from `APP_DB_PASSWORD` | secret |
 | `DATABASE_POOL_SIZE` | Connections in the app pool. | 10 | 10 | 10 | env |
-| `REDIS_URL` | Redis URL: queue, spend counters, kill switch, rate limits (may carry a password). | compose default | ElastiCache | ElastiCache | secret |
+| `REDIS_URL` | Redis URL: queue, spend counters, kill switch, rate limits (may carry a password). | compose default | built by compose | built by compose from `REDIS_PASSWORD` | secret |
 | `MODEL_PROVIDER_MODE` | auto falls back to the fake provider without keys; live refuses to start without them; fake never calls out. | auto | live | live | env |
-| `ANTHROPIC_API_KEY` | Anthropic key. | in .env, optional | set | set | secret |
-| `OPENAI_API_KEY` | OpenAI key (chat and embeddings). | in .env, optional | set | set | secret |
+| `ANTHROPIC_API_KEY` | Anthropic key. | in .env, optional | from .env | set | secret |
+| `OPENAI_API_KEY` | OpenAI key (chat and embeddings). | in .env, optional | from .env | set | secret |
 | `PROVIDER_MAX_RETRIES` | Retries per model call before the fallback. | 2 | 2 | 2 | env |
 | `PROVIDER_RETRY_BASE_MS` | First retry delay. | 250 | 250 | 250 | env |
 | `PROVIDER_RETRY_MAX_MS` | Longest retry delay. | 4000 | 4000 | 4000 | env |
@@ -30,17 +43,17 @@ secret injected by ECS. On a laptop everything comes from `.env` or the compose 
 | `BREAKER_WINDOW_S` | Seconds the failure count covers. | 60 | 60 | 60 | env |
 | `BREAKER_COOLDOWN_S` | Seconds an open circuit waits before a probe. | 30 | 30 | 30 | env |
 | `FAKE_PROVIDER_TOKEN_DELAY_MS` | Pause between streamed tokens of the fake provider. | 15 | n/a | n/a | env |
-| `TRACING_ENABLED` | Send traces to Langfuse. | true | true | true | env |
-| `LANGFUSE_HOST` | Langfuse URL (self-hosted locally; Langfuse Cloud on AWS). | compose | cloud URL | cloud URL | env |
-| `LANGFUSE_PUBLIC_KEY` | Langfuse project public key. | compose | set | set | ssm |
-| `LANGFUSE_SECRET_KEY` | Langfuse project secret key. | compose | set | set | secret |
-| `LANGFUSE_UI_URL` | Where trace links point. | localhost | cloud URL | cloud URL | env |
-| `LANGFUSE_PROJECT_ID` | Langfuse project id, for trace links. | compose | set | set | ssm |
+| `TRACING_ENABLED` | Send traces to Langfuse. | true | false unless keys are in .env | true | env |
+| `LANGFUSE_HOST` | Langfuse URL (self-hosted locally; Langfuse Cloud in production). | compose | Langfuse Cloud if keys are in .env | Langfuse Cloud URL | ssm |
+| `LANGFUSE_PUBLIC_KEY` | Langfuse project public key. | compose | from .env | set | ssm |
+| `LANGFUSE_SECRET_KEY` | Langfuse project secret key. | compose | from .env | set | secret |
+| `LANGFUSE_UI_URL` | Where trace links point. | localhost | Langfuse Cloud if keys are in .env | Langfuse Cloud URL | ssm |
+| `LANGFUSE_PROJECT_ID` | Langfuse project id, for trace links. | compose | from .env | set | ssm |
 | `TRACE_INCLUDE_CONTENT` | Put message text in traces (metadata only by default). | false | false | false | env |
-| `DEV_AUTH` | Dev sign-in and the /v1/dev helpers; refused in production. | true | true (needs the access code) | false | env |
+| `DEV_AUTH` | Dev sign-in and the /v1/dev helpers. In production it is code sign-in (needs `ACCESS_CODE`) and the helpers don't exist. | true | true (needs the access code) | true (needs the access code) | env |
 | `DEV_USER_EMAIL` | The dev user when none is named. | dev@example.com | n/a | n/a | env |
-| `SESSION_SECRET` | Signs the session cookie (32+ chars; the example value is refused off-laptop). | example | random | random | secret |
-| `SESSION_COOKIE_SECURE` | Mark the cookie Secure and send HSTS (required in staging and production). | false | true | true | env |
+| `SESSION_SECRET` | Signs the session cookie (32+ chars; the example value is refused off-laptop). | example | generated | random | secret |
+| `SESSION_COOKIE_SECURE` | Mark the cookie Secure and send HSTS (required in production). | false | true | true | env |
 | `MAX_MESSAGE_CHARS` | Longest message a turn accepts. | 8000 | 8000 | 8000 | env |
 | `DEFAULT_TIMEZONE` | IANA timezone of a new workspace. | UTC | UTC | UTC | env |
 | `POLICY_BULK_THRESHOLD` | Writes in one turn that need the person's OK. | 5 | 5 | 5 | env |
@@ -72,26 +85,27 @@ secret injected by ECS. On a laptop everything comes from `.env` or the compose 
 | `SPEND_CAP_DAILY_USD` | App-wide spend per UTC day before turns stop. | 0.50 | 0.50 | 0.50 | env |
 | `SPEND_CAP_MONTHLY_USD` | App-wide spend per UTC month before turns stop. | 5 | 5 | 5 | env |
 | `SPEND_CAP_WARN_RATIO` | Share of a cap at which a warning is logged. | 0.8 | 0.8 | 0.8 | env |
-| `PROVIDER_CREDIT_USD_ANTHROPIC` | What the app may spend on Anthropic since PROVIDER_CREDIT_SINCE (below the real balance). | unset | set | set | ssm |
-| `PROVIDER_CREDIT_USD_OPENAI` | What the app may spend on OpenAI since PROVIDER_CREDIT_SINCE. | unset | set | set | ssm |
-| `PROVIDER_CREDIT_SINCE` | The date the prepaid credit was topped up. | unset | set | set | ssm |
+| `PROVIDER_CREDIT_USD_ANTHROPIC` | What the app may spend on Anthropic since PROVIDER_CREDIT_SINCE (below the real balance). | unset | unset | set | ssm |
+| `PROVIDER_CREDIT_USD_OPENAI` | What the app may spend on OpenAI since PROVIDER_CREDIT_SINCE. | unset | unset | set | ssm |
+| `PROVIDER_CREDIT_SINCE` | The date the prepaid credit was topped up. | unset | unset | set | ssm |
 | `KILL_SWITCH` | Start with model work stopped; the runtime flag (make kill-switch) overrides it. | false | false | false | env |
 | `RATE_TURNS_PER_MINUTE` | Turns a person may start per minute. | 10 | 10 | 10 | env |
 | `MAX_REQUEST_BYTES` | Largest request body the API accepts. | 262144 | 262144 | 262144 | env |
-| `ALLOWED_ORIGINS` | Extra origins allowed to send state-changing requests (comma separated). | empty | empty | empty | env |
-| `STAGING_ACCESS_CODE` | The code dev sign-in asks for on staging. | unset | set | n/a | secret |
-| `LOGIN_ATTEMPTS_PER_MINUTE` | Sign-in attempts per address per minute on staging. | 5 | 5 | 5 | env |
+| `ALLOWED_ORIGINS` | Extra origins allowed to send state-changing requests (comma separated). | empty | https://localhost:8443 | https://2nd-mind.<domain> | ssm |
+| `ACCESS_CODE` | The code sign-in asks for in production until real accounts arrive (S6). | unset | generated | set | secret |
+| `GUESTS_OPEN` | Off keeps every way in (code sign-in, guest, persona) behind the access code; S5 turns it on to open the site. | false | false | false | env |
+| `LOGIN_ATTEMPTS_PER_MINUTE` | Sign-in attempts per address per minute in production. | 5 | 5 | 5 | env |
 | `SSE_HEARTBEAT_S` | Seconds between heartbeat comments on a quiet turn stream. | 15 | 15 | 15 | env |
-| `SHUTDOWN_GRACE_S` | Seconds running turns and jobs get after SIGTERM (under the ECS stop timeout). | 30 | 30 | 30 | env |
-| `DATABASE_MIGRATION_URL` | Postgres URL for the schema owner: migrations and the admin CLI (never the running app). | compose default | RDS, owner | RDS, owner | secret |
+| `SHUTDOWN_GRACE_S` | Seconds running turns and jobs get after SIGTERM (under the 45 s container stop timeout). | 30 | 30 | 30 | env |
+| `DATABASE_MIGRATION_URL` | Postgres URL for the schema owner: migrations and the admin CLI (never the running app). | compose default | built by compose | built by compose from `POSTGRES_PASSWORD` | secret |
 | `OPENAI_BASE_URL` | Points the OpenAI provider at another endpoint (a stand-in for a provider outage, or vLLM). | unset | unset | unset | env |
 | `MODEL_<STEP>` | provider:model for one step, over models.yaml (also MODEL_<STEP>_FALLBACK). | unset | unset | unset | env |
 | `EFFORT_<STEP>` | Reasoning depth (none, low, medium, high) for one step, over models.yaml. | unset | unset | unset | env |
-| `API_UPSTREAM` | Where the web container proxies /v1 (the api service; the ALB in front of Fargate on AWS). | http://api:8000 | internal ALB | internal ALB | env |
+| `API_UPSTREAM` | Where the web container proxies /v1 and /readyz (the api service). | http://api:8000 | http://api:8000 | http://api:8000 | env |
 | `NGINX_HSTS` | The web tier's Strict-Transport-Security value; empty sends none (plain HTTP). | empty | set | set | env |
 | `NGINX_MAX_BODY` | Largest request body the web tier passes on. | 1m | 1m | 1m | env |
 | `NGINX_READ_TIMEOUT` | How long the web tier waits on a quiet stream from the API. | 60s | 120s | 120s | env |
-| `NGINX_DESIGN` | Serve the /design gallery (on/off); off in production. | on | on | off | env |
+| `NGINX_DESIGN` | Serve the /design gallery (on/off); off in production. | on | off | off | env |
 
 ## Application variables added this sprint
 

@@ -57,7 +57,7 @@ export function SignedOut({ onSignIn }: { onSignIn: () => void }) {
   )
 }
 
-/** Staging: the way in is an email and the access code, until real accounts arrive. */
+/** Production: the way in is an email and the access code, until real accounts arrive. */
 export function AccessGate({ onSignIn }: { onSignIn: (email: string, accessCode: string) => Promise<string | null> }) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')

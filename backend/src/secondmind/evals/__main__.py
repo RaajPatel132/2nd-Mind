@@ -244,8 +244,8 @@ async def _seed_dev(email: str | None, web_url: str) -> int:
     from secondmind.memory.adapters import reset_workspace  # noqa: PLC0415
 
     config = load_app_config()
-    if not config.settings.dev_auth:
-        sys.stderr.write("seed-dev: DEV_AUTH is off; refusing to reset a workspace\n")
+    if not config.settings.dev_helpers:
+        sys.stderr.write("seed-dev: needs DEV_AUTH in development; refusing to reset a workspace\n")
         return 2
     owner_url = os.environ.get("DATABASE_MIGRATION_URL", "")
     if not owner_url:

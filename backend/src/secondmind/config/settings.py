@@ -26,7 +26,9 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 
 from secondmind.core import ConfigError
 
-Environment = Literal["development", "test", "staging", "production"]
+# One deployed environment (ADR-0035): what stood in for staging is the local rehearsal stack,
+# which runs ENV=production too.
+Environment = Literal["development", "test", "production"]
 ProviderMode = Literal["auto", "live", "fake"]
 
 # backend/ in a checkout, /app in the image: holds config/ and prompts/.
@@ -43,7 +45,11 @@ DEFAULT_SESSION_SECRETS = frozenset(
 class Settings(BaseSettings):
     """All process configuration. Construct with :func:`load_settings`."""
 
-    model_config = SettingsConfigDict(case_sensitive=False, extra="ignore", frozen=True)
+    # An empty variable is an unset one: compose passes every optional variable through, empty
+    # when it has no value (load_settings drops blanks the same way).
+    model_config = SettingsConfigDict(
+        case_sensitive=False, extra="ignore", frozen=True, env_ignore_empty=True
+    )
 
     # --- runtime
     env: Environment = "development"
@@ -132,9 +138,14 @@ class Settings(BaseSettings):
     # --- web hardening (R.11) and behaviour behind a load balancer (R.12)
     max_request_bytes: Annotated[int, Field(ge=1_024, le=50_000_000)] = 262_144
     # Origins besides the request's own host that may make state-changing requests (comma
-    # separated, e.g. "https://staging.example.com"); empty: same-origin only.
+    # separated, e.g. "https://2nd-mind.example.com"); empty: same-origin only.
     allowed_origins: str = ""
-    staging_access_code: SecretStr | None = None
+    # Code sign-in in production, until S6's accounts: DEV_AUTH=true there means "an email plus
+    # this code". Open dev sign-in exists only in development and test.
+    access_code: SecretStr | None = None
+    # Off until S5 opens the site: while off, every way in (code sign-in, guest, persona) asks
+    # for the access code.
+    guests_open: bool = False
     login_attempts_per_minute: Annotated[int, Field(ge=1, le=1_000)] = 5
     sse_heartbeat_s: Annotated[float, Field(gt=0, le=300)] = 15.0
     shutdown_grace_s: Annotated[float, Field(ge=0, le=600)] = 30.0
@@ -163,17 +174,11 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _production_guards(self) -> Self:
         if self.env == "production":
-            if self.dev_auth:
-                raise ValueError("DEV_AUTH must be false when ENV=production")
-            if self.log_include_content:
-                raise ValueError("LOG_INCLUDE_CONTENT must be false when ENV=production")
-        if self.env in ("staging", "production"):
             self._deployed_guards()
         return self
 
     def _deployed_guards(self) -> None:
-        """Staging and production run on shared infrastructure with real keys (R.11)."""
-        env = self.env.upper()
+        """Production runs on shared infrastructure with real keys (R.11, ADR-0035)."""
         if self.session_secret.get_secret_value() in DEFAULT_SESSION_SECRETS:
             raise ValueError(f"SESSION_SECRET must not be the example value when ENV={self.env}")
         if not self.session_cookie_secure:
@@ -182,13 +187,26 @@ class Settings(BaseSettings):
             raise ValueError(f"MODEL_PROVIDER_MODE must be live when ENV={self.env}")
         if self.tracing_enabled and not self.tracing_configured:
             raise ValueError(
-                f"tracing is on but not configured when ENV={env.lower()}: set LANGFUSE_HOST, "
+                f"tracing is on but not configured when ENV={self.env}: set LANGFUSE_HOST, "
                 "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY, or TRACING_ENABLED=false"
             )
-        if self.env == "staging" and self.dev_auth and self.staging_access_code is None:
-            raise ValueError("DEV_AUTH on staging needs STAGING_ACCESS_CODE")
+        if self.dev_auth and self.access_code is None:
+            raise ValueError(
+                "DEV_AUTH (code sign-in) on production needs ACCESS_CODE: open sign-in exists "
+                "only in development"
+            )
         if self.log_include_content:
             raise ValueError(f"LOG_INCLUDE_CONTENT must be false when ENV={self.env}")
+
+    @property
+    def access_code_required(self) -> bool:
+        """Sign-in asks for the access code: production, while sign-in is by code."""
+        return self.dev_auth and self.env == "production"
+
+    @property
+    def dev_helpers(self) -> bool:
+        """The /v1/dev helpers (seeding, resets) exist where open dev sign-in does."""
+        return self.dev_auth and self.env in ("development", "test")
 
     @property
     def allowed_origin_list(self) -> list[str]:

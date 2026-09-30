@@ -56,7 +56,7 @@ export interface paths {
         /**
          * Dev Login
          * @description Create or reuse the dev user (or the one named in the body) and their private workspace;
-         *     set the session cookie. On staging the access code is required first (R.11): compared in
+         *     set the session cookie. In production the access code is required first (R.11): compared in
          *     constant time, attempts per address limited, and each email is its own user, so isolation
          *     still applies between the people who hold the code.
          */
@@ -658,12 +658,12 @@ export interface components {
         /**
          * DevLoginIn
          * @description Log in as a dev user (dev auth only): optionally another one, e.g. a fresh one per E2E
-         *     test. On staging the access code is required, and each email is its own user.
+         *     test. In production the access code is required, and each email is its own user.
          */
         DevLoginIn: {
             /**
              * Access Code
-             * @description STAGING_ACCESS_CODE (staging only).
+             * @description ACCESS_CODE (production only).
              */
             access_code?: string | null;
             /** Email */
@@ -1356,7 +1356,7 @@ export interface components {
         MetaOut: {
             /**
              * Access Code Required
-             * @description Signing in needs the staging access code.
+             * @description Signing in needs the access code.
              * @default false
              */
             access_code_required: boolean;

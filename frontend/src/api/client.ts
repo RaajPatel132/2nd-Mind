@@ -76,7 +76,7 @@ export async function getMe(): Promise<Me | null> {
   return data
 }
 
-/** Dev sign-in; on staging it needs the access code, and each email is its own person. */
+/** Dev sign-in; in production it needs the access code, and each email is its own person. */
 export async function devLogin(credentials?: { email: string; accessCode: string }): Promise<Me> {
   const body = credentials ? { email: credentials.email, access_code: credentials.accessCode } : undefined
   return unwrap(await api.POST('/v1/auth/dev-login', { body }))

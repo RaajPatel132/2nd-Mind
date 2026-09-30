@@ -2,13 +2,12 @@ import { expect, test } from '@playwright/test'
 import { freshUser, inspect, send } from './helpers.ts'
 
 /**
- * R.13: the tagged subset that runs against the production-shaped stack (`make up-prodlike`,
- * staging config, real models): save, recall, undo, the glass box, the web headers and the access
- * door. The kill-switch notice (spend.spec.ts) carries the same tag. Nothing here compares a
- * model's wording; the fake-provider run stays the CI gate.
- *
- *   E2E_ACCESS_CODE=… E2E_COMPOSE="-p secondmind-prodlike -f ../compose.yaml -f ../compose.prodlike.yaml …" \
- *     npx playwright test --grep @prodlike --project=desktop --project=spend
+ * R.13, S4.4: the tagged subset that runs against the production stack: the rehearsal on this
+ * machine (`make e2e-prodlike`, real models, TLS from Caddy's local CA) and production itself
+ * (`make smoke-prod`). Save, recall, undo, the glass box, the web headers and the access door.
+ * The kill-switch notice (spend.spec.ts) carries the same tag, and runs only where the operator
+ * CLI is reachable (the rehearsal). Nothing here compares a model's wording; the fake-provider
+ * run stays the CI gate.
  */
 test.skip(!process.env.E2E_ACCESS_CODE, 'runs against the production-shaped stack only')
 test.describe.configure({ mode: 'serial' })
@@ -25,7 +24,7 @@ test('@prodlike the door asks for the access code and the web tier sends its hea
   expect(headers['strict-transport-security']).toContain('max-age')
   const api = await page.request.get('/v1/meta')
   expect(api.headers()['cache-control']).toContain('no-store')
-  expect((await api.json()) as { env: string; provider_mode: string }).toMatchObject({ env: 'staging', provider_mode: 'live' })
+  expect((await api.json()) as { env: string; provider_mode: string }).toMatchObject({ env: 'production', provider_mode: 'live' })
 })
 
 test('@prodlike save, recall and undo on real models, and the glass box explains the turn', async ({ page }, testInfo) => {

@@ -7,7 +7,7 @@ type State =
   | { status: 'loading' }
   | { status: 'ready'; session: Session }
   | { status: 'signed-out' }
-  /** Staging: signing in needs an email and the access code. */
+  /** Production: signing in needs an email and the access code. */
   | { status: 'needs-code'; meta: Meta }
   | { status: 'error'; message: string }
 

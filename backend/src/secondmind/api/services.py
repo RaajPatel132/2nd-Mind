@@ -164,5 +164,5 @@ async def build_services(config: AppConfig) -> Services:
             "providers": provider_check(config),
         },
         closers=[runtime.aclose, queue.aclose, close_gate],
-        seed_recall=seed_recall if settings.dev_auth else None,
+        seed_recall=seed_recall if settings.dev_helpers else None,
     )

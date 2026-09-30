@@ -72,7 +72,7 @@ def create_app(
         description="Chat-first personal memory. The web app is one client of this API.",
         lifespan=lifespan,
         generate_unique_id_function=lambda route: route.name,
-        # The interactive docs and the schema are for development and staging, not production.
+        # The interactive docs and the schema are for development, not production.
         docs_url=None if production else "/docs/api",
         openapi_url=None if production else "/openapi.json",
         redoc_url=None,
@@ -92,7 +92,7 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(turns.router)
     app.include_router(memory.router)
-    if settings.dev_auth:  # the dev helpers exist only where dev sign-in does
+    if settings.dev_helpers:  # only where sign-in is open: development and test, never production
         app.include_router(dev.router)
     app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]
     return app

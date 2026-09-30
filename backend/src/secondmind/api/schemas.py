@@ -259,13 +259,13 @@ class EntityDetailOut(_Out):
 
 class DevLoginIn(BaseModel):
     """Log in as a dev user (dev auth only): optionally another one, e.g. a fresh one per E2E
-    test. On staging the access code is required, and each email is its own user."""
+    test. In production the access code is required, and each email is its own user."""
 
     model_config = ConfigDict(extra="forbid")
 
     email: str | None = Field(default=None, max_length=254, pattern=r"^[^@\s]+@[^@\s]+$")
     access_code: str | None = Field(
-        default=None, max_length=200, description="STAGING_ACCESS_CODE (staging only)."
+        default=None, max_length=200, description="ACCESS_CODE (production only)."
     )
 
 
@@ -386,7 +386,7 @@ class MetaOut(_Out):
     substitutions: list[str]
     dev_auth: bool
     access_code_required: bool = Field(
-        default=False, description="Signing in needs the staging access code."
+        default=False, description="Signing in needs the access code."
     )
     tracing_enabled: bool
 
