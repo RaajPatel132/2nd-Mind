@@ -316,6 +316,9 @@ class LinkReader:
         self._apply_digest(
             result, digest, fallback_title=info.title, fallback_summary=info.description
         )
+        channel = info.channel.strip().lower()
+        if channel and channel not in result.tags:
+            result.tags = [*result.tags[:5], channel]  # a video is found by who made it
         result.message = " · ".join(
             p for p in (f"Read {result.title}", info.channel, format_duration(info.duration_s)) if p
         )

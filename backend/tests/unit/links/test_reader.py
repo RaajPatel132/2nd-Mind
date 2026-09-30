@@ -334,6 +334,7 @@ async def test_a_youtube_link_gets_title_channel_and_duration_with_no_transcript
     assert result.description == "A calm walkthrough."
     assert result.message == "Read Sleep well · Dr. Quill · 1:02:03"
     assert result.extraction_method == "oembed"
+    assert "dr. quill" in result.tags  # a video is found by who made it, whatever the digest said
     assert result.chunks == []  # no transcript, so nothing to chunk
     assert "no transcript" in digest.calls[0]["source"]
     assert fetcher.urls[0].startswith("https://www.youtube.com/oembed?")
