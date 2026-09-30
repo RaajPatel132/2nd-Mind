@@ -4,9 +4,9 @@
 #   COMMIT_AUTHORS="me@example.com,123+me@users.noreply.github.com" \
 #     scripts/check-commit-authors.sh <from> <to>
 #
-# In CI the list comes from the COMMIT_AUTHORS repository variable, not from the code, so a
-# commit authored by anyone else (a cloud session committing as "Claude", say) can't reach main.
-# An unset list fails closed. Emails are compared case-insensitively.
+# In CI the list is the owner's addresses (in the workflow), or the COMMIT_AUTHORS repository
+# variable when it is set, so a commit authored by anyone else (a cloud session committing as
+# "Claude", say) can't reach main. An unset list fails closed. Emails compare case-insensitively.
 set -euo pipefail
 from="${1:?usage: check-commit-authors.sh <from> <to>}"
 to="${2:-HEAD}"

@@ -46,9 +46,11 @@ jobs:
           npx --no -- commitlint --from "$from" --to HEAD --verbose
           echo "from=$from" >> "$GITHUB_OUTPUT"
         id: range
-      - name: commit authors are on the allowlist (repository variable COMMIT_AUTHORS)
+      - name: commit authors are on the allowlist (the owner; COMMIT_AUTHORS overrides)
         env:
-          COMMIT_AUTHORS: ${{ vars.COMMIT_AUTHORS }}
+          COMMIT_AUTHORS: >-
+            ${{ vars.COMMIT_AUTHORS
+            || 'raj@atliq.com,59522893+RaajPatel132@users.noreply.github.com' }}
         run: scripts/check-commit-authors.sh "${{ steps.range.outputs.from }}" HEAD
 
   backend:
