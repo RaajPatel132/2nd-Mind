@@ -135,6 +135,20 @@ class Settings(BaseSettings):
     kill_switch: bool = False
     rate_turns_per_minute: Annotated[int, Field(ge=1, le=10_000)] = 10
 
+    # --- links (S4.6, S4.7): fetching is safe by construction, and bounded
+    link_fetch_timeout_s: Annotated[float, Field(gt=0, le=60)] = 10.0
+    link_max_bytes: Annotated[int, Field(ge=10_000, le=20_000_000)] = 2_000_000
+    link_max_redirects: Annotated[int, Field(ge=0, le=10)] = 5
+    link_chunk_tokens: Annotated[int, Field(ge=50, le=2_000)] = 300
+    link_max_chunks: Annotated[int, Field(ge=1, le=200)] = 40
+    max_links_per_message: Annotated[int, Field(ge=1, le=20)] = 3
+    max_links_per_message_guest: Annotated[int, Field(ge=1, le=20)] = 1
+    rate_fetches_per_minute: Annotated[int, Field(ge=1, le=1_000)] = 10
+    rate_fetches_per_minute_guest: Annotated[int, Field(ge=1, le=1_000)] = 3
+    # Test-only: comma separated host names that may be fetched although they are private, and on
+    # any port, so the E2E stack can read its own fixture page server. Refused in production.
+    link_allow_private_hosts: str = ""
+
     # --- web hardening (R.11) and behaviour behind a load balancer (R.12)
     max_request_bytes: Annotated[int, Field(ge=1_024, le=50_000_000)] = 262_144
     # Origins besides the request's own host that may make state-changing requests (comma
@@ -197,6 +211,17 @@ class Settings(BaseSettings):
             )
         if self.log_include_content:
             raise ValueError(f"LOG_INCLUDE_CONTENT must be false when ENV={self.env}")
+        if self.link_allow_private_hosts.strip():
+            raise ValueError(
+                f"LINK_ALLOW_PRIVATE_HOSTS opens the link fetcher to private hosts: it is for "
+                f"development and test only, not ENV={self.env}"
+            )
+
+    @property
+    def allow_private_hosts(self) -> frozenset[str]:
+        return frozenset(
+            h.strip().lower() for h in self.link_allow_private_hosts.split(",") if h.strip()
+        )
 
     @property
     def access_code_required(self) -> bool:

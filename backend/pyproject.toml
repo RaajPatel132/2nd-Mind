@@ -130,7 +130,7 @@ forbidden_modules = [
     "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections",
     "secondmind.memory", "secondmind.providers", "secondmind.policy", "secondmind.metering",
     "secondmind.auth", "secondmind.jobs", "secondmind.observability", "secondmind.evals",
-    "secondmind.config",
+    "secondmind.config", "secondmind.links", "secondmind.persona",
     "fastapi", "starlette", "sqlalchemy", "asyncpg", "alembic", "redis", "arq", "httpx",
     "anthropic", "openai", "langfuse", "langgraph", "structlog", "yaml",
 ]
@@ -142,7 +142,7 @@ source_modules = [
     "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
-    "secondmind.core",
+    "secondmind.links", "secondmind.core",
 ]
 forbidden_modules = ["fastapi", "starlette", "uvicorn"]
 
@@ -153,6 +153,7 @@ source_modules = [
     "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections", "secondmind.memory",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
+    "secondmind.links",
 ]
 forbidden_modules = [
     "sqlalchemy", "asyncpg", "alembic", "anthropic", "openai", "redis", "arq", "langfuse",
@@ -180,7 +181,7 @@ source_modules = [
     "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval", "secondmind.corrections",
     "secondmind.providers", "secondmind.policy", "secondmind.metering", "secondmind.auth",
     "secondmind.jobs", "secondmind.observability", "secondmind.evals", "secondmind.config",
-    "secondmind.core",
+    "secondmind.links", "secondmind.core",
 ]
 forbidden_modules = ["secondmind.memory.store", "secondmind.memory.adapters.store"]
 allow_indirect_imports = true
@@ -194,3 +195,22 @@ public_subpackages = ["adapters"]
 adapter_importers = [
     "secondmind.api", "secondmind.jobs.adapters", "secondmind.evals", "secondmind.*.adapters",
 ]
+
+[[tool.importlinter.contracts]]
+name = "One door out: only links.adapters requests a URL a person gave (S4.6)"
+type = "forbidden"
+source_modules = [
+    "secondmind.api", "secondmind.agent", "secondmind.ingestion", "secondmind.retrieval",
+    "secondmind.corrections", "secondmind.memory", "secondmind.providers", "secondmind.policy",
+    "secondmind.metering", "secondmind.auth", "secondmind.jobs", "secondmind.evals",
+    "secondmind.config", "secondmind.core", "secondmind.links",
+]
+forbidden_modules = ["httpx", "requests", "aiohttp", "urllib3"]
+# links.adapters is the one place. (observability's exporters talk to Langfuse, not to a person's
+# URLs, and aren't in the list. The standard library's own clients are covered by a test.)
+ignore_imports = [
+    "secondmind.links.adapters.** -> httpx",
+    "secondmind.links.adapters -> httpx",
+]
+unmatched_ignore_imports_alerting = "none"
+allow_indirect_imports = true

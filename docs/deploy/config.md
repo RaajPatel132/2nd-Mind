@@ -106,6 +106,16 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `NGINX_MAX_BODY` | Largest request body the web tier passes on. | 1m | 1m | 1m | env |
 | `NGINX_READ_TIMEOUT` | How long the web tier waits on a quiet stream from the API. | 60s | 120s | 120s | env |
 | `NGINX_DESIGN` | Serve the /design gallery (on/off); off in production. | on | off | off | env |
+| `LINK_FETCH_TIMEOUT_S` | Whole-fetch deadline for reading a link, in seconds. | 10 | 10 | 10 | env |
+| `LINK_MAX_BYTES` | Largest page body the fetcher reads, counted after decompression. | 2000000 | 2000000 | 2000000 | env |
+| `LINK_MAX_REDIRECTS` | Redirects the fetcher follows, each checked as a new URL. | 5 | 5 | 5 | env |
+| `LINK_CHUNK_TOKENS` | Size of a page chunk, in tokens (about). | 300 | 300 | 300 | env |
+| `LINK_MAX_CHUNKS` | Most chunks kept for one link. | 40 | 40 | 40 | env |
+| `MAX_LINKS_PER_MESSAGE` | Links read from one message; more are saved as refused. | 3 | 3 | 3 | env |
+| `MAX_LINKS_PER_MESSAGE_GUEST` | The same for a guest. | 1 | 1 | 1 | env |
+| `RATE_FETCHES_PER_MINUTE` | Link fetches a person may start per minute. | 10 | 10 | 10 | env |
+| `RATE_FETCHES_PER_MINUTE_GUEST` | The same for a guest. | 3 | 3 | 3 | env |
+| `LINK_ALLOW_PRIVATE_HOSTS` | Test only: hosts the fetcher may reach although private (refused in production). | unset | unset | refused | env |
 | `POSTGRES_PASSWORD` | The database owner's password (the compose file builds `DATABASE_MIGRATION_URL` from it). | compose default | generated | set | secret |
 | `APP_DB_PASSWORD` | The app database role's password (`DATABASE_URL`, and `bootstrap_role` sets it). | compose default | generated | set | secret |
 | `REDIS_PASSWORD` | The Redis password (`REDIS_URL`). | compose default | generated | set | secret |
