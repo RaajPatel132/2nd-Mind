@@ -20,6 +20,9 @@ x-app-env: &app-env
   LANGFUSE_UI_URL: http://localhost:${LANGFUSE_PORT:-3000}
   LANGFUSE_PROJECT_ID: ${LANGFUSE_PROJECT_ID:-secondmind-local}
   DEV_AUTH: ${DEV_AUTH:-true}
+  # Test stack only (the app refuses to start with this set when ENV=production): the E2E fixture
+  # page server and the two video hosts it stands in for (network aliases on `fixtures`).
+  LINK_ALLOW_PRIVATE_HOSTS: ${LINK_ALLOW_PRIVATE_HOSTS-fixtures,www.youtube.com,vimeo.com}
   SESSION_SECRET: ${SESSION_SECRET:-change-me-local-dev-secret-0123456789abcdef}
 
 x-backend: &backend
@@ -207,6 +210,24 @@ services:
       timeout: 10s
       retries: 10
       start_period: 15s
+
+  # Synthetic pages for the link E2E specs (profile e2e: `make e2e` starts it). The api and the
+  # worker reach it as `fixtures`, and as the video hosts through the aliases.
+  fixtures:
+    profiles: ["e2e"]
+    image: nginxinc/nginx-unprivileged:1.30-alpine
+    volumes:
+      - ./frontend/e2e/fixtures/site/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/e2e/fixtures/site:/srv/site:ro
+    networks:
+      default:
+        aliases: [www.youtube.com, vimeo.com]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/sleep"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
 
   web:
     image: secondmind-web:${IMAGE_TAG:-local}
