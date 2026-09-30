@@ -1,7 +1,9 @@
 # ADR-0012: Deploy on AWS ECS Fargate with Terraform and GitHub OIDC
 
-- **Status:** accepted (S3.9; built in S4)
-- **Date:** 2026-09-24, accepted 2026-09-28
+- **Status:** accepted (S3.9); **topology superseded by ADR-0035** (S4.1). Its choices of region
+  (`us-east-1`), CPU (`arm64`), Langfuse Cloud for tracing and GitHub OIDC for CI carry over.
+  The CloudFront, ALB, Fargate, RDS and ElastiCache topology, the two environments and ECR do not.
+- **Date:** 2026-09-24, accepted 2026-09-28, topology superseded 2026-09-30
 
 ## Context
 

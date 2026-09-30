@@ -16,7 +16,7 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0009](0009-react-vite-generated-client.md) | React + Vite SPA using only the generated /v1 client | accepted |
 | [0010](0010-test-pyramid.md) | pytest, testcontainers and Playwright | accepted |
 | [0011](0011-import-boundaries.md) | Module boundaries enforced with import-linter | accepted |
-| [0012](0012-deploy-aws.md) | AWS ECS Fargate, Terraform, GitHub OIDC | accepted |
+| [0012](0012-deploy-aws.md) | AWS ECS Fargate, Terraform, GitHub OIDC | topology superseded by 0035 |
 | [0013](0013-config-routing-and-hash.md) | Env-only config; per-step routing, prices and a config hash | accepted |
 | [0014](0014-prompt-registry.md) | Versioned, immutable prompt files | accepted |
 | [0015](0015-turn-events-and-streaming.md) | Typed turn events as source of truth; SSE streaming | accepted |
@@ -39,3 +39,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0032](0032-spend-safety.md) | Spend safety: kill switch, caps, provider credit, dollar quotas, rate limits | accepted |
 | [0033](0033-supported-postgres-features.md) | The Postgres features we rely on, checked against RDS Postgres 16 | accepted |
 | [0034](0034-web-hardening-and-staging-access.md) | Web hardening and staging access | accepted |
+| [0035](0035-one-environment-on-one-host.md) | One environment on one host, built to move | proposed |

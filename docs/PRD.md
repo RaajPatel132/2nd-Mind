@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.3 |
-| **Date** | 2026-09-26 (v0.1: 2026-09-23, v0.2: 2026-09-24; changes in §16) |
+| **Status** | Draft v0.4 |
+| **Date** | 2026-09-30 (v0.1: 2026-09-23, v0.2: 2026-09-24, v0.3: 2026-09-26; changes in §16) |
 | **Owner** | Raj Patel |
 | **Phase covered** | Phase 1 (web app, hosted model providers); Phase 2 direction (self-hosted small model, §13.1) |
 | **Working name** | "2nd Mind" (final name open, see §15) |
@@ -59,7 +59,7 @@ Existing options fail in predictable ways:
 | G7 | **Explainability.** Any turn can be opened to see what was decided, written, retrieved, and where time and money went. | Glass box panels (§7.9) populated for 100% of turns. |
 | G8 | **Provider-agnostic model layer.** Every model call goes through one interface; providers and models are chosen per step by configuration. | The full eval suite is run on at least two hosted providers, and the comparison is published on `/evals` (§11.6). Switching a step's model is a config change. |
 | G9 | **A platform surface, not just a UI.** The memory is usable programmatically through a versioned, key-authenticated, usage-metered API and an MCP server. | Public API v1 with OpenAPI docs, API keys, per-key rate limits and usage metering (§7.17). An MCP client can save to and recall from a workspace (§7.18). |
-| G10 | **Operational maturity.** Deployed from code, observable, gated and recoverable. | IaC-provisioned staging and production; eval-gated releases; SLOs with alerts; a public `/status` page; a load-test report; a tested backup restore (§9.10). |
+| G10 | **Operational maturity.** Deployed from code, observable, gated and recoverable. | An IaC-provisioned production environment, and the same code rehearsed locally before every release; eval-gated releases; SLOs with alerts; a public `/status` page; a load-test report; a tested backup restore (§9.10). |
 | G11 | **Engineering quality.** A modular codebase an outside engineer can navigate in minutes. | Module boundaries enforced in CI; every module testable in isolation; ADRs for key decisions (§9.9). |
 
 ### 3.2 Non-goals (Phase 1)
@@ -127,7 +127,7 @@ and what the operator can plan around (ADR-0032; it replaced the token quotas of
 | Evidence | `/evals` (recorded CI runs), `/architecture` | Visitor-triggered eval runs |
 | Models | At least two hosted providers behind one interface; per-step model routing; fallback on provider failure | Self-hosted model (Phase 2) |
 | Programmatic access | Public REST API v1 (keys, rate limits, usage metering, OpenAPI docs); MCP server (P1) | SDKs, webhooks, OAuth apps for third parties |
-| Operations | Staging + production via IaC; eval-gated CI/CD; metrics, logs, traces; SLOs and alerts; `/status` page; load test; backups | Multi-region, autoscaling beyond basic |
+| Operations | One production environment via IaC, rehearsed locally on the same images; eval-gated CI/CD; metrics, logs, traces; SLOs and alerts; `/status` page; load test; backups | A second cloud environment, multi-region, autoscaling beyond basic |
 
 Requirements carry a priority:
 
@@ -520,8 +520,8 @@ These are properties the codebase must have. The technical plan chooses how.
 ### 9.10 Delivery and operations (P0 unless marked)
 
 - **NFR-10.1** **Infrastructure as code** for every cloud resource. No hand-made production resources.
-- **NFR-10.2** **Two environments**, staging and production, from the same code and IaC with different configuration.
-- **NFR-10.3** **CI/CD:** on every change, run lint, types, tests, boundary checks, the OpenAPI diff and a fast eval smoke set. Merge deploys to staging; promotion to production is gated (§11.6). Cloud credentials in CI are short-lived (OIDC), never stored keys.
+- **NFR-10.2** **One environment.** Production is provisioned from code. What stands in for staging is the local rehearsal stack (the same images and compose file, real keys), run before every release, and production itself while it is still behind the access code. A second cloud environment is added only when traffic or risk justifies its cost (ADR-0035).
+- **NFR-10.3** **CI/CD:** on every change, run lint, types, tests, boundary checks, the OpenAPI diff and a fast eval smoke set. A merge to `main` deploys, once CI is green; the release gate (§11.6) applies to that deploy from the point the site opens to visitors. Cloud credentials in CI are short-lived (OIDC), never stored keys.
 - **NFR-10.4** **Database migrations** are versioned, run automatically on deploy, and are backward-compatible for one release so a rollback is safe.
 - **NFR-10.5** **Rollback** to the previous release is one action and is documented in the runbook.
 - **NFR-10.6** **Secrets** live in a managed secret store and reach the runtime at start-up. Runtime roles are least-privilege.
@@ -600,7 +600,7 @@ The retrieval suite is run twice: once with full write-time enrichment (FR-3.6) 
 
 ### 11.6 Eval gates and provider comparison
 
-- **Release gate.** Promotion to production requires the eval suite to pass: no metric in §11.4 below target, and no regression beyond a configured tolerance against the last production run. Injection resistance must stay at 1.00. A failed gate blocks the release and is visible in CI.
+- **Release gate.** A deploy to production requires the eval suite to pass: no metric in §11.4 below target, and no regression beyond a configured tolerance against the last production run. Injection resistance must stay at 1.00. A failed gate blocks the release and is visible in CI.
 - **Change gate.** A pull request that touches prompts, models, retrieval or ingestion runs the relevant suites and posts the deltas on the pull request.
 - **Provider comparison.** The full suite is run on at least two hosted providers (and, in Phase 2, the self-hosted model). `/evals` shows quality, p50/p95 latency and cost per 1,000 turns per configuration side by side.
 
@@ -624,7 +624,7 @@ Phase 1 is done when all of the following hold:
 8. Export and account deletion work end to end.
 9. The eval suite has been run on at least two hosted providers, and the comparison is on `/evals`.
 10. Public API v1 works with API keys, scopes, rate limits and usage metering, and its OpenAPI docs are live.
-11. Staging and production are provisioned by IaC and deployed by CI, with the eval release gate enforced.
+11. Production is provisioned by IaC and deployed by CI, with the eval release gate enforced, and the same images run in the local rehearsal before each release.
 12. Dashboards, SLO alerts and the `/status` page are live, and the load-test report is published.
 
 The MCP server (§7.18), the feedback loop (§7.20) and the tested backup restore are P1: required before Phase 1 is declared done, not for the first public release.
@@ -712,6 +712,8 @@ Goal: show, with evidence, when a small self-hosted model can replace a hosted f
 | 2026-09-24 | **No external tool gateway.** The internal write policy and framework-level confirmation cover a single-agent app. §7.14 is now the model provider layer. |
 | 2026-09-24 | **Hosted providers first, self-hosted later:** at least two hosted providers behind one interface in Phase 1; a self-hosted small model for ingestion extraction in Phase 2 (§13.1), adopted only through the same eval gate. |
 | 2026-09-24 | **Platform surface:** public REST API v1 with keys, scopes, rate limits and usage metering (P0); MCP server (P1). |
-| 2026-09-24 | **Operational bar:** IaC staging + production, eval-gated releases, SLOs and alerts, public `/status`, load test, runbook, tested restore. |
+| 2026-09-24 | **Operational bar:** ~~IaC staging + production~~ (one environment from 2026-09-30, below), eval-gated releases, SLOs and alerts, public `/status`, load test, runbook, tested restore. |
 | 2026-09-24 | **Engineering bar:** modular by domain, ports and adapters, boundaries enforced in CI, ADRs, prompt and config versioning. |
 | 2026-09-26 | v0.3: exact counts and current-then-earlier values (**FR-5.5, FR-5.6**); situational questions, person/topic reminders and conversation recall (**FR-6.8 to FR-6.10**). |
+| 2026-09-30 | v0.4: **one environment** (NFR-10.2, G10, §5, NFR-10.3, §11.6, exit criterion 11). Two environments would cost twice as much for a handful of visitors and protect nobody; the local rehearsal stack and production-behind-the-code stand in for staging (ADR-0035). |
+| 2026-09-30 | **AWS is used to learn DevOps, on its new-account credits, then the app moves to a free host** (Oracle Cloud Always Free) or a cheap VPS. Target: no cash beyond the domain. Everything is built portable: containers, compose, Caddy and Cloudflare DNS move unchanged (ADR-0035). |
