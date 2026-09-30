@@ -1,7 +1,6 @@
 # ADR-0036: Link fetching and fetch safety
 
-- **Status:** accepted (part 1, S4.6); part 2 (extraction, chunking, partial rules, video, cost) is
-  written with S4.7
+- **Status:** accepted (part 1, S4.6; part 2, S4.7)
 - **Date:** 2026-09-30
 
 ## Context
@@ -69,3 +68,40 @@ a browser is saved as *partial* (S4.7): what's in the HTML, and the person's own
 Some legitimate links are refused: a page on a non-standard port, and any site that only answers on
 a private address. That is the intended trade. Every refusal has a stable rule code the glass box
 shows. The fetcher reads the page a person pasted, nothing more, and its limits are settings.
+
+## Part 2: reading the page (S4.7)
+
+**Extraction** is in-house, on the standard library's HTML parser (`links/adapters/extract.py`): no
+new dependency, nothing to audit, and it is the one place hidden text is decided. It reads Open
+Graph and JSON-LD for title, site, author and date; finds the main text readability-style (an
+`article` or `main`, else the block with the most prose and the least link text); drops scripts,
+comments, hidden and furniture elements; and sets three signals: a paywall (text, class names or
+structured data), a script-only page, and too short. A library such as trafilatura would do better on
+odd layouts at the price of a dependency tree; the extractor is one module and can be swapped.
+
+**Chunks** are about `LINK_CHUNK_TOKENS` (300) tokens, cut at paragraph and sentence ends, each one
+starting with the last sentences of the one before, up to `LINK_MAX_CHUNKS`. They are stored as
+`chunk` keys of the item (`memory_keys`, with a position), embedded with their title, so the soft
+channel finds them with no new search code; a hit collapses to its item and hands over the passage.
+
+**Status** follows the table in the sprint: `full` when the main text is found; `partial` for a
+paywall, a script-only page, 401, 403 or 429, too large, too short, or a PDF (whatever there is is
+kept, and "Add the text" completes it); `failed` for DNS, connection or timeout errors and a 5xx
+after one retry; `refused` for a safety rule or a limit, with no request made.
+
+**Video** (YouTube, Vimeo): title, channel, description, duration and thumbnail from oEmbed and the
+page's own metadata; a field the source doesn't give stays empty; no transcript. Other video sites
+are pages.
+
+**The digest** (`digest@1`, Luna) writes the title, summary, tags and cue situations; its input is at
+most 12,000 characters of the page in a data block. If the model's answer is invalid, or the
+provider is down, the page's own title and description stand in and the link is still saved.
+
+**Where it is written.** The read belongs to the turn that saved the link: the item's fill-in goes on
+that turn's write log, the model calls on its ledger as the person's cost, and a `fetch` event is
+appended to it. Undoing the turn removes the item. A chunk saved without a vector (the embedding
+provider was down) is found by words until a later job embeds it.
+
+**Cost of saving a link**, estimated from the price table (a live run, L1, confirms it): the digest is
+about 3,500 input and 150 output tokens on Luna, about $0.0004; the chunk embeddings, about ten of 300
+tokens at $0.02 per million, about $0.00006. About **$0.0005 a link**, against $0.006 for a chat turn.

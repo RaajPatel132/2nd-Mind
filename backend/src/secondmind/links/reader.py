@@ -24,6 +24,7 @@ from secondmind.links.datablock import data_block
 from secondmind.links.digest import DigestOutput
 from secondmind.links.model import ChunkRow, FetchStatus, LinkKind, LinkSource
 from secondmind.links.urls import FetchRefusedError, site_name, video_site
+from secondmind.policy import scan_secrets
 
 MIN_WORDS_TO_KEEP = 10  # below this, a page has no text worth a digest or a chunk
 
@@ -389,15 +390,22 @@ class LinkReader:
         fallback_title: str,
         fallback_summary: str,
     ) -> None:
+        """The digest's fields, unless any of them holds a secret (a page can try to plant one
+        through an obedient model): then the page's own title and description stand in. Nothing a
+        page says is stored with a password, PIN or key in it (ADR-0021)."""
+        if digest is not None and _has_secret(
+            digest.title, digest.summary, *digest.tags, *digest.cues
+        ):
+            digest = None
         if digest is not None:
-            result.title = digest.title.strip() or fallback_title
-            result.summary = digest.summary.strip() or fallback_summary
+            result.title = digest.title.strip() or _scrubbed(fallback_title)
+            result.summary = digest.summary.strip() or _scrubbed(fallback_summary)
             result.tags = [t.strip().lower() for t in digest.tags if t.strip()][:6]
             result.cues = [c.strip() for c in digest.cues if c.strip()][:3]
             result.digested = True
         else:
-            result.title = fallback_title
-            result.summary = fallback_summary
+            result.title = _scrubbed(fallback_title)
+            result.summary = _scrubbed(fallback_summary)
 
     async def _chunks(self, title: str, text: str) -> list[ChunkRow]:
         pieces = chunk_text(
@@ -411,13 +419,22 @@ class LinkReader:
             ChunkRow(
                 id=uuid4(),
                 position=c.position,
-                text=c.text,
-                content_hash=hashlib.sha256(c.text.encode("utf-8")).hexdigest(),
+                text=_scrubbed(c.text),
+                content_hash=hashlib.sha256(_scrubbed(c.text).encode("utf-8")).hexdigest(),
                 embedding=None if vectors is None else vectors[i],
                 embedding_model=model,
             )
             for i, c in enumerate(pieces)
         ]
+
+
+def _has_secret(*texts: str) -> bool:
+    return any(scan_secrets(t).hits for t in texts if t)
+
+
+def _scrubbed(text: str) -> str:
+    """``text`` with any secret it holds redacted."""
+    return scan_secrets(text).redacted if text else text
 
 
 def _stamp(result: ReadResult, fetched: FetchedPage) -> ReadResult:
