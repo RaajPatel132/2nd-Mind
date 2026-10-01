@@ -128,6 +128,11 @@ class TemplateDeps:
     embedding_model: str
 
 
+def display_name(seed_id: str) -> str:
+    """A seed's id as the person's name a visitor reads: ``aditi-rao`` is Aditi Rao."""
+    return seed_id.replace("-", " ").title()
+
+
 async def seed_template(
     deps: TemplateDeps, seed: PersonaSeed, *, hash_of: str | None = None, force: bool = False
 ) -> tuple[Workspace, Seeded | None]:
@@ -157,7 +162,7 @@ async def seed_template(
         embedding_model=deps.embedding_model,
         conversation=deps.conversation(scope),
         sources=deps.sources(scope),
-        label=f"the {seed.id} persona",
+        label=f"{display_name(seed.id)}'s memory",
     )
     await deps.store.mark_template(
         workspace.id, seed_id=seed.id, version=seed.version, seed_hash=digest
