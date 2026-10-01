@@ -38,6 +38,8 @@ test('a save shows its steps in order while running, and the same steps after a 
   // Let the last label swap finish (the running label leaves before the result enters).
   await expect.poll(() => turn.getByTestId('step-label').count()).toBe(await turn.getByTestId('trail-step').count())
   await expect(turn.locator('[data-testid="trail-step"][data-state="running"]')).toHaveCount(0)
+  // A row turns done a beat before its result label replaces the running one; read it after.
+  await expect(turn.getByTestId('step-label').filter({ hasText: 'Writing the reply' })).toHaveCount(0)
   const final = await rows(turn)
   expect(final.map((r) => r.step)).toEqual(['understand', 'extract', 'entities', 'reconcile', 'guard', 'save', 'enrich', 'answer'])
   expect(final.every((r) => r.state === 'done')).toBe(true)
