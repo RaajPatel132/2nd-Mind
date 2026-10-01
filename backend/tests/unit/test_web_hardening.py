@@ -3,7 +3,9 @@ must be JSON and must not come from another site; bodies have a size limit; the 
 and the dev helpers exist only where they belong; and in production, dev sign-in needs the access
 code (compared in constant time, attempts limited, one user per email)."""
 
+import re
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -333,3 +335,17 @@ async def test_the_access_code_is_compared_in_constant_time(base_env: dict[str, 
 async def test_development_needs_no_access_code(dev: httpx.AsyncClient) -> None:
     assert (await dev.get("/v1/meta")).json()["access_code_required"] is False
     assert (await dev.post("/v1/auth/dev-login")).status_code == 200
+
+
+def test_the_web_tier_loads_nothing_from_another_origin_so_a_remote_image_is_blocked() -> None:
+    # S4.8: the UI renders a page's words as text, and the policy refuses a remote image anyway.
+    template = Path(__file__).parents[3] / "frontend" / "nginx" / "default.conf.template"
+    found = re.search(r'Content-Security-Policy "([^"]+)"', template.read_text())
+    assert found, "the web tier sends a Content-Security-Policy"
+    policy = {
+        parts[0]: parts[1:] for parts in (d.split() for d in found.group(1).split(";")) if parts
+    }
+    assert policy["img-src"] == ["'self'", "data:"]
+    assert policy["default-src"] == ["'self'"]
+    for directive, sources in policy.items():
+        assert not [s for s in sources if s == "*" or "//" in s or s.startswith("http")], directive

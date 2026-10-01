@@ -130,6 +130,18 @@ def test_open_dev_sign_in_and_its_helpers_exist_only_in_development(
     assert not load_settings(base_env | {"DEV_AUTH": "false"}).dev_helpers
 
 
+def test_the_link_fetcher_opens_to_private_hosts_only_in_development_and_test(
+    base_env: dict[str, str],
+) -> None:
+    # The E2E stack reads its own fixture pages through this allowance; a deployed app never may.
+    with pytest.raises(ConfigError, match="LINK_ALLOW_PRIVATE_HOSTS"):
+        load_settings(deployed(base_env, LINK_ALLOW_PRIVATE_HOSTS="fixtures"))
+    for env in ("development", "test"):
+        allowed = load_settings(base_env | {"ENV": env, "LINK_ALLOW_PRIVATE_HOSTS": "Fixtures, b"})
+        assert allowed.allow_private_hosts == frozenset({"fixtures", "b"})
+    assert load_settings(base_env).allow_private_hosts == frozenset()
+
+
 def test_guests_are_closed_until_s5_opens_the_site(base_env: dict[str, str]) -> None:
     assert not load_settings(base_env).guests_open
     assert load_settings(base_env | {"GUESTS_OPEN": "true"}).guests_open
