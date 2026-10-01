@@ -64,6 +64,11 @@ table does. Where a number misses its target, it is shown with the target; the t
 question is the open item. The evaluation sets are small and synthetic: they say how it did on
 those cases, not on your data.
 
+To read a run in full, `make eval-report A=<a run id from the table>` prints hit@5 and MRR for each
+shape of question, the no-answer rate and the cost per case. `make eval-ingest` replays the
+ingestion cases through the real code with no keys in a couple of seconds: that checks the code
+around the model, not the model, which only a live run can.
+
 ## Why it is built this way
 
 - **Reconcile, don't de-duplicate.** A new fact is compared with what is known and becomes new,
