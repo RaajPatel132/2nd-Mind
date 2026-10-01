@@ -361,6 +361,22 @@ it to `ui/` and to `/design` first.
   times under a day ("4 min ago"), dates after.
 - A step's live label is what it is doing; its done label is what it found.
 
+### The line, and how we talk about the product
+
+The product's line is **"A personal memory that shows its work."** It is the headline of the
+landing page, the first line of the README and the text of the link-preview card, so it changes
+in all of them or none. Its three beats are **Catch it. Find it. Prove it.**: save without a
+filing decision, recall by meaning, time and person, and open any answer to see how it got there.
+
+- **Measured or absent.** No superlatives ("best", "smartest", "never forgets"). A claim is a
+  number from a recorded run, or it is a thing the reader can open and see. When a number misses
+  its target, show it with the target.
+- **Say it, then show it.** One plain sentence of what happens, then the example. The examples
+  on the landing page are the sample persona's own prompts, read from `meta.persona`, so they
+  cannot drift from the seed.
+- **Three names, used the same way everywhere:** the **glass box** (the whole inspector), the
+  **Trail** (the steps shown inline in a turn), the **memory diff** (what a save wrote).
+
 ---
 
 ## 11. Accessibility
