@@ -5,7 +5,7 @@
 
 ## Context
 
-FR-11.2, FR-13.4 and NFR-3.5. A recruiter clicks "Try the sample persona" once, from an office
+FR-11.2, FR-13.4 and NFR-3.5. A visitor clicks "Try the sample persona" once, from an office
 network shared with colleagues who do the same. There is no sign-up. The site must still protect
 the budget (a stranger is not a customer), keep one visitor's memory from another's, and not
 keep anyone's content longer than the demo needs.
@@ -23,8 +23,8 @@ is simply not believed (the visitor gets a new guest, which counts against the a
 IPv6 per /64. The address comes from `X-Forwarded-For`, counted `TRUSTED_PROXY_HOPS` entries from
 the right (Caddy, then nginx: 2), so a header the client sends can't choose the address. With fewer
 entries than proxies we trust, the connection's own address is used. Over the cap a visitor gets a
-clear refusal and a `Retry-After`; guests who already exist carry on. Ten, not two, because a hiring
-panel often shares one office address; what actually limits spend is the next rule.
+clear refusal and a `Retry-After`; guests who already exist carry on. Ten, not two, because a team
+in one office often shares one address; what actually limits spend is the next rule.
 
 **Guests get a share of the day's cap.** All guests together may spend at most
 `SPEND_CAP_GUEST_DAILY_USD` ($0.30 of the $0.50) a day. The total comes from the usage ledger
