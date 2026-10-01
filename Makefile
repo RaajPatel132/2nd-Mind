@@ -97,7 +97,7 @@ migrate: ## Apply database migrations (against the compose database)
 
 # ------------------------------------------------------------------ quality gates
 .PHONY: check
-check: commits lint typecheck imports openapi-check test test-int web-check infra-check secrets audit scan-images ## Everything CI runs, except E2E
+check: commits lint typecheck imports openapi-check headline-check test test-int web-check infra-check secrets audit scan-images ## Everything CI runs, except E2E
 
 .PHONY: commits
 commits: ## Commit messages not yet on origin/main follow the standard; authors too if COMMIT_AUTHORS is set
@@ -118,6 +118,10 @@ typecheck: ## mypy --strict (backend)
 .PHONY: imports
 imports: ## Import-boundary contracts (import-linter)
 	$(BACKEND_RUN) env PYTHONPATH=tools lint-imports
+
+.PHONY: headline-check
+headline-check: ## Fail if frontend/public/headline.json is out of date with the committed live runs
+	$(BACKEND_RUN) python -m secondmind.evals headline --check
 
 .PHONY: openapi-check
 openapi-check: ## Fail if backend/openapi.json is out of date with the code
@@ -335,7 +339,8 @@ restore-local: ## Load a nightly dump into the local stack: make restore-local D
 
 # ------------------------------------------------------------------ codegen and formatting
 .PHONY: gen-client
-gen-client: ## Regenerate backend/openapi.json and the TS client from it
+gen-client: ## Regenerate backend/openapi.json, the TS client and the landing page's headline numbers
+	$(BACKEND_RUN) python -m secondmind.evals headline --write
 	$(BACKEND_RUN) python -m secondmind.api.openapi --write openapi.json
 	$(WEB_RUN) gen-client
 

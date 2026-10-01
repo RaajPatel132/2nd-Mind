@@ -314,6 +314,10 @@ def main(argv: list[str] | None = None) -> int:
     record.add_argument("--cases", default=None, help="ids or prefixes, comma separated")
     record.add_argument("--diff", action="store_true", help="print each case's diff")
     record.add_argument("--write", action="store_true", help="rewrite the case files")
+    head = sub.add_parser("headline", help="the landing page's numbers, from the committed runs")
+    mode = head.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--write", action="store_true", help="write frontend/public/headline.json")
+    mode.add_argument("--check", action="store_true", help="fail when that file is out of date")
     seed = sub.add_parser("seed-dev", help="seed the recall fixture into the dev workspace")
     seed.add_argument("--email", default=None, help="the user to seed (default DEV_USER_EMAIL)")
     seed.add_argument("--web-url", default="http://localhost:8080", help="printed with the login")
@@ -325,6 +329,7 @@ def main(argv: list[str] | None = None) -> int:
         "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
         "record-replays": lambda: _record_replays(args),
+        "headline": lambda: _headline(args.check),
     }
     try:
         return commands.get(args.suite, lambda: _run_suite(args))()
@@ -337,6 +342,20 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         sys.stderr.write(f"{exc}\n")
         return 2
+
+
+def _headline(check_only: bool) -> int:
+    from secondmind.evals import headline  # noqa: PLC0415
+
+    if check_only:
+        if headline.check():
+            sys.stdout.write("headline.json is up to date\n")
+            return 0
+        sys.stderr.write("headline.json is out of date: run `make gen-client`\n")
+        return 1
+    path = headline.write()
+    sys.stdout.write(f"wrote {path}\n")
+    return 0
 
 
 def _live_check() -> int:

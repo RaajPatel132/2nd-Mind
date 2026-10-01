@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "metrics": [
+    {
+      "id": "retrieval_hit_rate",
+      "label": "Retrieval hit rate",
+      "value": 0.9024,
+      "display": "90%",
+      "detail": "hit@5: the answer's source was in the top five for 37 of 41 questions with a known answer. Target 85%.",
+      "run": "20260929T160542Z-1b15a10"
+    },
+    {
+      "id": "relative_date_accuracy",
+      "label": "Relative-date accuracy",
+      "value": 0.8462,
+      "display": "85%",
+      "detail": "11 of 13 dates worked out from words like 'last night' or 'next May' were right.",
+      "run": "20260929T122015Z-996c9bf"
+    },
+    {
+      "id": "recall_p95_latency_s",
+      "label": "p95 time to answer a question",
+      "value": 17.246,
+      "display": "17.2 s",
+      "detail": "From sending a question to the end of the answer, over the recall set. Target 6 s; recall is being made faster.",
+      "run": "20260929T160542Z-1b15a10"
+    }
+  ],
+  "runs": [
+    {
+      "id": "20260929T160542Z-1b15a10",
+      "suite": "recall",
+      "date": "2026-09-29",
+      "sha": "1b15a10",
+      "cases": 51,
+      "passed": 45,
+      "models": [
+        "anthropic:claude-haiku-4-5",
+        "openai:gpt-5.4-mini",
+        "openai:gpt-6-luna",
+        "openai:text-embedding-3-small"
+      ]
+    },
+    {
+      "id": "20260929T122015Z-996c9bf",
+      "suite": "ingest",
+      "date": "2026-09-29",
+      "sha": "996c9bf",
+      "cases": 19,
+      "passed": 17,
+      "models": [
+        "anthropic:claude-haiku-4-5",
+        "openai:gpt-6-luna",
+        "openai:text-embedding-3-small"
+      ]
+    }
+  ]
+}

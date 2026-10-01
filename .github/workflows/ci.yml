@@ -78,6 +78,8 @@ jobs:
         run: make -C .. imports
       - name: OpenAPI snapshot is up to date
         run: make -C .. openapi-check
+      - name: the landing page's numbers are up to date
+        run: make -C .. headline-check
       - name: unit tests
         run: make -C .. test
       - name: integration tests (testcontainers Postgres + Redis)
