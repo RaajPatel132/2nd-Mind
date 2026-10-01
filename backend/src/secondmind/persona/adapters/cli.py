@@ -14,7 +14,7 @@ from secondmind.config import Step, load_app_config
 from secondmind.core import WorkspaceScope
 from secondmind.links.adapters import SqlLinkStore
 from secondmind.memory.adapters import EMBED_DIMENSIONS
-from secondmind.persona import TemplateDeps, load_persona, seed_hash, seed_template
+from secondmind.persona import SEED_FILE, TemplateDeps, load_persona, seed_hash, seed_template
 from secondmind.persona.adapters.store import SqlPersonaStore
 from secondmind.providers import ModelCall
 from secondmind.retrieval.adapters import SqlConversationStore
@@ -46,8 +46,10 @@ async def _seed(force: bool) -> int:
             embed=embed,
             embedding_model=model,
         )
-        seed = load_persona()
-        template, seeded = await seed_template(deps, seed, hash_of=seed_hash(), force=force)
+        # An installed package isn't next to the seed: the resources directory says where it is.
+        path = config.settings.resources_dir / SEED_FILE
+        seed = load_persona(path)
+        template, seeded = await seed_template(deps, seed, hash_of=seed_hash(path), force=force)
         if seeded is None:
             sys.stdout.write(
                 f"The persona template is up to date (seed {seed.id} v{seed.version}).\n"
