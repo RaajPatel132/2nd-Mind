@@ -198,6 +198,8 @@ jobs:
         env:
           MODEL_PROVIDER_MODE: fake
         run: docker compose --profile e2e up -d --build --wait --wait-timeout 600
+      - name: load the sample persona's template
+        run: docker compose exec -T api python -m secondmind.persona.adapters seed
       - name: playwright smoke
         working-directory: frontend
         env:

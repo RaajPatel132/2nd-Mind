@@ -22,6 +22,7 @@ flag applies.
 7. [Restore the database](#7-restore-the-database) (tried locally)
 8. [Alerts](#8-alerts) (S8)
 9. [The host](#9-the-host) (yours to run)
+10. [The sample persona and guests](#10-the-sample-persona-and-guests) (tried locally)
 
 ## 1. Kill switch
 
@@ -308,3 +309,28 @@ a cushion, not working memory.
 
 **Timers.** `systemctl list-timers "secondmind-*"` shows the nightly dump and the reboot window;
 `sudo /opt/secondmind/infra/host/backup.sh` takes a dump now.
+
+## 10. The sample persona and guests
+
+**The template.** The sample persona (Aditi Rao) is copied from a template workspace that nobody can
+enter. `make seed-persona` loads it (locally, in the compose stack); the deploy does the same after a
+release is serving, and does nothing when the seed file is unchanged. `make seed-persona FORCE=1`
+reloads it. A failed load never rolls a release back: guests just can't open the sample until it is
+loaded (`POST /v1/guest` says so). Copies already made keep the seed they were made from.
+In production the template's embeddings are real (about $0.01, recorded on the ledger as the
+app's own usage); locally and on the fake provider they are free.
+
+**Guests.** A guest is a user with no email, made by `POST /v1/guest`. While `GUESTS_OPEN` is off it
+asks for the access code. The limits and their variables are in
+[the configuration matrix](deploy/config.md): `GUEST_NEW_PER_IP_PER_DAY`, `GUEST_TTL_DAYS`,
+`RATE_TURNS_PER_MINUTE_GUEST`, `SPEND_CAP_GUEST_DAILY_USD`, `TRUSTED_PROXY_HOPS`.
+
+- **"Too many new guests from your network"** is the per-address cap. It counts the address in
+  `X-Forwarded-For` that many proxies from the right (2 behind Caddy and nginx). If every visitor
+  is refused at once, the hop count is wrong (every guest then shares the proxy's address): check
+  `TRUSTED_PROXY_HOPS` against what the edge really does.
+- **"The sample has been used up for today"** is `guest_cap`: all guests together spent their share
+  (`SPEND_CAP_GUEST_DAILY_USD`) of the day's cap. Signed-in people carry on; it resets at 00:00 UTC.
+- **Expiry.** A daily job (03:15 UTC) empties the memory of guests older than `GUEST_TTL_DAYS`. The
+  usage ledger stays, so the caps and totals stay right. It is idempotent and needs no attention; a
+  worker that was down at 03:15 simply runs it the next night.

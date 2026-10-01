@@ -256,6 +256,7 @@ scan-images: images ## Trivy scan: fail on fixable CRITICAL vulnerabilities
 e2e: ## Playwright smoke test against the compose stack in fake-provider mode
 	$(COMPOSE) build api web
 	MODEL_PROVIDER_MODE=fake $(COMPOSE) --profile e2e up -d --wait
+	$(COMPOSE) exec -T api python -m secondmind.persona.adapters seed
 	cd frontend && E2E_BASE_URL=$(WEB_URL) npx playwright test
 
 # ------------------------------------------------------------------ infrastructure (ADR-0035)
