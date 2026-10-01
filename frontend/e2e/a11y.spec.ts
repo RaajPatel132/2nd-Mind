@@ -49,3 +49,23 @@ test('/design', async ({ page }) => {
   await expect(page.getByTestId('swatch-hex').first()).toHaveText(/^#[0-9A-F]{6}$/)
   expect(await page.getByRole('button', { name: /^Replay / }).count()).toBeGreaterThanOrEqual(7)
 })
+
+// S4.13: axe also finds nothing serious on the landing page, on /evals and on the sample persona's
+// screen (the first-run chips, the switcher and the glass box already open).
+test('the landing page and /evals', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByTestId('landing')).toBeVisible()
+  await expect(page.getByTestId('headline-stat')).toHaveCount(3)
+  await serious(page, 'landing')
+  await page.goto('/evals')
+  await expect(page.getByTestId('evals-page')).toBeVisible()
+  await serious(page, '/evals')
+})
+
+test('the sample persona opens with its suggested prompts and passes axe', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('try-persona').click()
+  await expect(page.getByTestId('composer')).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('suggested-prompts')).toBeVisible()
+  await serious(page, 'sample persona')
+})
