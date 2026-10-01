@@ -43,3 +43,49 @@ test('no horizontal scroll, a reachable composer, and the inspector where it bel
   await page.keyboard.press('F6')
   await expect(page.getByTestId('inspector')).toBeHidden()
 })
+
+// S4.13, ledger 46: at 360 px the top bar's controls never sit on top of each other, and the spend
+// chip that floats up after a turn doesn't land on the quota ring or its neighbours.
+type Box = { x: number; y: number; width: number; height: number }
+
+function overlaps(a: Box, b: Box): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+}
+
+test('the top bar keeps its controls apart and the spend chip off the quota ring', async ({ page }, testInfo) => {
+  await freshUser(page, testInfo)
+  const controls = {
+    brand: page.getByRole('link', { name: '2nd Mind, home' }),
+    memory: page.getByRole('button', { name: /^Memory:/ }),
+    upcoming: page.getByTestId('nav-upcoming'),
+    ring: page.getByTestId('quota-ring'),
+  }
+  async function boxes(): Promise<Map<string, Box>> {
+    const found = new Map<string, Box>()
+    for (const [name, locator] of Object.entries(controls)) {
+      const box = await locator.boundingBox()
+      if (box) found.set(name, box)
+    }
+    return found
+  }
+
+  const rest = await boxes()
+  expect(rest.size).toBe(4)
+  const names = [...rest.keys()]
+  for (const [i, first] of names.entries())
+    for (const second of names.slice(i + 1)) {
+      const a = rest.get(first)
+      const b = rest.get(second)
+      if (a && b) expect(overlaps(a, b), `${first} and ${second}`).toBe(false)
+    }
+
+  const composer = page.getByTestId('composer')
+  await composer.fill('I live in Bengaluru')
+  await composer.press('Enter')
+  const delta = page.getByTestId('quota-delta')
+  await delta.waitFor({ state: 'visible', timeout: 60_000 })
+  const chip = await delta.boundingBox()
+  if (chip) for (const [name, box] of await boxes()) expect(overlaps(chip, box), `the spend chip and ${name}`).toBe(false)
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(0)
+})

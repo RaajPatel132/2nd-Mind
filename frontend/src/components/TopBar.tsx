@@ -62,7 +62,7 @@ export function TopBar({ me, activeId, onSwitch, onSample, onScratch, providerMo
         <div className="flex min-w-0 items-center gap-3">
           <a href="/" className="inline-flex items-center gap-2.5 rounded-sm text-fg no-underline" aria-label="2nd Mind, home">
             <BrandMark />
-            <Wordmark />
+            <Wordmark className="max-sm:hidden" />
           </a>
           <WorkspaceSwitcher
             workspaces={me.workspaces}

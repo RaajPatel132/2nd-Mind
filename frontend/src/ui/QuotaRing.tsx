@@ -38,7 +38,7 @@ export const QuotaRing = forwardRef<HTMLButtonElement, Props>(function QuotaRing
           <motion.span
             key={delta.key}
             aria-hidden
-            className="pointer-events-none absolute right-full mr-2 whitespace-nowrap font-machine text-mono-sm text-fg-2"
+            className="pointer-events-none absolute right-full mr-2 whitespace-nowrap font-machine text-mono-sm text-fg-2 max-sm:right-0 max-sm:top-full max-sm:mr-0 max-sm:mt-1"
             initial={{ opacity: 0, y: 6 }}
             animate={reduce ? { opacity: [0, 1, 0] } : { opacity: [0, 1, 0], y: [6, 0, -14] }}
             transition={t.float}

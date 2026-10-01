@@ -1,13 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { inspect, send } from './helpers.ts'
+import { freshUser, inspect, send } from './helpers.ts'
 
 // S1.13 smoke: send a message, see the streamed reply, open the glass box (now the Inspector),
 // see Timing & cost.
 test.describe('chat and glass box', () => {
-  test('a reply streams in and Timing & cost is filled in', async ({ page }) => {
+  test('a reply streams in and Timing & cost is filled in', async ({ page }, testInfo) => {
     const message = `hello from e2e ${String(Date.now())}`
-    await page.goto('/')
-    await expect(page.getByTestId('composer')).toBeVisible()
+    await freshUser(page, testInfo)
 
     const turn = await send(page, message)
     const reply = turn.getByTestId('assistant-message')
@@ -31,27 +30,25 @@ test.describe('chat and glass box', () => {
     await expect(timing.getByTestId('trace-link')).toBeVisible()
   })
 
-  test('history is there after a refresh', async ({ page }) => {
+  test('history is there after a refresh', async ({ page }, testInfo) => {
     const message = `remember me ${String(Date.now())}`
-    await page.goto('/')
+    await freshUser(page, testInfo)
     await send(page, message, message)
 
     await page.reload()
     await expect(page.getByTestId('messages').getByText(message, { exact: true }).first()).toBeVisible()
   })
 
-  test('no horizontal scroll at this width', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.getByTestId('composer')).toBeVisible()
+  test('no horizontal scroll at this width', async ({ page }, testInfo) => {
+    await freshUser(page, testInfo)
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
-  test('fonts are self-hosted: no request leaves for a font host', async ({ page }) => {
+  test('fonts are self-hosted: no request leaves for a font host', async ({ page }, testInfo) => {
     const requests: string[] = []
     page.on('request', (r) => requests.push(r.url()))
-    await page.goto('/')
-    await expect(page.getByTestId('composer')).toBeVisible()
+    await freshUser(page, testInfo)
     await page.evaluate(() => document.fonts.ready)
     const origin = new URL(page.url()).origin
     expect(requests.filter((u) => !u.startsWith(origin) && !u.startsWith('data:'))).toEqual([])

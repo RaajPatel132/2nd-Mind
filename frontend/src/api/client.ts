@@ -9,6 +9,7 @@ import type { components, paths } from './schema.gen'
 export type Schemas = components['schemas']
 export type Me = Schemas['MeOut']
 export type WorkspaceInfo = Schemas['WorkspaceOut']
+export type PersonaInfo = NonNullable<Schemas['MetaOut']['persona']>
 export type Meta = Schemas['MetaOut']
 export type Picker = Schemas['PickerOut']
 export type ModelChoice = Schemas['ModelChoiceOut']
@@ -150,6 +151,16 @@ export async function listEntities(workspaceId: string): Promise<Entity[]> {
 /** Edit one memory in place; it runs as its own undoable turn (S3.12). */
 export async function editItem(itemId: string, body: ItemEdit): Promise<Turn> {
   return unwrap(await api.PATCH('/v1/items/{item_id}', { params: { path: { item_id: itemId } }, body }))
+}
+
+/** Start as a guest with a copy of the sample persona, or carry on as the guest this browser already is. */
+export async function startGuest(accessCode?: string): Promise<Me> {
+  return unwrap(await api.POST('/v1/guest', { body: accessCode ? { access_code: accessCode } : {} }))
+}
+
+/** A guest's empty memory of their own (S4.12). */
+export async function openScratch(): Promise<WorkspaceInfo> {
+  return unwrap(await api.POST('/v1/scratch'))
 }
 
 /** The caller's copy of the sample persona: made the first time, the same one after (S4.11). */

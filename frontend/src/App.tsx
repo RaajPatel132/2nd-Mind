@@ -6,8 +6,11 @@ import { Inspector } from './components/Inspector'
 import { ItemContext, type ItemActions, type ItemField } from './components/itemContext'
 import { ItemSheet } from './components/ItemSheet'
 import { UpcomingPage } from './components/UpcomingPage'
-import { AccessGate, BootError, Connecting, SignedOut } from './components/Screens'
+import { BootError, Connecting, SignedOut } from './components/Screens'
+import { EvalsPage } from './components/EvalsPage'
+import { Landing } from './components/Landing'
 import { TopBar } from './components/TopBar'
+import { SuggestedPrompts } from './components/SuggestedPrompts'
 import { useConversation } from './hooks/useConversation'
 import { useHeldActions } from './hooks/useHeldActions'
 import { useMediaQuery } from './hooks/useMediaQuery'
@@ -19,11 +22,22 @@ import { Dot, cx, useToast, type SheetMode } from './ui'
 
 export default function App() {
   const state = useSession()
+  // /evals is public: the runs behind the landing page's numbers, for anyone (S4.13).
+  if (window.location.pathname.replace(/\/+$/, '') === '/evals') return <EvalsPage />
   if (state.status === 'loading') return <Connecting />
   if (state.status === 'signed-out') return <SignedOut onSignIn={state.retry} />
-  if (state.status === 'needs-code') return <AccessGate onSignIn={state.signIn} />
+  if (state.status === 'landing')
+    return <Landing meta={state.meta} onTry={state.tryPersona} onSignIn={state.signIn} onDevSignIn={state.devSignIn} />
   if (state.status === 'error') return <BootError message={state.message} onRetry={state.retry} />
-  return <Workspace key={state.session.workspace.id} session={state.session} switchTo={state.switchTo} sample={state.sample} />
+  return (
+    <Workspace
+      key={state.session.workspace.id}
+      session={state.session}
+      switchTo={state.switchTo}
+      sample={state.sample}
+      scratch={state.scratch}
+    />
+  )
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -72,10 +86,12 @@ function Workspace({
   session,
   switchTo,
   sample,
+  scratch,
 }: {
   session: Session
   switchTo: (workspaceId: string) => void
   sample: (reset: boolean) => Promise<string | null>
+  scratch: () => Promise<string | null>
 }) {
   const { workspace, meta, me } = session
   const usage = useUsage()
@@ -92,7 +108,19 @@ function Workspace({
   const phone = useMediaQuery('(max-width: 767px)')
   const mode: SheetMode = wide ? 'docked' : phone ? 'bottom' : 'overlay'
 
-  const conversation = useConversation(workspace.id, { onQuota: usage.report })
+  const inspect = useCallback((turnId: string) => {
+    setInspecting(turnId)
+    setOpen(true)
+  }, [])
+  const isSample = workspace.kind === 'persona_copy'
+  // The sample opens with the glass box showing: docked beside the chat on a wide screen (the
+  // Trail of each new turn is open on a narrow one, by default).
+  const conversation = useConversation(workspace.id, {
+    onQuota: usage.report,
+    onTurnDone: (turnId) => {
+      if (isSample && wide) inspect(turnId)
+    },
+  })
   const { turns, addTurn } = conversation
   const refreshUsage = usage.refresh
   const onTurnCreated = useCallback(
@@ -115,10 +143,6 @@ function Workspace({
   const inspected = turns.find((t) => t.id === inspecting) ?? null
   const docked = mode === 'docked' && open && inspected !== null
 
-  const inspect = useCallback((turnId: string) => {
-    setInspecting(turnId)
-    setOpen(true)
-  }, [])
   const close = useCallback(() => {
     setOpen(false)
   }, [])
@@ -172,6 +196,7 @@ function Workspace({
           activeId={workspace.id}
           onSwitch={switchTo}
           onSample={sample}
+          onScratch={scratch}
           providerMode={meta.provider_mode}
           picker={meta.picker ?? null}
           offered={offered}
@@ -212,6 +237,18 @@ function Workspace({
                   composerRef.current?.focus()
                 }}
               />
+              {isSample && meta.persona != null && !conversation.loading && (
+                <SuggestedPrompts
+                  name={meta.persona.name}
+                  save={meta.persona.prompts.save}
+                  recall={meta.persona.prompts.recall}
+                  sent={turns.map((t) => t.input)}
+                  onPick={(text) => {
+                    setDraft(text)
+                    composerRef.current?.focus()
+                  }}
+                />
+              )}
             </>
           )}
         </main>
