@@ -6,7 +6,9 @@
 #   NGINX_READ_TIMEOUT             how long a quiet upstream may stay silent; the API sends a
 #                                  heartbeat every 15 s, so a stream that stops fails here first
 #   NGINX_DESIGN                   "on" serves /design (development); "off" is a 404
-# Also here (ADR-0045): the static site is gzipped (the bundle budget is measured gzipped).
+# Also here (ADR-0045): the static site is gzipped (the bundle budget is measured gzipped), and
+# the link-preview tags in index.html get this site's own address, because the domain is not known
+# when the image is built.
 server {
     listen 8080;
     server_name _;
@@ -21,6 +23,11 @@ server {
     gzip_min_length 1024;
     gzip_comp_level 6;
     gzip_vary on;
+
+    # index.html names this site's address in its link-preview tags as __SITE_ORIGIN__ (see the
+    # map at the end). Only text/html is rewritten; JSON, streams and assets pass untouched.
+    sub_filter_once off;
+    sub_filter '__SITE_ORIGIN__' '$site_origin';
 
     # Re-resolve the API's address every 2 s: a recreated api container gets a new IP, and nginx
     # would otherwise keep proxying to the old one. Short, so a restarted api is found well inside
@@ -92,4 +99,14 @@ server {
 map "${NGINX_DESIGN}" $design_off {
     "on" 0;
     default 1;
+}
+
+# This site's address as the visitor used it, for the link-preview tags. Behind the edge (Caddy)
+# the scheme arrives in X-Forwarded-Proto; with no proxy it is nginx's own. Both parts are checked
+# against a strict pattern, so a crafted Host or X-Forwarded-Proto can never put markup into the
+# page: anything else gives an empty origin and the tags fall back to relative paths.
+map "$http_x_forwarded_proto|$http_host" $site_origin {
+    default "";
+    "~^(https?)\|([A-Za-z0-9.-]+(?::[0-9]{1,5})?)$" "$1://$2";
+    "~^\|([A-Za-z0-9.-]+(?::[0-9]{1,5})?)$" "$scheme://$1";
 }

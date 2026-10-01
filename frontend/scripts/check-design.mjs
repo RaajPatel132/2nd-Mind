@@ -7,7 +7,8 @@
  *    src/ui/motion.ts), `transition-all` / `transition: all`, and inline style colours.
  * 2. Computes the contrast of every text/surface pair from tokens.css: at least 4.5 : 1
  *    (3 : 1 for line-control), fg-4 excepted (never text that must be read).
- * 3. With a build in dist/: initial JS <= 200 KB gzipped, first-render fonts <= 150 KB.
+ * 3. index.html's theme-color is the canvas token.
+ * 4. With a build in dist/: initial JS <= 200 KB gzipped, first-render fonts <= 150 KB.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative, extname, basename } from 'node:path'
@@ -93,6 +94,15 @@ for (const [text, surface, min] of pairs) {
   const ratio = contrast(tokens[text], tokens[surface])
   report.push(`${text} on ${surface}: ${ratio.toFixed(2)}`)
   if (ratio < min) problems.push(`contrast: ${text} on ${surface} is ${ratio.toFixed(2)} : 1 (needs ${min} : 1)`)
+}
+
+// ---------------------------------------------------------------- index.html
+// The browser chrome colour is the canvas token: one source for the dark surface.
+{
+  const canvas = readFileSync(TOKENS, 'utf8').match(/--color-canvas:\s*(#[0-9a-fA-F]{6})/)?.[1]
+  const theme = readFileSync(join(root, 'index.html'), 'utf8').match(/<meta\s+name="theme-color"\s+content="([^"]+)"/)?.[1]
+  if (!canvas) problems.push('index.html: --color-canvas not found in tokens.css')
+  else if (theme?.toLowerCase() !== canvas.toLowerCase()) problems.push(`index.html: theme-color is ${theme ?? 'missing'}, the canvas token is ${canvas}`)
 }
 
 // ---------------------------------------------------------------- bundle budget

@@ -1,4 +1,4 @@
-"""ADR-0045: the web tier compresses the static site only.
+"""ADR-0045: the web tier compresses the static site only, and fills in its own address safely.
 
 The template and the page are read as text: nginx itself is exercised by the e2e spec
 (`frontend/e2e/delivery.spec.ts`) against the running stack.
@@ -9,6 +9,8 @@ from pathlib import Path
 
 WEB = Path(__file__).parents[3] / "frontend"
 TEMPLATE = (WEB / "nginx" / "default.conf.template").read_text()
+INDEX = (WEB / "index.html").read_text()
+PLACEHOLDER = "__SITE_ORIGIN__"
 
 
 def _blocks(text: str, opener: str) -> dict[str, str]:
@@ -54,3 +56,24 @@ def test_the_api_and_its_streams_are_never_compressed() -> None:
 
 def test_the_built_script_is_among_the_compressed_types() -> None:
     assert {"text/css", "application/javascript", "application/json"} <= set(_gzip_types())
+
+
+def test_the_page_names_its_address_only_in_the_preview_tags() -> None:
+    page = re.sub(r"<!--.*?-->", "", INDEX, flags=re.DOTALL)  # the comment explaining it names it
+    uses = re.findall(rf'<meta[^>]*\scontent="([^"]*{PLACEHOLDER}[^"]*)"', page)
+    assert uses, "the preview tags carry no address to fill in"
+    assert page.count(PLACEHOLDER) == len(uses), "the placeholder is used outside a content tag"
+    assert any(use.endswith("/og.png") for use in uses)
+
+
+def test_the_web_tier_fills_the_placeholder_from_a_checked_value() -> None:
+    assert re.search(rf"sub_filter\s+'{PLACEHOLDER}'\s+'\$site_origin';", TEMPLATE)
+    assert "sub_filter_once off;" in TEMPLATE
+    origin = _blocks(TEMPLATE, "map")['"$http_x_forwarded_proto|$http_host" $site_origin']
+    assert 'default "";' in origin, "an unchecked Host must give an empty origin"
+    patterns = re.findall(r'"~([^"]+)"', origin)
+    assert len(patterns) == 2
+    for pattern in patterns:
+        # Hostname characters and a port only: nothing that could close an attribute or a tag.
+        assert "[A-Za-z0-9.-]+" in pattern
+        assert not re.search(r"\.\*|\\S|\\w|\[\^", pattern), f"too loose: {pattern}"

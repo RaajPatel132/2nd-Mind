@@ -4,7 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2nd Mind</title>
+    <title>2nd Mind: a personal memory that shows its work</title>
+    <meta
+      name="description"
+      content="A personal memory you talk to. It decides what to keep, finds it by meaning, time or person, and shows every step of its work."
+    />
+    <meta name="color-scheme" content="dark" />
+    <!-- The canvas token (src/styles/tokens.css); `npm run check:design` keeps the two equal. -->
+    <meta name="theme-color" content="#08080A" />
+    <!-- Link previews. __SITE_ORIGIN__ is this site's own address, filled in by the web tier when it
+         serves the page (frontend/nginx/default.conf.template, ADR-0045): the domain is not known
+         when the image is built. With no value the paths stay relative. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="2nd Mind" />
+    <meta property="og:title" content="2nd Mind: a personal memory that shows its work" />
+    <meta
+      property="og:description"
+      content="Tell it anything. It decides what to keep, finds it by meaning, time or person, and shows every step of its work."
+    />
+    <meta property="og:url" content="__SITE_ORIGIN__/" />
+    <meta property="og:image" content="__SITE_ORIGIN__/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="2nd Mind. A personal memory that shows its work." />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>
