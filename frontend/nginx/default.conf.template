@@ -6,12 +6,21 @@
 #   NGINX_READ_TIMEOUT             how long a quiet upstream may stay silent; the API sends a
 #                                  heartbeat every 15 s, so a stream that stops fails here first
 #   NGINX_DESIGN                   "on" serves /design (development); "off" is a 404
+# Also here (ADR-0045): the static site is gzipped (the bundle budget is measured gzipped).
 server {
     listen 8080;
     server_name _;
     root /usr/share/nginx/html;
     server_tokens off;
     client_max_body_size ${NGINX_MAX_BODY};
+
+    # Compression is for the static site only: `gzip on` appears in the static locations below and
+    # never in the API's. API responses carry one person's data and a stream (BREACH, and a stream
+    # must not be held back to be compressed). Fonts and images are already compressed.
+    gzip_types text/css text/javascript application/javascript application/json image/svg+xml;
+    gzip_min_length 1024;
+    gzip_comp_level 6;
+    gzip_vary on;
 
     # Re-resolve the API's address every 2 s: a recreated api container gets a new IP, and nginx
     # would otherwise keep proxying to the old one. Short, so a restarted api is found well inside
@@ -62,16 +71,19 @@ server {
         if ($design_off) {
             return 404;
         }
+        gzip on;
         expires -1;
         try_files /index.html =404;
     }
 
     location /assets/ {
+        gzip on;
         expires 1y;
         try_files $uri =404;
     }
 
     location / {
+        gzip on;
         expires -1;
         try_files $uri /index.html;
     }
