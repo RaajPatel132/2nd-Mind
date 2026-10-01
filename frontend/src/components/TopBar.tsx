@@ -1,9 +1,10 @@
+import { CalendarClock, MessageSquare } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { logout, type Me, type ModelChoice, type Picker, type Usage } from '../api/client'
 import type { LastSpend } from '../hooks/useUsage'
 import { formatMoney, formatUsd, initialsOf } from '../lib/format'
-import { BrandMark, Button, CountUp, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
+import { BrandMark, Button, CountUp, Icon, Overline, Popover, QuotaRing, Tag, Wordmark, cx } from '../ui'
 import { t } from '../ui/motion'
 import { ModelPicker } from './ModelPicker'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
@@ -73,18 +74,20 @@ export function TopBar({ me, activeId, onSwitch, onSample, onScratch, providerMo
             onScratch={onScratch}
           />
         </div>
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3 max-sm:gap-1.5">
           <nav aria-label="Pages" className="flex items-center gap-1">
             <a
               href={view === 'upcoming' ? '#/' : '#/upcoming'}
               aria-current={view === 'upcoming' ? 'page' : undefined}
               className={cx(
-                'rounded-full px-3 py-1 text-label no-underline transition-colors dur-1',
+                'inline-flex items-center justify-center rounded-full px-3 py-1 text-label no-underline transition-colors dur-1 max-sm:size-10 max-sm:p-0',
                 view === 'upcoming' ? 'bg-surface-2 text-fg' : 'text-fg-2 hover:text-fg',
               )}
               data-testid="nav-upcoming"
             >
-              {view === 'upcoming' ? 'Chat' : 'Upcoming'}
+              {/* A phone has no room for the word: the icon carries it, and the word stays for screen readers. */}
+              <Icon icon={view === 'upcoming' ? MessageSquare : CalendarClock} size={20} className="sm:hidden" />
+              <span className="max-sm:sr-only">{view === 'upcoming' ? 'Chat' : 'Upcoming'}</span>
             </a>
           </nav>
           {picker && offered.length > 0 ? (
