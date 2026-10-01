@@ -245,4 +245,5 @@ def _persona_service(config: AppConfig, db: Database, memory: Memory) -> Persona
         timezone=seed.timezone,
         anchor=seed.anchor,
         clock=utc_now,
+        prompts=seed.prompts,
     )

@@ -17,7 +17,7 @@ from secondmind.agent import TurnStore
 from secondmind.auth import IdentityStore, Workspace, WorkspaceKind
 from secondmind.core import Clock, WorkspaceScope
 from secondmind.memory import Embedder, Memory
-from secondmind.persona.loader import PersonaSeed, seed_hash
+from secondmind.persona.loader import PersonaSeed, SuggestedPrompts, seed_hash
 from secondmind.persona.seed import Seeded, SourceSink, seed_workspace
 from secondmind.persona.timing import days_to_move
 from secondmind.retrieval import ConversationStore
@@ -51,6 +51,9 @@ class PersonaService:
     timezone: str
     anchor: datetime
     clock: Clock
+    # What the demo shows a first-time visitor: the persona's name and its two suggested prompts.
+    name: str = "Aditi Rao"
+    prompts: SuggestedPrompts | None = None
 
     @property
     def moved_days(self) -> int:

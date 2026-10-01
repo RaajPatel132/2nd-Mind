@@ -2750,9 +2750,26 @@
             "title": "Env",
             "type": "string"
           },
+          "guests_open": {
+            "default": false,
+            "description": "The site is open to guests: making one needs no access code (S4.12).",
+            "title": "Guests Open",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "persona": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonaOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The sample persona, when it is available (S4.10)."
           },
           "picker": {
             "anyOf": [
@@ -3027,6 +3044,23 @@
           "reused"
         ],
         "title": "Normalisation",
+        "type": "object"
+      },
+      "PersonaOut": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prompts": {
+            "$ref": "#/components/schemas/SuggestedPromptsOut"
+          }
+        },
+        "required": [
+          "name",
+          "prompts"
+        ],
+        "title": "PersonaOut",
         "type": "object"
       },
       "PickerOut": {
@@ -4178,6 +4212,24 @@
           "question"
         ],
         "title": "SubQueryTrace",
+        "type": "object"
+      },
+      "SuggestedPromptsOut": {
+        "properties": {
+          "recall": {
+            "title": "Recall",
+            "type": "string"
+          },
+          "save": {
+            "title": "Save",
+            "type": "string"
+          }
+        },
+        "required": [
+          "save",
+          "recall"
+        ],
+        "title": "SuggestedPromptsOut",
         "type": "object"
       },
       "Tier": {

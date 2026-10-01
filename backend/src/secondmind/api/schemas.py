@@ -427,6 +427,23 @@ class MetaOut(_Out):
         default=False, description="Signing in needs the access code."
     )
     tracing_enabled: bool
+    guests_open: bool = Field(
+        default=False,
+        description="The site is open to guests: making one needs no access code (S4.12).",
+    )
+    persona: "PersonaOut | None" = Field(
+        default=None, description="The sample persona, when it is available (S4.10)."
+    )
+
+
+class SuggestedPromptsOut(_Out):
+    save: str
+    recall: str
+
+
+class PersonaOut(_Out):
+    name: str
+    prompts: SuggestedPromptsOut
 
 
 class CheckOut(_Out):

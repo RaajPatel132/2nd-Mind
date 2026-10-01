@@ -1645,8 +1645,16 @@ export interface components {
             dev_auth: boolean;
             /** Env */
             env: string;
+            /**
+             * Guests Open
+             * @description The site is open to guests: making one needs no access code (S4.12).
+             * @default false
+             */
+            guests_open: boolean;
             /** Name */
             name: string;
+            /** @description The sample persona, when it is available (S4.10). */
+            persona?: components["schemas"]["PersonaOut"] | null;
             /** @description Null when no picker is configured. */
             picker?: components["schemas"]["PickerOut"] | null;
             /** Price Version */
@@ -1766,6 +1774,12 @@ export interface components {
              * @enum {string}
              */
             vocab: "category" | "subtype" | "predicate" | "relation";
+        };
+        /** PersonaOut */
+        PersonaOut: {
+            /** Name */
+            name: string;
+            prompts: components["schemas"]["SuggestedPromptsOut"];
         };
         /**
          * PickerOut
@@ -2297,6 +2311,13 @@ export interface components {
              * @default []
              */
             windows: components["schemas"]["TimeResolution"][];
+        };
+        /** SuggestedPromptsOut */
+        SuggestedPromptsOut: {
+            /** Recall */
+            recall: string;
+            /** Save */
+            save: string;
         };
         /**
          * Tier

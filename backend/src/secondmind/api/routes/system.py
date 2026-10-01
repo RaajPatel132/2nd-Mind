@@ -12,9 +12,11 @@ from secondmind.api.schemas import (
     HealthOut,
     MetaOut,
     ModelChoiceOut,
+    PersonaOut,
     PickerOut,
     ReadyOut,
     RouteOut,
+    SuggestedPromptsOut,
 )
 from secondmind.config import AppConfig, ModelRef, Step
 
@@ -74,6 +76,17 @@ async def meta(services: ServicesDep) -> MetaOut:
         dev_auth=settings.dev_auth,
         access_code_required=settings.access_code_required,
         tracing_enabled=services.tracer.enabled,
+        guests_open=settings.guests_open,
+        persona=(
+            None
+            if services.persona is None or services.persona.prompts is None
+            else PersonaOut(
+                name=services.persona.name,
+                prompts=SuggestedPromptsOut(
+                    save=services.persona.prompts.save, recall=services.persona.prompts.recall
+                ),
+            )
+        ),
     )
 
 
