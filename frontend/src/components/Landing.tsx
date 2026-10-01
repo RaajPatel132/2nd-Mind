@@ -10,6 +10,7 @@ import type { HeadlineMetric, HeadlineRun } from '../api/headline'
 import { useHeadline } from '../hooks/useHeadline'
 import { BrandMark, Button, Overline, Wordmark } from '../ui'
 import { motionProps } from '../ui/motion'
+import { LandingBeats, LandingFooter } from './LandingSections'
 import { AccessForm } from './Screens'
 
 type Props = {
@@ -32,7 +33,7 @@ function Stat({ metric, run }: { metric: HeadlineMetric; run?: HeadlineRun }) {
   return (
     <a
       href="/evals"
-      className="group block min-w-0 rounded-md border border-line bg-surface px-4 py-3.5 text-left no-underline shadow-edge transition-colors dur-2 hover:bg-surface-2 focus-visible:outline-offset-2"
+      className="group block h-full min-w-0 rounded-md border border-line bg-surface px-4 py-3.5 text-left no-underline shadow-edge transition-colors dur-2 hover:bg-surface-2 focus-visible:outline-offset-2"
       data-testid="headline-stat"
       data-metric={metric.id}
       aria-label={`${metric.label}: ${metric.display}. See the run behind it.`}
@@ -95,7 +96,7 @@ export function Landing({ meta, onTry, onSignIn, onDevSignIn }: Props) {
 
       <div className="mt-16 sm:mt-24">
         <motion.h1 {...motionProps('rise')} className="m-0 max-w-140 text-balance font-voice text-display text-fg" data-testid="landing-line">
-          A personal memory you can talk to.
+          A personal memory that shows its work.
         </motion.h1>
         <motion.p {...motionProps('rise', 1)} className="m-0 mt-5 measure text-pretty text-body text-fg-2">
           Tell it anything and it decides what the thing is, when it matters, who it concerns and where to keep it. Ask for anything back by meaning, time, person or category.
@@ -154,6 +155,9 @@ export function Landing({ meta, onTry, onSignIn, onDevSignIn }: Props) {
           </p>
         )}
       </motion.div>
+
+      <LandingBeats persona={meta.persona ?? null} />
+      <LandingFooter />
     </main>
   )
 }
