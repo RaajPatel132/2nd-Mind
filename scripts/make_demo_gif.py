@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FRAMES = Path(os.environ.get("MEDIA_FRAMES") or Path(tempfile.gettempdir()) / "secondmind-media-frames")
 OUT = ROOT / "docs" / "media" / "tour.gif"
 LADDER = [(880, 128), (800, 96), (800, 64), (760, 48), (720, 48), (640, 32)]  # (width, colours)
-MIN_MS, MAX_MS = 90, 400  # frames taken as the screen changed are shown for how long it took
+MIN_MS, MAX_MS = 80, 250  # frames taken as the screen changed are shown for how long it took
 MAX_BYTES = 500 * 1024  # .pre-commit-config.yaml: check-added-large-files --maxkb=512
 
 
