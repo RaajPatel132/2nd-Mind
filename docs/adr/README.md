@@ -44,3 +44,4 @@ One page each: context, decision, alternatives, consequences. New decisions copy
 | [0037](0037-content-is-data.md) | Content is data: the trust boundary for links | accepted |
 | [0038](0038-the-sample-persona.md) | The sample persona: template, copy and rebase | accepted |
 | [0039](0039-guests.md) | Guests: device ids, per-address caps and expiry | accepted |
+| [0045](0045-delivery-and-link-previews.md) | Delivery and link previews: gzip for the static site, the page names its own address | accepted |
