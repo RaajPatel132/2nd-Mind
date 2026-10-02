@@ -1,0 +1,58 @@
+# Publish the page of every committed live eval run (`make eval-site`) with GitHub Pages. It is
+# built from the run files alone and has no secrets and no server. Nothing happens until Pages is
+# switched on (Settings > Pages > Source: GitHub Actions) and the repository variable
+# PAGES_ENABLED is `true`; "Run workflow" publishes it once by hand whatever the variable says.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/evals/runs/**"
+      - "backend/src/secondmind/evals/site.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.7"
+
+jobs:
+  build:
+    name: build the eval page
+    if: github.event_name == 'workflow_dispatch' || vars.PAGES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: render the page
+        run: >-
+          uv run --project backend --frozen python -m secondmind.evals site
+          --out _site --repo "${{ github.repository }}"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    name: publish
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -452,3 +452,17 @@ def test_the_scripts_a_person_runs_on_a_mac_avoid_bash_4_features() -> None:
         assert "mapfile" not in text, name
         assert "readarray" not in text, name
         assert not re.search(r"\$\{[A-Za-z_]+(,,|\^\^)\}", text), name
+
+
+# ------------------------------------------------------------------ the eval page
+
+
+def test_the_pages_workflow_needs_no_secret_and_waits_for_pages_to_be_switched_on() -> None:
+    text = (WORKFLOWS / "pages.yml").read_text()
+    workflow = yaml.safe_load(text)
+    assert "secrets." not in text
+    assert set(workflow["permissions"]) == {"contents", "pages", "id-token"}
+    condition = workflow["jobs"]["build"]["if"]
+    assert "vars.PAGES_ENABLED == 'true'" in condition
+    assert "workflow_dispatch" in condition
+    assert "_site" in text  # the directory `make eval-site` writes and Pages publishes
