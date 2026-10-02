@@ -111,6 +111,10 @@ lint: ## Ruff lint + format check (backend)
 	$(BACKEND_RUN) ruff check .
 	$(BACKEND_RUN) ruff format --check .
 
+.PHONY: coverage
+coverage: ## Unit-test coverage with branches (the floor is in pyproject.toml); the report is backend/coverage.json
+	$(BACKEND_RUN) pytest tests/unit --cov --cov-report=term --cov-report=json
+
 .PHONY: typecheck
 typecheck: ## mypy --strict (backend)
 	$(BACKEND_RUN) mypy

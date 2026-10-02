@@ -32,6 +32,7 @@ dev = [
     "pre-commit>=4.6",
     "pytest>=9.1",
     "pytest-asyncio>=1.4",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16",
     "testcontainers>=4.15",
     "types-python-dateutil>=2.9",
@@ -115,6 +116,18 @@ filterwarnings = [
     # arq closes its pool with redis-py's deprecated close(); not ours to fix.
     "ignore:Call to deprecated close:DeprecationWarning:arq.worker",
 ]
+
+# ---------------------------------------------------------------- coverage
+# `make coverage`: the unit tests only (the Postgres-backed ones run under `make test-int`), so the
+# SQL adapters read low here by design. The floor is below today's number, to catch a slide.
+[tool.coverage.run]
+source = ["secondmind"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 70
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\.$"]
 
 # ---------------------------------------------------------------- import-linter
 [tool.importlinter]

@@ -63,3 +63,4 @@ frontend/walkthrough-shots/
 
 # The generated eval page (make eval-site)
 _site/
+coverage.json
