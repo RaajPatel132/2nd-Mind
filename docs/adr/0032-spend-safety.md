@@ -70,7 +70,9 @@ a turn: storing a turn per rejected request would make the limit a way to fill t
   only sets the value at start-up; the runtime flag wins once it exists.
 - `make set-tier EMAIL=… TIER=guest|standard|premium` runs as the schema owner (the app's role
   can read `tier_changes` but not write it), and writes the audit row (who, when, from, to) in
-  the same transaction. The person's quota and picker follow on their next turn.
+  the same transaction. The person's quota and picker follow on their next turn. Migration 0009
+  takes `UPDATE` on `users` from the app's role (it only inserts and deletes users), so no bug in
+  the app can move a tier without that row.
 
 **Background work.** A job that needs a model checks the gate first; if it is stopped, it is put
 back on the queue for five minutes later (a new job, so a long stop never uses up a failing

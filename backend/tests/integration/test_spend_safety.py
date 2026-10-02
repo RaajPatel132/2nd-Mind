@@ -136,6 +136,33 @@ async def test_the_app_role_can_read_the_tier_audit_but_never_write_it(
                 await session.execute(text(statement), {"u": user_id})
 
 
+async def test_the_app_role_cannot_change_a_tier_without_the_audit(
+    app_db: Database, owner_db: Database
+) -> None:
+    """Migration 0009: the audit is written by the admin CLI as the owner. The app role used to be
+    able to ``UPDATE users`` as well, which would move a tier and leave no row behind."""
+    identity = SqlIdentityStore(app_db)
+    email = f"lock-{new_id().hex[:8]}@example.test"
+    user_id, _ = await _user(identity, email)
+    for statement in (
+        "UPDATE users SET tier = 'premium' WHERE id = :u",
+        "UPDATE users SET email = 'someone-else@example.test' WHERE id = :u",
+    ):
+        with pytest.raises(DBAPIError, match="permission denied"):
+            async with app_db.identity() as session:
+                await session.execute(text(statement), {"u": user_id})
+    assert (await identity.get_user(user_id)).tier is Tier.STANDARD  # type: ignore[union-attr]
+
+    # What the app does with users still works: read them, add them, remove them.
+    guest = await identity.create_user(email=None, tier=Tier.GUEST)
+    await identity.delete_user(guest.id)
+    assert await identity.get_user(guest.id) is None
+    # And the audited path, as the owner, still moves a tier and writes the row.
+    await SqlAdminStore(owner_db).set_tier(email=email, tier=Tier.PREMIUM, changed_by="raj")
+    assert (await identity.get_user(user_id)).tier is Tier.PREMIUM  # type: ignore[union-attr]
+    assert [c.to_tier for c in await SqlAdminStore(owner_db).tier_changes(email)] == [Tier.PREMIUM]
+
+
 async def test_a_tier_outside_the_three_is_refused_by_the_database(owner_db: Database) -> None:
     with pytest.raises(DBAPIError, match="ck_users_tier"):
         async with owner_db.identity() as session:
