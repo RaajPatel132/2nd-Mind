@@ -62,7 +62,10 @@ async def kill_switch(state: str) -> int:
 async def set_tier(email: str, tier: str) -> int:
     url = os.environ.get("DATABASE_MIGRATION_URL", "")
     if not url:
-        _say("DATABASE_MIGRATION_URL is required: set-tier writes the audit as the owner.")
+        _say(
+            "DATABASE_MIGRATION_URL is required: set-tier writes the audit as the owner.",
+            error=True,
+        )
         return 2
     db = Database(url, pool_size=1)
     try:
@@ -70,7 +73,7 @@ async def set_tier(email: str, tier: str) -> int:
             email=email, tier=Tier(tier), changed_by=f"{getpass.getuser()} (admin CLI)"
         )
     except NotFoundError as exc:
-        _say(exc.message)
+        _say(exc.message, error=True)
         return 1
     finally:
         await db.dispose()
