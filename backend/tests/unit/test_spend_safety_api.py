@@ -13,7 +13,7 @@ import pytest
 
 from secondmind.api import Services, create_app
 from secondmind.auth import resolve_scope
-from secondmind.core import Tier, utc_now
+from secondmind.core import Tier, WorkspaceScope, utc_now
 from secondmind.metering import SpendLimits, SpendTotals
 from secondmind.providers import FakeOutcome, FakeScript
 from tests.unit.test_api import _services, frames, login
@@ -123,6 +123,7 @@ async def test_undo_still_works_while_turns_are_blocked(
     undo = await client.post(f"/v1/turns/{saved}/undo")
     assert undo.status_code == 200, undo.text
     assert undo.json()["kind"] == "undo"
+    assert undo.json()["status"] == "completed", undo.json()["error"]
 
 
 async def test_a_turn_already_running_finishes_when_the_switch_flips(
@@ -231,3 +232,75 @@ async def test_a_rate_limited_turn_is_refused_at_the_door_and_never_stored(
         assert len(page) == 2  # the rejected request left nothing behind
         ticker.t += 31
         assert (await send(c, ws, "three"))[-1][0] == "turn.completed"
+
+
+async def saved_item(client: httpx.AsyncClient, ws: str, message: str) -> tuple[str, uuid.UUID]:
+    """Send a message that is saved as one note; return its turn and the note's id."""
+    turn_id = (await send(client, ws, message))[-1][1]["turn"]["id"]
+    diff = next(e for e in await events_of(client, turn_id) if e["type"] == "memory_diff")
+    return turn_id, uuid.UUID(next(e["item_id"] for e in diff["entries"] if e["op"] == "added"))
+
+
+async def _scope(services: Services) -> WorkspaceScope:
+    (user_id,) = services.identity.users  # type: ignore[attr-defined]
+    workspace = (await services.identity.workspaces_for(user_id))[0]
+    return (await resolve_scope(services.identity, user_id=user_id, workspace_id=workspace.id))[0]
+
+
+async def keys_of(services: Services, client: httpx.AsyncClient, item_id: uuid.UUID) -> list[Any]:
+    return list(await services.runner.memory.reader(await _scope(services)).keys([item_id]))
+
+
+async def test_an_edit_is_saved_whole_while_turns_are_blocked(
+    stack: tuple[httpx.AsyncClient, Services], ticker: Ticker
+) -> None:
+    """The blocked reply promises browsing, undo and edits keep working. An edit stopped by the
+    spend gate used to be written and then stored as "not saved", with its keys left stale."""
+    client, services = stack
+    ws = await login(client)
+    _, item_id = await saved_item(client, ws, "I keep my passport in the blue drawer")
+    before = await keys_of(services, client, item_id)
+    assert before
+    assert all(k.embedding is not None for k in before)
+
+    await services.gate.store.set_kill_switch(True)
+    ticker.t += 3
+    edit = await client.patch(f"/v1/items/{item_id}", json={"category": "documents"})
+    assert edit.status_code == 200, edit.text
+    assert edit.json()["status"] == "completed", edit.json()["error"]
+    assert edit.json()["usage"]["cost_usd"] == 0  # nothing was asked of a model
+
+    item = (await client.get(f"/v1/items/{item_id}")).json()["item"]
+    assert item["category_id"] is not None  # filed under "documents"
+    after = await keys_of(services, client, item_id)
+    # The keys follow the edit: the sentence that changed is kept without a vector (found by
+    # words), and the one that didn't keeps the vector it had.
+    assert sorted((k.key_kind.value, k.embedding is None) for k in after) == [
+        ("text", False),
+        ("verbal", True),
+    ]
+    assert any("Documents" in k.text for k in after)
+
+    await services.gate.store.set_kill_switch(False)  # `make kill-switch off`
+    ticker.t += 3
+    assert await services.runner.embed_pending_keys(await _scope(services), timezone="UTC") == 1
+    assert all(k.embedding is not None for k in await keys_of(services, client, item_id))
+
+
+async def test_a_redo_is_saved_whole_while_turns_are_blocked(
+    stack: tuple[httpx.AsyncClient, Services], ticker: Ticker
+) -> None:
+    """Undoing an undo brings the memory back, which re-keys it: that must not need a model."""
+    client, services = stack
+    ws = await login(client)
+    saved, item_id = await saved_item(client, ws, "I keep my passport in the blue drawer")
+    undone = (await client.post(f"/v1/turns/{saved}/undo")).json()
+    assert undone["status"] == "completed"
+
+    await services.gate.store.set_kill_switch(True)
+    ticker.t += 3
+    redo = await client.post(f"/v1/turns/{undone['id']}/undo")
+    assert redo.status_code == 200, redo.text
+    assert redo.json()["status"] == "completed", redo.json()["error"]
+    assert (await client.get(f"/v1/items/{item_id}")).json()["item"]["status"] == "active"
+    assert await keys_of(services, client, item_id)

@@ -731,7 +731,7 @@ class TurnRunner:
                     trail=NullTrail(emit),
                     write=lambda _: None,
                     origin="ui_edit",
-                    embed=self._embedder(steps),
+                    embed=self._embedder(steps, person=True),
                 ),
                 item_id,
                 changes,
@@ -780,7 +780,7 @@ class TurnRunner:
                     trail=NullTrail(emit),
                     write=lambda _: None,
                     origin="ui_edit",
-                    embed=self._embedder(steps),
+                    embed=self._embedder(steps, person=True),
                 ),
                 trigger_id,
                 date_expression,
@@ -914,7 +914,10 @@ class TurnRunner:
         if not commit.touched_items:
             return
         indexer = self._memory.keys(
-            scope, timezone=timezone, embed=self._embedder(steps), model=steps.embedding_model
+            scope,
+            timezone=timezone,
+            embed=self._embedder(steps, person=True),
+            model=steps.embedding_model,
         )
         await indexer.rebuild(sorted(commit.touched_items))
 
@@ -1059,13 +1062,21 @@ class TurnRunner:
         )
 
     @staticmethod
-    def _embedder(steps: ModelSteps) -> Embedder:
-        """Embeddings through the ``embed`` step; keys are stored without vectors if it's down."""
+    def _embedder(steps: ModelSteps, *, person: bool = False) -> Embedder:
+        """Embeddings through the ``embed`` step; keys are stored without vectors if it's down.
+
+        A refusal from the spend gate (ADR-0032) goes two ways. Background work lets it through,
+        so its job is deferred. A person's own action (``person=True``: undo, confirm, edit,
+        snooze) is never failed by it: the memory is already written, so its keys are stored
+        without vectors, found by words, and ``embed_pending`` adds the vectors once the gate
+        opens (ledger 47)."""
 
         async def embed(texts: Sequence[str], hits: int) -> list[list[float]] | None:
             try:
                 return await steps.embed(list(texts), hits)
             except CallsRefusedError:
+                if person:
+                    return None
                 raise
             except ProviderUnavailableError:
                 return None
