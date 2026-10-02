@@ -375,7 +375,7 @@ class Corrector:
         rows = await reader.item_entities([old.id])
         new_id_ = new_id()
         content = old.model_dump(include=set(ItemContent.model_fields))
-        content |= {"text": text, "title": text if len(text) <= 80 else old.title}
+        content |= {"text": text, "title": _title_of(text)}
         ops: list[Op] = [
             CreateItem.model_validate(
                 {
@@ -522,6 +522,20 @@ class Corrector:
     def _say(ctx: CorrectContext, kind: str, text: str) -> CorrectOutcome:
         ctx.write(text)
         return CorrectOutcome(reply=text, kind=kind)
+
+
+TITLE_MAX = 80
+
+
+def _title_of(text: str) -> str:
+    """The words themselves when they fit, else the first of them cut at a word and marked. A
+    corrected memory is about what the person just said, so it never keeps the old title."""
+    if len(text) <= TITLE_MAX:
+        return text
+    cut = text[: TITLE_MAX - 1]
+    if " " in cut and text[TITLE_MAX - 1] != " ":
+        cut = cut.rsplit(" ", 1)[0]
+    return cut.rstrip(" ,;:-") + "…"
 
 
 def _origin(op: Op, origin: str) -> Op:
