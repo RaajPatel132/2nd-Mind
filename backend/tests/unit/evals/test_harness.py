@@ -342,6 +342,37 @@ async def test_a_crashed_case_is_a_failed_case_not_a_lost_run(tmp_path: Path) ->
     assert "RuntimeError" in record.cases[0].failures[0]
 
 
+async def test_ctrl_c_in_a_case_still_books_what_that_case_spent(tmp_path: Path) -> None:
+    """The case's model calls were made and billed before the interrupt came. The pass ends as
+    stopped, and those calls are in the run file and the spend book, not lost."""
+    harness = _harness(tmp_path, budgets=Budgets(run=Decimal("0.50")))
+    _billed_fake(harness)
+    cases = intent_cases()[:3]
+    seen: list[str] = []
+
+    async def interrupted_in_the_second(case: Any, run: Pass) -> CaseRecord:
+        result = await run_intent_case(case, run)  # the calls happen, and are billed
+        if run.mode == "live":  # the estimating dry run goes first and is left alone
+            seen.append(case.id)
+            if len(seen) == 2:
+                raise KeyboardInterrupt
+        return result
+
+    record = await harness.run(cases, interrupted_in_the_second, id_of=lambda c: c.id)
+
+    assert record.status == "stopped: error"
+    assert "KeyboardInterrupt" in record.note
+    assert [c.id for c in record.cases] == [cases[0].id, cases[1].id]
+    first, interrupted = record.cases
+    assert first.passed is not None
+    assert not interrupted.passed
+    assert "interrupted" in interrupted.failures[0]
+    assert interrupted.spent_usd > 0  # the interrupted case's own calls are on its record
+    book = SpendBook.load(tmp_path / ".spend")
+    assert record.spent_usd == pytest.approx(first.spent_usd + interrupted.spent_usd)
+    assert float(book.total) == pytest.approx(record.spent_usd)
+
+
 def test_expensive_models_need_the_flag_and_a_named_subset(tmp_path: Path) -> None:
     with pytest.raises(BudgetRefusedError, match="ALLOW_EXPENSIVE"):
         _harness(tmp_path, routing="reference").check_expensive()

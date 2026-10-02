@@ -388,6 +388,21 @@ class Harness:
             self.say(f"estimated live cost ${record.cost_usd:.4f} for {len(record.cases)} cases")
         return record
 
+    @staticmethod
+    async def _one_case(
+        run: Pass, run_case: CaseRunner, case: Any, case_id: str, mark: int
+    ) -> tuple[CaseRecord, BaseException | None]:
+        """Run one case. A crash is a failed case. An interrupt (Ctrl-C) is one too, and is handed
+        back to be raised once the case's calls, made and billed already, are on the record."""
+        try:
+            return await run_case(case, run), None
+        except (KeyboardInterrupt, asyncio.CancelledError) as exc:
+            failure = f"interrupted: {type(exc).__name__}"
+            return run.record(mark=mark, case_id=case_id, passed=False, failures=[failure]), exc
+        except Exception as exc:
+            failure = f"crashed: {type(exc).__name__}: {exc}"[:500]
+            return run.record(mark=mark, case_id=case_id, passed=False, failures=[failure]), None
+
     async def _pass(
         self,
         mode: Mode,
@@ -429,15 +444,7 @@ class Harness:
                         break
                 started = time.perf_counter()
                 mark = run.log.mark()
-                try:
-                    result = await run_case(case, run)
-                except Exception as exc:
-                    result = run.record(
-                        mark=mark,
-                        case_id=case_id,
-                        passed=False,
-                        failures=[f"crashed: {type(exc).__name__}: {exc}"[:500]],
-                    )
+                result, interrupt = await self._one_case(run, run_case, case, case_id, mark)
                 for call in run.log.since(mark):
                     meter.add(call.provider, call.spent_usd)
                 record.cases.append(result)
@@ -449,6 +456,8 @@ class Harness:
                 broke = sorted(
                     {str(c["provider"]) for c in result.calls if c.get("failed") == "credit"}
                 )
+                if interrupt is not None:
+                    raise interrupt  # after its calls were booked, so the spend book counts them
                 if broke:
                     record.status = "stopped: error"
                     record.note = f"out of provider credit: {', '.join(broke)}"
