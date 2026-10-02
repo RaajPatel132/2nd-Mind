@@ -43,7 +43,10 @@ jobs:
           from="${PR_BASE:-$PUSH_BEFORE}"
           if [ -z "$from" ] || [ "$from" = "0000000000000000000000000000000000000000" ] \
              || ! git cat-file -e "$from^{commit}" 2>/dev/null; then
-            from="HEAD~1"
+            # A force-push leaves the old tip out of the clone. Look at every commit of the push
+            # (since the merge base with main), not just the last; on main itself, the last one.
+            from="$(git merge-base origin/main HEAD)"
+            if [ "$from" = "$(git rev-parse HEAD)" ]; then from="HEAD~1"; fi
           fi
           npx --no -- commitlint --from "$from" --to HEAD --verbose
           echo "from=$from" >> "$GITHUB_OUTPUT"
