@@ -227,9 +227,10 @@ backfill-conversation: ## Index past chat turns for "what did you tell me" quest
 	$(COMPOSE) exec worker python -m secondmind.jobs.adapters.enqueue backfill_conversation
 
 .PHONY: web-check
-web-check: ## Frontend lint, typecheck, build and the design-system check (tokens, contrast, budget)
+web-check: ## Frontend lint, typecheck, unit tests, build and the design-system check (tokens, contrast, budget)
 	$(WEB_RUN) lint
 	$(WEB_RUN) typecheck
+	$(WEB_RUN) test
 	$(WEB_RUN) build
 	$(WEB_RUN) check:design
 
