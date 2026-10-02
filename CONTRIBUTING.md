@@ -87,6 +87,21 @@ renames without that constant. Adding columns, tables and indexes needs nothing.
 as the schema owner behind an advisory lock, so two started together take turns; the RDS-like
 test (`tests/integration/test_rds_like.py`) runs them as a non-superuser owner.
 
+## Releases and the changelog
+
+The commit messages are the changelog: `make changelog` writes [`CHANGELOG.md`](CHANGELOG.md) from
+them with [git-cliff](https://git-cliff.org) (`cliff.toml` says how they are grouped; tests, style,
+build and CI commits stay out of the list). Don't edit it by hand.
+
+A release is a tag on a commit that has passed `make check`:
+
+```bash
+make release VERSION=0.3.0 REF=<commit>    # tags v0.3.0 (REF defaults to HEAD) and regenerates the file
+git add CHANGELOG.md && git commit -m "docs(release): write the changelog for v0.3.0"
+git push origin v0.3.0                     # yours to run: nothing here pushes
+make release-notes                         # the newest section, for the GitHub release text
+```
+
 ## Definition of done
 
 1. Acceptance criteria met and shown by tests (or the sprint report says how it was checked).

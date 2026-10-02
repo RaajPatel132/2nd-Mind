@@ -189,6 +189,23 @@ eval-report: ## Print a stamped run, or two side by side: make eval-report A=<ru
 eval-latency: ## Where a recall turn's time goes, from a stored run (fresh calls only): make eval-latency A=<run>
 	$(BACKEND_RUN) python -m secondmind.evals latency $(A)
 
+.PHONY: changelog
+changelog: ## Regenerate CHANGELOG.md from the commit messages (git-cliff; see CONTRIBUTING)
+	npx --no -- git-cliff --config cliff.toml --output CHANGELOG.md
+	@printf '%s\n' "$$(cat CHANGELOG.md)" > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+
+.PHONY: release
+release: ## Tag a release and regenerate the changelog: make release VERSION=0.3.0 [REF=<commit>] (local; you push the tag)
+	@test -n "$(VERSION)" || { echo "usage: make release VERSION=0.3.0 [REF=<commit>]"; exit 2; }
+	@git diff --quiet && git diff --cached --quiet || { echo "commit or stash your changes first"; exit 2; }
+	git tag -a "v$(VERSION)" $(or $(REF),HEAD) -m "v$(VERSION)"
+	$(MAKE) changelog
+	@echo "Tagged v$(VERSION). Commit CHANGELOG.md, then push the tag yourself: git push origin v$(VERSION)"
+
+.PHONY: release-notes
+release-notes: ## The newest changelog section, for the text of a GitHub release
+	@npx --no -- git-cliff --config cliff.toml --latest --strip header
+
 .PHONY: eval-site
 eval-site: ## A static page of every committed live eval run, into _site/ (GitHub Pages publishes it)
 	$(BACKEND_RUN) python -m secondmind.evals site --out ../_site --repo $(or $(REPO),RaajPatel132/2nd-Mind)
