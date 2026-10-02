@@ -124,13 +124,13 @@ INTERNAL_ERROR_MESSAGE = "Something went wrong on our side, and this turn was no
 # Called after a commit that renamed or relabelled entities (their items' keys need
 # re-rendering in the background, as a system turn).
 EntitiesRenamed = Callable[[WorkspaceScope, set[uuid.UUID]], Awaitable[None]]
-# Called when a chat turn completed (its conversation is indexed in the background, S3.9).
 # A short yes to an offer ("yes", "yes please", "sure, do it").
 _AFFIRMATIVE = re.compile(
     r"^\s*(yes|yeah|yep|yup|sure|ok|okay|please do|do it|go ahead)\b[\s\w,!.]{0,20}$",
     re.IGNORECASE,
 )
 
+# Called when a chat turn completed (its conversation is indexed in the background, S3.9).
 TurnCompletedHook = Callable[[WorkspaceScope, Turn], Awaitable[None]]
 QuotaAfter = Callable[[], Awaitable[QuotaEvent]]
 RecallStores = Callable[[WorkspaceScope], RecallStore]
