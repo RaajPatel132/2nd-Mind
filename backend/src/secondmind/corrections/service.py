@@ -33,6 +33,7 @@ from secondmind.core import (
     TimePrecision,
     Trail,
     TriggerState,
+    ValidationFailedError,
     WorkspaceScope,
     initial_state,
     new_id,
@@ -170,20 +171,23 @@ class Corrector:
         detach: Sequence[uuid.UUID] = (),
         delete: bool = False,
     ) -> CorrectOutcome:
-        """A glass-box edit of one memory: no model call; its own turn (origin ``ui_edit``)."""
+        """A glass-box edit of one memory: no model call; its own turn (origin ``ui_edit``).
+
+        An edit that changes nothing is refused with the reason, not answered as if it had worked:
+        the person pressed Save and a completed turn must mean something was written."""
         reader = ctx.memory.reader(ctx.scope)
         item = await reader.item(item_id)
         if item is None:
-            return self._say(ctx, "edit", "That memory doesn't exist any more.")
+            raise ValidationFailedError("That memory doesn't exist any more.")
+        notes: list[str] = []
         if delete:
             ops: list[Op] = [DeleteItem(item_id=item.id, title=item.title, rationale="edited")]
         else:
-            notes: list[str] = []
             ops = await self._reclassify(ctx, item, changes, notes)
             ops += await self._relink(ctx, item, attach, detach, notes)
-            if notes and not ops:
-                return self._say(ctx, "edit", " ".join(notes))
-        return await self._commit(ctx, ops, "edit", [], prefix="Edited")
+            if not ops:
+                raise ValidationFailedError(" ".join(notes) or "Nothing needed changing.")
+        return await self._commit(ctx, ops, "edit", notes, prefix="Edited")
 
     async def _relink(
         self,
@@ -225,17 +229,24 @@ class Corrector:
         self, ctx: CorrectContext, trigger_id: uuid.UUID, date_expression: str
     ) -> CorrectOutcome:
         """Move a pending reminder to a new time from Upcoming (S3.14). The memory's own date
-        stays: snoozing a reminder isn't rescheduling what it's about."""
+        stays: snoozing a reminder isn't rescheduling what it's about. A snooze that can't be done
+        is refused with the reason: a time in the past would just let the reminder expire."""
         reader = ctx.memory.reader(ctx.scope)
         trigger = await reader.trigger(trigger_id)
         if trigger is None or trigger.state is not TriggerState.PENDING:
-            return self._say(ctx, "snooze", "That reminder isn't pending any more.")
+            raise ValidationFailedError("That reminder isn't pending any more.")
         item = await reader.item(trigger.item_id)
         title = item.title if item is not None else "reminder"
         try:
             r = resolve(date_expression, TimeClock.OCCURRED, ctx.now)
         except UnresolvableTimeError:
-            return self._say(ctx, "snooze", f"I couldn't work out the date '{date_expression}'.")
+            raise ValidationFailedError(
+                f"I couldn't work out the date '{date_expression}'."
+            ) from None
+        if r.start <= ctx.now.instant:
+            raise ValidationFailedError(
+                f"'{date_expression}' has already passed. Pick a time that is still ahead."
+            )
         op = UpdateTrigger(
             trigger_id=trigger.id,
             changes={"fires_at": r.start},
