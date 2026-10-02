@@ -13,6 +13,7 @@ import {
   type UpcomingEntry,
 } from "../api/client";
 import { formatDay, plural } from "../lib/format";
+import { whyNotDone } from "../lib/turn-outcome";
 import {
   Button,
   Chip,
@@ -95,7 +96,13 @@ export function UpcomingPage({ workspaceId, timezone, onTurn }: Props) {
     async (key: string, run: () => Promise<Turn>, done: string) => {
       setBusy(key);
       try {
-        onTurn(await run());
+        const turn = await run();
+        onTurn(turn);
+        const why = whyNotDone(turn);
+        if (why) {
+          toast(why);
+          return;
+        }
         toast(`${done}. Undo it from its turn in the chat.`);
         load();
       } catch (err) {

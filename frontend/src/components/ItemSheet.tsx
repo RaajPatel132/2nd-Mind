@@ -15,6 +15,7 @@ import {
   type Turn,
 } from "../api/client";
 import { formatInZone, formatValue } from "../lib/format";
+import { whyNotDone } from "../lib/turn-outcome";
 import { LinkSection } from "./LinkSection";
 import {
   Button,
@@ -160,7 +161,9 @@ function Body({
     try {
       const turn = await editItem(itemId, body);
       onTurn(turn);
-      onClose();
+      const why = whyNotDone(turn);
+      if (why) setError(why);
+      else onClose();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "That edit did not go through.",
