@@ -189,6 +189,10 @@ eval-report: ## Print a stamped run, or two side by side: make eval-report A=<ru
 eval-latency: ## Where a recall turn's time goes, from a stored run (fresh calls only): make eval-latency A=<run>
 	$(BACKEND_RUN) python -m secondmind.evals latency $(A)
 
+.PHONY: eval-site
+eval-site: ## A static page of every committed live eval run, into _site/ (GitHub Pages publishes it)
+	$(BACKEND_RUN) python -m secondmind.evals site --out ../_site --repo $(or $(REPO),RaajPatel132/2nd-Mind)
+
 .PHONY: bench-vectors
 bench-vectors: ## Vector storage bench under RLS (throwaway pgvector; clustered random vectors; free)
 	$(BACKEND_RUN) env -u OPENAI_API_KEY python tools/bench_vectors.py --random

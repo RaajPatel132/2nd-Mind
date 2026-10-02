@@ -220,6 +220,15 @@ def _latency(refs: Sequence[str], into: str | None, check: bool) -> int:
     return 0
 
 
+def _site(out: str, repo: str | None) -> int:
+    """The static page of every committed live run, for GitHub Pages."""
+    from secondmind.evals.site import build  # noqa: PLC0415
+
+    path = build(Path(out), repo=repo)
+    sys.stdout.write(f"wrote {path}\n")
+    return 0
+
+
 def _record_replays(args: argparse.Namespace) -> int:
     """Show what a live run's recorded outputs would change in the golden cases' ``model:``
     blocks, and with ``--write`` change them (R.5). The expectations are never touched."""
@@ -345,6 +354,9 @@ def main(argv: list[str] | None = None) -> int:
     latency.add_argument("runs", nargs="*", help="run ids or files (none: the latest recall run)")
     latency.add_argument("--into", default=None, help="rewrite the profile block in this document")
     latency.add_argument("--check", action="store_true", help="with --into: only compare")
+    site = sub.add_parser("site", help="a static page of every committed live run (GitHub Pages)")
+    site.add_argument("--out", default="_site", help="the directory to write index.html into")
+    site.add_argument("--repo", default=None, help="OWNER/NAME, to link commits and run files")
     sub.add_parser("live-check", help="one tiny request per routed and picker model")
     record = sub.add_parser(
         "record-replays", help="rebuild the golden cases' model blocks from a live run (R.5)"
@@ -367,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
         "seed-dev": lambda: asyncio.run(_seed_dev(args.email, args.web_url)),
         "report": lambda: _report(args.runs),
         "latency": lambda: _latency(args.runs, args.into, args.check),
+        "site": lambda: _site(args.out, args.repo),
         "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
         "record-replays": lambda: _record_replays(args),

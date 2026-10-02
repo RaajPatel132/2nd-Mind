@@ -60,3 +60,6 @@ frontend/walkthrough-shots/
 
 # Production environment file for `make prod-secrets` (the real values; .env.prod.example is the shape)
 .env.prod
+
+# The generated eval page (make eval-site)
+_site/
