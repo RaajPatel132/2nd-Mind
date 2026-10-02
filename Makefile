@@ -207,6 +207,9 @@ seed-persona: ## Load the Aditi Rao persona into its template workspace (skipped
 
 # Spend safety (R.10, ADR-0032): operate the running stack without a deploy.
 ADMIN := python -m secondmind.api.admin
+# set-tier writes the audit as the schema owner. The production-shaped stack keeps that login out of
+# the api and worker, so there it runs in the one-off migrate container; the dev api holds it.
+ADMIN_AS_OWNER = $(if $(filter prodlike,$(STACK)),$(PRODLIKE) run --rm --no-deps -T --entrypoint python migrate -m secondmind.api.admin,$(COMPOSE) exec -T api $(ADMIN))
 
 .PHONY: kill-switch on off
 kill-switch: ## make kill-switch on|off (or STATE=status|clear): stop or resume every model call, no restart
@@ -216,7 +219,7 @@ on off: ; @:
 .PHONY: set-tier
 set-tier: ## make set-tier EMAIL=… TIER=guest|standard|premium: change a person's tier (audited)
 	@test -n "$(EMAIL)" -a -n "$(TIER)" || { echo "usage: make set-tier EMAIL=a@b.c TIER=premium"; exit 2; }
-	@$(STACKCMD) exec -T api $(ADMIN) set-tier "$(EMAIL)" "$(TIER)"
+	@$(ADMIN_AS_OWNER) set-tier "$(EMAIL)" "$(TIER)"
 
 .PHONY: spend-now
 spend-now: ## Today's, this month's and each provider's spend counters (the running stack)

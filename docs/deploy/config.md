@@ -103,7 +103,7 @@ The names `make prod-secrets` writes are exactly the ones in `.env.prod.example`
 | `LOGIN_ATTEMPTS_PER_MINUTE` | Sign-in attempts per address per minute in production. | 5 | 5 | 5 | env |
 | `SSE_HEARTBEAT_S` | Seconds between heartbeat comments on a quiet turn stream. | 15 | 15 | 15 | env |
 | `SHUTDOWN_GRACE_S` | Seconds running turns and jobs get after SIGTERM (under the 45 s container stop timeout). | 30 | 30 | 30 | env |
-| `DATABASE_MIGRATION_URL` | Postgres URL for the schema owner: migrations and the admin CLI (never the running app). | compose default | built by compose | built by compose from `POSTGRES_PASSWORD` | secret |
+| `DATABASE_MIGRATION_URL` | Postgres URL for the schema owner: migrations and the admin CLI's `set-tier`. Only the one-off `migrate` container holds it on the production stack; the api and worker never do. | compose default | built by compose | built by compose from `POSTGRES_PASSWORD` | secret |
 | `OPENAI_BASE_URL` | Points the OpenAI provider at another endpoint (a stand-in for a provider outage, or vLLM). | unset | unset | unset | env |
 | `MODEL_<STEP>` | provider:model for one step, over models.yaml (also MODEL_<STEP>_FALLBACK). | unset | unset | unset | env |
 | `EFFORT_<STEP>` | Reasoning depth (none, low, medium, high) for one step, over models.yaml. | unset | unset | unset | env |

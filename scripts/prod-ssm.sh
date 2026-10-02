@@ -3,6 +3,7 @@
 # session never holds any). Output comes back here.
 #
 #   scripts/prod-ssm.sh admin <args>     the admin CLI in the api container, e.g. `admin kill-switch on`
+#                                        (`set-tier` runs in the one-off migrate container: it needs the owner login)
 #   scripts/prod-ssm.sh deploy <sha> [migrate|no-migrate]     deploy a release without GitHub
 #   scripts/prod-ssm.sh shell '<command>'   any command, as root
 #
@@ -22,7 +23,11 @@ compose='cd /opt/secondmind && IMAGE_TAG="$(cat /var/lib/secondmind/current)" do
 case "$kind" in
   admin)
     args=""; for a in "$@"; do args="$args $(printf '%q' "$a")"; done
-    command="$compose exec -T api python -m secondmind.api.admin$args"
+    if [[ "${1:-}" == set-tier ]]; then  # writes the audit as the database owner, whom the api never is
+      command="$compose run --rm --no-deps -T --entrypoint python migrate -m secondmind.api.admin$args"
+    else
+      command="$compose exec -T api python -m secondmind.api.admin$args"
+    fi
     document=AWS-RunShellScript
     parameters="$(python3 -c 'import json,sys; print(json.dumps({"commands": [sys.argv[1]]}))' "$command")" ;;
   shell)

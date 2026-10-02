@@ -27,7 +27,6 @@ x-app-env: &app-env
   # In production DEV_AUTH means code sign-in (ACCESS_CODE), and no /v1/dev helpers exist.
   DEV_AUTH: "true"
   DATABASE_URL: postgresql+asyncpg://secondmind_app:${APP_DB_PASSWORD:?}@postgres:5432/secondmind
-  DATABASE_MIGRATION_URL: postgresql+asyncpg://secondmind:${POSTGRES_PASSWORD:?}@postgres:5432/secondmind
   APP_DB_PASSWORD: ${APP_DB_PASSWORD:?}
   REDIS_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/1
   SESSION_SECRET: ${SESSION_SECRET:?}
@@ -54,6 +53,14 @@ x-app-env: &app-env
   TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-2}
   GUEST_NEW_PER_IP_PER_DAY: ${GUEST_NEW_PER_IP_PER_DAY:-10}
   SPEND_CAP_GUEST_DAILY_USD: ${SPEND_CAP_GUEST_DAILY_USD:-0.30}
+
+# The database owner's login. Only the one-off `migrate` container holds it: migrations need it, and
+# so does the admin CLI's set-tier, which runs there (`run --entrypoint python migrate -m
+# secondmind.api.admin`). The api and worker run as the restricted app role and never see it, so a
+# hole in the app does not hand over the database's owner.
+x-owner-env: &owner-env
+  <<: *app-env
+  DATABASE_MIGRATION_URL: postgresql+asyncpg://secondmind:${POSTGRES_PASSWORD:?}@postgres:5432/secondmind
 
 x-app: &app
   image: "${IMAGE_REGISTRY:+${IMAGE_REGISTRY}/}secondmind-api:${IMAGE_TAG:?set by make up-prodlike or the deploy script}"
@@ -122,6 +129,7 @@ services:
 
   migrate:
     <<: *app
+    environment: *owner-env
     command: ["sh", "-c", "python -m secondmind.memory.adapters.bootstrap_role && alembic upgrade head"]
     depends_on:
       postgres: { condition: service_healthy }

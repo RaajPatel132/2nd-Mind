@@ -92,6 +92,29 @@ def test_production_is_one_environment_with_no_staging_left_in_the_compose_file(
     assert "staging" not in text.lower()
 
 
+def test_only_the_one_off_migrate_container_holds_the_database_owners_login() -> None:
+    """The api and worker run as the restricted app role. Were the owner's URL in their
+    environment too, a hole in the app would be a hole in the database."""
+    for name in ("api", "worker"):
+        env = dict(services()[name]["environment"])  # type: ignore[arg-type]
+        assert "DATABASE_MIGRATION_URL" not in env, name
+        assert "secondmind_app" in str(env["DATABASE_URL"]), name
+    owner = dict(services()["migrate"]["environment"])  # type: ignore[arg-type]
+    assert str(owner["DATABASE_MIGRATION_URL"]).startswith("postgresql+asyncpg://secondmind:")
+    assert services()["migrate"].get("restart") == "no"  # it runs, finishes and is gone
+
+
+def test_set_tier_writes_as_the_owner_so_it_runs_in_that_container_not_the_api() -> None:
+    ssm = (REPO / "scripts" / "prod-ssm.sh").read_text()
+    assert "--entrypoint python migrate -m secondmind.api.admin" in ssm
+    set_tier = ssm.split("== set-tier", 1)[1].split("else", 1)[0]
+    assert "run --rm --no-deps -T" in set_tier
+    assert "exec -T api" not in set_tier
+    makefile = (REPO / "Makefile").read_text()
+    assert "--entrypoint python migrate -m secondmind.api.admin" in makefile
+    assert "ADMIN_AS_OWNER) set-tier" in makefile
+
+
 def test_every_variable_the_compose_file_reads_is_in_the_matrix() -> None:
     names = set(re.findall(r"(?<!\$)\$\{([A-Z][A-Z0-9_]*)", COMPOSE.read_text()))
     documented = set(re.findall(r"^\|\s*`([A-Z][A-Z0-9_]*)`", MATRIX.read_text(), re.MULTILINE))
