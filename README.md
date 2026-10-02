@@ -5,6 +5,8 @@
 [![ci](https://github.com/RaajPatel132/2nd-Mind/actions/workflows/ci.yml/badge.svg)](https://github.com/RaajPatel132/2nd-Mind/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![last commit](https://img.shields.io/github/last-commit/RaajPatel132/2nd-Mind)](https://github.com/RaajPatel132/2nd-Mind/commits)
+[![recall, live run](https://img.shields.io/endpoint?url=https%3A%2F%2Fraajpatel132.github.io%2F2nd-Mind%2Fevals.json)](https://raajpatel132.github.io/2nd-Mind/)
+[![unit coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraajpatel132.github.io%2F2nd-Mind%2Fcoverage.json)](https://raajpatel132.github.io/2nd-Mind/)
 
 <p align="center">
   <img src="docs/media/tour.gif" width="800" alt="A first visit: the landing page, the sample persona opening, a message saved with its steps shown, a question answered with citations, and the inspector opening on the turn.">
@@ -64,10 +66,50 @@ table does. Where a number misses its target, it is shown with the target; the t
 question is the open item. The evaluation sets are small and synthetic: they say how it did on
 those cases, not on your data.
 
+Every run is also on one page, [**all committed runs**](https://raajpatel132.github.io/2nd-Mind/):
+pass rate, cost and latency per run with its commit, and the runs that stopped early marked. How the
+models were chosen, and what that cost, is in the
+[model-routing case study](docs/case-studies/model-routing.md); where a recall turn's time goes is
+in [`docs/performance.md`](docs/performance.md).
+
 To read a run in full, `make eval-report A=<a run id from the table>` prints hit@5 and MRR for each
 shape of question, the no-answer rate and the cost per case. `make eval-ingest` replays the
 ingestion cases through the real code with no keys in a couple of seconds: that checks the code
 around the model, not the model, which only a live run can.
+
+## What measuring it taught
+
+- **The first 40 of 50 was our prompts, not the model.** Going from 40 to 46 of 51 took five new
+  prompt versions and four pipeline fixes found by reading failures; a pricier model did no
+  better on the cases that were missed.
+- **A cheaper routing held up on the hardest cases.** On the ten hardest recall cases, the shipped
+  routing passed 7 of 9 at about a fifth of Sonnet 5's price per case (which passed 5 of 9), and a
+  cheaper candidate did the same at about a fourteenth. The shipped one costs more than that
+  candidate because its rerank is faster.
+- **The slow part is the model writing, not thinking about it.** The rerank takes about a second
+  plus 5 ms for every token it writes, and a few slow plans (8 s at the p95, 2.8 s at the median)
+  are the likeliest reason for the 17 s p95. The time is shown by step in [`docs/performance.md`](docs/performance.md); none of the ways to shorten it is done.
+- **A replay is not a timing.** A probe that re-ran only the rerank, with every other call replayed
+  from the cache, reported 3.6 s for a turn that takes about 11; the profile now leaves cached
+  calls out and says how many.
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  B["Browser<br/>React SPA"] -->|"/v1 and SSE"| W["nginx"]
+  M["MCP client<br/>(integrations/mcp)"] -->|"/v1"| W
+  W --> A["API<br/>FastAPI"]
+  A --> R["Turn runner<br/>LangGraph"]
+  R --> P["Provider layer<br/>one route per step"]
+  P --> LLM["Anthropic, OpenAI<br/>or the offline fake"]
+  R --> DB[("Postgres 16<br/>pgvector, RLS")]
+  A --> RD[("Redis<br/>jobs, spend, kill switch")]
+  WK["Worker"] --> DB
+```
+
+More diagrams (one turn, saving, recalling, the data) are in
+[`docs/architecture.md`](docs/architecture.md).
 
 ## Why it is built this way
 
@@ -117,6 +159,7 @@ runs in **fake-provider mode** (deterministic, scripted replies), so everything 
 | [`frontend/`](frontend/) | React, TypeScript, Vite and Tailwind. The Ink design system, a generated API client, Playwright specs |
 | [`docs/`](docs/README.md) | [Architecture](docs/architecture.md), the [product spec](docs/PRD.md), the [decision records](docs/adr/README.md), the [design system](docs/design/system.md), the [runbook](docs/runbook.md) |
 | [`infra/`](infra/) | Terraform for the single production host |
+| [`integrations/mcp/`](integrations/mcp/README.md) | An MCP server: save, recall and upcoming as tools for Claude Desktop or any agent |
 | [`scripts/`](scripts/) | Operator and capture scripts |
 
 ## Develop
@@ -129,9 +172,10 @@ make help                # all targets
 ```
 
 `make check` covers ruff, `mypy --strict`, the import contracts, an OpenAPI snapshot that the
-generated client must match, over 700 unit and integration tests (the integration ones against
+generated client must match, about 1,300 unit and integration tests (the integration ones against
 real Postgres and Redis in containers), the design-system check, gitleaks over the full history,
-dependency audits and an image scan. The README's pictures are remade by
+dependency audits and an image scan. Releases are tags, and
+[`CHANGELOG.md`](CHANGELOG.md) is written from the commit messages (`make changelog`). The README's pictures are remade by
 [`frontend/e2e/media.spec.ts`](frontend/e2e/media.spec.ts) and
 [`scripts/make_demo_gif.py`](scripts/make_demo_gif.py).
 
@@ -140,9 +184,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the commit standard and the definit
 ## Status and limits
 
 The first phase, a web app on hosted models, is built, and is designed to run as one environment
-on a single host. It has no accounts yet (visitors are guests, with the sample persona or a scratch memory), and the API keys
-and an MCP server in the product spec are not built. Recall is slower than its target (see the
-table above). Everything in the sample is synthetic.
+on a single host. It has no accounts yet (visitors are guests, with the sample persona or a scratch
+memory), and the public API with keys in the product spec is not built. The
+[MCP server](integrations/mcp/README.md) works today for the owner of a deployment, signed in with
+the access code, until keys exist ([ADR-0046](docs/adr/0046-mcp-server-as-an-adapter.md)). Recall
+is slower than its target (see the table above). Everything in the sample is synthetic.
 
 ## License
 

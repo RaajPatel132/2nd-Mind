@@ -19,6 +19,7 @@ Postgres database with row-level security.
 ```mermaid
 flowchart LR
   B["Browser<br/>React SPA"] -->|"/v1 and SSE"| W["Web tier<br/>nginx"]
+  M["MCP client<br/>integrations/mcp"] -->|"/v1"| W
   W --> A["API<br/>FastAPI"]
   A --> R["Turn runner<br/>LangGraph"]
   R --> P["Provider layer<br/>one route per step"]
