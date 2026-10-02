@@ -97,7 +97,7 @@ migrate: ## Apply database migrations (against the compose database)
 
 # ------------------------------------------------------------------ quality gates
 .PHONY: check
-check: commits lint typecheck imports openapi-check headline-check test test-int web-check infra-check secrets audit scan-images ## Everything CI runs, except E2E
+check: commits lint typecheck imports openapi-check headline-check test test-int web-check mcp-check infra-check secrets audit scan-images ## Everything CI runs, except E2E
 
 .PHONY: commits
 commits: ## Commit messages not yet on origin/main follow the standard; authors too if COMMIT_AUTHORS is set
@@ -266,6 +266,11 @@ web-check: ## Frontend lint, formatting, typecheck, unit tests, build and the de
 	$(WEB_RUN) test
 	$(WEB_RUN) build
 	$(WEB_RUN) check:design
+
+.PHONY: mcp-check
+mcp-check: ## The MCP server package: ruff, mypy --strict and its tests (integrations/mcp, its own lock file)
+	cd integrations/mcp && uv run --frozen ruff check . && uv run --frozen ruff format --check . \
+		&& uv run --frozen mypy && uv run --frozen pytest -q
 
 .PHONY: secrets
 secrets: ## gitleaks + hygiene hooks over the whole repo

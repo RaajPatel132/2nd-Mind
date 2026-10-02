@@ -1,0 +1,49 @@
+[project]
+name = "secondmind-mcp"
+version = "0.1.0"
+description = "An MCP server for 2nd Mind: save, recall and upcoming as tools for any MCP client."
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "mcp>=2.2,<3",
+]
+
+[project.scripts]
+secondmind-mcp = "secondmind_mcp.server:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3",
+    "pytest>=9.1",
+    "pytest-asyncio>=1.4",
+    "ruff>=0.16",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/secondmind_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "ASYNC", "RUF", "PL", "SIM", "T20"]
+ignore = ["PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR0913"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers --strict-config"
