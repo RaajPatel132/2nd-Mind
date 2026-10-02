@@ -1,4 +1,4 @@
-# Copy to terraform.tfvars (gitignored) and fill in. Guide step 8.
+# Copy to terraform.tfvars (gitignored) and fill in.
 domain_name = "example.com"         # the domain you bought
 alert_email = "you@example.com"     # the two Budgets email this address
 github_repo = "your-user/2nd-Mind"  # owner/name of the public repository

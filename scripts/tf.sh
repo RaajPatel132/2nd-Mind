@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Terraform in a container, so nothing needs installing (guide step 4).
+# Run Terraform in a container, so nothing needs installing.
 #
 #   scripts/tf.sh <root> <terraform args...>      e.g. scripts/tf.sh platform plan
 #

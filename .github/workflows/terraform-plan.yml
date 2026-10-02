@@ -1,6 +1,6 @@
 # A pull request that touches infra/ gets a `terraform plan` summary, from the read-only plan
 # role (no changes are possible). It does nothing until the plan role exists and its ARN is the
-# AWS_PLAN_ROLE_ARN repository variable (guide step 9); the offline checks in ci.yml run always.
+# AWS_PLAN_ROLE_ARN repository variable; the offline checks in ci.yml run always.
 name: terraform-plan
 
 on:

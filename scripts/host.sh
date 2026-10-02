@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop, start or look at the production host (guide Part 3). Yours to run, with your AWS profile.
+# Stop, start or look at the production host. Yours to run, with your AWS profile.
 #   scripts/host.sh stop|start|status
 # Before launch nobody visits, so stopping the instance saves credit. What still draws while it is
 # stopped: the Elastic IP (about $3.60 a month) and the disks and snapshots (about $2). After a

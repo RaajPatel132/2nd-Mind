@@ -168,7 +168,7 @@ spell can still get a 502 in the first second or two, before the edge has notice
 finishes within `SHUTDOWN_GRACE_S` (30 s; the container gets 45 s); the worker finishes its job or
 puts it back on the queue, which is covered by a test against a real worker and Redis
 (`tests/integration/test_worker_requeue.py`). **Not yet seen on the live host:** the slowed turn and
-slowed job checks (guide Part 3, exercise 1, with a long message in flight).
+slowed job checks (do it with a long message in flight).
 
 **Tried** (`infra/host/deploy.sh` against a sandbox compose project on the rehearsal's images,
 `SKIP_PULL=1`, 2026-09-30; the AWS parts of the path, SSM and OIDC, were not exercised):
@@ -225,7 +225,7 @@ that has one that hasn't.
 ==> 16:45:46 release b5e88c310ab0 is serving
 ```
 
-The rollback through GitHub and SSM is yours to try (guide Part 3, exercise 2).
+The rollback through GitHub and SSM is yours to try.
 
 ## 7. Restore the database
 
@@ -269,8 +269,8 @@ A user from the dump signed in on the restored stack and saw their workspace.
 **Restore production itself** (the disk is gone, or the database is corrupt): from a snapshot,
 create a volume in the same availability zone, stop the instance, swap it in for the data volume
 (or restore the dump into the running Postgres: `pg_restore --clean --if-exists --no-owner` inside the
-postgres container), start it, and run `make smoke-prod`. Practise the dump half at least once
-(guide Part 3, exercise 4). The point-in-time restore of S8's load-test sprint is out of scope here:
+postgres container), start it, and run `make smoke-prod`. Practise the dump half at least once.
+The point-in-time restore of S8's load-test sprint is out of scope here:
 the most a failure loses is a day.
 
 ## 8. Alerts

@@ -2,8 +2,8 @@
 # network, its role, its snapshots and the two Budgets. Later projects on <domain> share these;
 # this root moves to its own repository when a second project arrives.
 #
-# DNS is not here: it is one A record at Cloudflare, added by hand from the `dns_record` output
-# (guide step 8), so it survives the move to another host untouched.
+# DNS is not here: it is one A record at Cloudflare, added by hand from the `dns_record` output,
+# so it survives the move to another host untouched.
 
 provider "aws" {
   region = var.aws_region

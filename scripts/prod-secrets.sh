@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Write production's parameters to SSM Parameter Store from the gitignored .env.prod (guide step
-# 10). Secrets become SecureString parameters, the rest String, all under /secondmind/prod/.
+# Write production's parameters to SSM Parameter Store from the gitignored .env.prod.
+# Secrets become SecureString parameters, the rest String, all under /secondmind/prod/.
 # .env.prod.example says which is which and which names exist: a name it doesn't list is refused
 # (a typo would otherwise be written and never read), and so is an empty secret.
 #

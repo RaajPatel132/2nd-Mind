@@ -262,7 +262,7 @@ e2e: ## Playwright smoke test against the compose stack in fake-provider mode
 # ------------------------------------------------------------------ infrastructure (ADR-0035)
 # Terraform, tflint and trivy run in containers: nothing to install. The checks are offline (the
 # AWS provider is mocked in the tests), so they need no account. plan/apply/init need your AWS
-# profile (AWS_PROFILE) and are yours to run (guide Part 2).
+# profile (AWS_PROFILE) and are yours to run.
 TF_IMAGE      ?= hashicorp/terraform:1.16.4
 TFLINT_IMAGE  ?= ghcr.io/terraform-linters/tflint:v0.64.0
 TRIVY_IMAGE   ?= aquasec/trivy:0.74.0
