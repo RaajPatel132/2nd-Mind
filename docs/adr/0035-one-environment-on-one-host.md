@@ -1,9 +1,12 @@
 # ADR-0035: One environment on one host, built to move
 
-- **Status:** accepted (S4; the parts that need an AWS account are checked when the guide is followed)
+- **Status:** accepted (S4; the parts that need an AWS account are checked when the runbook is followed)
 - **Date:** 2026-09-30
 - **Supersedes:** the topology of ADR-0012 (its region, arm64 and Langfuse Cloud choices carry over)
 - **Amends:** ADR-0034 (code sign-in is allowed in production until S6)
+- **Amended 2026-10-02:** the host is in `ap-southeast-2`, not `us-east-1`. The AWS account's
+  organisation denies EC2 outside that region, so ADR-0012's reason for the US (compute next to the
+  model providers) gives way. Every model call now crosses the Pacific; S5.15 measures what that costs.
 
 ## Context
 
@@ -25,7 +28,7 @@ S6's accounts replace it; open dev sign-in and the `/v1/dev` helpers exist only 
 added when traffic or risk justifies its cost, not before.
 
 **One always-on host.** An EC2 `t4g.small` (2 vCPU, 2 GB, arm64, Ubuntu 24.04 LTS) in one AZ of
-`us-east-1`, with an Elastic IP, running Docker Compose from one file, `compose.prodlike.yaml`:
+`ap-southeast-2`, with an Elastic IP, running Docker Compose from one file, `compose.prodlike.yaml`:
 Caddy (TLS from Let's Encrypt, routing by host name), the web tier (nginx: SPA and `/v1`/`/readyz`
 proxy), api, worker, Postgres 16 with pgvector and Redis. Postgres, Redis and Caddy's certificates
 live on a separate encrypted volume that outlives the instance. Ubuntu, not Amazon Linux, so one
