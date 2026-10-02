@@ -83,8 +83,11 @@ jobs:
         run: make -C .. openapi-check
       - name: the landing page's numbers are up to date
         run: make -C .. headline-check
-      - name: unit tests
-        run: make -C .. test
+      - name: unit tests, with coverage (the floor is in pyproject.toml)
+        run: make -C .. coverage
+      - name: coverage in the job summary
+        if: always()
+        run: uv run --frozen coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
       - name: integration tests (testcontainers Postgres + Redis)
         run: make -C .. test-int
       - name: dependency audit (pip-audit)
@@ -109,12 +112,35 @@ jobs:
       - name: generated client matches the OpenAPI snapshot
         run: npm run gen-client && git diff --exit-code -- src/api/schema.gen.ts
       - run: npm run lint
+      - name: formatting (Prettier)
+        run: npm run format:check
       - run: npm run typecheck
+      - name: unit tests (Vitest)
+        run: npm test
       - run: npm run build
       - name: design system (tokens, contrast, bundle budget)
         run: npm run check:design
       - name: dependency audit
         run: npm audit --audit-level=high
+
+  mcp:
+    name: mcp server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: integrations/mcp/uv.lock
+      - run: uv python install 3.12
+      - name: ruff, mypy --strict and the tests (including the real server over stdio)
+        run: make mcp-check
+      - name: dependency audit (pip-audit)
+        working-directory: integrations/mcp
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt > /tmp/req.txt
+          uvx --from pip-audit pip-audit --strict --disable-pip --requirement /tmp/req.txt
 
   secrets:
     name: secret scan
@@ -224,7 +250,7 @@ jobs:
   # S5 launches it; then only main deploys). It waits for the images job, which pushes them.
   deploy:
     name: deploy
-    needs: [commits, backend, frontend, secrets, infra, images, e2e]
+    needs: [commits, backend, frontend, mcp, secrets, infra, images, e2e]
     if: >-
       github.event_name == 'push' && (github.ref == 'refs/heads/main'
       || (startsWith(github.ref, 'refs/heads/sprint-') && vars.DEPLOY_SPRINT_BRANCHES == 'true'))
