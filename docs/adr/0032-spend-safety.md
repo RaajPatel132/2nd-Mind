@@ -66,8 +66,9 @@ a turn: storing a turn per rejected request would make the limit a way to fill t
 **Operating it** (`python -m secondmind.api.admin`, behind `make`):
 
 - `make kill-switch on|off` flips the Redis flag; every api and worker process re-reads it at
-  most every 2 s, so it needs no restart. `make spend-now` prints the counters. `KILL_SWITCH`
-  only sets the value at start-up; the runtime flag wins once it exists.
+  most every 2 s, so it needs no restart. `make kill-switch STATE=clear` forgets the flag, so
+  `KILL_SWITCH` in the environment applies again. `make spend-now` prints the counters.
+  `KILL_SWITCH` only sets the value at start-up; the runtime flag wins once it exists.
 - `make set-tier EMAIL=… TIER=guest|standard|premium` runs as the schema owner (the app's role
   can read `tier_changes` but not write it), and writes the audit row (who, when, from, to) in
   the same transaction. The person's quota and picker follow on their next turn. Migration 0009
