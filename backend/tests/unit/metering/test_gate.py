@@ -170,6 +170,14 @@ async def test_a_store_that_cant_be_read_fails_closed() -> None:
     assert await gate.refuse() == "spend_check_unavailable"
 
 
+async def test_a_rate_limit_that_cant_be_read_raises_unless_the_caller_fails_closed_next() -> None:
+    gate, store, _ = gate_over()
+    store.fail = True
+    with pytest.raises(ConnectionError):  # a login limiter must not quietly stop limiting
+        await gate.rate_limited("someone", 5)
+    assert await gate.rate_limited("someone", 5, fail_open=True) is None  # a turn: spend check next
+
+
 async def test_a_credit_flag_that_cant_be_read_fails_closed_too() -> None:
     class CreditFlagDown(InMemorySpendStore):
         async def credit_out(self, provider: str) -> bool:

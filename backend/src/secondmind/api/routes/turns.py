@@ -87,7 +87,8 @@ async def create_turn(
         if user is not None and user.tier is Tier.GUEST
         else settings.rate_turns_per_minute
     )
-    wait = await services.gate.rate_limited(str(user_id), per_minute)
+    # With the store down this lets the message through to the spend check, which fails closed.
+    wait = await services.gate.rate_limited(str(user_id), per_minute, fail_open=True)
     if wait is not None:
         raise RateLimitedError("You're sending messages too fast. Try again in a moment.", wait)
     usage, block = await usage_and_block(services, user_id)

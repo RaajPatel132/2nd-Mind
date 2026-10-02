@@ -236,9 +236,21 @@ class SpendGate:
         guests counts with this."""
         return await self._store.incr_daily(key, self._clock())
 
-    async def rate_limited(self, identity: str, per_minute: int) -> float | None:
-        """Seconds to wait before this identity may start another turn, or None."""
-        return await self._store.take(f"turns:{identity}", per_minute)
+    async def rate_limited(
+        self, identity: str, per_minute: int, *, fail_open: bool = False
+    ) -> float | None:
+        """Seconds to wait before this identity may start another turn, or None.
+
+        A store that can't be reached raises, unless ``fail_open``: then there is no wait and the
+        failure is logged. Only a caller whose next step fails closed on the same store may ask
+        for that (a turn: the spend check after it pauses answers); a login limiter must not."""
+        try:
+            return await self._store.take(f"turns:{identity}", per_minute)
+        except Exception:
+            if not fail_open:
+                raise
+            log.exception("spend.rate_limit_failed")
+            return None
 
     async def reconcile(self, reader: SpendReader) -> SpendTotals:
         """Reset the spend counters to what the usage ledger says (the ledger is the source of

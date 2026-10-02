@@ -304,3 +304,26 @@ async def test_a_redo_is_saved_whole_while_turns_are_blocked(
     assert redo.json()["status"] == "completed", redo.json()["error"]
     assert (await client.get(f"/v1/items/{item_id}")).json()["item"]["status"] == "active"
     assert await keys_of(services, client, item_id)
+
+
+async def test_a_redis_outage_pauses_turns_instead_of_failing_the_request(
+    stack: tuple[httpx.AsyncClient, Services], ticker: Ticker
+) -> None:
+    """The rate limiter shares the spend store. With it unreachable, a message must meet the same
+    fail-closed answer `/v1/me/usage` gives ("paused"), not a server error."""
+    client, services = stack
+    ws = await login(client)
+    services.gate.store.fail = True  # type: ignore[attr-defined]
+    ticker.t += 3
+    turn, events = await assert_blocked(client, ws, "spend_check_unavailable")
+    assert "can't be checked" in turn["output"]
+    assert [e["reason"] for e in events if e["type"] == "blocked"] == ["spend_check_unavailable"]
+    usage = (await client.get("/v1/me/usage")).json()
+    assert usage["read_only"] is True
+    assert usage["read_only_reason"] == "spend_check_unavailable"
+
+    services.gate.store.fail = False  # type: ignore[attr-defined]
+    ticker.t += 3
+    back = await send(client, ws, "hello again")
+    assert back[-1][0] == "turn.completed"
+    assert back[-1][1]["usage"]["cost_usd"] > 0

@@ -30,6 +30,7 @@ class InMemorySpendStore:
         return self._kill
 
     async def set_kill_switch(self, on: bool) -> None:
+        self._check()
         self._kill = on
 
     async def add(self, provider: str, cost: Decimal, at: datetime) -> SpendTotals:
@@ -49,6 +50,7 @@ class InMemorySpendStore:
         )
 
     async def reset(self, totals: SpendTotals, at: datetime) -> None:
+        self._check()
         self._day[utc_day(at)] = totals.day
         self._month[utc_month(at)] = totals.month
         self._providers = dict(totals.providers)
@@ -58,9 +60,11 @@ class InMemorySpendStore:
         return self._credit_out.get(provider, 0.0) > self._monotonic()
 
     async def mark_credit_out(self, provider: str, seconds: int) -> None:
+        self._check()
         self._credit_out[provider] = self._monotonic() + seconds
 
     async def once(self, key: str, seconds: int) -> bool:
+        self._check()
         now = self._monotonic()
         if self._seen.get(key, 0.0) > now:
             return False
@@ -74,6 +78,7 @@ class InMemorySpendStore:
         return self._daily[slot]
 
     async def take(self, bucket: str, per_minute: int) -> float | None:
+        self._check()
         now = self._monotonic()
         tokens, at = self._buckets.get(bucket, (float(per_minute), now))
         tokens = min(float(per_minute), tokens + (now - at) * per_minute / 60)
