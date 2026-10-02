@@ -35,7 +35,13 @@ export function UnderstandTech({ ctx }: P) {
           <p className="m-0 mb-2 font-machine text-mono text-fg-2" data-testid="decision-intent">
             Intent {i.intent.replaceAll('_', '-')} · {i.source} · {Math.round(i.confidence * 100)}%
           </p>
-          <KV rows={[['intent', i.intent], ['confidence', i.confidence.toFixed(2)], ['source', i.source]]} />
+          <KV
+            rows={[
+              ['intent', i.intent],
+              ['confidence', i.confidence.toFixed(2)],
+              ['source', i.source],
+            ]}
+          />
         </>
       )}
       <ModelLines calls={ctx.calls} />
@@ -82,9 +88,7 @@ export function ExtractTech({ ctx }: P) {
           }))}
         />
       )}
-      {d && d.normalisations.length > 0 && (
-        <FactLine facts={d.normalisations.map((n) => `${n.vocab}: ${n.reused ? 'reused' : 'new'} ${n.chosen}`)} />
-      )}
+      {d && d.normalisations.length > 0 && <FactLine facts={d.normalisations.map((n) => `${n.vocab}: ${n.reused ? 'reused' : 'new'} ${n.chosen}`)} />}
       <ModelLines calls={ctx.calls} />
     </>
   )
@@ -138,7 +142,12 @@ export function DatesTech({ ctx }: P) {
       ))}
       {first && (
         <div className="mt-3">
-          <KV rows={[['now', formatInZone(first.now, first.timezone)], ['timezone', first.timezone]]} />
+          <KV
+            rows={[
+              ['now', formatInZone(first.now, first.timezone)],
+              ['timezone', first.timezone],
+            ]}
+          />
         </div>
       )}
       <FactLine facts={['code, no model']} />
@@ -240,7 +249,10 @@ export function ReconcileTech({ ctx }: P) {
       )}
       {d && Object.keys(d.decided_by).length > 0 && (
         <p className="m-0 mt-3 font-machine text-mono-sm text-fg-3" data-testid="decided-by">
-          decided by {Object.entries(d.decided_by).map(([step, model]) => `${step}: ${model}`).join(' · ')}
+          decided by{' '}
+          {Object.entries(d.decided_by)
+            .map(([step, model]) => `${step}: ${model}`)
+            .join(' · ')}
         </p>
       )}
       <ModelLines calls={ctx.calls} />
@@ -269,7 +281,10 @@ export function GuardPlain({ ctx }: P) {
       <Plain>
         {secret
           ? "I don't keep passwords or keys. Nothing was saved, and the stored message has it removed."
-          : facts.policies.filter((p) => p.verdict.decision === 'blocked').map((p) => p.verdict.reason).join(' ')}
+          : facts.policies
+              .filter((p) => p.verdict.decision === 'blocked')
+              .map((p) => p.verdict.reason)
+              .join(' ')}
       </Plain>
     )
   }
@@ -316,9 +331,7 @@ export function ToolCalls({ ctx }: P) {
             )}
             {call.policy && (
               <span
-                className={
-                  call.policy.decision === 'allowed' ? 'text-ok' : call.policy.decision === 'held' ? 'text-warn' : 'text-bad'
-                }
+                className={call.policy.decision === 'allowed' ? 'text-ok' : call.policy.decision === 'held' ? 'text-warn' : 'text-bad'}
                 data-testid="tool-call-policy"
               >
                 {call.policy.decision} · {call.policy.rule_id}
@@ -331,9 +344,7 @@ export function ToolCalls({ ctx }: P) {
             </div>
           )}
           {call.result_summary && <p className="m-0 mt-1 pl-5 font-machine text-mono-sm text-fg-3">→ {call.result_summary}</p>}
-          {call.policy && call.policy.decision !== 'allowed' && (
-            <p className="m-0 mt-1 pl-5 text-label font-normal text-fg-2">{call.policy.reason}</p>
-          )}
+          {call.policy && call.policy.decision !== 'allowed' && <p className="m-0 mt-1 pl-5 text-label font-normal text-fg-2">{call.policy.reason}</p>}
         </li>
       ))}
     </ol>
@@ -367,9 +378,7 @@ export function DiffTech({ ctx }: P) {
   if (!diff || diff.entries.length === 0) return <Muted>No memory changes.</Muted>
   return (
     <>
-      {diff.undo_of && (
-        <p className="m-0 mb-3 font-machine text-mono text-fg-2">Undoes turn {shortId(diff.undo_of)}</p>
-      )}
+      {diff.undo_of && <p className="m-0 mb-3 font-machine text-mono text-fg-2">Undoes turn {shortId(diff.undo_of)}</p>}
       <DiffList diff={diff} />
     </>
   )
@@ -388,11 +397,7 @@ export function ConfirmPlain({ ctx }: P) {
 export function AnswerPlain({ ctx }: P) {
   const call = ctx.calls[0]
   if (!call) return <Plain>A short confirmation of what I did. No model was needed to write it.</Plain>
-  return (
-    <Plain>
-      I wrote the reply{call.fallback ? ' with the fallback model, because the primary one didn\'t answer' : ''}.
-    </Plain>
-  )
+  return <Plain>I wrote the reply{call.fallback ? " with the fallback model, because the primary one didn't answer" : ''}.</Plain>
 }
 
 export function AnswerTech({ ctx }: P) {
@@ -412,7 +417,15 @@ export function FailedPlain({ ctx }: P) {
 export function FailedTech({ ctx }: P) {
   const e = ctx.facts.error
   if (!e) return <Muted>No error was recorded.</Muted>
-  return <KV rows={[['code', e.code], ['step', e.step ?? '—'], ['retryable', e.retryable ? 'yes' : 'no']]} />
+  return (
+    <KV
+      rows={[
+        ['code', e.code],
+        ['step', e.step ?? '—'],
+        ['retryable', e.retryable ? 'yes' : 'no'],
+      ]}
+    />
+  )
 }
 
 // ------------------------------------------------------------------ blocked
@@ -422,8 +435,7 @@ export function BlockedPlain({ ctx }: P) {
   if (!blocked) return <Plain>This turn was stopped before any model ran.</Plain>
   return (
     <Plain>
-      {blocked.message} No model was called, so this turn cost nothing. You can still browse your
-      memory, check Upcoming, undo, and open this glass box.
+      {blocked.message} No model was called, so this turn cost nothing. You can still browse your memory, check Upcoming, undo, and open this glass box.
     </Plain>
   )
 }

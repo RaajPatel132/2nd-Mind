@@ -142,9 +142,7 @@ export async function getItem(itemId: string): Promise<ItemDetail> {
 
 /** The workspace's people, places and things: what the editor can link a memory to (S3.12). */
 export async function listEntities(workspaceId: string): Promise<Entity[]> {
-  const out = unwrap(
-    await api.GET('/v1/workspaces/{workspace_id}/entities', { params: { path: { workspace_id: workspaceId } } }),
-  )
+  const out = unwrap(await api.GET('/v1/workspaces/{workspace_id}/entities', { params: { path: { workspace_id: workspaceId } } }))
   return out.items
 }
 
@@ -206,25 +204,13 @@ function toFrame(event: TurnStreamFrame['event'], data: unknown): TurnStreamFram
   return { event, data } as TurnStreamFrame
 }
 
-const FRAME_NAMES = new Set<TurnStreamFrame['event']>([
-  'turn.started',
-  'token',
-  'step.started',
-  'turn.event',
-  'turn.completed',
-  'turn.failed',
-])
+const FRAME_NAMES = new Set<TurnStreamFrame['event']>(['turn.started', 'token', 'step.started', 'turn.event', 'turn.completed', 'turn.failed'])
 
 /**
  * Send a message; yields the typed server-sent frames of the turn as they arrive. `model` is a
  * picker choice for every chat step of the turn; null keeps the configured routing.
  */
-export async function* streamTurn(
-  workspaceId: string,
-  message: string,
-  model: string | null = null,
-  signal?: AbortSignal,
-): AsyncGenerator<TurnStreamFrame> {
+export async function* streamTurn(workspaceId: string, message: string, model: string | null = null, signal?: AbortSignal): AsyncGenerator<TurnStreamFrame> {
   const { data, error, response } = await api.POST('/v1/workspaces/{workspace_id}/turns', {
     params: { path: { workspace_id: workspaceId } },
     body: { message, model },

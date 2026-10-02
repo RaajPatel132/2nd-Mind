@@ -77,9 +77,14 @@ export function Landing({ meta, onTry, onSignIn, onDevSignIn }: Props) {
   const stats =
     numbers.status === 'ready'
       ? numbers.headline.metrics
-      : (['Retrieval hit rate', 'Relative-date accuracy', 'p95 time to answer a question'] as const).map(
-          (label): HeadlineMetric => ({ id: label, label, value: null, display: numbers.status === 'loading' ? '…' : 'no run yet', detail: '', run: null }),
-        )
+      : (['Retrieval hit rate', 'Relative-date accuracy', 'p95 time to answer a question'] as const).map((label): HeadlineMetric => ({
+          id: label,
+          label,
+          value: null,
+          display: numbers.status === 'loading' ? '…' : 'no run yet',
+          detail: '',
+          run: null,
+        }))
   const runs = numbers.status === 'ready' ? numbers.headline.runs : []
 
   return (
@@ -99,12 +104,16 @@ export function Landing({ meta, onTry, onSignIn, onDevSignIn }: Props) {
           A personal memory that shows its work.
         </motion.h1>
         <motion.p {...motionProps('rise', 1)} className="m-0 mt-5 measure text-pretty text-body text-fg-2">
-          Tell it anything and it decides what the thing is, when it matters, who it concerns and where to keep it. Ask for anything back by meaning, time, person or category.
-          Every decision it makes can be inspected and corrected.
+          Tell it anything and it decides what the thing is, when it matters, who it concerns and where to keep it. Ask for anything back by meaning, time,
+          person or category. Every decision it makes can be inspected and corrected.
         </motion.p>
       </div>
 
-      <motion.ul {...motionProps('rise', 2)} className="m-0 mt-10 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3" aria-label="How well it works, as measured">
+      <motion.ul
+        {...motionProps('rise', 2)}
+        className="m-0 mt-10 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3"
+        aria-label="How well it works, as measured"
+      >
         {stats.map((m) => (
           <li key={m.id} className="min-w-0">
             <Stat metric={m} run={runOf(runs, m.run)} />
@@ -135,16 +144,32 @@ export function Landing({ meta, onTry, onSignIn, onDevSignIn }: Props) {
           <div className="grid gap-3">
             <p className="m-0 max-w-md text-label font-normal text-fg-3">This is a private preview. Use the access code you were given to open the sample.</p>
             <AccessForm codeOnly action="Open the sample" onSubmit={(_email, code) => onTry(code)} />
-            <Button variant="ghost" size="sm" className="justify-self-start" onClick={() => { setPanel('home') }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-self-start"
+              onClick={() => {
+                setPanel('home')
+              }}
+            >
               Back
             </Button>
           </div>
         )}
         {panel === 'sign-in' && (
           <div className="grid gap-3">
-            <p className="m-0 max-w-md text-label font-normal text-fg-3">Use the access code you were given. Your email keeps your memory apart from everyone else's.</p>
+            <p className="m-0 max-w-md text-label font-normal text-fg-3">
+              Use the access code you were given. Your email keeps your memory apart from everyone else's.
+            </p>
             <AccessForm onSubmit={onSignIn} />
-            <Button variant="ghost" size="sm" className="justify-self-start" onClick={() => { setPanel('home') }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-self-start"
+              onClick={() => {
+                setPanel('home')
+              }}
+            >
               Back
             </Button>
           </div>

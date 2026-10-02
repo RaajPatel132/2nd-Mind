@@ -40,7 +40,12 @@ type Props = {
 export function LinkCard({ title, href, host, site, kind = 'link', status, note, facts = [], summary, children, className }: Props) {
   const state = STATUS[status]
   return (
-    <article className={cx('rounded-md border border-line bg-surface px-4 py-3.5 shadow-edge', className)} data-testid="link-card" data-status={status} data-kind={kind}>
+    <article
+      className={cx('rounded-md border border-line bg-surface px-4 py-3.5 shadow-edge', className)}
+      data-testid="link-card"
+      data-status={status}
+      data-kind={kind}
+    >
       <div className="flex items-start gap-3">
         <Icon icon={kind === 'video' ? PlayCircle : Globe} size={20} className="mt-0.5 shrink-0 text-fg-3" />
         <div className="min-w-0 flex-1">

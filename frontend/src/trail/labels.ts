@@ -118,7 +118,13 @@ export function guardDone({ view, facts }: StepContext): string {
   return allowed ? `${plural(allowed, 'change')} allowed` : 'Nothing to check'
 }
 export function guardChips({ facts }: StepContext): string[] {
-  return [...new Set(writerOps(facts.tools).map((t) => t.policy?.rule_id).filter((r): r is string => Boolean(r)))].slice(0, 3)
+  return [
+    ...new Set(
+      writerOps(facts.tools)
+        .map((t) => t.policy?.rule_id)
+        .filter((r): r is string => Boolean(r)),
+    ),
+  ].slice(0, 3)
 }
 
 export function saveDone({ facts }: StepContext): string {

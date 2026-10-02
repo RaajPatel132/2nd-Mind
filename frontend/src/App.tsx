@@ -26,18 +26,9 @@ export default function App() {
   if (window.location.pathname.replace(/\/+$/, '') === '/evals') return <EvalsPage />
   if (state.status === 'loading') return <Connecting />
   if (state.status === 'signed-out') return <SignedOut onSignIn={state.retry} />
-  if (state.status === 'landing')
-    return <Landing meta={state.meta} onTry={state.tryPersona} onSignIn={state.signIn} onDevSignIn={state.devSignIn} />
+  if (state.status === 'landing') return <Landing meta={state.meta} onTry={state.tryPersona} onSignIn={state.signIn} onDevSignIn={state.devSignIn} />
   if (state.status === 'error') return <BootError message={state.message} onRetry={state.retry} />
-  return (
-    <Workspace
-      key={state.session.workspace.id}
-      session={state.session}
-      switchTo={state.switchTo}
-      sample={state.sample}
-      scratch={state.scratch}
-    />
-  )
+  return <Workspace key={state.session.workspace.id} session={state.session} switchTo={state.switchTo} sample={state.sample} scratch={state.scratch} />
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -214,7 +205,11 @@ function Workspace({
           ) : (
             <>
               {dueSoon && (
-                <p className="mx-auto mb-6 flex w-full max-w-180 flex-wrap items-center gap-2 text-label font-normal text-fg-2" data-testid="due-soon" role="status">
+                <p
+                  className="mx-auto mb-6 flex w-full max-w-180 flex-wrap items-center gap-2 text-label font-normal text-fg-2"
+                  data-testid="due-soon"
+                  role="status"
+                >
                   <Dot tone="warn" />
                   {dueSoon}{' '}
                   <a href="#/upcoming" className="text-fg underline underline-offset-2">

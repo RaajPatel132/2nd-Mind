@@ -9,7 +9,5 @@ test('a full save turn under reduced motion leaves nothing animating', async ({ 
   const turn = await send(page, 'I live in Bengaluru', 'Bengaluru')
   await expect(turn.getByTestId('trail-step')).toHaveCount(8)
   await expect(turn.locator('[data-testid="trail-step"][data-state="running"]')).toHaveCount(0)
-  await expect
-    .poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running').length), { timeout: 5_000 })
-    .toBe(0)
+  await expect.poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running').length), { timeout: 5_000 }).toBe(0)
 })

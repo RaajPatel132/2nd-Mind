@@ -1,21 +1,18 @@
-import { forwardRef, useId, type InputHTMLAttributes } from "react";
-import { cx } from "./cx";
+import { forwardRef, useId, type InputHTMLAttributes } from 'react'
+import { cx } from './cx'
 
-type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
-  label: string;
+type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
+  label: string
   /** A plain-words hint under the field ("Say it like you would: Friday, 3 October"). */
-  hint?: string;
-};
+  hint?: string
+}
 
 /** A labelled one-line input: 40px, radius-sm, a line-control border (rulebook §2, §11). */
-export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
-  { label, hint, className, id, ...rest },
-  ref,
-) {
-  const auto = useId();
-  const inputId = id ?? auto;
+export const TextField = forwardRef<HTMLInputElement, Props>(function TextField({ label, hint, className, id, ...rest }, ref) {
+  const auto = useId()
+  const inputId = id ?? auto
   return (
-    <div className={cx("grid gap-1", className)}>
+    <div className={cx('grid gap-1', className)}>
       <label htmlFor={inputId} className="text-label text-fg-2">
         {label}
       </label>
@@ -27,13 +24,10 @@ export const TextField = forwardRef<HTMLInputElement, Props>(function TextField(
         {...rest}
       />
       {hint && (
-        <p
-          id={`${inputId}-hint`}
-          className="m-0 text-label font-normal text-fg-3"
-        >
+        <p id={`${inputId}-hint`} className="m-0 text-label font-normal text-fg-3">
           {hint}
         </p>
       )}
     </div>
-  );
-});
+  )
+})

@@ -73,8 +73,7 @@ export function ModelLines({ calls }: { calls: ModelCallEvent[] }) {
           <FactLine facts={modelFacts(call)} />
           {call.fallback && (
             <p className="mt-2 text-label font-normal text-warn" data-testid="fallback">
-              Answered by the fallback model. The primary ({call.fallback.from_provider} · {call.fallback.from_model}) didn't
-              answer: {call.fallback.reason}
+              Answered by the fallback model. The primary ({call.fallback.from_provider} · {call.fallback.from_model}) didn't answer: {call.fallback.reason}
             </p>
           )}
         </div>

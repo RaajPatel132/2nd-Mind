@@ -16,7 +16,8 @@ export function EvalsPage() {
       </a>
       <h1 className="m-0 mt-10 font-voice text-title-lg text-fg">How it is measured</h1>
       <p className="m-0 mt-2 measure text-body text-fg-2">
-        Every number on the front page comes from a recorded run of the evaluation set, stamped with the commit and the models it ran on. Nothing here is typed in by hand, and a number with no run says so.
+        Every number on the front page comes from a recorded run of the evaluation set, stamped with the commit and the models it ran on. Nothing here is typed
+        in by hand, and a number with no run says so.
       </p>
       {state.status === 'loading' && <p className="m-0 mt-8 text-label text-fg-3">Loading the runs…</p>}
       {state.status === 'unavailable' && (

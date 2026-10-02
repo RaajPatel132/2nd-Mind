@@ -18,11 +18,18 @@ export function Tooltip({ label, children, side = 'top', className }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)
   const timer = useRef<number | undefined>(undefined)
-  useEffect(() => () => { window.clearTimeout(timer.current) }, [])
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current)
+    },
+    [],
+  )
 
   const show = (delay: number) => {
     window.clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => { setOpen(true) }, delay)
+    timer.current = window.setTimeout(() => {
+      setOpen(true)
+    }, delay)
   }
   const hide = () => {
     window.clearTimeout(timer.current)
@@ -32,11 +39,17 @@ export function Tooltip({ label, children, side = 'top', className }: Props) {
   return (
     <span
       className={cx('relative inline-flex', className)}
-      onPointerEnter={() => { show(DELAY_MS) }}
+      onPointerEnter={() => {
+        show(DELAY_MS)
+      }}
       onPointerLeave={hide}
-      onFocus={(e) => { if (e.target.matches(':focus-visible')) show(0) }}
+      onFocus={(e) => {
+        if (e.target.matches(':focus-visible')) show(0)
+      }}
       onBlur={hide}
-      onKeyDown={(e) => { if (e.key === 'Escape') hide() }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') hide()
+      }}
     >
       {children({ 'aria-describedby': open ? id : undefined })}
       <AnimatePresence>

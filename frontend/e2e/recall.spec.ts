@@ -85,13 +85,14 @@ test.describe('upcoming snooze', () => {
     await seeded(page, testInfo)
     await page.getByTestId('nav-upcoming').click()
     const upcoming = page.getByTestId('upcoming')
-    const row = (via: string) =>
-      upcoming.locator(`[data-testid="upcoming-entry"][data-via="${via}"]`).filter({ hasText: 'Dinner at Saffron Street' }).first()
+    const row = (via: string) => upcoming.locator(`[data-testid="upcoming-entry"][data-via="${via}"]`).filter({ hasText: 'Dinner at Saffron Street' }).first()
     const dayOf = (via: string) => row(via).locator('xpath=ancestor::section[1]').getAttribute('aria-label')
     await expect(row('trigger')).toBeVisible()
     const [reminderDay, dinnerDay] = [await dayOf('trigger'), await dayOf('occurred')]
 
-    await row('trigger').getByRole('button', { name: /Snooze/ }).click()
+    await row('trigger')
+      .getByRole('button', { name: /Snooze/ })
+      .click()
     await page.getByRole('option', { name: '1 day' }).click()
     await expect.poll(() => dayOf('trigger')).not.toBe(reminderDay)
     expect(await dayOf('occurred')).toBe(dinnerDay)
@@ -113,7 +114,11 @@ test.describe('edit in place', () => {
   test('the editor picks a day and links someone, as one undoable turn', async ({ page }, testInfo) => {
     await seeded(page, testInfo)
     await page.getByTestId('nav-upcoming').click()
-    const dinner = page.getByTestId('upcoming').locator('[data-testid="upcoming-entry"][data-via="occurred"]').filter({ hasText: 'Dinner at Saffron Street' }).first()
+    const dinner = page
+      .getByTestId('upcoming')
+      .locator('[data-testid="upcoming-entry"][data-via="occurred"]')
+      .filter({ hasText: 'Dinner at Saffron Street' })
+      .first()
     await dinner.getByRole('button', { name: 'Edit' }).click()
     const sheet = page.getByTestId('item-detail')
     await expect(sheet).toContainText('Dinner at Saffron Street')

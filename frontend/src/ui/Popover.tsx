@@ -51,10 +51,7 @@ export function Popover({ open, onClose, anchor, label, children, className, id 
           aria-label={label}
           tabIndex={-1}
           {...motionProps('pop')}
-          className={cx(
-            'absolute z-40 origin-top-right rounded-md border border-line-strong bg-surface-3 p-4 shadow-overlay outline-none',
-            className,
-          )}
+          className={cx('absolute z-40 origin-top-right rounded-md border border-line-strong bg-surface-3 p-4 shadow-overlay outline-none', className)}
         >
           {children}
         </motion.div>

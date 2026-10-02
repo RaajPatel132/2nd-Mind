@@ -55,8 +55,7 @@ export function WorkspaceSwitcher({ workspaces, activeId, guest, onSwitch, onSam
     if (value === activeId) return
     if (value.includes(':')) {
       setBusy(true)
-      const problem =
-        value === 'scratch:open' && onScratch ? await onScratch() : await onSample(value === 'sample:reset')
+      const problem = value === 'scratch:open' && onScratch ? await onScratch() : await onSample(value === 'sample:reset')
       setBusy(false)
       if (problem) toast(problem)
       return

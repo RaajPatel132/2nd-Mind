@@ -1,21 +1,18 @@
-import { forwardRef, useId, type TextareaHTMLAttributes } from "react";
-import { cx } from "./cx";
+import { forwardRef, useId, type TextareaHTMLAttributes } from 'react'
+import { cx } from './cx'
 
 type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  label: string;
+  label: string
   /** A plain-words hint under the field. */
-  hint?: string;
-};
+  hint?: string
+}
 
 /** A labelled several-line input, like TextField: radius-sm, a line-control border, scrolls past its height. */
-export const TextAreaField = forwardRef<HTMLTextAreaElement, Props>(function TextAreaField(
-  { label, hint, className, id, rows = 6, ...rest },
-  ref,
-) {
-  const auto = useId();
-  const fieldId = id ?? auto;
+export const TextAreaField = forwardRef<HTMLTextAreaElement, Props>(function TextAreaField({ label, hint, className, id, rows = 6, ...rest }, ref) {
+  const auto = useId()
+  const fieldId = id ?? auto
   return (
-    <div className={cx("grid gap-1", className)}>
+    <div className={cx('grid gap-1', className)}>
       <label htmlFor={fieldId} className="text-label text-fg-2">
         {label}
       </label>
@@ -33,5 +30,5 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, Props>(function Tex
         </p>
       )}
     </div>
-  );
-});
+  )
+})

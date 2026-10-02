@@ -1,7 +1,7 @@
-import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
 
-afterEach(cleanup);
+afterEach(cleanup)
 
 // jsdom has no matchMedia; the motion presets ask whether the person wants reduced motion.
 window.matchMedia = (query: string) =>
@@ -14,4 +14,4 @@ window.matchMedia = (query: string) =>
     addListener: () => undefined,
     removeListener: () => undefined,
     dispatchEvent: () => false,
-  }) satisfies MediaQueryList;
+  }) satisfies MediaQueryList

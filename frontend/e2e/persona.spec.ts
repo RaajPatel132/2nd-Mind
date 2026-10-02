@@ -108,13 +108,19 @@ test.describe('the sample persona', () => {
     await expect(page.getByRole('button', { name: /Memory: Scratch/ })).toBeVisible()
 
     await page.getByRole('button', { name: /Memory: Scratch/ }).click()
-    await page.getByRole('listbox').getByRole('option', { name: /^Sample persona/ }).click()
+    await page
+      .getByRole('listbox')
+      .getByRole('option', { name: /^Sample persona/ })
+      .click()
     await expect(page.getByTestId('messages')).toContainText('What did Priya say about my last review?')
     await expect(page.getByTestId('messages')).toContainText('What could I get Kabir') // what was asked here
 
     // Start over: a fresh copy, with the suggested prompts offered again.
     await page.getByRole('button', { name: /Memory: Sample persona/ }).click()
-    await page.getByRole('listbox').getByRole('option', { name: /Start the sample over/ }).click()
+    await page
+      .getByRole('listbox')
+      .getByRole('option', { name: /Start the sample over/ })
+      .click()
     await expect(page.getByTestId('suggested-prompts').getByTestId('suggested-prompt')).toHaveCount(2, { timeout: 30_000 })
     await expect(page.getByTestId('messages')).not.toContainText('What could I get Kabir')
   })

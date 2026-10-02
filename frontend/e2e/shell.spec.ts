@@ -22,8 +22,7 @@ test('landmarks, the skip link, and texture removed in forced colours', async ({
   await inspect(page, turn)
   await expect(page.getByRole('complementary', { name: 'Inspector' })).toBeVisible()
 
-  const texture = () =>
-    page.evaluate(() => [getComputedStyle(document.body, '::before').display, getComputedStyle(document.body, '::after').display])
+  const texture = () => page.evaluate(() => [getComputedStyle(document.body, '::before').display, getComputedStyle(document.body, '::after').display])
   expect(await texture()).toEqual(['block', 'block'])
   await page.emulateMedia({ forcedColors: 'active' })
   expect(await texture()).toEqual(['none', 'none'])

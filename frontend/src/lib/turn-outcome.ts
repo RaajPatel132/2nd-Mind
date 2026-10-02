@@ -1,4 +1,4 @@
-import type { Turn } from "../api/client";
+import type { Turn } from '../api/client'
 
 /**
  * Why a turn that was not a chat message (an edit, a snooze) did not do what was asked, or null
@@ -7,6 +7,6 @@ import type { Turn } from "../api/client";
  * instead and carries its own message.
  */
 export function whyNotDone(turn: Turn): string | null {
-  if (turn.status === "completed") return null;
-  return turn.error?.message || turn.output || "That did not go through.";
+  if (turn.status === 'completed') return null
+  return turn.error?.message || turn.output || 'That did not go through.'
 }

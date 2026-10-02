@@ -39,7 +39,10 @@ export function FetchPlain({ ctx }: P) {
 }
 
 function rows(f: FetchEvent): [string, string][] {
-  const out: [string, string][] = [['host', f.host || '—'], ['status', f.status]]
+  const out: [string, string][] = [
+    ['host', f.host || '—'],
+    ['status', f.status],
+  ]
   if (f.status_code != null) out.push(['http', String(f.status_code)])
   if (f.bytes != null) out.push(['bytes', formatTokens(f.bytes)])
   if (f.redirects != null) out.push(['redirects', String(f.redirects)])

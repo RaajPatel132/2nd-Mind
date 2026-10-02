@@ -82,9 +82,27 @@ export function AccessForm({
   return (
     <form onSubmit={(e) => void submit(e)} className="grid w-full max-w-72 gap-3 text-left" data-testid="access-gate">
       {!codeOnly && (
-        <TextField label="Email" type="email" autoComplete="email" required value={email} onChange={(e) => { setEmail(e.target.value) }} />
+        <TextField
+          label="Email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+          }}
+        />
       )}
-      <TextField label="Access code" type="password" autoComplete="off" required value={code} onChange={(e) => { setCode(e.target.value) }} />
+      <TextField
+        label="Access code"
+        type="password"
+        autoComplete="off"
+        required
+        value={code}
+        onChange={(e) => {
+          setCode(e.target.value)
+        }}
+      />
       {problem && (
         <p className="m-0 text-label text-bad" role="alert" data-testid="access-problem">
           {problem}
@@ -104,7 +122,9 @@ export function AccessGate({ onSignIn }: { onSignIn: (email: string, accessCode:
       <BrandMark size="lg" />
       <div>
         <p className="m-0 font-voice text-title-lg text-fg">This is a private preview.</p>
-        <p className="m-0 mt-1 text-label font-normal text-fg-3">Use the access code you were given. Your email keeps your memory apart from everyone else&apos;s.</p>
+        <p className="m-0 mt-1 text-label font-normal text-fg-3">
+          Use the access code you were given. Your email keeps your memory apart from everyone else&apos;s.
+        </p>
       </div>
       <AccessForm onSubmit={onSignIn} />
     </Screen>

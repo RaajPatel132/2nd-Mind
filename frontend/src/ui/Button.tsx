@@ -36,12 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   return (
-    <button
-      ref={ref}
-      type={type}
-      className={cx(BASE, VARIANTS[variant], SIZES[size], className)}
-      {...rest}
-    >
+    <button ref={ref} type={type} className={cx(BASE, VARIANTS[variant], SIZES[size], className)} {...rest}>
       {icon}
       {children}
     </button>

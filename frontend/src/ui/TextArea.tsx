@@ -25,11 +25,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, Props>(function TextArea
 
   return (
     <div ref={wrap} className="relative grid min-w-0 flex-1 grow-rows">
-      <div
-        ref={mirror}
-        aria-hidden
-        className={cx('pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-wrap break-words', className)}
-      />
+      <div ref={mirror} aria-hidden className={cx('pointer-events-none invisible absolute inset-x-0 top-0 whitespace-pre-wrap break-words', className)} />
       <textarea
         ref={area}
         value={value}

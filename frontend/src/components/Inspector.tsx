@@ -56,8 +56,7 @@ function Body({ turn, onClose, timezone, quotaNow }: { turn: ChatTurn; onClose: 
       <div className="scroll-thin flex-1 overflow-y-auto px-5 pb-7 pt-1.5" data-testid="glass-box">
         {turn.error && (
           <p role="alert" className="m-0 mt-4 border-l-2 border-bad pl-3 text-label font-normal text-fg">
-            This turn failed: {turn.error}{' '}
-            <span className="font-machine text-mono-sm text-fg-3">({facts.error?.code ?? t?.error?.code ?? 'error'})</span>
+            This turn failed: {turn.error} <span className="font-machine text-mono-sm text-fg-3">({facts.error?.code ?? t?.error?.code ?? 'error'})</span>
           </p>
         )}
         <DecisionPanel turn={turn} views={views} facts={facts} timezone={timezone} />
@@ -127,7 +126,21 @@ function DecisionPanel({ turn, views, facts, timezone }: { turn: ChatTurn; views
   )
 }
 
-function Panel({ n, title, reason, applies, testId, children }: { n: number; title: string; reason?: string; applies: boolean; testId: string; children?: ReactNode }) {
+function Panel({
+  n,
+  title,
+  reason,
+  applies,
+  testId,
+  children,
+}: {
+  n: number
+  title: string
+  reason?: string
+  applies: boolean
+  testId: string
+  children?: ReactNode
+}) {
   const id = useId()
   const [open, setOpen] = useState(applies)
   return (
@@ -184,8 +197,8 @@ function Timing({ turn, views, facts, quotaNow }: { turn: ChatTurn; views: StepV
           </>
         ) : quotaNow ? (
           <>
-            Quota now: <b className="font-machine text-mono font-medium text-fg">{formatMoney(quotaNow.remaining_usd)}</b> of{' '}
-            {formatMoney(quotaNow.limit_usd)} left
+            Quota now: <b className="font-machine text-mono font-medium text-fg">{formatMoney(quotaNow.remaining_usd)}</b> of {formatMoney(quotaNow.limit_usd)}{' '}
+            left
           </>
         ) : (
           'Quota is loading.'
@@ -221,8 +234,22 @@ type Span = { key: string; name: string; startedAt: string; latencyMs: number; a
 function spansOf(facts: Facts): Span[] {
   const tools = facts.tools
     .filter((t) => t.access === 'read' && t.started_at && t.latency_ms != null)
-    .map((t, i) => ({ key: `tool-${String(i)}`, name: t.tool.replace(/^recall\./, ''), startedAt: t.started_at ?? '', latencyMs: t.latency_ms ?? 0, answer: false, nested: true }))
-  const timings = (facts.retrieval?.timings ?? []).map((t, i) => ({ key: `timing-${String(i)}`, name: t.name, startedAt: t.started_at, latencyMs: t.latency_ms, answer: false, nested: true }))
+    .map((t, i) => ({
+      key: `tool-${String(i)}`,
+      name: t.tool.replace(/^recall\./, ''),
+      startedAt: t.started_at ?? '',
+      latencyMs: t.latency_ms ?? 0,
+      answer: false,
+      nested: true,
+    }))
+  const timings = (facts.retrieval?.timings ?? []).map((t, i) => ({
+    key: `timing-${String(i)}`,
+    name: t.name,
+    startedAt: t.started_at,
+    latencyMs: t.latency_ms,
+    answer: false,
+    nested: true,
+  }))
   const calls = facts.calls
     .filter((c) => c.step !== 'answer')
     .map((c, i) => ({ key: `call-${String(i)}`, name: `${c.step} call`, startedAt: c.started_at, latencyMs: c.latency_ms, answer: false, nested: true }))
@@ -236,11 +263,7 @@ function Waterfall({ views, spans, start, end }: { views: StepView[]; spans: Spa
     .map((v) => ({ key: v.key, name: v.step, startedAt: v.startedAt, latencyMs: v.latencyMs ?? 0, answer: v.step === 'answer', nested: false }))
   const rows = [...steps, ...spans].sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt) || Number(a.nested) - Number(b.nested))
   if (rows.length === 0) return null
-  const total = Math.max(
-    end - start,
-    ...rows.map((v) => Date.parse(v.startedAt) - start + v.latencyMs),
-    1,
-  )
+  const total = Math.max(end - start, ...rows.map((v) => Date.parse(v.startedAt) - start + v.latencyMs), 1)
   const tick = [100, 250, 500, 1000, 2000, 5000, 10000].find((s) => total / s <= 5) ?? 20000
   const ticks: number[] = []
   for (let x = 0; x <= total; x += tick) ticks.push(x)
@@ -268,7 +291,10 @@ function Waterfall({ views, spans, start, end }: { views: StepView[]; spans: Spa
           {ticks.map((x, i) => (
             <span
               key={x}
-              className={cx('absolute top-0 whitespace-nowrap font-machine text-mono-sm text-fg-3', i === 0 ? '' : x / total > 0.9 ? '-translate-x-full' : '-translate-x-1/2')}
+              className={cx(
+                'absolute top-0 whitespace-nowrap font-machine text-mono-sm text-fg-3',
+                i === 0 ? '' : x / total > 0.9 ? '-translate-x-full' : '-translate-x-1/2',
+              )}
               style={{ left: `${String((x / total) * 100)}%` }}
             >
               {x === 0 ? '0' : formatSeconds(x)}

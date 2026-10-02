@@ -36,7 +36,23 @@ type Props = {
  * Brand, wordmark and workspace on the left; the model picker and the avatar with its quota
  * ring on the right. Transparent at rest; surface, blur and a hairline once content scrolls under.
  */
-export function TopBar({ me, activeId, onSwitch, onSample, onScratch, providerMode, picker, offered, model, onModel, usage, last, delta, docked, view }: Props) {
+export function TopBar({
+  me,
+  activeId,
+  onSwitch,
+  onSample,
+  onScratch,
+  providerMode,
+  picker,
+  offered,
+  model,
+  onModel,
+  usage,
+  last,
+  delta,
+  docked,
+  view,
+}: Props) {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const onScroll = () => {
@@ -92,10 +108,12 @@ export function TopBar({ me, activeId, onSwitch, onSample, onScratch, providerMo
           </nav>
           {picker && offered.length > 0 ? (
             <ModelPicker picker={picker} offered={offered} value={model} onChange={onModel} />
-          ) : providerMode !== 'live' && (
-            <span className="rounded-full px-2 py-0.5 font-machine text-mono-sm text-fg-3 ring-1 ring-inset ring-line-strong" data-testid="provider-mode">
-              {providerMode}
-            </span>
+          ) : (
+            providerMode !== 'live' && (
+              <span className="rounded-full px-2 py-0.5 font-machine text-mono-sm text-fg-3 ring-1 ring-inset ring-line-strong" data-testid="provider-mode">
+                {providerMode}
+              </span>
+            )
           )}
           <Account me={me} usage={usage} last={last} delta={delta} />
         </div>
@@ -138,11 +156,7 @@ function Account({ me, usage, last, delta }: Pick<Props, 'me' | 'usage' | 'last'
         <div data-testid="quota-popover">
           <Overline>Quota</Overline>
           <p className="m-0 mb-0.5 mt-1.5 flex items-baseline gap-1.5">
-            <CountUp
-              value={usage?.remaining_usd ?? 0}
-              format={formatMoney}
-              className="font-voice text-display text-fg"
-            />
+            <CountUp value={usage?.remaining_usd ?? 0} format={formatMoney} className="font-voice text-display text-fg" />
             <span className="ml-1 text-label text-fg-2">left</span>
           </p>
           <p className="m-0 font-machine text-mono-sm text-fg-3 tnum" data-testid="quota-remaining">
@@ -167,8 +181,7 @@ function Account({ me, usage, last, delta }: Pick<Props, 'me' | 'usage' | 'last'
             </dd>
           </dl>
           <p className="m-0 mt-3 text-label font-normal text-fg-3">
-            A lifetime allowance in dollars. Every model call counts at its price, embeddings
-            included; housekeeping the app does on its own is free to you.
+            A lifetime allowance in dollars. Every model call counts at its price, embeddings included; housekeeping the app does on its own is free to you.
           </p>
           {usage?.read_only && (
             <p className="m-0 mt-3 rounded-md bg-surface-2 p-3 text-label font-normal text-fg-2" data-testid="quota-readonly">

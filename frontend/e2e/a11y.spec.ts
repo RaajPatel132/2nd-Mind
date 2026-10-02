@@ -4,7 +4,11 @@ import { freshUser, inspect, send } from './helpers.ts'
 
 async function serious(page: Page, name: string) {
   // Let entrances finish: axe reads colours, and a card mid-fade has less contrast than at rest.
-  await expect.poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getComputedTiming().iterations !== Infinity).length)).toBe(0)
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getComputedTiming().iterations !== Infinity).length),
+    )
+    .toBe(0)
   await page.waitForTimeout(400)
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
   const bad = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')

@@ -42,7 +42,19 @@ import {
 } from '../ui'
 import { motionProps, presets, type PresetName } from '../ui/motion'
 import { contrast } from './contrast'
-import { FAILED_EVENTS, FETCH_PARTIAL_EVENTS, FETCH_PENDING_EVENTS, FETCH_READ_EVENTS, FETCH_REFUSED_EVENTS, HELD_EVENTS, PICKER, REFUSED_EVENTS, RUNNING_START, SAVE_EVENTS, withSeq } from './fixtures'
+import {
+  FAILED_EVENTS,
+  FETCH_PARTIAL_EVENTS,
+  FETCH_PENDING_EVENTS,
+  FETCH_READ_EVENTS,
+  FETCH_REFUSED_EVENTS,
+  HELD_EVENTS,
+  PICKER,
+  REFUSED_EVENTS,
+  RUNNING_START,
+  SAVE_EVENTS,
+  withSeq,
+} from './fixtures'
 import { ModelPicker } from '../components/ModelPicker'
 
 type Swatch = { name: string; bg: string; use: string; text?: boolean }
@@ -139,7 +151,11 @@ export default function DesignPage() {
           <span className="rounded-full px-2 py-0.5 font-machine text-mono-sm text-fg-3 ring-1 ring-inset ring-line-strong">Ink</span>
           <span className="no-scrollbar ml-auto flex min-w-0 gap-1 overflow-x-auto">
             {['colour', 'type', 'space', 'motion', 'components', 'trail'].map((id) => (
-              <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-label text-fg-3 no-underline transition-colors dur-2 hover:bg-surface-2 hover:text-fg">
+              <a
+                key={id}
+                href={`#${id}`}
+                className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-label text-fg-3 no-underline transition-colors dur-2 hover:bg-surface-2 hover:text-fg"
+              >
                 {id}
               </a>
             ))}
@@ -218,7 +234,22 @@ function ColourSection() {
             {(list as Swatch[]).map((s) => (
               <li key={s.name} className="overflow-hidden rounded-md border border-line bg-surface">
                 <div className={cx('flex h-20 items-end border-b border-line px-3.5 pb-3', s.bg)} aria-hidden>
-                  <span className={cx('font-voice text-title-lg', s.name === 'inverse' || s.name === 'fg' || s.name === 'fg-2' || s.name === 'ok' || s.name === 'warn' || s.name === 'bad' || s.name === 'fg-3' ? 'text-on-inverse' : 'text-fg')}>Aa</span>
+                  <span
+                    className={cx(
+                      'font-voice text-title-lg',
+                      s.name === 'inverse' ||
+                        s.name === 'fg' ||
+                        s.name === 'fg-2' ||
+                        s.name === 'ok' ||
+                        s.name === 'warn' ||
+                        s.name === 'bad' ||
+                        s.name === 'fg-3'
+                        ? 'text-on-inverse'
+                        : 'text-fg',
+                    )}
+                  >
+                    Aa
+                  </span>
                 </div>
                 <div className="grid gap-0.5 px-3.5 pb-3.5 pt-3">
                   <p className="m-0 font-machine text-mono text-fg">{s.name}</p>
@@ -369,9 +400,7 @@ function PresetRow({ name }: { name: PresetName }) {
       <p className="m-0 text-label font-normal text-fg-3">{p.use}</p>
       <div className="flex items-center gap-3">
         <span className="relative grid h-10 w-20 place-items-center rounded-sm bg-canvas ring-1 ring-inset ring-line">
-          <AnimatePresence mode="wait">
-            {shown && <motion.span key={run} {...motionProps(name)} className="block size-4 rounded-full bg-fg" />}
-          </AnimatePresence>
+          <AnimatePresence mode="wait">{shown && <motion.span key={run} {...motionProps(name)} className="block size-4 rounded-full bg-fg" />}</AnimatePresence>
         </span>
         <Button
           size="sm"
@@ -448,10 +477,37 @@ function ComponentsSection() {
           </div>
           <TextAreaField label="Paste the text of the page" hint="I read it the same way I read the page." defaultValue="" />
         </Demo>
-        <Demo title="LinkCard" note="A saved link in every state: waiting, read, partly read, video, couldn't open, refused. Plain text only; the original opens in a new tab.">
-          <LinkCard title="Sleep well" href="https://journal.example/sleep" host="journal.example" site="The Journal" status="full" facts={['Anjali Verma', 'Thu 13 Aug']} summary="Sleep researchers keep finding that a cool, dark room and a regular bedtime matter more than any gadget." />
-          <LinkCard title="Ten minute dal tadka" href="https://www.youtube.com/watch?v=qk7Lp2xR9aE" host="www.youtube.com" site="Youtube" kind="video" status="full" facts={['Quiet Kitchen', '10:40']} summary="A quick dal tadka with tempered cumin, garlic and dried chillies." />
-          <LinkCard title="Council approves the riverside plan" href="https://courier.example/riverside-plan" host="courier.example" site="The Daily Courier" status="partial" note="paywall">
+        <Demo
+          title="LinkCard"
+          note="A saved link in every state: waiting, read, partly read, video, couldn't open, refused. Plain text only; the original opens in a new tab."
+        >
+          <LinkCard
+            title="Sleep well"
+            href="https://journal.example/sleep"
+            host="journal.example"
+            site="The Journal"
+            status="full"
+            facts={['Anjali Verma', 'Thu 13 Aug']}
+            summary="Sleep researchers keep finding that a cool, dark room and a regular bedtime matter more than any gadget."
+          />
+          <LinkCard
+            title="Ten minute dal tadka"
+            href="https://www.youtube.com/watch?v=qk7Lp2xR9aE"
+            host="www.youtube.com"
+            site="Youtube"
+            kind="video"
+            status="full"
+            facts={['Quiet Kitchen', '10:40']}
+            summary="A quick dal tadka with tempered cumin, garlic and dried chillies."
+          />
+          <LinkCard
+            title="Council approves the riverside plan"
+            href="https://courier.example/riverside-plan"
+            host="courier.example"
+            site="The Daily Courier"
+            status="partial"
+            note="paywall"
+          >
             <Button size="sm">Add the text</Button>
           </LinkCard>
           <LinkCard title="the ridge loop" href="https://trailhead.example/routes/ridge-loop" host="trailhead.example" status="pending" />
@@ -646,7 +702,14 @@ function ComponentsSection() {
           note="A pill that opens a grouped listbox. ↑ ↓ move, ↵ picks, Esc closes. Auto first, then each model with its price against Auto's; a fake stand-in (Haiku) is tagged."
         >
           <div className="flex min-h-12 justify-end">
-            <ModelPicker picker={PICKER} offered={PICKER.choices} value={model} onChange={(id) => { setModel(id === 'auto' ? null : id) }} />
+            <ModelPicker
+              picker={PICKER}
+              offered={PICKER.choices}
+              value={model}
+              onChange={(id) => {
+                setModel(id === 'auto' ? null : id)
+              }}
+            />
           </div>
         </Demo>
         <Demo title="TextArea, CardButton, brand" note="The composer's input grows to 8 lines, then scrolls.">
@@ -687,7 +750,21 @@ function ComponentsSection() {
 
 // ------------------------------------------------------------------ the Trail
 
-function TrailDemo({ title, note, events, starts = [], folded = false, nowMs }: { title: string; note: string; events: TrailEvent[]; starts?: StepStart[]; folded?: boolean; nowMs?: number }) {
+function TrailDemo({
+  title,
+  note,
+  events,
+  starts = [],
+  folded = false,
+  nowMs,
+}: {
+  title: string
+  note: string
+  events: TrailEvent[]
+  starts?: StepStart[]
+  folded?: boolean
+  nowMs?: number
+}) {
   const [isFolded, setFolded] = useState(folded)
   const views = useMemo(() => stepViews(events, starts, nowMs), [events, starts, nowMs])
   const facts = useMemo(() => factsOf(events), [events])
@@ -733,8 +810,16 @@ function TrailSection() {
           events={withSeq(FETCH_PENDING_EVENTS)}
           nowMs={Date.parse('2026-09-25T05:11:30Z')}
         />
-        <TrailDemo title="A link, read" note="The result replaces the waiting row. Click for the request's facts: host, status, bytes, redirects, passages." events={withSeq(FETCH_READ_EVENTS)} />
-        <TrailDemo title="A link, partly read" note="A paywall or a page that needs JavaScript. The memory offers Add the text." events={withSeq(FETCH_PARTIAL_EVENTS)} />
+        <TrailDemo
+          title="A link, read"
+          note="The result replaces the waiting row. Click for the request's facts: host, status, bytes, redirects, passages."
+          events={withSeq(FETCH_READ_EVENTS)}
+        />
+        <TrailDemo
+          title="A link, partly read"
+          note="A paywall or a page that needs JavaScript. The memory offers Add the text."
+          events={withSeq(FETCH_PARTIAL_EVENTS)}
+        />
         <TrailDemo title="A link, refused" note="A private address is never requested. Red, open, with the rule." events={withSeq(FETCH_REFUSED_EVENTS)} />
       </div>
       <div className="mt-3">
@@ -753,11 +838,7 @@ function TrailSection() {
               Replay
             </Button>
           </div>
-          {replay > 0 ? (
-            <LiveReplay key={replay} />
-          ) : (
-            <p className="m-0 mt-4 text-label font-normal text-fg-3">Press Replay to stream a save turn.</p>
-          )}
+          {replay > 0 ? <LiveReplay key={replay} /> : <p className="m-0 mt-4 text-label font-normal text-fg-3">Press Replay to stream a save turn.</p>}
         </Card>
       </div>
     </Section>

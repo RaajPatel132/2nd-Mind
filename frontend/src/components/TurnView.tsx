@@ -70,14 +70,8 @@ export function TurnView({ turn, timezone, folded, onFold, onInspect, onUndo, bu
         onFold={onFold}
         summary={summaryOf(turn, target, facts)}
       />
-      {turn.status === 'failed' ? (
-        <Failure turn={turn} />
-      ) : (
-        answerVisible && <Answer turn={turn} event={event} facts={facts} onInspect={onInspect} />
-      )}
-      {turn.status === 'running' && (
-        <p className="m-0 mt-3 text-label font-normal text-fg-3">Still being answered. Refresh in a moment to see the reply.</p>
-      )}
+      {turn.status === 'failed' ? <Failure turn={turn} /> : answerVisible && <Answer turn={turn} event={event} facts={facts} onInspect={onInspect} />}
+      {turn.status === 'running' && <p className="m-0 mt-3 text-label font-normal text-fg-3">Still being answered. Refresh in a moment to see the reply.</p>}
       {finished && turn.id && turn.turn && (answerVisible || turn.status === 'failed') && (
         <Receipt turn={turn} facts={facts} onInspect={onInspect} onUndo={onUndo} busy={busy} />
       )}
@@ -95,29 +89,34 @@ function Answer({ turn, event, facts, onInspect }: { turn: ChatTurn; event: bool
     const parts = turn.chunks.join('').split(/(\[\d+\])/)
     return (
       <>
-      <div className={cx('measure mt-4 whitespace-pre-wrap break-words text-pretty', event ? 'text-label font-normal text-fg-2' : 'text-answer text-fg')} data-testid="assistant-message">
-        {parts.map((part, i) => {
-          const m = /^\[(\d+)\]$/.exec(part)
-          const cite = m ? byMarker.get(Number(m[1])) : undefined
-          if (!cite) return <span key={i}>{part}</span>
-          return (
-            <CitationChip
-              key={i}
-              marker={cite.marker}
-              kind={cite.kind}
-              title={cite.title}
-              onClick={() => {
-                if (cite.kind === 'item' && cite.item_id) items?.open(cite.item_id)
-                else if (cite.turn_id) {
-                  document.querySelector(`[data-turn-id="${cite.turn_id}"]`)?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
-                  onInspect(cite.turn_id)
-                }
-              }}
-            />
-          )
-        })}
-      </div>
-      <PageSnippets citations={cites} />
+        <div
+          className={cx('measure mt-4 whitespace-pre-wrap break-words text-pretty', event ? 'text-label font-normal text-fg-2' : 'text-answer text-fg')}
+          data-testid="assistant-message"
+        >
+          {parts.map((part, i) => {
+            const m = /^\[(\d+)\]$/.exec(part)
+            const cite = m ? byMarker.get(Number(m[1])) : undefined
+            if (!cite) return <span key={i}>{part}</span>
+            return (
+              <CitationChip
+                key={i}
+                marker={cite.marker}
+                kind={cite.kind}
+                title={cite.title}
+                onClick={() => {
+                  if (cite.kind === 'item' && cite.item_id) items?.open(cite.item_id)
+                  else if (cite.turn_id) {
+                    document
+                      .querySelector(`[data-turn-id="${cite.turn_id}"]`)
+                      ?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+                    onInspect(cite.turn_id)
+                  }
+                }}
+              />
+            )
+          })}
+        </div>
+        <PageSnippets citations={cites} />
       </>
     )
   }
@@ -191,15 +190,22 @@ function Receipt({
   const undoable = t.status === 'completed' && count > 0
   const answer = outputOf(turn)
   const model = t.models.answer
-  const receiptFacts = [wall != null ? formatSeconds(wall) : null, tokens ? `${formatTokens(tokens)} tokens` : 'no model call', formatUsd(usage.cost_usd)].filter(
-    (f): f is string => f !== null,
-  )
+  const receiptFacts = [
+    wall != null ? formatSeconds(wall) : null,
+    tokens ? `${formatTokens(tokens)} tokens` : 'no model call',
+    formatUsd(usage.cost_usd),
+  ].filter((f): f is string => f !== null)
 
   return (
     <motion.div {...motionProps('rise')} className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5" data-testid="receipt">
       <Tooltip label={model ? `Answered by ${model.provider} · ${model.model}` : 'No model wrote this reply'}>
         {(describedBy) => (
-          <span tabIndex={0} {...describedBy} className="flex flex-wrap gap-1.5 rounded-xs font-machine text-mono-sm text-fg-3 tnum" data-testid="receipt-facts">
+          <span
+            tabIndex={0}
+            {...describedBy}
+            className="flex flex-wrap gap-1.5 rounded-xs font-machine text-mono-sm text-fg-3 tnum"
+            data-testid="receipt-facts"
+          >
             {receiptFacts.map((f, i) => (
               <span key={f}>
                 {i > 0 && (

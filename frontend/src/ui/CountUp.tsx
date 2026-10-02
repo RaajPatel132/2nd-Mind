@@ -17,10 +17,14 @@ export function CountUp({ value, format = (n) => String(Math.round(n)), classNam
     }
     const controls = animate(from.current, value, {
       ...t.meter,
-      onUpdate: (v) => { setShown(v) },
+      onUpdate: (v) => {
+        setShown(v)
+      },
     })
     from.current = value
-    return () => { controls.stop() }
+    return () => {
+      controls.stop()
+    }
   }, [value, reduce])
 
   return <span className={`tnum ${className ?? ''}`}>{format(reduce ? value : shown)}</span>

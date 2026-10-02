@@ -59,20 +59,14 @@ export function Sheet({ open, mode, onClose, label, children, testId }: Props) {
       }
     }
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey) }
+    return () => {
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open, overlay, onClose])
 
   return (
     <AnimatePresence>
-      {open && overlay && (
-        <motion.div
-          key="scrim"
-          aria-hidden
-          {...motionProps('fade')}
-          onClick={onClose}
-          className="fixed inset-0 z-30 bg-(--scrim)"
-        />
-      )}
+      {open && overlay && <motion.div key="scrim" aria-hidden {...motionProps('fade')} onClick={onClose} className="fixed inset-0 z-30 bg-(--scrim)" />}
       {open && (
         <motion.aside
           key="sheet"

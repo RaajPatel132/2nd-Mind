@@ -18,8 +18,24 @@ export function DesignRoute() {
       })
   }, [])
   if (state === 'loading') return <Connecting />
-  if (state === 'error') return <BootError message="Couldn't reach the server to check this page." onRetry={() => { window.location.reload() }} />
-  if (state === 'hidden') return <BootError message="There's no page here." onRetry={() => { window.location.assign('/') }} />
+  if (state === 'error')
+    return (
+      <BootError
+        message="Couldn't reach the server to check this page."
+        onRetry={() => {
+          window.location.reload()
+        }}
+      />
+    )
+  if (state === 'hidden')
+    return (
+      <BootError
+        message="There's no page here."
+        onRetry={() => {
+          window.location.assign('/')
+        }}
+      />
+    )
   return (
     <Suspense fallback={<Connecting />}>
       <DesignPage />

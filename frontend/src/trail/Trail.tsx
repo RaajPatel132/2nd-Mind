@@ -59,10 +59,7 @@ export function Trail({ steps, facts, turn, timezone, live, folded, onFold, summ
             {steps.map((s) => (
               <span
                 key={s.key}
-                className={cx(
-                  'size-1.5 rounded-full',
-                  s.state === 'held' ? 'bg-warn' : s.state === 'refused' || s.state === 'failed' ? 'bg-bad' : 'bg-fg-3',
-                )}
+                className={cx('size-1.5 rounded-full', s.state === 'held' ? 'bg-warn' : s.state === 'refused' || s.state === 'failed' ? 'bg-bad' : 'bg-fg-3')}
               />
             ))}
           </span>
@@ -126,7 +123,13 @@ function StepRow({ ctx, live, onKey }: { ctx: StepContext; live: boolean; onKey:
         <Icon
           icon={spec.icon}
           className={cx(
-            view.state === 'held' ? 'text-warn' : view.state === 'refused' || view.state === 'failed' ? 'text-bad' : view.state === 'running' ? 'text-fg-2' : 'text-fg-3',
+            view.state === 'held'
+              ? 'text-warn'
+              : view.state === 'refused' || view.state === 'failed'
+                ? 'text-bad'
+                : view.state === 'running'
+                  ? 'text-fg-2'
+                  : 'text-fg-3',
           )}
         />
         <span className="flex min-w-0 overflow-hidden">

@@ -174,7 +174,11 @@ export function Conversation(props: Props) {
             if (group.length === 1) return <li key={head.key}>{view(head)}</li>
             return (
               <li key={head.key}>
-                <HousekeepingGroup turns={group}>{group.map((t) => <div key={t.key}>{view(t)}</div>)}</HousekeepingGroup>
+                <HousekeepingGroup turns={group}>
+                  {group.map((t) => (
+                    <div key={t.key}>{view(t)}</div>
+                  ))}
+                </HousekeepingGroup>
               </li>
             )
           })}
@@ -183,7 +187,13 @@ export function Conversation(props: Props) {
       <AnimatePresence>
         {showJump && (
           <motion.div {...motionProps('toast')} className="fixed inset-x-0 bottom-30 z-20 flex justify-center sm:bottom-34">
-            <Button variant="secondary" size="sm" className="bg-surface-3 shadow-overlay" icon={<ArrowDown aria-hidden size={16} strokeWidth={1.5} />} onClick={jump}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-surface-3 shadow-overlay"
+              icon={<ArrowDown aria-hidden size={16} strokeWidth={1.5} />}
+              onClick={jump}
+            >
               Jump to latest
             </Button>
           </motion.div>

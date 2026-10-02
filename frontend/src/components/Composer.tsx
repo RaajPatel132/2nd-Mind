@@ -114,10 +114,7 @@ export function Composer({ value, onChange, onSend, sending, inputRef, docked, n
         </div>
         <SendButton sending={sending} disabled={!value.trim()} />
       </form>
-      <p
-        id="composer-hints"
-        className="pointer-events-auto mx-auto mb-0 mt-2 hidden max-w-180 justify-center gap-4 text-mono-sm font-ui text-fg-3 sm:flex"
-      >
+      <p id="composer-hints" className="pointer-events-auto mx-auto mb-0 mt-2 hidden max-w-180 justify-center gap-4 text-mono-sm font-ui text-fg-3 sm:flex">
         <span className="inline-flex items-center gap-1.5">
           <Kbd>↵</Kbd> send
         </span>

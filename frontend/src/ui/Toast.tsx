@@ -19,8 +19,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!toast) return
-    const timer = window.setTimeout(() => { setToast((t) => (t?.id === toast.id ? null : t)) }, TOAST_MS)
-    return () => { window.clearTimeout(timer) }
+    const timer = window.setTimeout(() => {
+      setToast((t) => (t?.id === toast.id ? null : t))
+    }, TOAST_MS)
+    return () => {
+      window.clearTimeout(timer)
+    }
   }, [toast])
 
   return (

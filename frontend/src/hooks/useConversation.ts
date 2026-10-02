@@ -82,9 +82,15 @@ export function useConversation(workspaceId: string, options: Options = {}) {
           try {
             const stored = await getTurnEvents(turnId)
             const events = stored.map((e) => ({ seq: e.seq, event: e.event }))
-            patch((t) => t.id === turnId, () => ({ events }))
+            patch(
+              (t) => t.id === turnId,
+              () => ({ events }),
+            )
           } catch {
-            patch((t) => t.id === turnId && t.events === null, () => ({ events: [] }))
+            patch(
+              (t) => t.id === turnId && t.events === null,
+              () => ({ events: [] }),
+            )
           }
         }
       }
