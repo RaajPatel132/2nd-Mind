@@ -3,6 +3,8 @@
 - **Status:** accepted
 - **Date:** 2026-09-29
 - **Amends:** ADR-0016 (dev auth; adds the CSRF check it left as a follow-up)
+- **Amended 2026-10-02:** attempts are counted per person, and the code's limit is stated plainly
+  (both under "Staging access" and "Consequences")
 
 ## Context
 
@@ -46,7 +48,10 @@ constant time (always compared, so the time says nothing), attempts limited per 
 (`LOGIN_ATTEMPTS_PER_MINUTE`, a Redis bucket; over it, `429`). Each holder signs in with an email
 and gets their own user and private workspace, so isolation between them is the same as between
 accounts. Start-up refuses `ENV=staging` with `DEV_AUTH=true` and no code. Real sign-in
-replaces all of this in S6.
+replaces all of this in S6. An attempt is counted against the person's address, read from
+`X-Forwarded-For` as ADR-0039 does (`TRUSTED_PROXY_HOPS` entries from the right), not from the
+connection, which behind the web tier is the same address for everyone: counting that would let
+one person's wrong guesses lock out every other holder of the code.
 
 **Start-up guards** for staging and production: a `SESSION_SECRET` that isn't one of the example
 values, `SESSION_COOKIE_SECURE=true`, `MODEL_PROVIDER_MODE=live`, tracing either configured or
@@ -65,3 +70,11 @@ explicitly off, and no content logging.
 A browser too old to send `Sec-Fetch-Site` still sends `Origin` on a write, so it is checked
 too. A non-browser client that adds a wrong `Origin` is refused, which is the point. The access
 code is one shared secret: fine for a handful of invited people, not a substitute for accounts.
+
+**What the code does not prove.** It shows the person was invited, not who they are. The email
+typed beside it is taken as given, so a holder who types someone else's email signs in as them and
+opens their memory, the owner's included. That is acceptable only while every holder is someone the
+owner would trust with every private workspace on the host: the code is handed out by hand, to a
+handful of people, and never published. If a holder should lose access, change `ACCESS_CODE` and
+deploy; their cookie stays valid until it expires, so rotate `SESSION_SECRET` too. Nothing but
+accounts (S6) closes this. Guests (ADR-0039) have no email and cannot be impersonated this way.
