@@ -9,6 +9,7 @@ synthetic, and the page says so: it reports how the system did on those cases, n
 """
 
 import html
+import json
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -346,9 +347,70 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; }
 """
 
 
-def build(out: Path, *, repo: str | None = None, root: Path = RUNS_DIR) -> Path:
-    """Write ``index.html`` under ``out`` and return its path."""
+COLORS = ((0.9, "brightgreen"), (0.8, "green"), (0.7, "yellowgreen"), (0.6, "yellow"))
+
+
+def _color(rate: float) -> str:
+    """A shields.io colour for a share between 0 and 1."""
+    for floor, color in (
+        (0.9, "brightgreen"),
+        (0.8, "green"),
+        (0.7, "yellowgreen"),
+        (0.6, "yellow"),
+    ):
+        if rate >= floor:
+            return color
+    return "orange"
+
+
+def eval_badge(rows: Sequence[Row]) -> dict[str, object] | None:
+    """A shields.io endpoint for the newest full recall run: what it passed, and which run."""
+    full = [r for r in rows if r.suite == "recall" and r.full]
+    if not full:
+        return None
+    r = full[-1]
+    suffix = "" if r.status == "complete" else " (stopped early)"
+    return {
+        "schemaVersion": 1,
+        "label": "recall, live run",
+        "message": f"{r.passed}/{r.total}{suffix}",
+        "color": _color(r.rate),
+    }
+
+
+def coverage_badge(report: dict[str, object]) -> dict[str, object]:
+    """A shields.io endpoint from a coverage.py JSON report. It says "unit": the tests that need
+    Postgres run elsewhere, so the number is a floor on what the whole suite covers."""
+    totals = report["totals"]
+    assert isinstance(totals, dict)  # noqa: S101 - the shape coverage.py writes
+    percent = float(totals["percent_covered"])
+    return {
+        "schemaVersion": 1,
+        "label": "unit coverage",
+        "message": f"{percent:.0f}%",
+        "color": _color(percent / 100),
+    }
+
+
+def build(
+    out: Path,
+    *,
+    repo: str | None = None,
+    root: Path = RUNS_DIR,
+    coverage_report: Path | None = None,
+) -> Path:
+    """Write ``index.html`` under ``out`` (and the badge files ``evals.json``, and ``coverage.json``
+    when a coverage report is given) and return the page's path."""
     out.mkdir(parents=True, exist_ok=True)
+    rows = collect(root)
     target = out / "index.html"
-    target.write_text(Page(collect(root), repo).render(), encoding="utf-8")
+    target.write_text(Page(rows, repo).render(), encoding="utf-8")
+    badge = eval_badge(rows)
+    if badge is not None:
+        (out / "evals.json").write_text(json.dumps(badge) + "\n", encoding="utf-8")
+    if coverage_report is not None:
+        report = json.loads(coverage_report.read_text(encoding="utf-8"))
+        (out / "coverage.json").write_text(
+            json.dumps(coverage_badge(report)) + "\n", encoding="utf-8"
+        )
     return target

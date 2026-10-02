@@ -220,11 +220,11 @@ def _latency(refs: Sequence[str], into: str | None, check: bool) -> int:
     return 0
 
 
-def _site(out: str, repo: str | None) -> int:
-    """The static page of every committed live run, for GitHub Pages."""
+def _site(out: str, repo: str | None, coverage: str | None) -> int:
+    """The static page of every committed live run, for GitHub Pages, and its badge files."""
     from secondmind.evals.site import build  # noqa: PLC0415
 
-    path = build(Path(out), repo=repo)
+    path = build(Path(out), repo=repo, coverage_report=Path(coverage) if coverage else None)
     sys.stdout.write(f"wrote {path}\n")
     return 0
 
@@ -357,6 +357,7 @@ def main(argv: list[str] | None = None) -> int:
     site = sub.add_parser("site", help="a static page of every committed live run (GitHub Pages)")
     site.add_argument("--out", default="_site", help="the directory to write index.html into")
     site.add_argument("--repo", default=None, help="OWNER/NAME, to link commits and run files")
+    site.add_argument("--coverage", default=None, help="a coverage.py JSON report, for its badge")
     sub.add_parser("live-check", help="one tiny request per routed and picker model")
     record = sub.add_parser(
         "record-replays", help="rebuild the golden cases' model blocks from a live run (R.5)"
@@ -379,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
         "seed-dev": lambda: asyncio.run(_seed_dev(args.email, args.web_url)),
         "report": lambda: _report(args.runs),
         "latency": lambda: _latency(args.runs, args.into, args.check),
-        "site": lambda: _site(args.out, args.repo),
+        "site": lambda: _site(args.out, args.repo, args.coverage),
         "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
         "record-replays": lambda: _record_replays(args),
