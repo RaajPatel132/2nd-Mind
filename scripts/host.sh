@@ -6,7 +6,7 @@
 # start the site is back by itself: the address stays, Docker starts, every container restarts.
 set -euo pipefail
 action="${1:?usage: host.sh stop|start|status}"
-region="${AWS_REGION:-us-east-1}"
+region="${AWS_REGION:-ap-southeast-2}"
 
 id="$(aws ec2 describe-instances --region "$region" \
   --filters Name=tag:project,Values=secondmind \

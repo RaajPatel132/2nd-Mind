@@ -9,7 +9,7 @@
 # `deploy` is the way to roll back before the deploy workflow exists on main (GitHub only lists a
 # workflow that is on the default branch), and a way in if GitHub is down.
 set -euo pipefail
-region="${AWS_REGION:-us-east-1}"
+region="${AWS_REGION:-ap-southeast-2}"
 kind="${1:?usage: prod-ssm.sh admin|deploy|shell ...}"
 shift
 

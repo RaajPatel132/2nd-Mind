@@ -5,7 +5,7 @@
 # (a typo would otherwise be written and never read), and so is an empty secret.
 #
 # Yours to run, with your AWS profile: the session never holds AWS credentials.
-#   AWS_PROFILE=secondmind make prod-secrets
+#   AWS_PROFILE=second-mind make prod-secrets
 #   PROD_SECRETS_DRY_RUN=1 make prod-secrets     # check the file, write nothing
 #
 # Plain bash 3.2 (macOS's own): no associative arrays.
@@ -14,7 +14,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 example="${PROD_SECRETS_EXAMPLE:-$root/.env.prod.example}"
 file="${PROD_SECRETS_FILE:-$root/.env.prod}"
 path="${SSM_PATH:-/secondmind/prod}"
-region="${AWS_REGION:-us-east-1}"
+region="${AWS_REGION:-ap-southeast-2}"
 dry="${PROD_SECRETS_DRY_RUN:-}"
 
 [[ -f "$file" ]] || { echo "no $file: copy .env.prod.example to .env.prod and fill it in" >&2; exit 2; }

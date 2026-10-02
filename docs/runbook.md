@@ -240,7 +240,7 @@ The rollback through GitHub and SSM is yours to try.
 **Restore a dump into the local stack** (to look at production's data, or to prove the backup):
 
 ```sh
-aws s3 cp s3://secondmind-backups-<account-id>/dumps/<year>/<month>/<file>.dump ./last.dump --profile secondmind
+aws s3 cp s3://secondmind-backups-<account-id>/dumps/<year>/<month>/<file>.dump ./last.dump --profile second-mind
 make up
 make restore-local DUMP=./last.dump
 ```
@@ -283,7 +283,7 @@ alarms.*
 The everyday operations on the production host. All of them need your AWS login, and none is run by
 the session.
 
-**Get a shell:** `aws ssm start-session --target <instance-id> --profile secondmind` (the id is
+**Get a shell:** `aws ssm start-session --target <instance-id> --profile second-mind` (the id is
 `scripts/tf.sh platform output -raw instance_id`). No SSH, no open port.
 
 **Run one thing without a shell:** `scripts/prod-ssm.sh shell '<command>'`;

@@ -266,7 +266,7 @@ e2e: ## Playwright smoke test against the compose stack in fake-provider mode
 TF_IMAGE      ?= hashicorp/terraform:1.16.4
 TFLINT_IMAGE  ?= ghcr.io/terraform-linters/tflint:v0.64.0
 TRIVY_IMAGE   ?= aquasec/trivy:0.74.0
-AWS_PROFILE   ?= secondmind
+AWS_PROFILE   ?= second-mind
 ROOT          ?= platform
 
 .PHONY: infra-check

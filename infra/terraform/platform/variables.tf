@@ -1,7 +1,7 @@
 variable "aws_region" {
-  description = "Where everything lives: model providers are in the US, so compute is next to them (ADR-0012)."
+  description = "Where everything lives. This account's organisation only allows ap-southeast-2 (an SCP denies EC2 in us-east-1), so ADR-0012's us-east-1 is not available."
   type        = string
-  default     = "us-east-1"
+  default     = "ap-southeast-2"
 }
 
 variable "domain_name" {

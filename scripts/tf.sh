@@ -5,7 +5,7 @@
 #
 # <root> is platform or app (infra/terraform/<root>). `init` adds the S3 backend settings for you
 # (the state bucket from `make tf-bootstrap`, a key per root). Your AWS profile (AWS_PROFILE) is
-# read from ~/.aws, so the container sees the same SSO login the AWS CLI does.
+# read from ~/.aws, so the container sees the same login (`aws login`) the AWS CLI does.
 set -euo pipefail
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TF_IMAGE="${TF_IMAGE:-hashicorp/terraform:1.16.4}"
@@ -19,7 +19,7 @@ if [[ "${1:-}" == "init" ]]; then
   args=(init -input=false
     -backend-config="bucket=secondmind-tfstate-$account"
     -backend-config="key=$root/terraform.tfstate"
-    -backend-config="region=${AWS_REGION:-us-east-1}"
+    -backend-config="region=${AWS_REGION:-ap-southeast-2}"
     "${@:2}")
 fi
 
@@ -32,6 +32,6 @@ exec docker run --rm ${tty_flag[@]+"${tty_flag[@]}"} \
   -v "$HOME/.cache/terraform-plugins:/plugin-cache" \
   -e TF_PLUGIN_CACHE_DIR=/plugin-cache \
   -e AWS_PROFILE="${AWS_PROFILE:-}" \
-  -e AWS_REGION="${AWS_REGION:-us-east-1}" \
+  -e AWS_REGION="${AWS_REGION:-ap-southeast-2}" \
   -e AWS_SDK_LOAD_CONFIG=1 \
   -w "/infra/terraform/$root" "$TF_IMAGE" "${args[@]}"
