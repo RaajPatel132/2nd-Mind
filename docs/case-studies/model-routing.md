@@ -97,9 +97,10 @@ twice the cost; Anthropic off, 9 of 10 on mini at no extra cost
   breaks the time down by step.
 - **Situational questions are the weak shape:** hit@5 was 0 of 2 in the shipped routing's run,
   against a target of 0.75 for every shape. It is on the list to fix, not hidden in the average.
-- **A re-read from the cache is not a timing.** Most of the full run's cases were replayed from
-  the response cache to keep the budget, so only the fresh calls are timed in the profile, and a
-  probe whose calls were all cached (the rerank swap above) says nothing about end-to-end time.
+- **A re-read from the cache is not a timing.** Some of a full run's calls are replayed from the
+  response cache to keep the budget, so only the fresh calls are timed in the profile. A probe in
+  which only the changed step was fresh (the rerank swap above, reported at a median of 3.6 s a
+  turn) says nothing about end-to-end time: the other steps cost nothing in it.
 - **Quality here is retrieval and extraction,** not how helpful the answers read. A judged
   faithfulness measure is later work.
 

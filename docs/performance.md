@@ -36,8 +36,9 @@ The steps of a recall turn run in order (intent → plan → embed → rerank �
 - **The steps wait for each other.** Intent, the plan, the query embedding, the rerank and the
   answer run in that order, so their medians add. Two of them are about a third each: the **rerank**
   and the **plan**. Intent is under a fifth and the answer about a seventh.
-- **The plan is where the slow turns come from.** Its median is 2.8 s but its p95 is 8.2 s: a few
-  plans take three times as long as most, and they set the run's p95 of 17 s.
+- **The plan has the long tail.** Its median is 2.8 s but its p95 is 8.2 s: a few plans take three
+  times as long as most, which is the likeliest reason the run's p95 is 17 s against a median of
+  11 s (the run does not record enough to prove it).
 - **The rerank is mostly writing.** It spends about a second before it starts and then about 5 ms
   for every token it writes, and it writes a score and a one-line reason for each of 20
   candidates. Its time is its output.
