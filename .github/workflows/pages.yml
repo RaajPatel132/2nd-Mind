@@ -1,16 +1,14 @@
-# Publish the page of every committed live eval run (`make eval-site`) with GitHub Pages. It is
-# built from the run files alone and has no secrets and no server. Nothing happens until Pages is
-# switched on (Settings > Pages > Source: GitHub Actions) and the repository variable
-# PAGES_ENABLED is `true`; "Run workflow" publishes it once by hand whatever the variable says.
+# Publish the page of every committed live eval run (`make eval-site`) with GitHub Pages, and the
+# two badge files the README shows (the newest recall run, and the unit tests' coverage). It has no
+# secrets and no server: the page comes from the run files, the coverage from the unit tests.
+# Nothing happens until Pages is switched on (Settings > Pages > Source: GitHub Actions) and the
+# repository variable PAGES_ENABLED is `true`; "Run workflow" publishes once by hand whatever the
+# variable says.
 name: pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - "backend/evals/runs/**"
-      - "backend/src/secondmind/evals/site.py"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -37,10 +35,13 @@ jobs:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
-      - name: render the page
+      - name: unit-test coverage
+        working-directory: backend
+        run: uv run --frozen pytest tests/unit -q --cov --cov-report=json
+      - name: render the page and the badge files
         run: >-
           uv run --project backend --frozen python -m secondmind.evals site
-          --out _site --repo "${{ github.repository }}"
+          --out _site --repo "${{ github.repository }}" --coverage backend/coverage.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
