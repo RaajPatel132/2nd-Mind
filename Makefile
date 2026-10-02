@@ -277,11 +277,14 @@ secrets: ## gitleaks + hygiene hooks over the whole repo
 	cd backend && uv run --frozen pre-commit run --all-files --show-diff-on-failure
 
 .PHONY: audit
-audit: ## Dependency vulnerability audit (pip-audit + npm audit)
+audit: ## Dependency vulnerability audit (pip-audit for the backend and the MCP server, npm audit)
 	cd backend && uv export --frozen --no-dev --no-emit-project --format requirements-txt \
 		> ../.tmp-requirements.txt && uv run --frozen pip-audit --strict --disable-pip \
 		--requirement ../.tmp-requirements.txt; status=$$?; rm -f ../.tmp-requirements.txt; exit $$status
 	cd frontend && npm audit --audit-level=high
+	cd integrations/mcp && uv export --frozen --no-dev --no-emit-project --format requirements-txt \
+		> ../../.tmp-requirements.txt && uvx --from pip-audit pip-audit --strict --disable-pip \
+		--requirement ../../.tmp-requirements.txt; status=$$?; rm -f ../../.tmp-requirements.txt; exit $$status
 
 .PHONY: images
 images: ## Build the api/worker and web images
