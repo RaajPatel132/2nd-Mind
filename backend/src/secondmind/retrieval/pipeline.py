@@ -588,25 +588,35 @@ class RecallPipeline:
         elif not any(r.candidates for r in runs):
             mode, note = "skipped", "nothing to rerank"
         else:
-            try:
-                await asyncio.gather(
-                    *(
-                        rerank(
-                            ctx.steps,
-                            run.sub.question,
-                            run.candidates[: self._s.rerank_top_n],
-                            h.items,
-                            h.keys,
-                            now=ctx.now.instant,
-                            timezone=ctx.now.timezone,
-                            passage_floor=self._s.rerank_min_score,
-                        )
-                        for run in runs
-                        if run.candidates
+            # Every part's rerank is waited for, even after one has failed: a sibling left running
+            # would write its scores after the fallback cleared them, and make its model call
+            # after the turn is over, where the usage totals no longer count it.
+            outcomes = await asyncio.gather(
+                *(
+                    rerank(
+                        ctx.steps,
+                        run.sub.question,
+                        run.candidates[: self._s.rerank_top_n],
+                        h.items,
+                        h.keys,
+                        now=ctx.now.instant,
+                        timezone=ctx.now.timezone,
+                        passage_floor=self._s.rerank_min_score,
                     )
-                )
-            except ProviderUnavailableError as exc:
-                mode, note = "failed", f"rerank unavailable ({exc.message}); fused order used"
+                    for run in runs
+                    if run.candidates
+                ),
+                return_exceptions=True,
+            )
+            unavailable: ProviderUnavailableError | None = None
+            for outcome in outcomes:
+                if isinstance(outcome, ProviderUnavailableError):
+                    unavailable = unavailable or outcome
+                elif isinstance(outcome, BaseException):
+                    raise outcome
+            if unavailable is not None:
+                mode = "failed"
+                note = f"rerank unavailable ({unavailable.message}); fused order used"
                 for run in runs:
                     for c in run.candidates:
                         c.rerank_score = None

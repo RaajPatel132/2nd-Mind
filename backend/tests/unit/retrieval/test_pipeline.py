@@ -7,7 +7,7 @@ import pytest
 
 from secondmind.core import Kind, Shape, ToolCallEvent, new_id
 from secondmind.memory import WriterTurn
-from secondmind.providers import FakeOutcome, ProviderErrorKind
+from secondmind.providers import FakeOutcome, FakeProvider, FakeScript, ProviderErrorKind
 from secondmind.retrieval import (
     SHAPE_TOOLS,
     Filters,
@@ -15,6 +15,8 @@ from secondmind.retrieval import (
     LookupResult,
     RecallSettings,
     fuse,
+    recall_responders,
+    recall_text_responders,
 )
 from secondmind.retrieval.plan import _entities_text
 from tests.unit.memory.helpers import create, item
@@ -538,6 +540,47 @@ async def test_a_failed_rerank_falls_back_to_the_fused_order_and_says_so() -> No
     assert event.rerank_note
     assert ran.reply == "You live in Pune [1]."
     assert ran.outcome.cited == [w.ids["pune"]]
+
+
+async def test_a_failed_rerank_waits_for_its_siblings_so_none_writes_after_the_fallback() -> None:
+    """Two parts rerank at once. One fails at once, the other is still being asked. The fallback
+    must come after both: the slow call is on the ledger before the turn goes on, and nothing
+    writes a score after the scores were cleared."""
+    w = await world()
+    store = RecordingStore(
+        results={
+            "lookup": LookupResult([Hit(w.ids["pune"], 1)], 1),
+            "search": _found(w.ids["pune"]),
+        }
+    )
+    script = FakeScript(responders=recall_responders(), text_responders=recall_text_responders())
+    script.add(
+        plan(
+            {"question": "Where do I live?", "shape": "exact", "filters": LIVES},
+            {"question": "What do I like?", "shape": "semantic"},
+        ),
+        step="plan",
+    )
+    script.add(  # AUTH is not retried, so the first call fails at once and the second is slow
+        FakeOutcome(error=ProviderErrorKind.AUTH),
+        FakeOutcome(
+            structured={"scores": [{"id": "c1", "score": 0.9, "reason": "late"}]}, delay_s=0.2
+        ),
+        step="rerank",
+    )
+    script.add(FakeOutcome(text="You live in Pune [1]."), step="answer")
+
+    ran = await run_recall(
+        w, "Where do I live, and what do I like?", FakeProvider("primary", script=script), store
+    )
+
+    reranks = [c for c in ran.calls if c.step == "rerank"]
+    assert len(reranks) == 1  # the slow sibling's call is on the record before the turn goes on
+    event = ran.events.of("retrieval")[0]
+    assert event.rerank == "failed"
+    scores = [c.rerank_score for q in event.sub_queries for c in q.candidates]
+    assert scores
+    assert all(score is None for score in scores)
 
 
 async def test_a_plan_whose_parts_all_fail_to_resolve_falls_back_to_meaning() -> None:
