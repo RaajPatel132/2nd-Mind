@@ -33,6 +33,7 @@ model call to stop now. It needs no deploy and no restart.
 make kill-switch on        # stop all new model work
 make kill-switch STATE=status
 make kill-switch off       # resume
+make kill-switch STATE=clear   # forget the flag: KILL_SWITCH in the environment applies again
 ```
 
 **What happens.** Every api and worker process re-reads the flag at most every 2 seconds. From
@@ -131,6 +132,11 @@ make set-tier EMAIL=someone@example.com TIER=premium     # guest | standard | pr
 Guest is Auto only, $0.75 lifetime; standard picks Luna, GPT-5.4 mini or Haiku 4.5, $2.50;
 premium adds Sonnet 5, $4.00. Every change is written to `tier_changes` (who, when, from, to).
 The person's quota and picker follow on their next turn.
+
+It writes as the database owner, which the api and worker never are: on the production stack the
+command runs in the one-off `migrate` container (`make prod-admin CMD="set-tier …"` does the same
+on the host), and the app's own database role cannot `UPDATE` a user at all, so no tier can change
+without a `tier_changes` row (migration 0009, [ADR-0032](adr/0032-spend-safety.md)).
 
 **Tried** (`make set-tier EMAIL=… TIER=premium STACK=prodlike`, then back):
 
@@ -328,7 +334,9 @@ asks for the access code. The limits and their variables are in
 - **"Too many new guests from your network"** is the per-address cap. It counts the address in
   `X-Forwarded-For` that many proxies from the right (2 behind Caddy and nginx). If every visitor
   is refused at once, the hop count is wrong (every guest then shares the proxy's address): check
-  `TRUSTED_PROXY_HOPS` against what the edge really does.
+  `TRUSTED_PROXY_HOPS` against what the edge really does. The same count decides whose sign-in
+  attempts are counted (`LOGIN_ATTEMPTS_PER_MINUTE`): with it wrong, one person's wrong guesses lock
+  out everyone holding the access code.
 - **"The sample has been used up for today"** is `guest_cap`: all guests together spent their share
   (`SPEND_CAP_GUEST_DAILY_USD`) of the day's cap. Signed-in people carry on; it resets at 00:00 UTC.
 - **Expiry.** A daily job (03:15 UTC) empties the memory of guests older than `GUEST_TTL_DAYS`. The
