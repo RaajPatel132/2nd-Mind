@@ -2,10 +2,12 @@
 were left out, and the performance document quotes a stored run, not numbers typed by hand."""
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+from secondmind.config import DEFAULT_RESOURCES_DIR
 from secondmind.evals.profile import (
     END,
     START,
@@ -16,7 +18,10 @@ from secondmind.evals.profile import (
     step_timings,
     sync_doc,
 )
-from secondmind.evals.runs import CaseRecord, RunRecord
+from secondmind.evals.runs import CaseRecord, RunRecord, load_run
+
+DOC = DEFAULT_RESOURCES_DIR.parent / "docs" / "performance.md"
+RUN = "20260929T160542Z-1b15a10"
 
 
 def call(step: str, ms: int | None, **fields: Any) -> dict[str, Any]:
@@ -125,3 +130,23 @@ def test_sync_doc_replaces_only_the_block_and_is_idempotent() -> None:
     assert sync_doc(once, r) == once
     with pytest.raises(ValueError, match="markers"):
         sync_doc("no markers here", r)
+
+
+def test_the_performance_document_quotes_the_stored_run_exactly() -> None:
+    """Edit the run or the profile code and this fails until the document is regenerated, so a
+    number on the page is always one the run file produces."""
+    doc = DOC.read_text(encoding="utf-8")
+    expected = sync_doc(doc, load_run(RUN))
+    assert doc == expected, (
+        f"docs/performance.md is out of date: run `python -m secondmind.evals latency {RUN} "
+        "--into docs/performance.md`"
+    )
+
+
+def test_the_document_can_be_checked_from_the_command_line(tmp_path: Path) -> None:
+    from secondmind.evals.__main__ import main  # noqa: PLC0415
+
+    assert main(["latency", RUN, "--into", str(DOC), "--check"]) == 0
+    stale = tmp_path / "stale.md"
+    stale.write_text(DOC.read_text(encoding="utf-8").replace("p50", "p51", 1))
+    assert main(["latency", RUN, "--into", str(stale), "--check"]) == 1
