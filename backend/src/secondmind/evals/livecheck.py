@@ -146,9 +146,9 @@ async def _ping_all(routing: Routing, targets: Targets, env: Mapping[str, str]) 
 
 async def live_check(environ: Mapping[str, str] | None = None, out: TextIO = sys.stdout) -> int:
     env = dict(os.environ if environ is None else environ)
-    budgets = Budgets.from_env(env)
     book = SpendBook.load()
     try:
+        budgets = Budgets.from_env(env)
         book.effective_budget(Budgets(run=Decimal("0.01"), total=budgets.total))
     except BudgetRefusedError as exc:
         out.write(f"refused: {exc}\n")

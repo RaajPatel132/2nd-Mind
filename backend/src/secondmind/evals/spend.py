@@ -14,7 +14,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -62,7 +62,14 @@ class Budgets:
             raw = env.get(name, "").strip()
             if not raw:
                 return default
-            value = Decimal(raw)
+            try:
+                value = Decimal(raw)
+            except InvalidOperation:
+                value = Decimal("NaN")
+            if not value.is_finite():
+                raise BudgetRefusedError(
+                    f"{name} must be an amount in dollars like 0.50, not {raw!r}"
+                )
             if value < 0:
                 raise BudgetRefusedError(f"{name} must not be negative")
             return value

@@ -112,6 +112,20 @@ def test_budgets_come_from_the_environment() -> None:
     assert Budgets.from_env({"ALLOW_DIRTY": "1"}).allow_dirty
 
 
+@pytest.mark.parametrize("raw", ["abc", "1,50", "$1.50", "NaN", "inf", "-Infinity"])
+def test_a_budget_that_is_not_an_amount_is_refused_by_name_not_a_crash(raw: str) -> None:
+    with pytest.raises(BudgetRefusedError, match="LIVE_TOTAL_BUDGET_USD"):
+        Budgets.from_env({"LIVE_TOTAL_BUDGET_USD": raw})
+    with pytest.raises(BudgetRefusedError, match="LIVE_RUN_BUDGET_USD"):
+        Budgets.from_env({"LIVE_RUN_BUDGET_USD": raw})
+
+
+def test_a_negative_budget_is_still_refused_and_a_blank_one_means_the_default() -> None:
+    with pytest.raises(BudgetRefusedError, match="must not be negative"):
+        Budgets.from_env({"LIVE_RUN_BUDGET_USD": "-0.10"})
+    assert Budgets.from_env({"LIVE_RUN_BUDGET_USD": "  "}).run == Decimal("0.50")
+
+
 def test_the_sprint_total_defaults_to_this_sprints_share() -> None:
     assert Budgets.from_env({}).total == Decimal("1.50")
 
