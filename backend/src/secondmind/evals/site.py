@@ -173,7 +173,7 @@ class Page:
 
     def table(self, rows: Iterable[Row], *, latency: bool = True) -> str:
         head = (
-            '<tr><th>Date</th><th>Run</th><th>Commit</th><th>Routing</th><th class="n">Passed</th>'
+            '<tr><th>Date</th><th>Run and commit</th><th>Routing</th><th class="n">Passed</th>'
             '<th class="n">Cost a case</th>'
             + ('<th class="n">Median</th><th class="n">p95</th>' if latency else "")
             + "<th>Status</th></tr>"
@@ -189,8 +189,9 @@ class Page:
             status = "complete" if r.status == "complete" else r.status
             note = f'<span class="note">{_e(r.note)}</span>' if r.note else ""
             body.append(
-                f"<tr><td>{_e(r.day.isoformat())}</td><td>{self.run_link(r)}</td>"
-                f"<td>{self.commit(r)}</td><td>{_e(r.routing)}</td>"
+                f"<tr><td>{_e(r.day.isoformat())}</td>"
+                f'<td>{self.run_link(r)}<span class="note">commit {self.commit(r)}</span></td>'
+                f"<td>{_e(r.routing)}</td>"
                 f'<td class="n">{r.passed}/{r.total}</td>'
                 f'<td class="n">${r.cost_per_case:.4f}</td>{lat}'
                 f'<td class="status">{_e(status)}{note}</td></tr>'
