@@ -185,6 +185,10 @@ eval-dry: ## Any suite as a dry run with its estimated live cost: make eval-dry 
 eval-report: ## Print a stamped run, or two side by side: make eval-report A=<run> B=<run>
 	$(BACKEND_RUN) python -m secondmind.evals report $(A) $(B)
 
+.PHONY: eval-latency
+eval-latency: ## Where a recall turn's time goes, from a stored run (fresh calls only): make eval-latency A=<run>
+	$(BACKEND_RUN) python -m secondmind.evals latency $(A)
+
 .PHONY: bench-vectors
 bench-vectors: ## Vector storage bench under RLS (throwaway pgvector; clustered random vectors; free)
 	$(BACKEND_RUN) env -u OPENAI_API_KEY python tools/bench_vectors.py --random

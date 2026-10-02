@@ -20,6 +20,7 @@ import sys
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from secondmind.core import ConfigError
@@ -184,6 +185,41 @@ def _report(refs: Sequence[str]) -> int:
     return 0
 
 
+def _latency(refs: Sequence[str], into: str | None, check: bool) -> int:
+    """Where a recall turn's time goes, from stored runs (ledger 52): fresh calls only. With
+    ``--into FILE`` the block between the profile markers in FILE is rewritten (or, with
+    ``--check``, only compared)."""
+    from secondmind.evals.profile import render_profile, render_rerank, sync_doc  # noqa: PLC0415
+
+    if into:
+        if len(refs) != 1:
+            sys.stderr.write("--into takes exactly one run\n")
+            return 2
+        path = Path(into)
+        current = path.read_text(encoding="utf-8")
+        updated = sync_doc(current, load_run(refs[0]))
+        if check:
+            if updated != current:
+                sys.stderr.write(f"{into} is out of date: run `latency {refs[0]} --into {into}`\n")
+                return 1
+            return 0
+        path.write_text(updated, encoding="utf-8")
+        sys.stdout.write(f"rewrote the profile in {into}\n")
+        return 0
+
+    if refs:
+        runs = [load_run(r) for r in refs]
+    else:
+        runs = [load_run(p) for p in latest_runs() if p.parent.name == "recall"]
+    if not runs:
+        sys.stderr.write("no live recall runs yet; name a run file or id\n")
+        return 2
+    sys.stdout.write(
+        "\n\n".join(f"{render_profile(run)}\n\n{render_rerank(run)}" for run in runs) + "\n"
+    )
+    return 0
+
+
 def _record_replays(args: argparse.Namespace) -> int:
     """Show what a live run's recorded outputs would change in the golden cases' ``model:``
     blocks, and with ``--write`` change them (R.5). The expectations are never touched."""
@@ -305,6 +341,10 @@ def main(argv: list[str] | None = None) -> int:
     spend.add_argument("--clear-halt", action="store_true", help="clear a stop-rule halt")
     spend.add_argument("--record", default=None, help="add spend made outside the harness: p=usd,…")
     spend.add_argument("--note", default=None, help="why (stored with the entry)")
+    latency = sub.add_parser("latency", help="where a recall turn's time goes, from stored runs")
+    latency.add_argument("runs", nargs="*", help="run ids or files (none: the latest recall run)")
+    latency.add_argument("--into", default=None, help="rewrite the profile block in this document")
+    latency.add_argument("--check", action="store_true", help="with --into: only compare")
     sub.add_parser("live-check", help="one tiny request per routed and picker model")
     record = sub.add_parser(
         "record-replays", help="rebuild the golden cases' model blocks from a live run (R.5)"
@@ -326,6 +366,7 @@ def main(argv: list[str] | None = None) -> int:
     commands: dict[str, Callable[[], int]] = {
         "seed-dev": lambda: asyncio.run(_seed_dev(args.email, args.web_url)),
         "report": lambda: _report(args.runs),
+        "latency": lambda: _latency(args.runs, args.into, args.check),
         "spend": lambda: _spend(args.clear_halt, args.record, args.note),
         "live-check": _live_check,
         "record-replays": lambda: _record_replays(args),
