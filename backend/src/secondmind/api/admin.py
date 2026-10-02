@@ -1,10 +1,11 @@
 """The admin CLI (ADR-0032): what an operator does without a deploy.
 
-    python -m secondmind.api.admin kill-switch on|off|status
+    python -m secondmind.api.admin kill-switch on|off|clear|status
     python -m secondmind.api.admin set-tier EMAIL guest|standard|premium
     python -m secondmind.api.admin spend
 
-``kill-switch`` flips the flag every api and worker process reads (within seconds, no restart).
+``kill-switch`` flips the flag every api and worker process reads (within seconds, no restart);
+``clear`` forgets the flag, so ``KILL_SWITCH`` in the environment applies again.
 ``set-tier`` changes a person's tier and writes the audit row (who, when, from, to); it connects
 as the schema owner (``DATABASE_MIGRATION_URL``), because the app's own role can't write the
 audit. ``spend`` prints today's, this month's and each provider's counters. Nothing here prints a
@@ -33,7 +34,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="secondmind.api.admin", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     kill = sub.add_parser("kill-switch", help="stop or resume every model call")
-    kill.add_argument("state", choices=("on", "off", "status"))
+    kill.add_argument("state", choices=("on", "off", "clear", "status"))
     tier = sub.add_parser("set-tier", help="change a person's tier (audited)")
     tier.add_argument("email")
     tier.add_argument("tier", choices=[t.value for t in Tier])
@@ -47,6 +48,8 @@ async def kill_switch(state: str) -> int:
     try:
         if state in ("on", "off"):
             await store.set_kill_switch(state == "on")
+        elif state == "clear":
+            await store.clear_kill_switch()
         flag = await store.kill_switch()
     finally:
         await store.aclose()

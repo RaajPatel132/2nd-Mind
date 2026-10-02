@@ -73,6 +73,9 @@ class RedisSpendStore:
     async def set_kill_switch(self, on: bool) -> None:
         await self._redis.set(KILL, "on" if on else "off")
 
+    async def clear_kill_switch(self) -> None:
+        await self._redis.delete(KILL)
+
     async def add(self, provider: str, cost: Decimal, at: datetime) -> SpendTotals:
         amount = float(cost)
         pipe = self._redis.pipeline(transaction=True)

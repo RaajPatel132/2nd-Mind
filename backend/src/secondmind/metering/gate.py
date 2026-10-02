@@ -101,6 +101,10 @@ class SpendStore(Protocol):
 
     async def set_kill_switch(self, on: bool) -> None: ...
 
+    async def clear_kill_switch(self) -> None:
+        """Forget the runtime flag, so the environment's ``KILL_SWITCH`` applies again."""
+        ...
+
     async def add(self, provider: str, cost: Decimal, at: datetime) -> SpendTotals:
         """Add a call's cost to the day, month and provider counters; the new totals."""
         ...

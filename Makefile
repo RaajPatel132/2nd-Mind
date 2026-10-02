@@ -209,7 +209,7 @@ seed-persona: ## Load the Aditi Rao persona into its template workspace (skipped
 ADMIN := python -m secondmind.api.admin
 
 .PHONY: kill-switch on off
-kill-switch: ## make kill-switch on|off (or STATE=status): stop or resume every model call, no restart
+kill-switch: ## make kill-switch on|off (or STATE=status|clear): stop or resume every model call, no restart
 	@$(STACKCMD) exec -T api $(ADMIN) kill-switch $(or $(STATE),$(filter on off,$(MAKECMDGOALS)),status)
 on off: ; @:
 
@@ -327,7 +327,7 @@ prod-deploy: ## Deploy SHA=<sha> straight over SSM, without GitHub (a rollback b
 
 .PHONY: prod-admin
 prod-admin: ## The admin CLI in production's api container over SSM: make prod-admin CMD="kill-switch on" (yours to run)
-	@test -n "$(CMD)" || { echo 'usage: make prod-admin CMD="kill-switch on|off|status | spend | set-tier <email> <tier>"'; exit 2; }
+	@test -n "$(CMD)" || { echo 'usage: make prod-admin CMD="kill-switch on|off|clear|status | spend | set-tier <email> <tier>"'; exit 2; }
 	AWS_PROFILE=$(AWS_PROFILE) scripts/prod-ssm.sh admin $(CMD)
 
 .PHONY: smoke-prod

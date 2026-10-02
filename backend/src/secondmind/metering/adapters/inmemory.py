@@ -33,6 +33,10 @@ class InMemorySpendStore:
         self._check()
         self._kill = on
 
+    async def clear_kill_switch(self) -> None:
+        self._check()
+        self._kill = None
+
     async def add(self, provider: str, cost: Decimal, at: datetime) -> SpendTotals:
         self._check()
         day, month = utc_day(at), utc_month(at)
