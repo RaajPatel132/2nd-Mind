@@ -11,7 +11,7 @@ from datetime import UTC, datetime, time, timedelta
 
 from fastapi import APIRouter, Request, Response
 
-from secondmind.api.client_address import client_address
+from secondmind.api.client_address import caller_address
 from secondmind.api.deps import DEVICE_COOKIE, SESSION_COOKIE, ServicesDep, UserIdDep
 from secondmind.api.errors import ERROR_RESPONSES, RATE_LIMITED_RESPONSE
 from secondmind.api.schemas import GuestIn, MeOut, WorkspaceOut
@@ -67,11 +67,7 @@ async def _check_code(request: Request, services: ServicesDep, body: GuestIn | N
 
 
 def _address(request: Request, services: ServicesDep) -> str:
-    return client_address(
-        request.headers.get("x-forwarded-for"),
-        request.client.host if request.client else None,
-        services.config.settings.trusted_proxy_hops,
-    )
+    return caller_address(request, services.config.settings.trusted_proxy_hops)
 
 
 async def _returning(request: Request, services: ServicesDep) -> User | None:

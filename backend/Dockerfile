@@ -41,4 +41,6 @@ USER 10001:10001
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=4s --start-period=20s --retries=6 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+# The person's address comes from TRUSTED_PROXY_HOPS (api/client_address.py), not from uvicorn's
+# forwarded-allow-ips: trusting a forwarded header here would let a client choose its own address.
 CMD ["uvicorn", "--factory", "secondmind.api.main:create", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--no-access-log"]

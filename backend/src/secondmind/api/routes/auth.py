@@ -5,6 +5,7 @@ import hmac
 
 from fastapi import APIRouter, Request, Response
 
+from secondmind.api.client_address import caller_address
 from secondmind.api.deps import SESSION_COOKIE, ServicesDep, UserIdDep
 from secondmind.api.errors import ERROR_RESPONSES, RATE_LIMITED_RESPONSE
 from secondmind.api.routes.turns import usage_for
@@ -49,7 +50,7 @@ async def _check_access_code(
     request: Request, services: ServicesDep, body: DevLoginIn | None
 ) -> None:
     settings = services.config.settings
-    caller = request.client.host if request.client else "unknown"
+    caller = caller_address(request, settings.trusted_proxy_hops)
     wait = await services.gate.rate_limited(f"login:{caller}", settings.login_attempts_per_minute)
     if wait is not None:
         raise RateLimitedError("Too many attempts. Wait a moment and try again.", wait)

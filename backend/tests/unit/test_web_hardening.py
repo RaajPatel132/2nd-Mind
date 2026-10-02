@@ -319,6 +319,42 @@ async def test_access_attempts_are_rate_limited_per_address(
         assert int(limited.headers["retry-after"]) >= 1
 
 
+def behind_proxies(address: str, forged: str = "") -> dict[str, str]:
+    """What Caddy then nginx send: the person's address, then the first proxy's, on the right."""
+    left = f"{forged}, " if forged else ""
+    return {"x-forwarded-for": f"{left}{address}, 10.0.0.2"}
+
+
+async def login_status(c: httpx.AsyncClient, headers: dict[str, str], code: str = "wrong") -> int:
+    body = {"email": "a@example.test", "access_code": code}
+    return (await c.post("/v1/auth/dev-login", json=body, headers=headers)).status_code
+
+
+async def test_behind_the_proxies_each_person_has_their_own_attempts(
+    base_env: dict[str, str],
+) -> None:
+    """Every request reaches the API from the web tier's address. If that were the caller, a few
+    wrong codes from one person would lock out everyone holding the right one."""
+    env = coded(base_env, TRUSTED_PROXY_HOPS="2", LOGIN_ATTEMPTS_PER_MINUTE="3")
+    async with client_for(env, "https") as c:
+        guesser = behind_proxies("203.0.113.7")
+        assert [await login_status(c, guesser) for _ in range(4)] == [401, 401, 401, 429]
+        neighbour = behind_proxies("203.0.113.8")
+        assert await login_status(c, neighbour, CODE) == 200
+
+
+async def test_a_forged_address_does_not_buy_more_attempts(base_env: dict[str, str]) -> None:
+    """A client can write anything at the left of X-Forwarded-For; the entry the proxies added
+    is the one counted."""
+    env = coded(base_env, TRUSTED_PROXY_HOPS="2", LOGIN_ATTEMPTS_PER_MINUTE="3")
+    async with client_for(env, "https") as c:
+        statuses = [
+            await login_status(c, behind_proxies("203.0.113.7", forged=f"198.51.100.{n}"))
+            for n in range(1, 6)
+        ]
+        assert statuses == [401, 401, 401, 429, 429]
+
+
 async def test_the_access_code_is_compared_in_constant_time(base_env: dict[str, str]) -> None:
     from secondmind.api.routes import auth  # noqa: PLC0415
 
