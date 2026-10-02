@@ -37,6 +37,7 @@ the data.
 | [`PRD.md`](PRD.md) | What it must do and why: users, requirements, how success is measured |
 | [`adr/`](adr/README.md) | Why each choice was made, one page each, with the alternatives that lost |
 | [`design/system.md`](design/system.md) | Ink, the design system: tokens, type, motion, the Trail, the product's words |
+| [`case-studies/model-routing.md`](case-studies/model-routing.md) | How the models were chosen by measurement on a small budget, what it cost, and what the numbers do not show |
 | [`performance.md`](performance.md) | Where a recall turn's time goes, by step, from a stored run |
 | [`runbook.md`](runbook.md) | How it is run: deploys, spend controls, backups, what to do when |
 | [`media/`](media/) | The pictures in the README, remade by script ([how](../README.md#develop)) |
