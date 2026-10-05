@@ -247,12 +247,14 @@ jobs:
 
   # Deploy: after everything above is green, on a push to main, or to a sprint branch while the
   # repository variable DEPLOY_SPRINT_BRANCHES is true (the site is behind the access code until
-  # S5 launches it; then only main deploys). It waits for the images job, which pushes them.
+  # S5 launches it; then only main deploys). It waits for the images job, which pushes them. It
+  # needs the deploy role (AWS_DEPLOY_ROLE_ARN): where the account forbids the OIDC provider there
+  # is none, the job is skipped, and a release goes out with `make prod-deploy`.
   deploy:
     name: deploy
     needs: [commits, backend, frontend, mcp, secrets, infra, images, e2e]
     if: >-
-      github.event_name == 'push' && (github.ref == 'refs/heads/main'
+      github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != '' && (github.ref == 'refs/heads/main'
       || (startsWith(github.ref, 'refs/heads/sprint-') && vars.DEPLOY_SPRINT_BRANCHES == 'true'))
     permissions:
       contents: read
