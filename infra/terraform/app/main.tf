@@ -61,7 +61,8 @@ resource "aws_ssm_document" "deploy" {
       inputs = {
         timeoutSeconds = "900"
         runCommand = [
-          "set -euo pipefail",
+          # Run by /bin/sh, which on Ubuntu is dash: no pipefail (and nothing here pipes).
+          "set -eu",
           "cd /opt/secondmind",
           "git fetch --depth 1 origin {{ sha }}",
           "git checkout --force {{ sha }}",
