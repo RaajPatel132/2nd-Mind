@@ -47,3 +47,21 @@ run "no_secret_is_in_the_terraform_of_the_app_root" {
     error_message = "secret values reach SSM by `make prod-secrets`, never through Terraform"
   }
 }
+
+run "ci_access_can_be_left_out_where_the_account_forbids_the_oidc_provider" {
+  command = apply
+
+  variables {
+    enable_ci_access = false
+  }
+
+  assert {
+    condition     = output.deploy_role_arn == null && output.plan_role_arn == null
+    error_message = "with enable_ci_access false there is no OIDC provider and no CI role"
+  }
+
+  assert {
+    condition     = output.deploy_document_name == "secondmind-deploy"
+    error_message = "the deploy document is still made: deploys go over SSM from a shell"
+  }
+}

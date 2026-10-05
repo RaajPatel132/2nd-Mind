@@ -14,6 +14,12 @@ variable "github_environment" {
   default     = "production"
 }
 
+variable "enable_ci_access" {
+  description = "Make GitHub's OIDC provider and the CI roles. Set false where the account's organisation policy denies the provider: deploys then run from a shell (make prod-deploy)."
+  type        = bool
+  default     = true
+}
+
 variable "create_oidc_provider" {
   description = "GitHub's OIDC provider exists once per account: set false if the account already has it."
   type        = bool

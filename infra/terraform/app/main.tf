@@ -72,7 +72,10 @@ resource "aws_ssm_document" "deploy" {
   })
 }
 
+# Left out where the account forbids GitHub's OIDC provider (an organisation policy can): deploys
+# then go over SSM from a logged-in shell (`make prod-deploy`) and CI never touches AWS.
 module "ci_access" {
+  count                = var.enable_ci_access ? 1 : 0
   source               = "../modules/ci_access"
   github_repo          = var.github_repo
   environment_name     = var.github_environment
