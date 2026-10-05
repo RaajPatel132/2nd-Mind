@@ -68,10 +68,11 @@ resource "aws_vpc_security_group_ingress_rule" "web" {
   tags              = var.tags
 }
 
-# The host pulls images and packages and calls the model providers.
+# The host pulls images and packages and calls the model providers. (EC2 allows only
+# a-zA-Z0-9 and . _-:/()#,@[]+=&;{}!$* in a rule description: no apostrophe.)
 resource "aws_vpc_security_group_egress_rule" "all" {
   security_group_id = aws_security_group.web.id
-  description       = "Everything out: image pulls, updates, model providers, Let's Encrypt"
+  description       = "Everything out: image pulls, updates, model providers, certificate issuance"
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
   tags              = var.tags
