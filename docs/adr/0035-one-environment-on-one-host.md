@@ -7,6 +7,12 @@
 - **Amended 2026-10-02:** the host is in `ap-southeast-2`, not `us-east-1`. The AWS account's
   organisation denies EC2 outside that region, so ADR-0012's reason for the US (compute next to the
   model providers) gives way. Every model call now crosses the Pacific; S5.15 measures what that costs.
+- **Amended 2026-10-05:** two changes for a no-cash launch. (1) The host name is a free DuckDNS name
+  (`<name>.duckdns.org`), pointed at the Elastic IP by `make dns-duckdns`, not a bought domain:
+  AWS's own `ec2-*` names can't get a certificate (Let's Encrypt refuses them) and sslip.io's shared
+  quota is spent. The name survives a move off AWS, because only the address changes. (2) The
+  account's organisation policy denies GitHub's OIDC provider, so `enable_ci_access = false` leaves
+  the CI roles out; CI builds and scans the images and a release goes out with `make prod-deploy`.
 
 ## Context
 
