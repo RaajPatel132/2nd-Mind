@@ -31,8 +31,11 @@ mock_provider "aws" {
 
 variables {
   domain_name = "example.test"
-  alert_email = "owner@example.test"
-  github_repo = "owner/repo"
+  # Set here so a local, gitignored terraform.tfvars can't change what the test expects.
+  app_subdomain = "2nd-mind"
+  alert_email   = "owner@example.test"
+  github_repo   = "owner/repo"
+  repo_ref      = "main"
 }
 
 run "the_app_is_reached_at_a_name_built_from_the_variables" {

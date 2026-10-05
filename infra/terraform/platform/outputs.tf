@@ -9,7 +9,7 @@ output "app_hostname" {
 }
 
 output "dns_record" {
-  description = "The one record to add at Cloudflare, as DNS only (grey cloud, no proxy)."
+  description = "The one record to add at the DNS provider (DuckDNS: make dns-duckdns), DNS only: no proxy in front."
   value       = "A  ${local.app_hostname}  ->  ${module.host.elastic_ip}  (DNS only)"
 }
 

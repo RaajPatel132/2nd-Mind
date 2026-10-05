@@ -345,6 +345,10 @@ tf-apply: ## terraform apply for ROOT=platform|app (yours to run)
 tf-output: ## terraform output for ROOT=platform|app
 	AWS_PROFILE=$(AWS_PROFILE) scripts/tf.sh $(ROOT) output
 
+.PHONY: dns-duckdns
+dns-duckdns: ## Point the DuckDNS host name at the host's Elastic IP (needs DUCKDNS_TOKEN or DUCKDNS_TOKEN_FILE)
+	AWS_PROFILE=$(AWS_PROFILE) scripts/dns-duckdns.sh "$$(scripts/tf.sh platform output -raw app_hostname)" "$$(scripts/tf.sh platform output -raw elastic_ip)"
+
 .PHONY: prod-secrets
 prod-secrets: ## Write .env.prod to SSM Parameter Store (PROD_SECRETS_DRY_RUN=1 checks only; yours to run)
 	AWS_PROFILE=$(AWS_PROFILE) scripts/prod-secrets.sh
